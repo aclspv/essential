@@ -23,9 +23,9 @@ enum UTIL_OPBIN2_ {
 };
 
 #include <ae2f/Keys.h>
+#include <ae2f/c90/StdInt.h>
 
 #include "./iddef.h"
-#include "./log.h"
 #include "./literal.h"
 #include <spirv/unified1/spirv.h>
 
@@ -35,7 +35,17 @@ typedef struct {
 	util_literal	m_literal;
 } util_opbincfg_extra;
 
-static ae2f_ccconst enum SpvOp_ util_opbin2_to_spvop(const e_id_default c_id, const enum UTIL_OPBIN2_ c_op2) {
+/**
+ * @brief type alias for `enum UTIL_OPBIN2_`
+ * */
+typedef uint_leastenum_t B_util_opbin2_t;
+
+
+static ae2f_ccconst B_util_opbin2_t util_opbin2_to_spvop(
+		const e_id_default c_id, 
+		const enum UTIL_OPBIN2_ c_op2
+		) 
+{
 	switch(c_op2) {
 		case UTIL_OPBIN2_NONE:
 		default:

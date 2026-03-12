@@ -209,8 +209,8 @@ ACLSPV_ABI_IMPL enum CXChildVisitResult aclemit_entp_body(CXCursor h_cur, CXCurs
 
 					case CXType_Record:
 						{
-							const intmax_t	_TY_SIZEOF = clang_Type_getSizeOf(TYPE);
-							const uintmax_t	 TY_SIZEOF = _TY_SIZEOF < 0 ? 0 : (uintmax_t)_TY_SIZEOF;
+							const intmax_t	TY_SIZEOF_ = clang_Type_getSizeOf(TYPE);
+							const uintmax_t	 TY_SIZEOF = TY_SIZEOF_ < 0 ? 0 : (uintmax_t)TY_SIZEOF_;
 							const aclspv_wrd_t	 TY_SIZE_WRD = TY_SIZEOF < UINT32_MAX 
 								? (aclspv_wrd_t)TY_SIZEOF : 0;
 
@@ -229,17 +229,17 @@ ACLSPV_ABI_IMPL enum CXChildVisitResult aclemit_entp_body(CXCursor h_cur, CXCurs
 
 					default:
 						{
-							CXString __NAME = clang_getTypeSpelling(TYPE);
+							CXString NAME = clang_getTypeSpelling(TYPE);
 							err_prefix(a);
 							err_call(
 									fprintf, (
 										stderr
 										, "Met the unknown type(%u): %s\n"
 										, TYPE.kind
-										, (const char*)__NAME.data
+										, (const char*)NAME.data
 										);
 								)
-								clang_disposeString(__NAME);
+								clang_disposeString(NAME);
 						}
 						break;
 				}

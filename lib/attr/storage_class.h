@@ -10,7 +10,14 @@
 #include <string.h>
 #include <spirv/unified1/spirv.h>
 
-/** @param aclspv_wrd_t* wr_storage_class */
+/** 
+ * @fn	
+ * static enum CXChildVisitResult	attr_storage_class(
+ * CXCursor h_cur, 
+ * CXCursor h_parent, 
+ * aclspv_wrd_t* ae2f_restrict wr_storage_class
+ * )
+ * */
 static enum CXChildVisitResult	attr_storage_class(CXCursor h_cur, CXCursor h_parent, CXClientData ae2f_restrict wr_storage_class) {
 	CXString TEXT;
 	enum CXChildVisitResult RES = CXChildVisit_Break;

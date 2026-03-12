@@ -7,47 +7,6 @@
 
 #include <string.h>
 
-ae2f_inline static ae2f_ccpure util_constant* util_get_constant_node(
-		const u64_least	c_key, 
-		h_util_ctx_t	h_ctx
-		)
-{
-	const aclspv_wrdcount_t	COUNT = (aclspv_wrdcount_t)(h_ctx->m_constant_cache.m_sz / (size_t)sizeof(util_constant));
-	aclspv_wrdcount_t	LEFT	= 0;
-	aclspv_wrdcount_t	RIGHT	= COUNT;
-
-	ae2f_expected_if(COUNT) {
-		const uint_least64_t	KEY_MADE_L = 
-				(u64_least)(((p_util_constant_t)h_ctx->m_constant_cache.m_p)
-				[LEFT].m_key_0)
-				| ((u64_least)((p_util_constant_t)h_ctx->m_constant_cache.m_p)
-				[LEFT].m_key_1) << 32;
-
-		while(LEFT < RIGHT) {
-			const aclspv_wrdcount_t	MIDDLE	= LEFT + ((RIGHT - LEFT) >> 1);
-			const uint_least64_t	KEY_MADE = 
-				(u64_least)(((p_util_constant_t)h_ctx->m_constant_cache.m_p)
-				[MIDDLE].m_key_0)
-				| ((u64_least)((p_util_constant_t)h_ctx->m_constant_cache.m_p)
-				[MIDDLE].m_key_1) << 32;
-
-			if(KEY_MADE == c_key)
-				return &((p_util_constant_t)h_ctx->m_constant_cache.m_p)[MIDDLE];
-			if(KEY_MADE < c_key) {
-				LEFT = MIDDLE + 1;
-			} else {
-				RIGHT = MIDDLE;
-			}
-		}
-
-
-		if(KEY_MADE_L == c_key)
-			return &((p_util_constant_t)h_ctx->m_constant_cache.m_p)[LEFT];
-	}
-
-	return ae2f_NIL;
-}
-
 ACLSPV_ABI_IMPL util_constant* aclutil_mk_constant_node(
 		const u64_least	c_key,
 		h_util_ctx_t	h_ctx

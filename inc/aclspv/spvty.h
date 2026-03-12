@@ -12,10 +12,7 @@
  * @typedef	aclspv_wrd_t
  * @brief	integer as word
  * */
-#ifndef aclspv_wrd_t
-#define aclspv_wrd_t	aclspv_wrd_t
-typedef uint32_t aclspv_wrd_t;
-#endif
+typedef uint_least32_t	aclspv_wrd_t;
 
 extern char ACLSPV_CHECK[sizeof(aclspv_wrd_t) >= 4 ? 1 : -1];
 

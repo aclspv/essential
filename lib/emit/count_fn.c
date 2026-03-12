@@ -14,7 +14,7 @@
 
 #include <spirv/unified1/spirv.h>
 
-static enum CXChildVisitResult __attr_workgroup(CXCursor h_cur, CXCursor h_parent, CXClientData wr_data) {
+static enum CXChildVisitResult s_attr_workgroup(CXCursor h_cur, CXCursor h_parent, CXClientData wr_data) {
 	CXString	ATTR_KIND;
 	const char* NIDDLE;
 
@@ -66,7 +66,7 @@ ACLSPV_ABI_IMPL enum CXChildVisitResult aclemit_iter_entry_point(CXCursor h_cur,
 			EXEC_MODEL = SpvExecutionModelGLCompute;	/** fallback */
 
 		if(EXEC_MODEL == SpvExecutionModelGLCompute || EXEC_MODEL == SpvExecutionModelKernel)
-			clang_visitChildren(h_parent, __attr_workgroup, XYZ);
+			clang_visitChildren(h_parent, s_attr_workgroup, XYZ);
 
 		{
 			int ARGI	= clang_Cursor_getNumArguments(h_parent);

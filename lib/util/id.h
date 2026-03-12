@@ -1,10 +1,10 @@
 
 
-#ifndef __lib_build_id
-#define __lib_build_id
+#ifndef aclid_h
+#define aclid_h
 
 /** type id */
-typedef enum {
+typedef enum ID_DEFAULT_ {
 	ID_DEFAULT_VOID = 1, 
 	ID_DEFAULT_I8,
 	ID_DEFAULT_U8,

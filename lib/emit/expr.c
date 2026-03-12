@@ -28,13 +28,6 @@
 
 #include <spirv/unified1/spirv.h>
 
-
-static enum CXChildVisitResult emit_expr(
-		CXCursor h_cur,
-		CXCursor h_parent,
-		CXClientData h_ctx
-		);
-
 ACLSPV_ABI_IMPL enum EMIT_EXPR_ aclexpr_arithmetic_cast_non_literal(
 		const aclspv_id_t	c_old_id,
 		const aclspv_id_t	c_old_type,
@@ -217,12 +210,12 @@ ACLSPV_ABI_IMPL enum EMIT_EXPR_ aclexpr_arithmetic_cast(
 		switch(aclid_get_bit_width(c_old_type)) {
 			case 64:
 				dbg_prefix();
-				dbg_call(fprintf, (stderr, "Cast from literal(double): %f\n", c_old_literal.m_dbl));
+				dbg_call(fprintf, (stderr, "Cast from literal(double): %f\n", (float)c_old_literal.m_dbl));
 				RESULT.m_api_intmax = (imax)c_old_literal.m_dbl;
 				break;
 			case 32:
 				dbg_prefix();
-				dbg_call(fprintf, (stderr, "Cast from literal(float): %f\n", c_old_literal.m_flt));
+				dbg_call(fprintf, (stderr, "Cast from literal(float): %f\n", (float)c_old_literal.m_flt));
 				RESULT.m_api_intmax = (imax)c_old_literal.m_flt;
 				break;
 			default:
@@ -241,7 +234,7 @@ ACLSPV_ABI_IMPL enum EMIT_EXPR_ aclexpr_arithmetic_cast(
 			case 64:
 				RESULT.m_dbl = (double)c_old_literal.m_api_intmax;
 				dbg_prefix();
-				dbg_call(fprintf, (stderr, "Literal result(double): %f\n", RESULT.m_dbl));
+				dbg_call(fprintf, (stderr, "Literal result(double): %f\n", (float)RESULT.m_dbl));
 				break;
 
 			case 32:
@@ -632,49 +625,6 @@ ae2f_inline static enum EMIT_EXPR_ emit_expr_bin_2(
 	return EMIT_EXPR_SUCCESS_LITERAL;
 }
 
-/** when error occurs, return value will be 1 */
-ae2f_inline static aclspv_id_t emit_expr_type(const CXType type, const h_util_ctx_t CTX)
-{
-	aclspv_id_t	TYPE_ID = 0;
-
-	switch((uintmax_t)type.kind) {
-		case CXType_Int:
-		case CXType_UInt:
-			TYPE_ID = aclid_mk_default_id(ID_DEFAULT_I32, CTX);
-			break;
-
-		case CXType_Short:
-		case CXType_UShort:
-			TYPE_ID = aclid_mk_default_id(ID_DEFAULT_I16, CTX);
-			break;
-
-		case CXType_SChar:
-		case CXType_UChar:
-			TYPE_ID = aclid_mk_default_id(ID_DEFAULT_I8, CTX);
-			break;
-
-		case CXType_Float:
-			TYPE_ID = aclid_mk_default_id(ID_DEFAULT_F32, CTX);
-			break;
-
-		case CXType_Double:
-			TYPE_ID = aclid_mk_default_id(ID_DEFAULT_F64, CTX);
-			break;
-
-		case CXType_Long:
-		case CXType_ULong:
-		case CXType_LongLong:
-		case CXType_ULongLong:
-			TYPE_ID = aclid_mk_default_id(ID_DEFAULT_I64, CTX);
-			break;
-
-		default:
-			TYPE_ID = 0;
-			break;
-	}
-
-	return TYPE_ID;
-}
 #endif
 
 
@@ -865,13 +815,12 @@ ae2f_inline static int emit_expr_carve_one_scale(
 
 		case UTIL_LITERAL_MASK_LITERAL: case UTIL_LITERAL_LITERAL:
 			{
-				struct util_literal_eval_ EVAL_LIT;
-
-				EVAL_LIT = util_literal_eval2(
+				struct util_literal_eval_ EVAL_LIT 
+					= util_literal_eval2(
 						LST_EXTRA[0].m_literal
 						, LST_EXTRA[1].m_literal
-						, LST_SCALE_BUF[5]
-						,LST_SCALE_BUF[UTIL_OPBINCFG_RESTYID]
+						, (enum SpvOp_)LST_SCALE_BUF[5]
+						,(e_id_default)LST_SCALE_BUF[UTIL_OPBINCFG_RESTYID]
 						);
 
 				if(EVAL_LIT.m_found)
@@ -976,7 +925,7 @@ static enum CXChildVisitResult emit_expr(
 		u32_least	m_count_oprnd;
 	} cmdcounterstckelm;
 
-	char aclspv_STATICASSERT_ELMSIZE[sizeof(exprstck) == sizeof(cmdcounterstckelm) && sizeof(cmdcounterstckelm) == sizeof(u32_least)];
+	ae2f_unused char aclspv_STATICASSERT_ELMSIZE[sizeof(exprstck) == sizeof(cmdcounterstckelm) && sizeof(cmdcounterstckelm) == sizeof(u32_least)];
 
 #define	BUF_EXPRSTCK(a)	((exprstck* ae2f_restrict)(EXPRSTCK).m_p)
 #define	GETLASTELEXPRSTCK(a)	BUF_EXPRSTCK(c_stck)[EXPRSTCK_COUNT - 1]
@@ -989,8 +938,6 @@ static enum CXChildVisitResult emit_expr(
 		= (void*)(((uptr* ae2f_restrict)(rdwr_data)) + 6);
 
 	util_opbincfg_extra* ae2f_restrict	LST_EXTRA;
-
-	(void)aclspv_STATICASSERT_ELMSIZE;
 
 #if 1
 	if(EXPRSTCK_COUNT) {

@@ -13,7 +13,7 @@
 #include <string.h>
 
 /** 
- * @param aclspv_wrd_t* ae2f_restrict wr_location
+ * @fn static enum CXChildVisitResult	attr_location(CXCursor h_cur, CXCursor h_parent, aclspv_wrd_t* ae2f_restrict wr_location)
  * */
 static enum CXChildVisitResult	attr_location(CXCursor h_cur, CXCursor h_parent, CXClientData ae2f_restrict wr_location) {
 	CXString TEXT;

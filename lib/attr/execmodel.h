@@ -9,7 +9,9 @@
 #include <string.h>
 #include <spirv/unified1/spirv.h>
 
-/** @param enum SpvExecutionModel_* ae2f_restrict wr_data */
+/** 
+ * @fn static enum CXChildVisitResult attr_execmodel(CXCursor h_cur, CXCursor h_parent, enum SpvExecutionModel_* ae2f_restrict wr_data)
+ * */
 static enum CXChildVisitResult attr_execmodel(CXCursor h_cur, CXCursor h_parent, CXClientData ae2f_restrict wr_data) {
 	CXString	ATTR_KIND;
 	const char*	NIDDLE;

@@ -31,7 +31,7 @@
 
 #include <spirv/unified1/spirv.h>
 
-static enum CXChildVisitResult	__attr_set(CXCursor h_cur, CXCursor h_parent, CXClientData ae2f_restrict h_data) {
+static enum CXChildVisitResult	s_attr_set(CXCursor h_cur, CXCursor h_parent, CXClientData ae2f_restrict h_data) {
 	CXString TEXT;
 	enum CXChildVisitResult RES = CXChildVisit_Break;
 	const char* NEEDLE;
@@ -205,7 +205,7 @@ LBL_ABRT_NALLOC:
 
 		case SpvStorageClassStorageBuffer:
 			clang_visitChildren(h_cur
-					, __attr_set
+					, s_attr_set
 					, &INFO->m_bindable.m_set
 					);
 
@@ -286,11 +286,11 @@ LBL_ABRT_NALLOC:
 				}
 
 				ae2f_expected_if(SPECID_WORK != 0xFFFFFFFF) {
-					const aclspv_id_t _SPECIDSPIRV 
+					const aclspv_id_t SPECIDSPIRV_ 
 						= aclutil_mk_constant_spec_id(SPECID_WORK, NUM_ARR, CTX);
 
 					const aclspv_id_t SPECIDSPIRV
-						= _SPECIDSPIRV ? _SPECIDSPIRV : 
+						= SPECIDSPIRV_ ? SPECIDSPIRV_ : 
 						aclutil_mk_constant_spec64_id(
 								SPECID_WORK
 								, NUM_ARR
@@ -402,7 +402,7 @@ LBL_ABRT_NALLOC:
 
 					INFO->m_unified.m_var_type_id = aclutil_mk_cxtp_ptr(
 							I32V4
-							, INFO->m_unified.m_storage_class
+							, (enum SpvStorageClass_)INFO->m_unified.m_storage_class
 							, CTX
 							);
 				}

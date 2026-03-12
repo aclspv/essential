@@ -6,6 +6,7 @@ project(aclspv VERSION 0)
 
 # Set this source directory as the tree root for project.
 set(ae2f_ProjRoot ${CMAKE_CURRENT_SOURCE_DIR} CACHE STRING "Tree root for project")
+set(ae2f_BinRoot ${CMAKE_CURRENT_BINARY_DIR} CACHE STRING "Tree root for project")
 set(ae2f_submod  .submod CACHE STRING "Relative path to submodule (subdirectory)")
 
 option(aclspv_N_RELOAD_ALWAYS	"reloads aclspv always on configuration when set `OFF`" ON)
@@ -39,6 +40,7 @@ endif()
 
 ae2f_CoreLibFetchX(ae2f Core	main)
 ae2f_CoreLibFetchX(ae2f Preproc	main)
+ae2f_CoreLibFetchX(ae2f Pat	master)
 
 ae2f_CoreLibFetchX(KhronosGroup SPIRV-Headers main)
 
@@ -134,7 +136,7 @@ target_include_directories(${ae3f__aclspvABI__TENT}
 	PRIVATE lib ${CLANG_INCLUDE_DIRS}
 	)
 
-target_link_libraries(${ae3f__aclspvABI__TENT} PUBLIC libclang)
+target_link_libraries(${ae3f__aclspvABI__TENT} PUBLIC libclang ae2f::Pat)
 
 ae2f_CoreTestTentVerbose(${ae3f__aclspvABI__TENT} ./test/lifespan)
 ae2f_CoreTestTentVerbose(${ae3f__aclspvABI__TENT} ./test/util)
