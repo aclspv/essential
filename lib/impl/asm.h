@@ -36,7 +36,7 @@ ae2f_inline static ae2f_noexcept e_aclspv_compile_t impl_asm(
 	unless(h_ctx->m_ret.m_p)		return ACLSPV_COMPILE_ALLOC_FAILED;
 
 	get_wrd_of_vec(&h_ctx->m_ret)[0] = SpvMagicNumber;
-	get_wrd_of_vec(&h_ctx->m_ret)[1] = SpvVersion & 0x10000;
+	get_wrd_of_vec(&h_ctx->m_ret)[1] = SpvVersion | 0x10000;
 	get_wrd_of_vec(&h_ctx->m_ret)[2] = 0;
 	get_wrd_of_vec(&h_ctx->m_ret)[3] = h_ctx->m_num_ret;
 	get_wrd_of_vec(&h_ctx->m_ret)[4] = 0;

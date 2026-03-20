@@ -39,7 +39,6 @@ if(NOT TARGET ae2f::CoreScript)
 endif()
 
 ae2f_CoreLibFetchX(ae2f Core	main)
-ae2f_CoreLibFetchX(ae2f Preproc	main)
 ae2f_CoreLibFetchX(ae2f Pat	master)
 
 ae2f_CoreLibFetchX(KhronosGroup SPIRV-Headers main)
@@ -111,12 +110,9 @@ add_library(
 	${PROJECT_SOURCE_DIR}/test/lifespan/ocl.auto.h
 	)
 
-target_link_libraries(${ae3f__aclspvCore__TENT} INTERFACE
-	ae2f::Core ae2f::Preproc
-	)
-
-target_link_libraries(${ae3f__aclspvCore__TENT} INTERFACE 
-	SPIRV-Headers::SPIRV-Headers
+target_link_libraries(${ae3f__aclspvCore__TENT} 
+	INTERFACE SPIRV-Headers::SPIRV-Headers
+	INTERFACE ae2f::Pat
 	)
 
 file(GLOB_RECURSE aclspv-src ${PROJECT_SOURCE_DIR}/lib/*)
@@ -136,7 +132,7 @@ target_include_directories(${ae3f__aclspvABI__TENT}
 	PRIVATE lib ${CLANG_INCLUDE_DIRS}
 	)
 
-target_link_libraries(${ae3f__aclspvABI__TENT} PUBLIC libclang ae2f::Pat)
+target_link_libraries(${ae3f__aclspvABI__TENT} PUBLIC libclang)
 
 ae2f_CoreTestTentVerbose(${ae3f__aclspvABI__TENT} ./test/lifespan)
 ae2f_CoreTestTentVerbose(${ae3f__aclspvABI__TENT} ./test/util)

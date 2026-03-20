@@ -40,6 +40,8 @@ __kernel void KERNEL_0(
 			*/
 		       __local double __attribute__((annotate("aclspv_specid(0)")))
 		       locu32_0[LOCU32_COUNT], /** local(workgroup) must be array */
+
+		       __local float locuf32_1,
 		       __global float* globf32, 
 		       float pushf32, 
 

@@ -6,6 +6,7 @@
 #ifndef	aclspv_impl_conf_h
 #define aclspv_impl_conf_h
 
+#include <util/ctx.h>
 #include <util/emitx.h>
 #include <util/id.h>
 
@@ -48,10 +49,7 @@ ae2f_inline static e_aclspv_compile_t impl_conf(
 				, SpvCapabilityShader))
 		return ACLSPV_COMPILE_ALLOC_FAILED_CFG;
 
-
-	h_ctx->m_is_for_gl = 1;
-	h_ctx->m_is_logical = 1;
-	unless(h_ctx->m_is_logical) {
+	unless(h_ctx->m_flag0 & ACLSPV_CTX_FLAG0_LOGICAL) {
 		ae2f_expected_but_else(wrd_caps_count = util_emitx_2(
 					&wrd_caps
 					, wrd_caps_count
@@ -60,7 +58,7 @@ ae2f_inline static e_aclspv_compile_t impl_conf(
 			return ACLSPV_COMPILE_ALLOC_FAILED_CFG;
 	}
 
-	unless(h_ctx->m_is_for_gl) {
+	unless(h_ctx->m_flag0 & ACLSPV_CTX_FLAG0_OGL) {
 		ae2f_expected_but_else(wrd_caps_count = util_emitx_2(
 					&wrd_caps
 					, wrd_caps_count
@@ -88,11 +86,11 @@ ae2f_inline static e_aclspv_compile_t impl_conf(
 	/*** Memory Model **/
 	ae2f_expected_but_else(h_ctx->m_count.m_memmodel = util_emitx_3(
 				&h_ctx->m_section.m_memmodel
-				, 0, SpvOpMemoryModel
-				, h_ctx->m_is_logical 
-				? SpvAddressingModelLogical
-				: h_ctx->m_is_buffer_64 ? SpvAddressingModelPhysical64 : SpvAddressingModelPhysical32 
-				, h_ctx->m_is_for_gl ? SpvMemoryModelGLSL450 : SpvMemoryModelVulkan))
+				, 0
+				, SpvOpMemoryModel
+				, h_ctx->m_flag0 & ACLSPV_CTX_FLAG0_LOGICAL ? SpvAddressingModelLogical
+				: h_ctx->m_flag0 & ACLSPV_CTX_FLAG0_BUF64 ? SpvAddressingModelPhysical64 : SpvAddressingModelPhysical32 
+				, h_ctx->m_flag0 & ACLSPV_CTX_FLAG0_OGL ? SpvMemoryModelGLSL450 : SpvMemoryModelVulkan))
 		return ACLSPV_COMPILE_ALLOC_FAILED_CFG;
 
 	return ACLSPV_COMPILE_OK;

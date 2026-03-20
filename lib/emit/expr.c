@@ -703,6 +703,8 @@ ae2f_inline static int s_carve_one_scale(
 		= (void* ae2f_restrict)(LST_SCALE_BUF + NUM_OPRND + UTIL_OPBINCFG_END);
 
 	ae2fpat_assertassume(LST_SCALE_BUF);
+	ae2fpat_assertassume(rdwr_prv_extra);
+	ae2fpat_assertassume(rdwr_prv_idval);
 
 	switch(NUM_OPRND) {
 		default:
@@ -726,7 +728,7 @@ ae2f_inline static int s_carve_one_scale(
 									, LST_EXTRA[0].m_type_original
 									, LST_EXTRA[0].m_mask_literal
 									, OLD_LITERAL
-									, rdwr_prv_idval
+									, &ID_REQ
 									, LST_SCALE_BUF[UTIL_OPBINCFG_RESTYID]
 									, &rdwr_prv_extra->m_literal
 									, CTX
@@ -748,7 +750,7 @@ ae2f_inline static int s_carve_one_scale(
 						}
 					}
 
-					ID_REQ = *rdwr_prv_idval;
+					*rdwr_prv_idval = ID_REQ;
 
 					rdwr_prv_extra->m_mask_literal
 						&= LST_SCALE_BUF[UTIL_OPBINCFG_MASKLITERAL];

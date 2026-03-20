@@ -3,6 +3,7 @@
 
 #include "./decl_glob_obj.h"
 #include "aclspv.h"
+#include "attr/execmodel.h"
 
 #include <assert.h>
 #include <string.h>
@@ -57,11 +58,7 @@ LBL_FINI:
 }
 
 static enum CXChildVisitResult emit_decl_glob_obj_visit_fetch(CXCursor h_cur, CXCursor h_parent, CXClientData h_data) {
-#if	!defined(NDEBUG) || !NDEBUG
-
-	CXString	PARAM_NAME, FUNC_NAME;
-	aclspv_wrdcount_t	POS_FOR_LOCAL;
-#endif
+	ae2f_unused aclspv_wrdcount_t	POS_FOR_LOCAL = 0xFFFFFFFF;
 	CXString	PARAM_TY_NAME;
 	CXType		PARAM_TY;
 
@@ -123,49 +120,58 @@ static enum CXChildVisitResult emit_decl_glob_obj_visit_fetch(CXCursor h_cur, CX
 	INFO->m_bindable.m_binding		= (aclspv_wrd_t)BIND_IDX;
 
 	/** FETCH BIND END */
-#if	!defined(NDEBUG) || !NDEBUG
-	FUNC_NAME	= clang_getCursorSpelling(h_parent);
-	PARAM_NAME	= clang_getCursorSpelling(h_cur);
 
-	{
-		char* ae2f_restrict const	
-			NAME_MERGE = malloc(strlen(FUNC_NAME.data) + strlen(PARAM_NAME.data) + 3);
-		const aclspv_wrdcount_t	POS = CTX->m_count.m_name;
-		unless(NAME_MERGE) {
+	if(CTX->m_flag0 & ACLSPV_CTX_FLAG0_SYMBOL) {
+		CXString	PARAM_NAME, FUNC_NAME;
+		FUNC_NAME	= clang_getCursorSpelling(h_parent);
+		PARAM_NAME	= clang_getCursorSpelling(h_cur);
+
+		{
+			char* ae2f_restrict const	
+				NAME_MERGE = malloc(strlen(FUNC_NAME.data) + strlen(PARAM_NAME.data) + 3);
+			const aclspv_wrdcount_t	POS = CTX->m_count.m_name;
+			unless(NAME_MERGE) {
 LBL_ABRT_NALLOC:
-			CTX->m_err = ACLSPV_COMPILE_ALLOC_FAILED;
-			free(NAME_MERGE);
-			clang_disposeString(FUNC_NAME);
-			clang_disposeString(PARAM_NAME);
-			return CXChildVisit_Break;
-		}
+				CTX->m_err = ACLSPV_COMPILE_ALLOC_FAILED;
+				free(NAME_MERGE);
+				clang_disposeString(FUNC_NAME);
+				clang_disposeString(PARAM_NAME);
+				return CXChildVisit_Break;
+			}
 
-		strcpy(NAME_MERGE, FUNC_NAME.data);
-		strcat(NAME_MERGE, "::");
-		strcat(NAME_MERGE, PARAM_NAME.data);
+			strcpy(NAME_MERGE, FUNC_NAME.data);
+			strcat(NAME_MERGE, "::");
+			strcat(NAME_MERGE, PARAM_NAME.data);
 
 
-#if	!defined(NDEBUG) || !NDEBUG
 #define EMIT_POS	CTX->m_count.m_name
-		unless((POS_FOR_LOCAL = EMIT_POS = emit_opcode(&CTX->m_section.m_name, EMIT_POS, SpvOpName, 0))) 
-			goto LBL_ABRT_NALLOC;
-		unless((EMIT_POS = util_emit_wrd(&CTX->m_section.m_name, EMIT_POS, INFO->m_unified.m_var_id)))
-			goto LBL_ABRT_NALLOC;
-		unless((EMIT_POS = util_emit_str(&CTX->m_section.m_name, EMIT_POS, NAME_MERGE))) 
-			goto LBL_ABRT_NALLOC;
-		set_oprnd_count_for_opcode(get_wrd_of_vec(&CTX->m_section.m_name)[POS], EMIT_POS - POS - 1);
+			ae2f_expected_but_else((POS_FOR_LOCAL = EMIT_POS = emit_opcode(
+							&CTX->m_section.m_name
+							, EMIT_POS
+							, SpvOpName, 0))) 
+				goto LBL_ABRT_NALLOC;
+			ae2f_expected_but_else((EMIT_POS = util_emit_wrd(
+							&CTX->m_section.m_name
+							, EMIT_POS
+							, INFO->m_unified.m_var_id)))
+				goto LBL_ABRT_NALLOC;
+			ae2f_expected_but_else((EMIT_POS = util_emit_str(
+							&CTX->m_section.m_name
+							, EMIT_POS
+							, NAME_MERGE))) 
+				goto LBL_ABRT_NALLOC;
+			set_oprnd_count_for_opcode(
+					get_wrd_of_vec(&CTX->m_section.m_name)[POS]
+					, EMIT_POS - POS - 1);
 #undef	EMIT_POS
-#endif
 
 
-		free(NAME_MERGE);
+			free(NAME_MERGE);
+		}
+		clang_disposeString(FUNC_NAME);
+		clang_disposeString(PARAM_NAME);
+
 	}
-#endif
-
-#if	!defined(NDEBUG) || !NDEBUG
-	clang_disposeString(FUNC_NAME);
-	clang_disposeString(PARAM_NAME);
-#endif
 
 	INFO->m_unified.m_storage_class = SpvStorageClassMax;
 
@@ -364,10 +370,10 @@ LBL_ABRT_NALLOC:
 				CTX->m_id	+= 6;
 				CTX->m_err	 = ACLSPV_COMPILE_OK;
 
-#if !defined(NDEBUG) || !NDEBUG
-				((aclspv_wrd_t* ae2f_restrict)CTX->m_section.m_name.m_p)[POS_FOR_LOCAL] 
-					= INFO->m_unified.m_var_id;
-#endif
+				if(CTX->m_flag0 & ACLSPV_CTX_FLAG0_SYMBOL) {
+					((aclspv_wrd_t* ae2f_restrict)CTX->m_section.m_name.m_p)[POS_FOR_LOCAL]
+						= INFO->m_unified.m_var_id;
+				}
 
 				ae2f_expected_but_else(CTX->m_count.m_vars = util_emitx_variable(
 							&CTX->m_section.m_vars
@@ -413,6 +419,7 @@ LBL_ABRT_NALLOC:
 			if(INFO->m_io.m_location == 0xFFFFFFFF)
 				INFO->m_io.m_location = 0;
 #define		THIS_ENTP	((util_entp_t* ae2f_restrict)CTX->m_fnlist.m_entp.m_p)[CTX->m_tmp.m_w0]
+
 			/** TODO: this will now uintvec4. make this flexible some day */
 			assert(IO_ARG_IDX < THIS_ENTP.m_io.m_num);
 			INFO->m_unified.m_var_id		= THIS_ENTP.m_io.m_anchour + (aclspv_wrd_t)IO_ARG_IDX;
@@ -435,9 +442,9 @@ LBL_ABRT_NALLOC:
 						, INFO->m_unified.m_storage_class
 						)) return CXChildVisit_Break;
 
-#if !defined(NDEBUG) || !NDEBUG
-			get_wrd_of_vec(&CTX->m_section.m_name)[POS_FOR_LOCAL] = INFO->m_unified.m_var_id;
-#endif
+			if(CTX->m_flag0 & ACLSPV_CTX_FLAG0_SYMBOL) {
+				get_wrd_of_vec(&CTX->m_section.m_name)[POS_FOR_LOCAL] = INFO->m_unified.m_var_id;
+			}
 #undef		THIS_ENTP
 
 			++IO_ARG_IDX;

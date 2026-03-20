@@ -1,6 +1,7 @@
 /** @file alcpsv.c */
 
 #include <assert.h>
+#include <stdint.h>
 #include <string.h>
 
 #include <aclspv.h>
@@ -16,6 +17,7 @@
 #include "./util/ctx.h"
 #include "./util/entp.h"
 #include "./util/fn.h"
+#include "./util/fnctx.h"
 #include "./util/iddef.h"
 #include "./util/cursor.h"
 #include "./util/scale.h"
@@ -24,6 +26,7 @@
 #include "./emit/count_fn.h"
 #include "./emit/decl_glob_obj.h"
 #include "./emit/entp_body.h"
+#include "ae2f/c90/StdInt.h"
 
 
 /**
@@ -56,6 +59,11 @@ aclspv_compile(
 	assert(rwr_output);
 
 	memset(&CTX, 0, sizeof(CTX));
+
+#if	1	/** just know this: this is just for development step. */
+	CTX.m_flag0 |= ACLSPV_CTX_FLAG0_SYMBOL;
+#endif
+
 	_aclspv_grow_vec(_aclspv_malloc, _aclspv_free, CTX.m_type_uniques		, (1 << 30));
 	_aclspv_grow_vec(_aclspv_malloc, _aclspv_free, CTX.m_scale_vars			, (1 << 30));
 	_aclspv_grow_vec(_aclspv_malloc, _aclspv_free, CTX.m_cursors			, (1 << 30));
@@ -189,13 +197,16 @@ aclspv_compile(
 					,  (size_t)(CTX.m_tmp.m_w0 = IDX)
 					);
 
+			aclutil_fnctx	FNCTX;
+			FNCTX.m_ctx	= &CTX;
+			FNCTX.m_state0	= 0;
+
 			CTX.m_count.m_fnimpl = 0;
 
 			ae2f_expected_but_else(CTX.m_scale_vars.m_p && FNSCALE) {
 				CTX.m_err = ACLSPV_COMPILE_MET_INVAL;
 				goto LBL_CLEANUP;
 			}
-
 
 			CTX.m_err = ACLSPV_COMPILE_ALLOC_FAILED;
 			CTX.m_tmp.m_w0 = IDX;
@@ -245,11 +256,11 @@ aclspv_compile(
 
 
 #undef	FNINFO
-
-			CTX.m_has_function_ret	= 0;
+			FNCTX.m_state0 &= (uint_leastenum_t)~ACLUTIL_FNCTX_STATE0_FNRET;
 			clang_visitChildren(((util_entp_t* ae2f_restrict)CTX.m_fnlist.m_entp.m_p)[IDX].m_fn
 					, aclemit_entp_body
-					, &CTX);
+					, &FNCTX);
+
 			ae2f_unexpected_but_if(STATE_VAL) goto LBL_CLEANUP;
 
 			if(CTX.m_count.m_fnimpl) {
@@ -272,7 +283,7 @@ aclspv_compile(
 				CTX.m_count.m_fndef += CTX.m_count.m_fnimpl;
 			}
 
-			unless(CTX.m_has_function_ret) {
+			unless(FNCTX.m_state0 & ACLUTIL_FNCTX_STATE0_FNRET) {
 				ae2f_expected_but_else(CTX.m_count.m_fndef = emit_opcode(
 							&CTX.m_section.m_fndef
 							, CTX.m_count.m_fndef

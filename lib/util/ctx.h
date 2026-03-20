@@ -11,16 +11,32 @@
 
 #define	_free(a, b)	free(a)
 
-typedef struct a_aclspv_ctx {
-	aclspv_wrd_t		m_has_function_ret : 1;
-	aclspv_wrd_t		m_is_buffer_64 : 1;
-	aclspv_wrd_t		m_not_dbg : 1;
-	aclspv_wrd_t		m_is_for_gl : 1;
 
-	/**
-	 * @brief	when on, ignores `m_is_buffer_64`.
-	 * */
-	aclspv_wrd_t		m_is_logical : 1;
+#define	__ENUM()	\
+	__X(SYMBOL),	\
+	__X(BUF64),	\
+	__X(OGL),	\
+	__X(LOGICAL)
+
+#define	__X(A)	ACLSPV_CTX_FLAGPAD0_##A
+
+enum ACLSPV_CTX_FLAGPAD0_ {
+	__ENUM()
+};
+
+#undef	__X
+#define	__X(A)	ACLSPV_CTX_FLAG0_##A = 1 << ACLSPV_CTX_FLAGPAD0_##A
+
+enum ACLSPV_CTX_FLAG0_ {
+	__ENUM()
+};
+
+#undef	__X
+#undef	__ENUM
+
+typedef struct a_aclspv_ctx {
+	/** @brief see `ACLSPV_CTX_FLAG0_` */
+	uint_leastenum_t	m_flag0;
 
 	e_aclspv_compile_t	m_err;
 

@@ -3,7 +3,7 @@
 #ifndef constant_ptr_auto_h
 #define constant_ptr_auto_h
 
-#include <ae2f/Macro.h>
+#include <ae2f/pat/macrostruct.h>
 
 #if !__ae2f_MACRO_GENERATED
 

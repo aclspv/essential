@@ -1,8 +1,6 @@
 #include "./entp_body.h"
 #include "./expr.h"
 
-#include <stdio.h>
-
 #include <aclspv.h>
 #include <aclspv/abi.h>
 
@@ -12,7 +10,7 @@
 
 #include <clang-c/CXString.h>
 
-#include <util/ctx.h>
+#include <util/fnctx.h>
 #include <util/emitx.h>
 #include <util/iddef.h>
 #include <util/constant.h>
@@ -21,14 +19,14 @@
 #include <util/literal.h>
 #include <util/u32_to_hex8.auto.h>
 #include <util/cxtp.h>
+#include <util/log.h>
 
 #include <attr/specid.h>
 
 #include <spirv/unified1/spirv.h>
 
 
-#if	!defined(NDEBUG) || !NDEBUG
-#define	___mkname_on_dbg(c_ID)			{					\
+#define	___mkname_on_dbg(c_ID)	if(CTX->m_flag0 & ACLSPV_CTX_FLAG0_SYMBOL) {	\
 	const aclspv_wrd_t POS	= CTX->m_count.m_name;				\
 	_aclspv_grow_vec(_aclspv_malloc, _aclspv_free				\
 			, CTX->m_tmp.m_v0, strlen(SPELL.data) + 10		\
@@ -61,12 +59,10 @@
 				&CTX->m_section.m_name)[POS]				\
 				, CTX->m_count.m_name - POS - 1);				\
 }
-#else
-#define	___mkname_on_dbg(a)
-#endif
 
 ACLSPV_ABI_IMPL enum CXChildVisitResult aclemit_entp_body(CXCursor h_cur, CXCursor h_parent, CXClientData rdwr_data) {
-#define	CTX		((h_util_ctx_t)rdwr_data)
+#define	FNCTX		((aclutil_fnctx* ae2f_restrict) rdwr_data)
+#define	CTX		FNCTX->m_ctx
 #define	jmpfail(c_why)	{ (CTX)->m_err = (c_why); goto LBL_FAIL; }
 	const enum CXCursorKind KIND	= (h_cur).kind;
 	const CXString KINDSPELL	= clang_getCursorKindSpelling(KIND);
@@ -375,7 +371,8 @@ ACLSPV_ABI_IMPL enum CXChildVisitResult aclemit_entp_body(CXCursor h_cur, CXCurs
 						, CTX->m_count.m_fnimpl
 						, SpvOpReturn, 0
 						)) goto LBL_FAIL;
-			CTX->m_has_function_ret = 1;
+			FNCTX->m_state0 |= ACLUTIL_FNCTX_STATE0_FNRET;
+
 			goto LBL_DONE;
 
 		case CXCursor_LabelStmt:
