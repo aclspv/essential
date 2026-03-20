@@ -6,13 +6,16 @@
 
 #include "./id.h"
 #include "./ctx.h"
+#include "aclspv/abi.h"
+#include "aclspv/spvty.h"
 
 /**
  * @brief type alias for `enum ID_DEFAULT_`
  * */
 typedef uint_leastenum_t B_id_default_t;
 
-
+ae2f_ccconst aclspv_bool_t aclid_is_castable(const B_id_default_t);
+ae2f_ccconst aclspv_bool_t aclid_is_castable1(const B_id_default_t, const B_id_default_t);
 ae2f_ccconst aclspv_bool_t aclid_is_unsigned(const B_id_default_t c_id_default);
 ae2f_ccconst aclspv_bool_t aclid_is_signed(const B_id_default_t c_id_default);
 
@@ -23,6 +26,7 @@ ae2f_ccconst aclspv_bool_t aclid_is_float(const B_id_default_t c_id_default);
 ae2f_ccconst aclspv_bool_t aclid_is_default(const B_id_default_t c_id_default);
 
 ae2f_ccconst aclspv_bool_t aclid_is_number(const B_id_default_t c_id_default);
+ae2f_ccconst aclspv_bool_t aclid_is_castable(const B_id_default_t c_id_default);
 
 ae2f_ccconst B_id_default_t aclid_getty_float(unsigned bit_width);
 

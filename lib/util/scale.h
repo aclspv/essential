@@ -10,7 +10,6 @@
 #include "../vec.auto.h"
 #include <assert.h>
 
-#include "./log.h"
 
 typedef struct x_scale x_scale;
 typedef x_scale* ae2f_restrict h_scale_t;

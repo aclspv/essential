@@ -9,7 +9,7 @@
 #include <stdio.h>
 #include <string.h>
 
-static enum CXChildVisitResult	attr_specid(CXCursor h_cur, CXCursor h_parent, CXClientData ae2f_restrict wr_specid) {
+static enum CXChildVisitResult	s_attr_specid(CXCursor h_cur, CXCursor h_parent, CXClientData ae2f_restrict wr_specid) {
 	CXString TEXT;
 	const char* NEEDLE;
 	unsigned SPECID = *((aclspv_wrd_t* ae2f_restrict)wr_specid);

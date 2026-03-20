@@ -178,7 +178,7 @@ LBL_ABRT_NALLOC:
 	/** Attriburte: storage class */
 	clang_visitChildren(
 			h_cur
-			, attr_storage_class
+			, s_attr_storage_class
 			, &INFO->m_unified.m_storage_class
 			);
 
@@ -276,7 +276,7 @@ LBL_ABRT_NALLOC:
 
 				clang_visitChildren(
 						h_cur
-						, attr_specid 
+						, s_attr_specid 
 						, &SPECID_WORK
 						);
 
@@ -409,7 +409,7 @@ LBL_ABRT_NALLOC:
 			}
 
 			INFO->m_io.m_location = 0xFFFFFFFF;
-			clang_visitChildren(h_cur, attr_location, &INFO->m_io.m_location);
+			clang_visitChildren(h_cur, s_attr_location, &INFO->m_io.m_location);
 			if(INFO->m_io.m_location == 0xFFFFFFFF)
 				INFO->m_io.m_location = 0;
 #define		THIS_ENTP	((util_entp_t* ae2f_restrict)CTX->m_fnlist.m_entp.m_p)[CTX->m_tmp.m_w0]

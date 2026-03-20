@@ -265,7 +265,7 @@ ACLSPV_ABI_IMPL enum CXChildVisitResult aclemit_entp_body(CXCursor h_cur, CXCurs
 #if 1
 					aclspv_id_t	SPECID = 0xFFFFFFFF;
 
-					clang_visitChildren(h_cur, attr_specid, &SPECID);
+					clang_visitChildren(h_cur, s_attr_specid, &SPECID);
 
 					if(SPECID != 0xFFFFFFFF) {
 						/** specid! */

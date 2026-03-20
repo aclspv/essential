@@ -18,7 +18,7 @@
  * 	1 when the attribute is found.
  *
  * */
-static enum CXChildVisitResult	attr_glcmagic(CXCursor h_cur, CXCursor h_parent, CXClientData ae2f_restrict wr_ismagic) {
+static enum CXChildVisitResult	s_attr_glcmagic(CXCursor h_cur, CXCursor h_parent, CXClientData ae2f_restrict wr_ismagic) {
 	CXString TEXT;
 	const char* NEEDLE;
 	TEXT = clang_getCursorSpelling(h_cur);

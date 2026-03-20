@@ -505,8 +505,8 @@ ae2f_extern aclspv_id_t aclutil_mk_cxtp_by_cursor(
 				const aclspv_id_t ELMID	= aclutil_mk_cxtp_by_cursor(c_cursor, ELM, h_ctx);
 				enum SpvStorageClass_	SCLASS = SpvStorageClassMax;
 
-				clang_visitChildren(TYPEDEF, attr_storage_class, &SCLASS);
-				clang_visitChildren(c_cursor, attr_storage_class, &SCLASS);
+				clang_visitChildren(TYPEDEF, s_attr_storage_class, &SCLASS);
+				clang_visitChildren(c_cursor, s_attr_storage_class, &SCLASS);
 
 				if(SCLASS == SpvStorageClassMax)
 					SCLASS = SpvStorageClassFunction;	/** default fallback */
@@ -536,8 +536,8 @@ ae2f_extern aclspv_id_t aclutil_mk_cxtp_by_cursor(
 							, h_ctx);
 				}
 
-				clang_visitChildren(TYPEDEF, attr_specid, &SPECID);
-				clang_visitChildren(c_cursor, attr_specid, &SPECID);
+				clang_visitChildren(TYPEDEF, s_attr_specid, &SPECID);
+				clang_visitChildren(c_cursor, s_attr_specid, &SPECID);
 
 				if(SPECID != 0xFFFFFFFF) {
 					/** specid */

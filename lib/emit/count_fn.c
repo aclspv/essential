@@ -60,7 +60,7 @@ ACLSPV_ABI_IMPL enum CXChildVisitResult aclemit_iter_entry_point(CXCursor h_cur,
 		aclspv_wrd_t		IOCOUNT = 0;
 		CTX->m_err = ACLSPV_COMPILE_ALLOC_FAILED;
 
-		clang_visitChildren(h_parent, attr_execmodel, &EXEC_MODEL);
+		clang_visitChildren(h_parent, s_attr_execmodel, &EXEC_MODEL);
 
 		if(EXEC_MODEL == SpvExecutionModelMax)
 			EXEC_MODEL = SpvExecutionModelGLCompute;	/** fallback */
@@ -73,7 +73,7 @@ ACLSPV_ABI_IMPL enum CXChildVisitResult aclemit_iter_entry_point(CXCursor h_cur,
 			while(ARGI --> 0) {	/** All-Capturing Iterating Annonymous Routine Syntax (ACIARS) */
 				CXCursor ARG	= clang_Cursor_getArgument(h_parent, (unsigned)ARGI);
 				aclspv_wrd_t	STORAGE = SpvStorageClassMax;
-				clang_visitChildren(ARG, attr_storage_class, &STORAGE);
+				clang_visitChildren(ARG, s_attr_storage_class, &STORAGE);
 
 				if(STORAGE == SpvStorageClassInput || STORAGE == SpvStorageClassOutput) {
 					++IOCOUNT;

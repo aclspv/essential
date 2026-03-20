@@ -53,4 +53,12 @@ ACLSPV_ABI_DECL enum EMIT_EXPR_ aclspv_get_expr(
 		, h_util_ctx_t h_ctx
 		);
 
+ACLSPV_ABI_IMPL enum EMIT_EXPR_ aclspv_get_expr2(
+		aclspv_id_t* ae2f_restrict const ret_id
+		, aclspv_id_t* ae2f_restrict const r_type_opt
+		, const CXCursor c_cur
+		, util_literal* ae2f_restrict	wr_literal_opt
+		, h_util_ctx_t h_ctx
+		);
+
 #endif

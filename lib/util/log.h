@@ -17,7 +17,7 @@
 #endif
 
 #ifndef	WARN
-#define	WARN 1
+#define	WARN 	DBG
 #endif
 
 #if WARN
@@ -27,7 +27,7 @@
 #endif
 
 #ifndef	ERROR
-#define	ERROR	1
+#define	ERROR	DBG
 #endif
 
 #if ERROR

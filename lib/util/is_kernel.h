@@ -11,7 +11,7 @@
 
 ae2f_inline static u32_least util_is_kernel(const CXCursor h_fndecl) {
 	enum SpvExecutionModel_ MODEL = SpvExecutionModelMax;
-	clang_visitChildren(h_fndecl, attr_execmodel, &MODEL);
+	clang_visitChildren(h_fndecl, s_attr_execmodel, &MODEL);
 	return (u32_least)(MODEL ^ SpvExecutionModelMax);
 }
 

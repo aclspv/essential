@@ -1,10 +1,10 @@
 #ifndef	aclspv_pass_ctx_auto_h
 #define	aclspv_pass_ctx_auto_h
 
-#include <ae2f/Macro.h>
 #include <stddef.h>
 #include <ae2f/Keys.h>
 #include <ae2f/Cast.h>
+#include <ae2f/pat/macrofunc.h>
 
 typedef struct {
 	void* ae2f_restrict 	m_p;

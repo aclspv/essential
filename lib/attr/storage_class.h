@@ -18,7 +18,7 @@
  * aclspv_wrd_t* ae2f_restrict wr_storage_class
  * )
  * */
-static enum CXChildVisitResult	attr_storage_class(CXCursor h_cur, CXCursor h_parent, CXClientData ae2f_restrict wr_storage_class) {
+static enum CXChildVisitResult	s_attr_storage_class(CXCursor h_cur, CXCursor h_parent, CXClientData ae2f_restrict wr_storage_class) {
 	CXString TEXT;
 	enum CXChildVisitResult RES = CXChildVisit_Break;
 	const char* NEEDLE;

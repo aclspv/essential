@@ -8,7 +8,15 @@
 #include <assert.h>
 #include <spirv/unified1/spirv.h>
 
- ae2f_ccconst aclspv_bool_t aclid_is_unsigned(const B_id_default_t c_id_default) {
+ae2f_ccconst aclspv_bool_t aclid_is_castable(const B_id_default_t c_id) {
+	return aclid_is_arithmetic(c_id);
+}
+
+ae2f_ccconst aclspv_bool_t aclid_is_castable1(const B_id_default_t c_id0, const B_id_default_t c_id1) {
+	return aclid_is_arithmetic(c_id0) && aclid_is_arithmetic(c_id1);
+}
+
+ae2f_ccconst aclspv_bool_t aclid_is_unsigned(const B_id_default_t c_id_default) {
 	switch(c_id_default) {
 		case ID_DEFAULT_U8:
 		case ID_DEFAULT_U16:
@@ -31,7 +39,7 @@
 	return 0;
 }
 
- ae2f_ccconst aclspv_bool_t aclid_is_signed(const B_id_default_t c_id_default) {
+ae2f_ccconst aclspv_bool_t aclid_is_signed(const B_id_default_t c_id_default) {
 	switch(c_id_default) {
 		case ID_DEFAULT_I32:
 		case ID_DEFAULT_I8:
@@ -53,11 +61,11 @@
 	}
 }
 
- ae2f_ccconst aclspv_bool_t aclid_is_int(const B_id_default_t c_id_default) {
+ae2f_ccconst aclspv_bool_t aclid_is_int(const B_id_default_t c_id_default) {
 	return aclid_is_unsigned(c_id_default) || aclid_is_signed(c_id_default);
 }
 
- ae2f_ccconst aclspv_bool_t aclid_is_float(const B_id_default_t c_id_default) {
+ae2f_ccconst aclspv_bool_t aclid_is_float(const B_id_default_t c_id_default) {
 	switch(c_id_default) {
 		case ID_DEFAULT_F16:
 		case ID_DEFAULT_F32:
@@ -79,7 +87,7 @@
 	}
 }
 
- ae2f_ccconst aclspv_bool_t aclid_is_default(const B_id_default_t c_id_default) {
+ae2f_ccconst aclspv_bool_t aclid_is_default(const B_id_default_t c_id_default) {
 	switch(c_id_default) {
 		case ID_DEFAULT_F16:
 		case ID_DEFAULT_F32:
@@ -100,12 +108,12 @@
 	}
 }
 
- ae2f_ccconst aclspv_bool_t 
+ae2f_ccconst aclspv_bool_t 
 aclid_is_number(const B_id_default_t c_id_default) {
 	return aclid_is_int(c_id_default) || aclid_is_float(c_id_default);
 }
 
- ae2f_ccconst B_id_default_t aclid_getty_float(unsigned bit_width) {
+ae2f_ccconst B_id_default_t aclid_getty_float(unsigned bit_width) {
 	switch(bit_width) {
 		case 16:
 			return ID_DEFAULT_F16;
@@ -118,7 +126,7 @@ aclid_is_number(const B_id_default_t c_id_default) {
 	}
 }
 
- ae2f_ccconst B_id_default_t aclid_getty_signed(unsigned bit_width) {
+ae2f_ccconst B_id_default_t aclid_getty_signed(unsigned bit_width) {
 	switch(bit_width) {
 		case 8:
 			return ID_DEFAULT_I8;
@@ -133,7 +141,7 @@ aclid_is_number(const B_id_default_t c_id_default) {
 	}
 }
 
- ae2f_ccconst B_id_default_t aclid_getty_unsigned(unsigned bit_width) {
+ae2f_ccconst B_id_default_t aclid_getty_unsigned(unsigned bit_width) {
 	switch(bit_width) {
 		case 8:
 			return ID_DEFAULT_U8;
@@ -148,7 +156,7 @@ aclid_is_number(const B_id_default_t c_id_default) {
 	}
 }
 
- ae2f_ccconst unsigned aclid_get_bit_width(const B_id_default_t c_id_default) {
+ae2f_ccconst unsigned aclid_get_bit_width(const B_id_default_t c_id_default) {
 	switch(c_id_default) {
 		case ID_DEFAULT_I8:
 		case ID_DEFAULT_U8:
@@ -177,7 +185,7 @@ aclid_is_number(const B_id_default_t c_id_default) {
 }
 
 
- ae2f_ccconst aclspv_bool_t aclid_is_arithmetic(const aclspv_id_t c_id) {
+ae2f_ccconst aclspv_bool_t aclid_is_arithmetic(const aclspv_id_t c_id) {
 	return aclid_is_number(c_id);
 }
 
@@ -185,7 +193,7 @@ aclid_is_number(const B_id_default_t c_id_default) {
  * @fn		util_default_decide_cast
  * @returns	0 when invalid
  * */
- ae2f_ccconst B_id_default_t aclid_decide_cast(const e_id_default c_id0, const e_id_default c_id1) {
+ae2f_ccconst B_id_default_t aclid_decide_cast(const e_id_default c_id0, const e_id_default c_id1) {
 	/** one is 0? */
 	unless(c_id0 && c_id1)
 		return c_id0 ? c_id0 : c_id1;
@@ -203,7 +211,7 @@ aclid_is_number(const B_id_default_t c_id_default) {
 		? c_id0 : c_id1;
 }
 
- aclspv_id_t aclid_mk_default_id(
+aclspv_id_t aclid_mk_default_id(
 		const B_id_default_t	c_id_default,
 		h_util_ctx_t	h_ctx
 		)

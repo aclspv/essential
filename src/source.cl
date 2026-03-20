@@ -56,7 +56,7 @@ __kernel void KERNEL_0(
 
 
 kernel_raw(0) void N_KERNEL_0(__constant uintptr_t* consti32, storage_class(3) const uint* u32out) {
-	int a0 = 3.2;
+	int a0 = (float)(int)3.2;
 	int a1 
 #if 0
 		= 1
@@ -66,7 +66,7 @@ kernel_raw(0) void N_KERNEL_0(__constant uintptr_t* consti32, storage_class(3) c
 			;
 	int a2 = a0 - a1;
 #if 1
-	int a = a0 + a1 + a2 + 12.2;
+	int a = (double)(int)(float)(a0 + a1 + a2 + 12.2);
 #endif
 
 
