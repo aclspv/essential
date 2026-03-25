@@ -433,3 +433,17 @@ aclspv_id_t aclid_mk_default_id(
 
 	return h_ctx->m_id_defaults[c_id_default] = c_id_default;
 }
+
+
+ae2f_ccconst B_id_default_t aclid_number_cvtbitcount(const B_id_default_t c_id, const unsigned bitcount) {
+	if(aclid_is_unsigned(c_id))
+		return aclid_getty_unsigned(bitcount);
+
+	if(aclid_is_signed(c_id))
+		return aclid_getty_signed(bitcount);
+
+	if(aclid_is_float(c_id))
+		return aclid_getty_float(bitcount);
+
+	return 0;
+}

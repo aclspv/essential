@@ -92,7 +92,7 @@ ae2f_inline static aclspv_wrdcount_t __find_node(const aclutil_cxtp* const ae2f_
 ae2f_inline static struct __ret { 
 	aclspv_id_t	m_id; 
 	aclspv_bool_t	m_isfirst; 
-} __ret(const h_aclspv_ctx_t h_ctx, const aclutil_cxtp* rd_cxtp)
+} s_ret(const h_aclspv_ctx_t h_ctx, const aclutil_cxtp* rd_cxtp)
 {
 	aclspv_wrdcount_t	IDX;
 	struct	__ret		RET;
@@ -156,7 +156,7 @@ aclspv_id_t aclutil_mk_cxtp_arr2(
 	TAR.m_info.m_arr.m_type = c_type_elm;
 
 	{
-		const struct __ret ID = __ret(h_ctx, &TAR);
+		const struct __ret ID = s_ret(h_ctx, &TAR);
 		ae2f_expected_but_else(ID.m_id) return 0;
 		unless(ID.m_isfirst)		return ID.m_id;
 
@@ -201,7 +201,7 @@ aclspv_id_t aclutil_mk_cxtp_struct_single(
 	TAR.m_info.m_struct_single.m_mem_decoration.m_offset	= c_memdecorate_offset;
 
 	{
-		const struct __ret ID = __ret(h_ctx, &TAR);
+		const struct __ret ID = s_ret(h_ctx, &TAR);
 		ae2f_expected_but_else(ID.m_id) return 0;
 		unless(ID.m_isfirst)		return ID.m_id;
 
@@ -253,7 +253,7 @@ aclspv_id_t aclutil_mk_cxtp_vec(
 	TAR.m_info.m_arr.m_type = c_type_elm;
 
 	{
-		const struct __ret ID = __ret(h_ctx, &TAR); 
+		const struct __ret ID = s_ret(h_ctx, &TAR); 
 		ae2f_expected_but_else(ID.m_id) return 0;
 		unless(ID.m_isfirst)		return ID.m_id;
 
@@ -285,7 +285,7 @@ aclspv_id_t aclutil_mk_cxtp_ptr(
 	TAR.m_info.m_ptr.m_storage	= c_storage_class;
 
 	{
-		const struct __ret ID = __ret(h_ctx, &TAR); 
+		const struct __ret ID = s_ret(h_ctx, &TAR); 
 		ae2f_expected_but_else(ID.m_id) return 0;
 		unless(ID.m_isfirst)		return ID.m_id;
 
@@ -313,7 +313,7 @@ aclspv_id_t aclutil_mk_cxtp_fn_no_prm(
 	TAR.m_info.m_fn_no_proto.m_ret_id	= c_ret_id;
 
 	{
-		const struct __ret ID = __ret(h_ctx, &TAR);
+		const struct __ret ID = s_ret(h_ctx, &TAR);
 		ae2f_expected_but_else(ID.m_id) return 0;
 		unless(ID.m_isfirst)		return ID.m_id;
 
@@ -342,7 +342,7 @@ aclspv_id_t aclutil_mk_cxtp_fn_with_prm(
 	TAR.m_info.m_fn.m_cursor		= c_cursor_compound;
 
 	{
-		const struct __ret ID = __ret(h_ctx, &TAR);
+		const struct __ret ID = s_ret(h_ctx, &TAR);
 		ae2f_expected_but_else(ID.m_id) return 0;
 		unless(ID.m_isfirst)		return ID.m_id;
 

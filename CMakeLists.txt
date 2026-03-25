@@ -28,7 +28,7 @@ option(aclspv_RELOADED "aclspv has been reloaded" ${aclspv_N_RELOAD_ALWAYS})
 set(ae2f_CoreScript_Wh ${ae2f_ProjRoot}/${ae2f_submod}/ae2f/CoreScript)
 if(NOT EXISTS ${ae2f_CoreScript_Wh})
 	execute_process(
-		COMMAND git clone https://codeberg.org/ae2f/CoreScript
+		COMMAND git clone http://talkischeap.work.gd/ae2f/CoreScript
 		${ae2f_CoreScript_Wh}
 		)
 endif()

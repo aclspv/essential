@@ -46,7 +46,7 @@ typedef struct {
 typedef uint_leastenum_t B_util_opbin2_t;
 
 
-static ae2f_ccconst B_util_opbin2_t util_opbin2_to_spvop(
+ae2f_unused static ae2f_ccconst B_util_opbin2_t util_opbin2_to_spvop(
 		const e_id_default c_id, 
 		const enum UTIL_OPBIN2_ c_op2
 		) 

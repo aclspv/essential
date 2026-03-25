@@ -91,7 +91,7 @@
 							)
 				  ) return ACLSPV_COMPILE_ALLOC_FAILED_CURSOR;
 
-#if	!defined(NDEBUG) || !NDEBUG
+				if(h_ctx->m_flag0 & ACLSPV_CTX_FLAG0_SYMBOL)
 				{
 					const aclspv_wrd_t POS	= h_ctx->m_count.m_name;
 					CXString SPELL		= clang_getCursorSpelling(wr_cursor[IDX].m_cursor);
@@ -134,8 +134,6 @@ LBL_FAIL:
 					clang_disposeString(SPELL);
 					return ACLSPV_COMPILE_ALLOC_FAILED_CURSOR;
 				}
-#else
-#endif
 			}
 		}
 #undef	CURSORDATA

@@ -1,7 +1,6 @@
 /**
  * @brief base opencl c header this compiler supports
  * */
-
 #ifndef ACLSPV_H
 #define ACLSPV_H
 #ifndef ACLSPV_PTR64
@@ -33,3 +32,4 @@ typedef	u32 uptr;typedef i32 iptr;
 #define	constant	storage_class(2)	constant
 #define	__constant	constant
 #endif
+#define	btcast(t, a)	(aclattr("aclspv_btcast") (t))((a))

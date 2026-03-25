@@ -100,6 +100,9 @@ aclspv_location(location)
 > Specifies the location of `input` or `output`  
 - When not specified, every input our output's location will be 0.
 
+aclspv_btcast
+> Tells that the final casting of variable would be bit-casting when it is arithmetic casting.
+
 aclspv_glcmagic  
 > Specifies that user wants the input automatically on GLCompute.
 - Provided aclspv_execmodel is not GLCompute(5), this attribute will be ignored.

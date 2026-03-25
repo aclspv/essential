@@ -29,9 +29,9 @@ ae2f_ccconst aclspv_bool_t aclid_is_number(const B_id_default_t c_id_default);
 ae2f_ccconst aclspv_bool_t aclid_is_castable(const B_id_default_t c_id_default);
 
 ae2f_ccconst B_id_default_t aclid_getty_float(unsigned bit_width);
-
 ae2f_ccconst B_id_default_t aclid_getty_unsigned(unsigned bit_width);
 ae2f_ccconst B_id_default_t aclid_getty_signed(unsigned bit_width);
+ae2f_ccconst B_id_default_t aclid_number_cvtbitcount(const B_id_default_t c_id, const unsigned bitcount);
 
 ae2f_ccconst unsigned aclid_get_bit_width(const B_id_default_t c_id_default);
 

@@ -1,5 +1,6 @@
 #include "./entp_body.h"
 #include "./expr.h"
+#include "util/id.h"
 
 #include <aclspv.h>
 #include <aclspv/abi.h>
@@ -10,6 +11,7 @@
 
 #include <clang-c/CXString.h>
 
+#include <clang-c/Index.h>
 #include <util/fnctx.h>
 #include <util/emitx.h>
 #include <util/iddef.h>
@@ -22,6 +24,7 @@
 #include <util/log.h>
 
 #include <attr/specid.h>
+#include <attr/btcast.h>
 
 #include <spirv/unified1/spirv.h>
 
@@ -100,6 +103,10 @@ ACLSPV_ABI_IMPL enum CXChildVisitResult aclemit_entp_body(CXCursor h_cur, CXCurs
 					case CXType_UInt:
 					case CXType_UShort:
 					case CXType_UChar:
+						ae2f_expected_but_else(aclid_mk_default_id(ID_DEFAULT_U32, CTX))
+							goto LBL_FAIL;
+
+
 						TYPE_ID = aclutil_mk_cxtp_ptr(
 								ID_DEFAULT_U32
 								, SpvStorageClassFunction
@@ -114,6 +121,8 @@ ACLSPV_ABI_IMPL enum CXChildVisitResult aclemit_entp_body(CXCursor h_cur, CXCurs
 							case CXType_Int:
 							case CXType_Short:
 							case CXType_SChar:
+							ae2f_expected_but_else(aclid_mk_default_id(ID_DEFAULT_I32, CTX))
+								goto LBL_FAIL;
 							TYPE_ID = aclutil_mk_cxtp_ptr(
 									ID_DEFAULT_I32
 									, SpvStorageClassFunction
@@ -130,6 +139,8 @@ ACLSPV_ABI_IMPL enum CXChildVisitResult aclemit_entp_body(CXCursor h_cur, CXCurs
 							ae2f_unreachable();
 							case CXType_ULongLong:
 							case CXType_ULong:
+							ae2f_expected_but_else(aclid_mk_default_id(ID_DEFAULT_U64, CTX))
+								goto LBL_FAIL;
 							TYPE_ID = aclutil_mk_cxtp_ptr(
 									ID_DEFAULT_U64
 									, SpvStorageClassFunction
@@ -144,6 +155,8 @@ ACLSPV_ABI_IMPL enum CXChildVisitResult aclemit_entp_body(CXCursor h_cur, CXCurs
 							ae2f_unreachable();
 							case CXType_LongLong:
 							case CXType_Long:
+							ae2f_expected_but_else(aclid_mk_default_id(ID_DEFAULT_I64, CTX))
+								goto LBL_FAIL;
 							TYPE_ID = aclutil_mk_cxtp_ptr(
 									ID_DEFAULT_I64
 									, SpvStorageClassFunction
@@ -163,6 +176,8 @@ ACLSPV_ABI_IMPL enum CXChildVisitResult aclemit_entp_body(CXCursor h_cur, CXCurs
 							ae2f_unreachable();
 							case CXType_BFloat16:
 							case CXType_Float16:
+							ae2f_expected_but_else(aclid_mk_default_id(ID_DEFAULT_F16, CTX))
+								goto LBL_FAIL;
 							TYPE_ID = aclutil_mk_cxtp_ptr(
 									ID_DEFAULT_F16
 									, SpvStorageClassFunction
@@ -175,6 +190,8 @@ ACLSPV_ABI_IMPL enum CXChildVisitResult aclemit_entp_body(CXCursor h_cur, CXCurs
 						ae2f_unexpected_but_if(0) {
 							ae2f_unreachable();
 							case CXType_Float:
+							ae2f_expected_but_else(aclid_mk_default_id(ID_DEFAULT_F32, CTX))
+								goto LBL_FAIL;
 							TYPE_ID = aclutil_mk_cxtp_ptr(
 									ID_DEFAULT_F32
 									, SpvStorageClassFunction
@@ -189,6 +206,8 @@ ACLSPV_ABI_IMPL enum CXChildVisitResult aclemit_entp_body(CXCursor h_cur, CXCurs
 						ae2f_unexpected_but_if(0) {
 							ae2f_unreachable();
 							case CXType_Double:
+							ae2f_expected_but_else(aclid_mk_default_id(ID_DEFAULT_F64, CTX))
+								goto LBL_FAIL;
 							TYPE_ID = aclutil_mk_cxtp_ptr(
 									ID_DEFAULT_F64
 									, SpvStorageClassFunction
@@ -323,9 +342,17 @@ ACLSPV_ABI_IMPL enum CXChildVisitResult aclemit_entp_body(CXCursor h_cur, CXCurs
 #endif
 
 					unless(clang_Cursor_isNull(VAR_INIT)) {
+						fn_aclspv_get_expr_t*	FN_GETEXPR = aclspv_get_expr;
+
+						{
+							int IS_BTCAST = 0;
+							clang_visitChildren(h_cur, s_attr_btcast, &IS_BTCAST);
+							if(IS_BTCAST) FN_GETEXPR = aclspv_get_expr_btcast;
+						}
+
 						dbg_puts(("Variable has constructor."));
 
-						switch(aclspv_get_expr(
+						switch(FN_GETEXPR(
 									&CURSOR.m_data.m_var_simple.m_init_val
 									, CURSOR.m_data.m_var_simple.m_type_id
 									, VAR_INIT

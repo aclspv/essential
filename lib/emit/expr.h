@@ -24,7 +24,7 @@ typedef enum EMIT_EXPR_ {
 
 typedef util_literal emit_expr_literal;
 
-ACLSPV_ABI_DECL enum EMIT_EXPR_ aclexpr_arithmetic_cast_non_literal(
+enum EMIT_EXPR_ aclexpr_arithmetic_cast_non_literal(
 		const aclspv_id_t	c_old_id,
 		const aclspv_id_t	c_old_type,
 		const B_util_literal_t	c_flag_literal,
@@ -33,7 +33,7 @@ ACLSPV_ABI_DECL enum EMIT_EXPR_ aclexpr_arithmetic_cast_non_literal(
 		const h_util_ctx_t			h_ctx
 		);
 
-ACLSPV_ABI_DECL enum EMIT_EXPR_ aclexpr_arithmetic_cast(
+enum EMIT_EXPR_ aclexpr_arithmetic_cast(
 		const aclspv_id_t	c_old_id,
 		const aclspv_id_t	c_old_type,
 		const B_util_literal_t	c_flag_literal,
@@ -45,7 +45,16 @@ ACLSPV_ABI_DECL enum EMIT_EXPR_ aclexpr_arithmetic_cast(
 		const h_util_ctx_t	h_ctx
 		);
 
-ACLSPV_ABI_DECL enum EMIT_EXPR_ aclspv_get_expr(
+enum EMIT_EXPR_ aclexpr_arithmetic_cast_literal(
+		const aclspv_id_t	c_old_type,
+		const emit_expr_literal	c_old_literal,
+		aclspv_id_t* ae2f_restrict	r_newid,
+		aclspv_id_t			c_new_type,
+		emit_expr_literal* ae2f_restrict	wr_new_literal_opt,
+		const h_util_ctx_t		h_ctx
+		);
+
+typedef enum EMIT_EXPR_ fn_aclspv_get_expr_t(
 		aclspv_id_t* ae2f_restrict const ret_id
 		, const aclspv_id_t c_type_req
 		, const CXCursor c_cur
@@ -53,12 +62,35 @@ ACLSPV_ABI_DECL enum EMIT_EXPR_ aclspv_get_expr(
 		, h_util_ctx_t h_ctx
 		);
 
-ACLSPV_ABI_IMPL enum EMIT_EXPR_ aclspv_get_expr2(
+enum EMIT_EXPR_ aclspv_get_expr_btcast(
+		aclspv_id_t* ae2f_restrict const ret_id
+		, const aclspv_id_t c_type_req
+		, const CXCursor c_cur
+		, util_literal* ae2f_restrict	wr_literal_opt
+		, h_util_ctx_t h_ctx
+		);
+
+enum EMIT_EXPR_ aclspv_get_expr(
+		aclspv_id_t* ae2f_restrict const ret_id
+		, const aclspv_id_t c_type_req
+		, const CXCursor c_cur
+		, util_literal* ae2f_restrict	wr_literal_opt
+		, h_util_ctx_t h_ctx
+		);
+
+enum EMIT_EXPR_ aclspv_get_expr2(
 		aclspv_id_t* ae2f_restrict const ret_id
 		, aclspv_id_t* ae2f_restrict const r_type_opt
 		, const CXCursor c_cur
 		, util_literal* ae2f_restrict	wr_literal_opt
 		, h_util_ctx_t h_ctx
 		);
+
+enum CXChildVisitResult aclexpr_visit(
+		CXCursor h_cur,
+		ae2f_unused CXCursor h_parent,
+		CXClientData rdwr_data
+		);
+
 
 #endif
