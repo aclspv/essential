@@ -2,6 +2,7 @@
 
 #include <aclspv/spvty.h>
 
+#include <spirv/unified1/spirv.h>
 #include <util/literal.h>
 #include <util/iddef.h>
 #include <util/emitx.h>
@@ -9,6 +10,8 @@
 #include <util/constant.h>
 
 #include "../expr.h"
+#include "aclspv.h"
+#include "aclspv/abi.h"
 
 enum EMIT_EXPR_ aclexpr_arithmetic_cast_non_literal(
 		const aclspv_id_t	c_old_id,
@@ -25,6 +28,7 @@ enum EMIT_EXPR_ aclexpr_arithmetic_cast_non_literal(
 
 	dbg_puts(("Arithmetic cast: non-literal"));
 
+	/** two are same */
 	if(c_old_type == c_new_type) {
 		*r_newid = c_old_id;
 
@@ -33,68 +37,24 @@ enum EMIT_EXPR_ aclexpr_arithmetic_cast_non_literal(
 			: EMIT_EXPR_SUCCESS;
 	}
 
+	/** down here, two types are different */
+
+	/** two are float */
 	if (aclid_is_float(c_old_type) && aclid_is_float(c_new_type)) {
 		if(c_flag_literal & UTIL_LITERAL_CONSTANT) {
-			if(c_old_type == c_new_type) {
-
-				aclspv_id_t ID_0 = aclutil_mk_constant_val_f32_id(0, h_ctx);
-				aclspv_id_t ID_1 = aclutil_mk_constant_val_id(1, h_ctx);
-				ae2f_expected_but_else(ID_0)	return EMIT_EXPR_FAILURE;
-				ae2f_expected_but_else(ID_1)	return EMIT_EXPR_FAILURE;
-
-
-				*r_newid = h_ctx->m_id;
-				ae2f_expected_but_else(h_ctx->m_count.m_types
-						= util_emitx_7(
-							&h_ctx->m_section.m_types
-							, h_ctx->m_count.m_types
-							, SpvOpSpecConstantOp
-							, c_new_type
-							, h_ctx->m_id++ 
-							, SpvOpSelect
-							, ID_1
-							, c_old_id
-							, ID_0))
-					return EMIT_EXPR_FAILURE;
-
-				return EMIT_EXPR_SUCCESS_CONSTANT;
-			}
-
-			*r_newid = h_ctx->m_id;
 			ae2f_expected_but_else(h_ctx->m_count.m_types
 					= util_emitx_5(
 						&h_ctx->m_section.m_types
 						, h_ctx->m_count.m_types
 						, SpvOpSpecConstantOp
 						, c_new_type
-						, h_ctx->m_id++
+						, *r_newid = h_ctx->m_id++
 						, SpvOpFConvert
 						, c_old_id))
 				return EMIT_EXPR_FAILURE;
 
 			return EMIT_EXPR_SUCCESS_CONSTANT;
 		} else {
-			if(c_new_type == c_old_type) {
-				aclspv_id_t ID_0 = aclutil_mk_constant_val_f32_id(0, h_ctx);
-				ae2f_expected_but_else(ID_0)	return EMIT_EXPR_FAILURE;
-
-				*r_newid = h_ctx->m_id;
-				ae2f_expected_but_else(h_ctx->m_count.m_fnimpl
-						= util_emitx_5(
-							&h_ctx->m_section.m_fnimpl
-							, h_ctx->m_count.m_fnimpl
-							, SpvOpFAdd
-							, c_new_type
-							, h_ctx->m_id++
-							, c_old_id
-							, ID_0
-							)
-						) return EMIT_EXPR_FAILURE;
-
-				return EMIT_EXPR_SUCCESS;
-			}
-
-
 			*r_newid = h_ctx->m_id;
 			ae2f_expected_but_else(h_ctx->m_count.m_fnimpl
 					= util_emitx_4(
@@ -110,9 +70,94 @@ enum EMIT_EXPR_ aclexpr_arithmetic_cast_non_literal(
 		}
 	}
 
+	if (aclid_is_int(c_old_type) && aclid_is_int(c_new_type)) {
+		const aclspv_wrd_t
+			OPCODE = aclid_is_unsigned(c_new_type)
+			? SpvOpUConvert
+			: SpvOpSConvert;
+
+		if(aclid_get_bit_width(c_old_type) == aclid_get_bit_width(c_new_type)) {
+#if 1
+			const aclspv_id_t	VAL_ZERO = aclid_get_bit_width(c_old_type) == 64
+				? aclutil_mk_constant_val64_id(0, h_ctx)
+				: aclutil_mk_constant_val_id(0, h_ctx);
+
+			ae2f_expected_but_else(VAL_ZERO) {
+				return EMIT_EXPR_FAILURE;
+			}
+
+			if(c_flag_literal & UTIL_LITERAL_CONSTANT) {
+				ae2f_expected_but_else(h_ctx->m_count.m_types
+						= util_emitx_6(
+							&h_ctx->m_section.m_types
+							, h_ctx->m_count.m_types
+							, SpvOpSpecConstantOp
+							, c_new_type
+							, *r_newid = h_ctx->m_id++
+							, SpvOpBitwiseOr 
+							, c_old_id
+							, VAL_ZERO))
+					return EMIT_EXPR_FAILURE;
+
+				return EMIT_EXPR_SUCCESS_CONSTANT;
+			} else {
+				*r_newid = h_ctx->m_id;
+				ae2f_expected_but_else(h_ctx->m_count.m_fnimpl
+						= util_emitx_5(
+							&h_ctx->m_section.m_fnimpl
+							, h_ctx->m_count.m_fnimpl
+							, SpvOpBitwiseOr
+							, c_new_type
+							, h_ctx->m_id++
+							, c_old_id
+							, VAL_ZERO
+							)
+						) return EMIT_EXPR_FAILURE;
+				return EMIT_EXPR_SUCCESS;
+			}
+
+			ae2f_unreachable();
+#else
+			*r_newid = c_old_id;
+			return c_flag_literal & UTIL_LITERAL_CONSTANT
+				? EMIT_EXPR_SUCCESS_CONSTANT
+				: EMIT_EXPR_SUCCESS;
+#endif
+		}
+
+		if(c_flag_literal & UTIL_LITERAL_CONSTANT) {
+			ae2f_expected_but_else(h_ctx->m_count.m_types
+					= util_emitx_5(
+						&h_ctx->m_section.m_types
+						, h_ctx->m_count.m_types
+						, SpvOpSpecConstantOp
+						, c_new_type
+						, *r_newid = h_ctx->m_id++
+						, OPCODE 
+						, c_old_id))
+				return EMIT_EXPR_FAILURE;
+
+			return EMIT_EXPR_SUCCESS_CONSTANT;
+		} else {
+			*r_newid = h_ctx->m_id;
+			ae2f_expected_but_else(h_ctx->m_count.m_fnimpl
+					= util_emitx_4(
+						&h_ctx->m_section.m_fnimpl
+						, h_ctx->m_count.m_fnimpl
+						, OPCODE 
+						, c_new_type
+						, h_ctx->m_id++
+						, c_old_id
+						)
+					) return EMIT_EXPR_FAILURE;
+			return EMIT_EXPR_SUCCESS;
+		}
+
+		ae2f_unreachable();
+	}
+
 	/** TWO ARE DIFFERENT */
 	if(aclid_is_float(c_new_type)) {
-
 		*r_newid = h_ctx->m_id;
 		ae2f_expected_but_else(h_ctx->m_count.m_fnimpl
 				= util_emitx_4(
@@ -129,7 +174,6 @@ enum EMIT_EXPR_ aclexpr_arithmetic_cast_non_literal(
 	}
 
 	if(aclid_is_int(c_new_type)) {
-
 		*r_newid = h_ctx->m_id;
 		ae2f_expected_but_else(h_ctx->m_count.m_fnimpl
 				= util_emitx_4(

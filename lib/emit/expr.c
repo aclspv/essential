@@ -1,6 +1,9 @@
 /** @file expr.c */
 
 #include "./expr.h"
+#include "aclspv.h"
+#include "ae2f/pat/dbg.h"
+#include "util/iddef.h"
 
 #include <aclspv/spvty.h>
 
@@ -226,63 +229,94 @@ enum EMIT_EXPR_ aclspv_get_expr_btcast(
 				);
 	}
 
+	/** NON-LITERAL */
 	{
-		unsigned	BWIDTH;
-		if((BWIDTH = aclid_get_bit_width(c_type_req)) != aclid_get_bit_width((aclspv_wrd_t)BUF[4]))
-		{
-			const aclspv_id_t TYPE = aclid_number_cvtbitcount(
-					(aclspv_wrd_t)BUF[4]
-					, BWIDTH
-					);
+		const aclspv_id_t	TYPE_SRC = aclid_getty_unsigned(
+				aclid_get_bit_width((aclspv_id_t)BUF[4])
+				);
 
-			aclspv_id_t VAL;
+		const aclspv_id_t	TYPE_DST = aclid_getty_unsigned(aclid_get_bit_width(c_type_req));
 
-			switch(aclexpr_arithmetic_cast_non_literal(
-						(aclspv_id_t)BUF[2]
-						, (aclspv_id_t)BUF[4]
-						, (aclspv_id_t)BUF[3]
-						, &VAL
-						, TYPE
-						, h_ctx))
-			{
-				default:
-				case EMIT_EXPR_NOT_THE_CASE:
-					return EMIT_EXPR_NOT_THE_CASE;
-				case EMIT_EXPR_FAILURE:
-					return EMIT_EXPR_FAILURE;
+		const aclspv_id_t	VAL_SRC = h_ctx->m_id;
+		typedef const aclspv_id_t* ae2f_restrict ptr_id_t;
 
-				case EMIT_EXPR_SUCCESS:
-					BUF[3] = 0;
-					ae2f_fallthrough;
-				case EMIT_EXPR_SUCCESS_CONSTANT:
-					BUF[3] &= 1;
-					ae2f_fallthrough;
-				case EMIT_EXPR_SUCCESS_LITERAL:
-					BUF[2] = VAL;
+		ptr_id_t VAL_SRC_PTR, TYPE_SRC_PTR;
+		aclspv_id_t	VAL_DST;
+
+		ae2f_expected_but_else(aclid_mk_default_id(TYPE_DST, h_ctx)
+				&& aclid_mk_default_id(TYPE_SRC, h_ctx)) {
+			return EMIT_EXPR_FAILURE;
+		}
+
+		unless(aclid_is_int((aclspv_id_t)BUF[4])) {
+			++h_ctx->m_id;
+			ae2f_expected_but_else(h_ctx->m_count.m_fnimpl = util_emitx_4(
+						&h_ctx->m_section.m_fnimpl
+						, h_ctx->m_count.m_fnimpl
+						, SpvOpBitcast
+						, TYPE_SRC
+						, VAL_SRC
+						, (aclspv_wrd_t)BUF[2]
+						)) {
+				return EMIT_EXPR_FAILURE;
 			}
+
+			VAL_SRC_PTR = &VAL_SRC;
+			TYPE_SRC_PTR = &TYPE_SRC;
+		} else {
+			VAL_SRC_PTR = (const void*)&BUF[2];
+			TYPE_SRC_PTR = (const void*)&BUF[4];
+		}
+
+		ae2fpat_assertassume(aclid_is_int(*TYPE_SRC_PTR));
+		switch(aclexpr_arithmetic_cast_non_literal(
+					*VAL_SRC_PTR
+					, *TYPE_SRC_PTR
+					, 0
+					, &VAL_DST
+					, TYPE_DST
+					, h_ctx
+					)) {
+			default:
+			case EMIT_EXPR_NOT_THE_CASE:
+				return EMIT_EXPR_NOT_THE_CASE;
+			case EMIT_EXPR_FAILURE:
+				return EMIT_EXPR_FAILURE;
+
+			case EMIT_EXPR_SUCCESS:
+			case EMIT_EXPR_SUCCESS_CONSTANT:
+			case EMIT_EXPR_SUCCESS_LITERAL:
+				break;
+		}
+
+		ae2fpat_assertassume(aclid_is_unsigned(TYPE_DST));
+
+		unless(aclid_is_int(c_type_req)) {
+			ae2f_expected_but_else(h_ctx->m_count.m_fnimpl = util_emitx_4(
+						&h_ctx->m_section.m_fnimpl
+						, h_ctx->m_count.m_fnimpl
+						, SpvOpBitcast
+						, c_type_req
+						, *ret_id = h_ctx->m_id++
+						, VAL_DST
+						)) {
+				return EMIT_EXPR_FAILURE;
+			}
+
+			return EMIT_EXPR_SUCCESS;
+		} else {
+			return aclexpr_arithmetic_cast_non_literal(
+					VAL_DST
+					, TYPE_DST
+					, 0
+					, ret_id
+					, c_type_req
+					, h_ctx
+					);
 		}
 	}
 
-
-	ae2f_expected_but_else(aclid_mk_default_id(c_type_req, h_ctx)) {
-		return EMIT_EXPR_FAILURE;
-	}
-
-	ae2f_expected_but_else(h_ctx->m_count.m_fnimpl = util_emitx_4(
-				&h_ctx->m_section.m_fnimpl
-				, h_ctx->m_count.m_fnimpl
-				, SpvOpBitcast
-				, c_type_req
-				, *ret_id = h_ctx->m_id
-				, (aclspv_wrd_t)BUF[2]
-				)) {
-		h_ctx->m_err = ACLSPV_COMPILE_ALLOC_FAILED_EXPR;
-		return EMIT_EXPR_FAILURE;
-	}
-
-	++h_ctx->m_id;
-
-	return EMIT_EXPR_SUCCESS;
+	ae2f_unreachable();
 }
 
 enum EMIT_EXPR_ aclspv_get_expr(

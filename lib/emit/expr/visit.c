@@ -1,6 +1,7 @@
 /** @file visit.c */
 
 #include "../expr.h"
+#include "util/literal.h"
 
 #include <assert.h>
 
@@ -482,6 +483,9 @@ ae2f_inline static int s_carve_one_scale(
 						);	/** only when bin2 (arithmetic thing) */
 
 			rdwr_prv_extra->m_type_original = LST_SCALE_BUF[UTIL_OPBINCFG_RESTYID];
+			if(aclid_is_float(rdwr_prv_extra->m_type_original)) {
+				rdwr_prv_extra->m_mask_literal &= ~(aclspv_wrd_t)UTIL_LITERAL_CONSTANT;
+			}
 
 			ae2fpat_assertassume_strict(LST_SCALE_BUF);
 			ae2fpat_assertassume_strict(LST_SCALE_BUF[UTIL_OPBINCFG_RESTYID]);
@@ -532,6 +536,8 @@ ae2f_inline static int s_carve_one_scale(
 				rdwr_prv_extra->m_mask_literal 
 					&= LST_SCALE_BUF[UTIL_OPBINCFG_MASKLITERAL]
 					&= LST_EXTRA[NUM_OPRND].m_mask_literal;
+
+				if (rdwr_prv_extra)
 
 				dbg_prefix(i);
 				dbg_call((void), fprintf(stderr, "deepbin2-%u[%u]{%u} and literal mask %p [%u]{%u}\n"
