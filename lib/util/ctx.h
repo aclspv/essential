@@ -3,8 +3,8 @@
 #ifndef lib_build_ctx_h
 #define lib_build_ctx_h
 
-#include "../vec.auto.h"
 #include "./id.h"
+#include <vec.auto.h>
 
 #include <aclspv.h>
 #include <aclspv/spvty.h>

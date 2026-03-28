@@ -82,11 +82,11 @@ file(GLOB aclspv-inc ${PROJECT_SOURCE_DIR}/inc/*)
 
 ae2f_Macro_init(1 30 30)
 
-ae2f_Macro_Lib_V2(
+ae2f_Macro_Lib_V2_REL(
 	ae3f aclspvCore INTERFACE
 	${PROJECT_SOURCE_DIR}/src/ "__NOTHING"
 	${PROJECT_SOURCE_DIR}/src/ "*.c*"
-	${PROJECT_SOURCE_DIR}/lib/ ".auto.h"
+	lib/ ".auto.h"
 	${PROJECT_SOURCE_DIR}/cfg/aclspvCore.cmake.in
 	inc ${_aclspv_RELOADED} 
 	)

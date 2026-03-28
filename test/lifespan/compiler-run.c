@@ -6,7 +6,6 @@
 
 #include "./source.auto.h"
 #include "./ocl.auto.h"
-
 	char maincontent[
 sizeof(A_0)
 	+ sizeof(A_1) - 1

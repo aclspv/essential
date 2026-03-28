@@ -63,16 +63,13 @@
 				, CTX->m_count.m_name - POS - 1);				\
 }
 
-ACLSPV_ABI_IMPL enum CXChildVisitResult aclemit_entp_body(CXCursor h_cur, CXCursor h_parent, CXClientData rdwr_data) {
+ACLSPV_ABI_IMPL enum CXChildVisitResult aclemit_entp_body(CXCursor h_cur, ae2f_unused CXCursor h_parent, CXClientData rdwr_data) {
 #define	FNCTX		((aclutil_fnctx* ae2f_restrict) rdwr_data)
 #define	CTX		FNCTX->m_ctx
 #define	jmpfail(c_why)	{ (CTX)->m_err = (c_why); goto LBL_FAIL; }
 	const enum CXCursorKind KIND	= (h_cur).kind;
 	const CXString KINDSPELL	= clang_getCursorKindSpelling(KIND);
 	const CXString SPELL		= clang_getCursorSpelling(h_cur);
-
-	(void)h_parent;
-	(void)rdwr_data;
 
 	ae2f_expected_but_else(KIND)	{
 		CTX->m_err = ACLSPV_COMPILE_MET_INVAL;
