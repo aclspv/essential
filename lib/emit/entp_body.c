@@ -549,7 +549,7 @@ ACLSPV_ABI_IMPL enum CXChildVisitResult aclemit_entp_body(CXCursor h_cur, ae2f_u
 
 
 	warn_prefix(i);
-	warn_call(fprintf, (stderr, "Met unprocessed spell(%s) in kind(%s) [NOIMPL]\n"
+	warn_call(fprintf, (stderr, "Met unprocessed spell(%s) in kind(%s) [NOIMPL, BODY]\n"
 				, (const char*)SPELL.data
 				, (const char*)KINDSPELL.data));
 

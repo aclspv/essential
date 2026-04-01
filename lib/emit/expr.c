@@ -4,6 +4,9 @@
 #include "aclspv.h"
 #include "ae2f/pat/dbg.h"
 #include "util/iddef.h"
+#include "util/log.h"
+
+#include <ae2f/bll.h>
 
 #include <aclspv/spvty.h>
 
@@ -180,6 +183,7 @@ enum EMIT_EXPR_ aclspv_get_expr_btcast(
 	ae2f_expected_but_else(h_ctx->m_tmp.m_v1.m_p)
 		return EMIT_EXPR_FAILURE;
 
+	dbg_puts("BTCASST");
 
 	dbg_prefix(a);
 	dbg_call(fprintf, (stderr
@@ -405,6 +409,11 @@ enum EMIT_EXPR_ aclspv_get_expr(
 
 	dbg_prefix(a);
 	dbg_call(fprintf, (stderr, "ID Required(aka BUF[2]): %u\n", (unsigned)BUF[2]));
+	dbg_puts("ARITHMETIC_CAST: GETEXPR");
+
+	unless(c_type_req)
+		return ae2f_bll_sel_bool1(uint_fastenum_t, BUF[3] & 2, EMIT_EXPR_SUCCESS_LITERAL, 0u)
+		| ae2f_bll_sel_bool1(uint_fastenum_t, BUF[3] & 1, EMIT_EXPR_SUCCESS_CONSTANT, EMIT_EXPR_SUCCESS);
 
 	return	aclexpr_arithmetic_cast(
 			(aclspv_wrdcount_t)BUF[2]

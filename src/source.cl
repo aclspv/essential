@@ -41,7 +41,7 @@ __kernel void KERNEL_0(
 		       __local double __attribute__((annotate("aclspv_specid(0)")))
 		       locu32_0[LOCU32_COUNT], /** local(workgroup) must be array */
 
-		       __local float locuf32_1,
+		       __local float locuf32_1[1],
 		       __global float* globf32, 
 		       float pushf32, 
 
@@ -66,13 +66,13 @@ kernel_raw(0) void N_KERNEL_0(__constant uintptr_t* consti32, storage_class(3) c
 		aclattr("aclspv_specid(0)")
 #endif
 			;
-	int a2 = a0 - a1;
+	int a2 = a0 + (a0 += a1);
 #if 1
 	aclattr("aclspv_btcast") long a = (double)(int)(float)(a0 + a1 + a2);
 #endif
 
-	goto AGOTO;
-AGOTO:
+	goto GOTO;
+GOTO:
 	return;
 }
 

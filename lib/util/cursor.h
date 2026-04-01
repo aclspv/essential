@@ -130,4 +130,14 @@ ae2f_extern  enum ACLSPV_COMPILE_ aclutil_tell_cursor_lbl(
 		const h_util_ctx_t h_ctx
 		);
 
+ae2f_extern aclspv_id_t aclutil_assign_cursor_lval(
+		util_cursor* ae2f_restrict const wr_cursor,
+		const h_util_ctx_t			h_ctx,
+		const aclspv_id_t			c_val,
+		const aclspv_id_t			c_val_ty,
+		const B_util_literal_t			c_masklit,
+		const util_literal* ae2f_restrict	rd_literal_to_assign,
+		util_literal*	ae2f_restrict		r_literal_opt
+		);
+
 #endif

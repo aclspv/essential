@@ -7,7 +7,7 @@
 
 #include <string.h>
 
-ACLSPV_ABI_IMPL util_constant* aclutil_mk_constant_node(
+util_constant* aclutil_mk_constant_node(
 		const u64_least	c_key,
 		h_util_ctx_t	h_ctx
 		)
@@ -75,9 +75,8 @@ ACLSPV_ABI_IMPL util_constant* aclutil_mk_constant_node(
 }
 
 #include <spirv/unified1/spirv.h>
-#include "./wrdemit.h"
 
-ACLSPV_ABI_IMPL aclspv_id_t	aclutil_mk_constant_val_id(const aclspv_wrd_t c_val, h_util_ctx_t h_ctx)
+aclspv_id_t	aclutil_mk_constant_val_id(const aclspv_wrd_t c_val, h_util_ctx_t h_ctx)
 {
 	util_constant* ae2f_restrict const C = aclutil_mk_constant_node((u64_least)c_val, h_ctx);
 	ae2f_expected_but_else(C) return 0;
@@ -102,7 +101,7 @@ ACLSPV_ABI_IMPL aclspv_id_t	aclutil_mk_constant_val_id(const aclspv_wrd_t c_val,
 	return C->m_const_val_id;
 }
 
-ACLSPV_ABI_IMPL aclspv_id_t	aclutil_mk_constant_val64_id(const u64_least c_val, h_util_ctx_t h_ctx)
+aclspv_id_t	aclutil_mk_constant_val64_id(const u64_least c_val, h_util_ctx_t h_ctx)
 {
 	util_constant* ae2f_restrict const C = aclutil_mk_constant_node(c_val, h_ctx);
 	ae2f_expected_but_else(C) return 0;
@@ -128,7 +127,7 @@ ACLSPV_ABI_IMPL aclspv_id_t	aclutil_mk_constant_val64_id(const u64_least c_val, 
 	return C->m_const_val64_id;
 }
 
-ACLSPV_ABI_IMPL aclspv_id_t	aclutil_mk_constant_val_f32_id(const float c_val, h_util_ctx_t h_ctx)
+aclspv_id_t	aclutil_mk_constant_val_f32_id(const float c_val, h_util_ctx_t h_ctx)
 {
 	union {
 		float		m_flt;
@@ -160,7 +159,7 @@ ACLSPV_ABI_IMPL aclspv_id_t	aclutil_mk_constant_val_f32_id(const float c_val, h_
 	return C->m_const_val_f32_id;
 }
 
-ACLSPV_ABI_IMPL aclspv_id_t	aclutil_mk_constant_val_f64_id(const double c_val, h_util_ctx_t h_ctx)
+aclspv_id_t	aclutil_mk_constant_val_f64_id(const double c_val, h_util_ctx_t h_ctx)
 {
 	union {
 		double		m_flt;
@@ -193,7 +192,7 @@ ACLSPV_ABI_IMPL aclspv_id_t	aclutil_mk_constant_val_f64_id(const double c_val, h
 	return C->m_const_val_f64_id;
 }
 
-ACLSPV_ABI_IMPL aclspv_id_t	aclutil_mk_constant_spec_id(
+aclspv_id_t	aclutil_mk_constant_spec_id(
 		const aclspv_wrd_t c_key, const aclspv_wrd_t c_val, 
 		h_util_ctx_t h_ctx
 		)
@@ -230,7 +229,7 @@ ACLSPV_ABI_IMPL aclspv_id_t	aclutil_mk_constant_spec_id(
 	return C->m_const_spec_id;
 }
 
-ACLSPV_ABI_IMPL aclspv_id_t	aclutil_mk_constant_spec_id_f32(const aclspv_wrd_t c_key, const float c_val, h_util_ctx_t h_ctx)
+aclspv_id_t	aclutil_mk_constant_spec_id_f32(const aclspv_wrd_t c_key, const float c_val, h_util_ctx_t h_ctx)
 {
 	union {
 		float		m_f;
@@ -271,7 +270,7 @@ ACLSPV_ABI_IMPL aclspv_id_t	aclutil_mk_constant_spec_id_f32(const aclspv_wrd_t c
 	return C->m_const_spec_id;
 }
 
-ACLSPV_ABI_IMPL aclspv_id_t	aclutil_mk_constant_spec64_id(
+aclspv_id_t	aclutil_mk_constant_spec64_id(
 		const aclspv_wrd_t c_key, 
 		const u64_least c_val, h_util_ctx_t h_ctx)
 {
@@ -310,7 +309,7 @@ ACLSPV_ABI_IMPL aclspv_id_t	aclutil_mk_constant_spec64_id(
 	return C->m_const_spec_id;
 }
 
-ACLSPV_ABI_IMPL aclspv_id_t	aclutil_mk_constant_spec_id_f64(
+aclspv_id_t	aclutil_mk_constant_spec_id_f64(
 		const aclspv_wrd_t c_key, 
 		const double c_val, h_util_ctx_t h_ctx)
 {

@@ -1,6 +1,10 @@
 #ifndef util_op_h
 #define util_op_h
 
+#include "aclspv/abi.h"
+#include "aclspv/spvty.h"
+#include "util/id.h"
+#include <clang-c/Index.h>
 enum UTIL_OPBINCFG_ {
 	UTIL_OPBINCFG_NUMOPRND,
 
@@ -44,6 +48,7 @@ typedef struct {
 	aclspv_wrd_t	m_type_original;
 	aclspv_wrd_t	m_mask_literal;
 	util_literal	m_literal;
+	CXCursor	m_cursor;
 } util_opbincfg_extra;
 
 /**
@@ -52,7 +57,24 @@ typedef struct {
 typedef uint_leastenum_t B_util_opbin2_t;
 
 
-ae2f_unused static ae2f_ccconst B_util_opbin2_t util_opbin2_to_spvop(
+ae2f_unused ae2f_inline static ae2f_ccconst aclspv_bool_t	util_opbin2_is_assign(
+		const enum UTIL_OPBIN2_ c_op2
+		)  {
+	switch((uint_fastenum_t)c_op2) {
+		case UTIL_OPBIN2_ADDASSIGN:
+		case UTIL_OPBIN2_SUBASSIGN:
+		case UTIL_OPBIN2_DIVASSIGN:
+		case UTIL_OPBIN2_REMASSIGN:
+		case UTIL_OPBIN2_MULASSIGN:
+		case UTIL_OPBIN2_ASSIGN:
+			return 1;
+
+		default:
+			return 0;
+	}
+}
+
+ae2f_unused ae2f_inline static ae2f_ccconst B_util_opbin2_t util_opbin2_to_spvop(
 		const e_id_default c_id, 
 		const enum UTIL_OPBIN2_ c_op2
 		) 

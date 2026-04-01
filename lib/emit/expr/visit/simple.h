@@ -6,6 +6,7 @@
 #ifndef aclexpr_visit_simple1_h
 #define aclexpr_visit_simple1_h
 
+#include "util/literal.h"
 #include <util/cursor.h>
 #include <util/emitx.h>
 #include <util/constant.h>
@@ -154,32 +155,25 @@ ae2f_inline static enum EMIT_EXPR_ s_simple(
 				}
 
 				*wr_type_fetched = DECL_INFO.m_data.m_var_simple.m_type_id;
+				ae2f_expected_if(*wr_newid = aclutil_assign_cursor_lval(
+							&DECL_INFO, h_ctx
+							, 0, 0
+							, 0, 0
+							, rwr_literal_opt)) switch(DECL_INFO.m_data.m_var_simple.m_mask_literal) {
+					case UTIL_LITERAL_MASK_LITERAL:
+					case UTIL_LITERAL_LITERAL:
 
-				if(DECL_INFO.m_data.m_var_simple.m_mask_literal & UTIL_LITERAL_LITERAL) {
-					*rwr_literal_opt = DECL_INFO.m_data.m_var_simple.m_literal;
-					*wr_newid = DECL_INFO.m_data.m_var_simple.m_init_val;
-					return EMIT_EXPR_SUCCESS_LITERAL;
+						return EMIT_EXPR_SUCCESS_LITERAL;
+
+					case UTIL_LITERAL_CONSTANT:
+						return EMIT_EXPR_SUCCESS_CONSTANT;
+
+					default:
+						return EMIT_EXPR_SUCCESS;
 				}
 
-				if(DECL_INFO.m_data.m_var_simple.m_is_predictable) {
-					dbg_puts(("Variable is predictable"));
-					*wr_newid = DECL_INFO.m_data.m_var_simple.m_init_val;
-					return DECL_INFO.m_data.m_var_simple.m_mask_literal & UTIL_LITERAL_CONSTANT
-						? EMIT_EXPR_SUCCESS_CONSTANT
-						: EMIT_EXPR_SUCCESS;
-				}
 
-				dbg_puts(("Load from memory"));
-				*wr_newid = h_ctx->m_id++;
-				ae2f_expected_but_else(h_ctx->m_count.m_fnimpl = util_emitx_4(
-							&h_ctx->m_section.m_fnimpl
-							, h_ctx->m_count.m_fnimpl
-							, SpvOpLoad
-							, DECL_INFO.m_data.m_var_simple.m_type_id
-							, *wr_newid
-							, DECL_INFO.m_data.m_var_simple.m_id
-							)) return EMIT_EXPR_FAILURE;
-				return EMIT_EXPR_SUCCESS;
+				return EMIT_EXPR_FAILURE;
 #undef	DECL_INFO
 			}
 	}

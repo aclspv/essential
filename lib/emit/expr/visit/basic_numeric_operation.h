@@ -6,12 +6,14 @@
 #ifndef	aclexpr_visit_basic_numeric_operation_h
 #define aclexpr_visit_basic_numeric_operation_h
 
+#include <clang-c/CXString.h>
 #include <clang-c/Index.h>
 #include <util/scale.h>
 #include <util/op.h>
 #include <util/emitx.h>
 
 #include "../../expr.h"
+#include "util/log.h"
 
 ae2f_inline static enum EMIT_EXPR_ s_basic_numeric_operation(
 		const CXCursor				c_cur,
@@ -26,11 +28,33 @@ ae2f_inline static enum EMIT_EXPR_ s_basic_numeric_operation(
 		return EMIT_EXPR_FAILURE;
 	}
 
-	switch((uint_leastenum_t)c_cur.kind) {
+#if	DBG
+	{
+		const CXString SPL = clang_getCursorSpelling(c_cur);
+		const CXString KNDSPL = clang_getCursorKindSpelling(clang_getCursorKind(c_cur));
+		const char* const OP = clang_getCString(SPL);
+		const char* const OPKND = clang_getCString(KNDSPL);
+
+		ae2f_expected_but_else(OP) {
+			h_ctx->m_err = ACLSPV_COMPILE_ERR_CLANG;
+			return EMIT_EXPR_FAILURE;
+		}
+
+		dbg_prefix(a);
+		dbg_call((void), printf("Binary Operator: %s\n", OP));
+		dbg_call((void), printf("Binary Operator Kind: %s\n", OPKND));
+
+		clang_disposeString(SPL);
+		clang_disposeString(KNDSPL);
+	}
+#endif
+
+	switch((uint_leastenum_t)clang_getCursorKind(c_cur)) {
 		default:
 			return EMIT_EXPR_NOT_THE_CASE;
 
 		case CXCursor_BinaryOperator:
+		case CXCursor_CompoundAssignOperator:
 			break;
 	}
 

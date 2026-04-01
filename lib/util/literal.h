@@ -53,26 +53,19 @@ ae2f_inline static ae2f_ccconst struct util_literal_eval_	util_literal_eval2(
 		case	c_case:						\
 									\
 		RET.m_ret.L_mem = c_oprndA.L_mem L_oper c_oprndB.L_mem;	\
-		RET.m_found = 1;					\
+		RET.m_found = 1					\
 
 		case ID_DEFAULT_I8:
 		case ID_DEFAULT_I16:
 		case ID_DEFAULT_I32:
 		case ID_DEFAULT_I64:
-			/** FIXME: in arithmetic sign matters */
 			switch((uintmax_t)c_opcode) {
-				EXPR_TWO(+, m_api_intmax, SpvOpIAdd) {}
-				return RET;
-
-				EXPR_TWO(-, m_api_intmax, SpvOpISub) {}
-				return RET;
-
-				EXPR_TWO(*, m_api_intmax, SpvOpIMul) {}
-				return RET;
-				EXPR_TWO(/, m_api_intmax, SpvOpSDiv) {}
-				return RET;
-				EXPR_TWO(%, m_api_intmax, SpvOpSRem) {}
-				return RET;
+				EXPR_TWO(+, m_api_intmax, SpvOpIAdd); return RET;
+				EXPR_TWO(-, m_api_intmax, SpvOpISub); return RET;
+				EXPR_TWO(*, m_api_intmax, SpvOpIMul); return RET;
+				EXPR_TWO(/, m_api_intmax, SpvOpSDiv); return RET;
+				EXPR_TWO(/, m_api_intmax, SpvOpUDiv); return RET;
+				EXPR_TWO(%, m_api_intmax, SpvOpSRem); return RET;
 
 				default:
 				RET.m_found = 0;
@@ -81,27 +74,26 @@ ae2f_inline static ae2f_ccconst struct util_literal_eval_	util_literal_eval2(
 
 		case ID_DEFAULT_F32:
 			switch((uintmax_t)c_opcode) {
-				case SpvOpFAdd:
-					RET.m_ret.m_flt
-						= c_oprndA.m_flt + c_oprndB.m_flt;
-					RET.m_found = 1;
-					return RET;
+				EXPR_TWO(+, m_flt, SpvOpFAdd); return RET;
+				EXPR_TWO(-, m_flt, SpvOpFSub); return RET;
+				EXPR_TWO(/, m_flt, SpvOpFDiv); return RET;
+				EXPR_TWO(*, m_flt, SpvOpFMul); return RET;
+
 				default:
-					RET.m_found = 0;
-					return RET;
+				RET.m_found = 0;
+				return RET;
 			}
 
 
 		case ID_DEFAULT_F64:
 			switch((uintmax_t)c_opcode) {
-				case SpvOpFAdd:
-					RET.m_ret.m_dbl
-						= c_oprndA.m_dbl + c_oprndB.m_dbl;
-					RET.m_found = 1;
-					return RET;
+				EXPR_TWO(+, m_dbl, SpvOpFAdd); return RET;
+				EXPR_TWO(-, m_dbl, SpvOpFSub); return RET;
+				EXPR_TWO(/, m_dbl, SpvOpFDiv); return RET;
+				EXPR_TWO(*, m_dbl, SpvOpFMul); return RET;
 				default:
-					RET.m_found = 0;
-					return RET;
+				RET.m_found = 0;
+				return RET;
 			}
 			break;
 

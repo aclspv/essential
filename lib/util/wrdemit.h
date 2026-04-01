@@ -3,6 +3,7 @@
 #ifndef build_wrdemit_h
 #define build_wrdemit_h
 
+#include <limits.h>
 #include <stddef.h>
 #include <aclspv/spvty.h>
 
@@ -11,6 +12,8 @@
 
 #include <assert.h>
 #include <string.h>
+
+#include <ae2f/bll.h>
 
 #include "./ctx.h"
 
@@ -49,6 +52,10 @@ static ae2f_inline spvsz_t util_emit_wrd(
 		const aclspv_wrd_t c_wrd
 		)
 {
+	aclspv_wrd_t	DUMMY;
+	uptr		CND;
+ 
+
 	if(count_to_sz(c_wrdcount + 1) > (spvsz_t)h_wrds->m_sz)
 		_aclspv_grow_vec_with_copy(
 				_aclspv_malloc, _aclspv_free, _aclspv_memcpy 
@@ -56,11 +63,20 @@ static ae2f_inline spvsz_t util_emit_wrd(
 				, ((size_t)count_to_sz((c_wrdcount + 1) << 1))
 				);
 
-	ae2f_expected_but_else(h_wrds->m_p)				return 0;
-	ae2f_unexpected_but_if(sz_to_count(h_wrds->m_sz) > UINT32_MAX)	return 0;
+	CND = ae2f_bll_from_bool1(uptr, ae2f_expected(h_wrds->m_p && (sz_to_count(h_wrds->m_sz) <= UINT_MAX)));
 
-	get_wrd_of_vec(h_wrds)[c_wrdcount] = c_wrd;
-	return c_wrdcount + 1;
+	*ae2f_bll_sel_ptr(
+			aclspv_wrd_t* ae2f_restrict
+			, CND
+			, &get_wrd_of_vec(h_wrds)[c_wrdcount]
+			, &DUMMY) = c_wrd;
+
+	return ae2f_bll_sel(
+			aclspv_wrd_t
+			, (spvsz_t)CND
+			, c_wrdcount + 1
+			, 0u
+			);
 }
 
 #define	mk_noprnds(c_num_opprm)	\
