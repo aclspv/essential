@@ -1,8 +1,6 @@
 #include <ae2f/pat/dbg.h>
 #include <ae2f/bll.h>
 
-#include <aclspv/spvty.h>
-
 #include <spirv/unified1/spirv.h>
 #include <util/literal.h>
 #include <util/iddef.h>
@@ -12,6 +10,9 @@
 
 #include "../expr.h"
 #include "ae2f/c90/StdInt.h"
+#include "ae2f/cc.h"
+#include "util/id.h"
+#include "util/wrd.h"
 
 enum EMIT_EXPR_ aclexpr_arithmetic_cast_non_literal(
 		const aclspv_id_t	c_old_id,
@@ -166,16 +167,90 @@ enum EMIT_EXPR_ aclexpr_arithmetic_cast_non_literal(
 
 	dbg_puts("two are different");
 
+	if(c_new_type == ID_DEFAULT_BOOL && (aclid_is_int(c_old_type) | aclid_is_float(c_old_type))) {
+		aclspv_id_t		V0;
+		aclspv_wrd_t		OPCODE = ae2f_bll_sel_bool1(aclspv_wrd_t, aclid_is_int(c_old_type), SpvOpINotEqual, SpvOpFOrdNotEqual);
+		
+		ae2f_expected_but_else(V0 = aclutil_mk_constant_val_by_enum(0, h_ctx, c_old_type))
+			return EMIT_EXPR_FAILURE;
+
+		if(c_flag_literal & UTIL_LITERAL_CONSTANT) {
+			ae2f_expected_but_else(h_ctx->m_count.m_types
+					= util_emitx_6(
+						&h_ctx->m_section.m_types
+						, h_ctx->m_count.m_types
+						, SpvOpSpecConstantOp
+						, c_new_type
+						, *r_newid = h_ctx->m_id++
+						,OPCODE 
+						, c_old_id, V0))
+				return EMIT_EXPR_FAILURE;
+
+			return EMIT_EXPR_SUCCESS_CONSTANT;
+		} else {
+			ae2f_expected_but_else(h_ctx->m_count.m_fnimpl
+					= util_emitx_5(
+						&h_ctx->m_section.m_fnimpl
+						, h_ctx->m_count.m_fnimpl
+						,OPCODE 
+						, c_new_type
+						, *r_newid = h_ctx->m_id++
+						, c_old_id 
+						, V0
+						)
+					) return EMIT_EXPR_FAILURE;
+			return EMIT_EXPR_SUCCESS;
+		}
+	}
+
+	if((aclid_is_int(c_new_type) | aclid_is_int(c_new_type)) && c_old_type == ID_DEFAULT_BOOL) {
+		aclspv_id_t		V0, V1;
+
+		ae2f_expected_but_else(V0 = aclutil_mk_constant_val_by_enum(0, h_ctx, c_old_type))
+			return EMIT_EXPR_FAILURE;
+
+		ae2f_expected_but_else(V1 = aclutil_mk_constant_val_by_enum(1, h_ctx, c_old_type))
+			return EMIT_EXPR_FAILURE;
+
+
+		if(c_flag_literal & UTIL_LITERAL_CONSTANT) {
+			ae2f_expected_but_else(h_ctx->m_count.m_types
+					= util_emitx_7(
+						&h_ctx->m_section.m_types
+						, h_ctx->m_count.m_types
+						, SpvOpSpecConstantOp
+						, c_new_type
+						, *r_newid = h_ctx->m_id++
+						, SpvOpSelect
+						, c_old_id, V1, V0))
+				return EMIT_EXPR_FAILURE;
+
+			return EMIT_EXPR_SUCCESS_CONSTANT;
+		} else {
+			ae2f_expected_but_else(h_ctx->m_count.m_fnimpl
+					= util_emitx_6(
+						&h_ctx->m_section.m_fnimpl
+						, h_ctx->m_count.m_fnimpl
+						, SpvOpINotEqual
+						, c_new_type
+						, *r_newid = h_ctx->m_id++
+						, c_old_id
+						, V1, V0
+						)
+					) return EMIT_EXPR_FAILURE;
+			return EMIT_EXPR_SUCCESS;
+		}
+	}
+
 	/** TWO ARE DIFFERENT */
 	if(aclid_is_float(c_new_type)) {
-		*r_newid = h_ctx->m_id;
 		ae2f_expected_but_else(h_ctx->m_count.m_fnimpl
 				= util_emitx_4(
 					&h_ctx->m_section.m_fnimpl
 					, h_ctx->m_count.m_fnimpl
 					, SpvOpConvertSToF 
 					, c_new_type
-					, h_ctx->m_id++
+					, *r_newid = h_ctx->m_id++
 					, c_old_id
 					)
 				) return EMIT_EXPR_FAILURE;
@@ -269,7 +344,7 @@ enum EMIT_EXPR_ aclexpr_arithmetic_cast_literal(
 		}
 	}
 
-	else if(aclid_is_float(c_old_type) && aclid_is_float(c_new_type) && c_old_type != c_new_type) {
+	else if(aclid_is_float(c_old_type) && aclid_is_float(c_new_type) && c_old_type != c_new_type)
 		switch(aclid_get_bit_width(c_new_type)) {
 			case 64:
 				RESULT.m_dbl = c_old_literal.m_flt;
@@ -281,6 +356,28 @@ enum EMIT_EXPR_ aclexpr_arithmetic_cast_literal(
 				ae2fpat_assertassume(0 && "unknown float bit-width");
 				return EMIT_EXPR_FAILURE;
 		}
+	else if(aclid_is_int(c_old_type) && c_new_type == ID_DEFAULT_BOOL) {
+		RESULT.m_u64 = !!c_old_literal.m_api_uintmax;
+	} else if(aclid_is_float(c_old_type) && c_new_type == ID_DEFAULT_BOOL) switch(aclid_get_bit_width(c_old_type)) {
+		case 64:
+			RESULT.m_api_uintmax = !!(i64_least)c_old_literal.m_dbl;
+			break;
+		case 32:
+			RESULT.m_api_uintmax = !!(i32_least)c_old_literal.m_flt;
+			break;
+		default:
+			return EMIT_EXPR_FAILURE;
+	} else if (aclid_is_int(c_new_type) && c_old_type == ID_DEFAULT_BOOL) {
+		RESULT.m_u64 = c_old_literal.m_api_uintmax;
+	} else if (aclid_is_float(c_new_type) && c_old_type == ID_DEFAULT_BOOL) switch(aclid_get_bit_width(c_old_type)) {
+		case 64:
+			RESULT.m_dbl = (double)(c_old_literal.m_api_uintmax);
+			break;
+		case 32:
+			RESULT.m_flt = (float)(c_old_literal.m_api_uintmax);
+			break;
+		default:
+			return EMIT_EXPR_FAILURE;
 	}
 
 
@@ -348,6 +445,9 @@ enum EMIT_EXPR_ aclexpr_arithmetic_cast(
 
 	/** c_new_type = ae2f_bll_sel_bool1(aclspv_id_t, c_new_type, c_new_type, c_old_type); */
 	ae2fpat_assertassume(c_new_type);
+
+	(void)aclid_mk_default_id(c_new_type, h_ctx);
+	(void)aclid_mk_default_id(c_old_type, h_ctx);
 
 	if(c_flag_literal & UTIL_LITERAL_LITERAL) {
 		return aclexpr_arithmetic_cast_literal(

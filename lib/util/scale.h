@@ -7,8 +7,9 @@
 #define pass_scale_h
 
 #include <ae2f/c90/StdInt.h>
-#include "../vec.auto.h"
 #include <assert.h>
+
+#include <.aclspv/vec.h>
 
 
 typedef struct x_scale x_scale;

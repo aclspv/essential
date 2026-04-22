@@ -1,8 +1,6 @@
 #ifndef util_op_h
 #define util_op_h
 
-#include "aclspv/abi.h"
-#include "aclspv/spvty.h"
 #include "util/id.h"
 #include <clang-c/Index.h>
 enum UTIL_OPBINCFG_ {

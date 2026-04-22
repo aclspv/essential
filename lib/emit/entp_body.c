@@ -1,9 +1,7 @@
 #include "./entp_body.h"
 #include "./expr.h"
-#include "util/id.h"
 
 #include <aclspv.h>
-#include <aclspv/abi.h>
 
 #include <ae2f/Keys.h>
 #include <ae2f/c90/StdInt.h>
@@ -25,6 +23,7 @@
 
 #include <attr/specid.h>
 #include <attr/btcast.h>
+#include <attr/ifpart.h>
 
 #include <spirv/unified1/spirv.h>
 
@@ -63,7 +62,7 @@
 				, CTX->m_count.m_name - POS - 1);				\
 }
 
-ACLSPV_ABI_IMPL enum CXChildVisitResult aclemit_entp_body(CXCursor h_cur, ae2f_unused CXCursor h_parent, CXClientData rdwr_data) {
+enum CXChildVisitResult aclemit_entp_body(CXCursor h_cur, ae2f_unused CXCursor h_parent, CXClientData rdwr_data) {
 #define	FNCTX		((aclutil_fnctx* ae2f_restrict) rdwr_data)
 #define	CTX		FNCTX->m_ctx
 #define	jmpfail(c_why)	{ (CTX)->m_err = (c_why); goto LBL_FAIL; }
@@ -75,6 +74,9 @@ ACLSPV_ABI_IMPL enum CXChildVisitResult aclemit_entp_body(CXCursor h_cur, ae2f_u
 		CTX->m_err = ACLSPV_COMPILE_MET_INVAL;
 		goto LBL_FAIL;
 	}
+
+	FNCTX->m_state0 |= (uint_leastenum_t)(KIND != CXCursor_LabelStmt && KIND != CXCursor_ReturnStmt) << (uint_leastenum_t)(ACLUTIL_FNCTX_STATEPAD0_LBL_DO_SOMETHING);
+	FNCTX->m_state0 &= ~((uint_leastenum_t)(KIND != CXCursor_ReturnStmt) << (uint_leastenum_t)(ACLUTIL_FNCTX_STATEPAD0_FNRET));
 
 	switch((uintmax_t)KIND) {
 		case CXCursor_VarDecl:
@@ -269,7 +271,6 @@ ACLSPV_ABI_IMPL enum CXChildVisitResult aclemit_entp_body(CXCursor h_cur, ae2f_u
 				 * So far I have defined the variable but not with the initialiser.
 				 * Make initialising part if possible.
 				 * */
-				CURSOR.m_data.m_var_simple.m_is_predictable = 0;
 				if(aclid_is_arithmetic(CURSOR.m_data.m_var_simple.m_type_id))
 				{
 					CXCursor	VAR_INIT = clang_Cursor_getVarDeclInitializer(h_cur);
@@ -390,16 +391,42 @@ ACLSPV_ABI_IMPL enum CXChildVisitResult aclemit_entp_body(CXCursor h_cur, ae2f_u
 			goto LBL_DONE;
 
 		case CXCursor_ReturnStmt:
+			if(FNCTX->m_state0 & (uint_leastenum_t)(ACLUTIL_FNCTX_STATE0_LBL_DO_SOMETHING)) {
+				aclutil_tell_cursor_lbl(CTX->m_num_cursor, CTX->m_cursors.m_p
+						, CTX);
+			} else {
+				CTX->m_count.m_fnimpl = FNCTX->m_lbl_snapshot;
+			}
+
 			ae2f_expected_but_else(CTX->m_count.m_fnimpl = emit_opcode(
 						&CTX->m_section.m_fnimpl
 						, CTX->m_count.m_fnimpl
 						, SpvOpReturn, 0
 						)) goto LBL_FAIL;
 			FNCTX->m_state0 |= ACLUTIL_FNCTX_STATE0_FNRET;
+			FNCTX->m_lbl_snapshot = CTX->m_count.m_fnimpl;
+
+			if(FNCTX->m_retid != ID_DEFAULT_VOID) {
+				/** have to return a value */
+			}
+
+			FNCTX->m_state0 &= ~(uint_leastenum_t)(ACLUTIL_FNCTX_STATE0_LBL_DO_SOMETHING);
+
+			/** just for branch */
+			ae2f_expected_but_else(CTX->m_count.m_fnimpl = util_emitx_2(
+						&CTX->m_section.m_fnimpl
+						, CTX->m_count.m_fnimpl
+						, SpvOpLabel
+						, CTX->m_id++
+						)) goto LBL_FAIL;
 
 			goto LBL_DONE;
 
 		case CXCursor_LabelStmt:
+			unless(FNCTX->m_state0 & (uint_leastenum_t)(ACLUTIL_FNCTX_STATE0_LBL_DO_SOMETHING)) {
+				CTX->m_count.m_fnimpl = FNCTX->m_lbl_snapshot;
+			}
+
 			ae2f_unexpected_but_if(CTX->m_err = aclutil_tell_cursor_lbl(
 						CTX->m_num_cursor
 						, CTX->m_cursors.m_p, CTX))
@@ -438,7 +465,7 @@ ACLSPV_ABI_IMPL enum CXChildVisitResult aclemit_entp_body(CXCursor h_cur, ae2f_u
 
 				___mkname_on_dbg(CURSOR.m_data.m_goto_lbl.m_id);
 #undef	CURSOR
-			} goto LBL_RECURSE;
+			} goto LBL_DONE;
 		case CXCursor_GotoStmt:
 			{
 				CXCursor LBL_STMT = clang_getCursorReferenced(h_cur);
@@ -463,6 +490,15 @@ ACLSPV_ABI_IMPL enum CXChildVisitResult aclemit_entp_body(CXCursor h_cur, ae2f_u
 					++CTX->m_num_cursor;
 				}
 
+
+				/** snapshot */
+				FNCTX->m_lbl_snapshot	= CTX->m_count.m_fnimpl;
+
+				if(FNCTX->m_state0 & (uint_leastenum_t)(ACLUTIL_FNCTX_STATE0_LBL_DO_SOMETHING)) {
+					aclutil_tell_cursor_lbl(CTX->m_num_cursor, CTX->m_cursors.m_p
+							, CTX);
+				}
+
 				ae2f_expected_but_else(CTX->m_count.m_fnimpl = util_emitx_2(
 							&CTX->m_section.m_fnimpl
 							, CTX->m_count.m_fnimpl
@@ -478,6 +514,8 @@ ACLSPV_ABI_IMPL enum CXChildVisitResult aclemit_entp_body(CXCursor h_cur, ae2f_u
 							, SpvOpLabel
 							, CTX->m_id++
 							)) goto LBL_FAIL;
+
+				FNCTX->m_state0 &= ~(uint_leastenum_t)(ACLUTIL_FNCTX_STATE0_LBL_DO_SOMETHING);
 			}
 			goto LBL_DONE;
 
@@ -492,7 +530,6 @@ ACLSPV_ABI_IMPL enum CXChildVisitResult aclemit_entp_body(CXCursor h_cur, ae2f_u
 		case CXCursor_CompoundStmt:
 			goto LBL_RECURSE;
 
-		case CXCursor_IntegerLiteral:
 		case CXCursor_BinaryOperator:
 		case CXCursor_CompoundAssignOperator:
 #if 1
@@ -521,7 +558,143 @@ ACLSPV_ABI_IMPL enum CXChildVisitResult aclemit_entp_body(CXCursor h_cur, ae2f_u
 			}
 			goto LBL_DONE;
 #endif
-		case CXCursor_FloatingLiteral:
+		case CXCursor_IfStmt:
+			{
+				struct s_attr_ifpart_t	IFPART;
+				aclspv_id_t		IDVAL = 0;
+
+				IFPART.m_n				= 0;
+				IFPART.m_b_true				= CTX->m_id++;
+				IFPART.m_b_false = IFPART.m_b_default	= CTX->m_id++;
+
+				clang_visitChildren(h_cur, s_attr_ifpart, &IFPART);
+				dbg_prefix(a);
+				dbg_call(fprintf, (stderr, "number ifpart: %u\n", IFPART.m_n));
+
+
+				dbg_prefix(a);
+				dbg_call(fprintf, (stderr, "ifpart: %u %u %u\n", IFPART.m_b_true, IFPART.m_b_false, IFPART.m_b_default));
+
+				switch(aclspv_get_expr(
+							&IDVAL
+							, ID_DEFAULT_BOOL
+							, IFPART.m_parts[0]
+							, 0, CTX))
+				{
+					case EMIT_EXPR_NOT_THE_CASE:
+					case EMIT_EXPR_FAILURE:
+					default:
+						goto LBL_FAIL;
+
+					case EMIT_EXPR_SUCCESS:
+					case EMIT_EXPR_SUCCESS_CONSTANT:
+					case EMIT_EXPR_SUCCESS_LITERAL:
+						break;
+				}
+
+				ae2f_expected_but_else(IDVAL) {
+					CTX->m_err = ACLSPV_COMPILE_IF_COND_INVAL;
+					goto LBL_FAIL;
+				}
+
+				ae2f_unexpected_but_if(CTX->m_err = aclutil_tell_cursor_lbl(
+							CTX->m_num_cursor
+							, CTX->m_cursors.m_p
+							, CTX)) goto LBL_FAIL;
+
+				ae2f_expected_but_else(CTX->m_count.m_fnimpl = util_emitx_3(
+							&CTX->m_section.m_fnimpl
+							, CTX->m_count.m_fnimpl
+							, SpvOpSelectionMerge
+							, IFPART.m_b_default
+							, 0	/** attribute */
+							)) goto LBL_FAIL;
+
+				ae2f_expected_but_else(CTX->m_count.m_fnimpl = util_emitx_4(
+							&CTX->m_section.m_fnimpl
+							, CTX->m_count.m_fnimpl
+							, SpvOpBranchConditional
+							, IDVAL
+							, IFPART.m_b_true
+							, IFPART.m_b_false
+							)) goto LBL_FAIL;
+
+				{
+					aclutil_fnctx		FNCTX_NEW = *FNCTX;
+					FNCTX_NEW.m_state0 = 0;
+
+					ae2f_expected_but_else(CTX->m_count.m_fnimpl = util_emitx_2(
+								&CTX->m_section.m_fnimpl
+								, CTX->m_count.m_fnimpl
+								, SpvOpLabel
+								, IFPART.m_b_true
+								)) goto LBL_FAIL;
+
+					clang_visitChildren(
+							IFPART.m_parts[1]
+							, aclemit_entp_body
+							, &FNCTX_NEW
+							); ae2f_unexpected_but_if(CTX->m_err) goto LBL_FAIL;
+
+					FNCTX->m_state0		|= FNCTX_NEW.m_state0;
+
+					ae2f_unexpected_but_if(CTX->m_err = aclutil_tell_cursor_lbl(
+								CTX->m_num_cursor
+								, CTX->m_cursors.m_p
+								, CTX)) goto LBL_FAIL;
+
+					unless(FNCTX_NEW.m_state0 & ACLUTIL_FNCTX_STATE0_FNRET) {
+						ae2f_expected_but_else(CTX->m_count.m_fnimpl = util_emitx_2(
+									&CTX->m_section.m_fnimpl
+									, CTX->m_count.m_fnimpl
+									, SpvOpBranch
+									, IFPART.m_b_default
+									)) goto LBL_FAIL;
+					}
+				}
+
+				if(IFPART.m_b_false ^ IFPART.m_b_default /* != */) {
+					aclutil_fnctx		FNCTX_NEW = *FNCTX;
+					FNCTX_NEW.m_state0 = 0;
+
+					ae2f_expected_but_else(CTX->m_count.m_fnimpl = util_emitx_2(
+								&CTX->m_section.m_fnimpl
+								, CTX->m_count.m_fnimpl
+								, SpvOpLabel
+								, IFPART.m_b_false
+								)) goto LBL_FAIL;
+
+					clang_visitChildren(
+							IFPART.m_parts[2]
+							, aclemit_entp_body
+							, &FNCTX_NEW
+							); ae2f_unexpected_but_if(CTX->m_err) goto LBL_FAIL;
+
+					FNCTX->m_state0		|= FNCTX_NEW.m_state0;
+
+					ae2f_unexpected_but_if(CTX->m_err = aclutil_tell_cursor_lbl(
+								CTX->m_num_cursor
+								, CTX->m_cursors.m_p
+								, CTX)) goto LBL_FAIL;
+
+					unless(FNCTX_NEW.m_state0 & ACLUTIL_FNCTX_STATE0_FNRET) {
+						ae2f_expected_but_else(CTX->m_count.m_fnimpl = util_emitx_2(
+									&CTX->m_section.m_fnimpl
+									, CTX->m_count.m_fnimpl
+									, SpvOpBranch
+									, IFPART.m_b_default
+									)) goto LBL_FAIL;
+					}
+				}
+
+				ae2f_expected_but_else(CTX->m_count.m_fnimpl = util_emitx_2(
+							&CTX->m_section.m_fnimpl
+							, CTX->m_count.m_fnimpl
+							, SpvOpLabel
+							, IFPART.m_b_default
+							)) goto LBL_FAIL;
+			} goto LBL_DONE;
+
 		case CXCursor_UnaryOperator:
 		case CXCursor_CallExpr:
 		case CXCursor_ArraySubscriptExpr:
@@ -530,7 +703,6 @@ ACLSPV_ABI_IMPL enum CXChildVisitResult aclemit_entp_body(CXCursor h_cur, ae2f_u
 		case CXCursor_DeclRefExpr:
 		case CXCursor_UnaryExpr:
 		case CXCursor_DoStmt:
-		case CXCursor_IfStmt:
 
 		case CXCursor_ForStmt:
 		case CXCursor_WhileStmt:

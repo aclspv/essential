@@ -1,9 +1,10 @@
 #ifndef aclutil_cxtp_h
 #define	aclutil_cxtp_h
 
+#include "./wrd.h"
 #include "util/ctx.h"
+
 #include <clang-c/Index.h>
-#include <aclspv/spvty.h>
 #include <ae2f/Keys.h>
 #include <spirv/unified1/spirv.h>
 

@@ -8,9 +8,42 @@
 
 #include <ae2f/Keys.h>
 #include <ae2f/cc.h>
+#include <ae2f/.Call.h>
 
-#include "./aclspv/abi.h"
-#include "./aclspv/spvty.h"
+/**
+ * @def ACLSPV_ABI_IMPL	
+ * @brief Implementation as ABI
+ *
+ * @def ACLSPV_ABI_DECL	
+ * @brief Declaration as ABI
+ * */
+
+#if ae2f_IS_SHARED
+#define ACLSPV_ABI_DECL ae2f_decl
+#define ACLSPV_ABI_IMPL	ae2f_impl
+#else
+#define ACLSPV_ABI_DECL
+#define ACLSPV_ABI_IMPL
+#endif
+
+#include <ae2f/c90/StdInt.h>
+
+/**
+ * @typedef	aclspv_wrd_t
+ * @brief	integer as word.
+ * 		could be defined with `#define`
+ * */
+#ifndef	aclspv_wrd_t
+#define	aclspv_wrd_t	aclspv_wrd_t
+typedef uint_least32_t	aclspv_wrd_t;
+#endif
+
+/**
+ * @typedef	aclspv_wrdcount_t
+ * @brief	the integer type represents the number of word.
+ * */
+typedef	aclspv_wrd_t	aclspv_wrdcount_t;
+extern int ACLSPV_WRD_CHECK[sizeof(aclspv_wrd_t) >= 4 ? 1 : -1];
 
 #include <clang-c/Index.h>
 
@@ -30,7 +63,8 @@ typedef enum ACLSPV_COMPILE_ {
 	ACLSPV_COMPILE_STORAGE_CLASS_UNDEFINED,
 	ACLSPV_COMPILE_BTCAST_NON_NUMBER,
 	ACLSPV_COMPILE_ASSIGN_ON_NON_LVAL,
-	ACLSPV_COMPILE_CURSOR_NOT_FOUND
+	ACLSPV_COMPILE_CURSOR_NOT_FOUND,
+	ACLSPV_COMPILE_IF_COND_INVAL
 } e_aclspv_compile_t;
 
 /**

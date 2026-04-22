@@ -3,7 +3,7 @@
 #ifndef util_bind_h
 #define util_bind_h
 
-#include <aclspv/spvty.h>
+#include "./wrd.h"
 #include <clang-c/Index.h>
 
 typedef	struct {

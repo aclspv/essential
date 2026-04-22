@@ -2,8 +2,6 @@
 
 #ifndef	lib_emit_expr_h
 #define	lib_emit_expr_h
-#include <aclspv/abi.h>
-#include <aclspv/spvty.h>
 #include <util/literal.h>
 
 typedef enum EMIT_EXPR_ {

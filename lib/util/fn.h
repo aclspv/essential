@@ -3,8 +3,8 @@
 #ifndef lib_build_fn_h
 #define lib_build_fn_h
 
-#include <aclspv/spvty.h>
 #include <clang-c/Index.h>
+#include <util/wrd.h>
 
 typedef struct {
 	/* @brief Result ID for function */

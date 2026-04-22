@@ -3,9 +3,10 @@
 #ifndef build_wrdemit_h
 #define build_wrdemit_h
 
-#include <limits.h>
+
+#include <ae2f/c90/Limits.h>
 #include <stddef.h>
-#include <aclspv/spvty.h>
+#include "./wrd.h"
 
 #include <ae2f/c90/StdInt.h>
 #include <ae2f/Keys.h>

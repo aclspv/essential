@@ -1,20 +1,15 @@
 /** @file expr.c */
 
 #include "./expr.h"
-#include "aclspv.h"
-#include "ae2f/pat/dbg.h"
-#include "util/iddef.h"
-#include "util/log.h"
 
 #include <ae2f/bll.h>
-
-#include <aclspv/spvty.h>
-
 #include <util/op.h>
 #include <util/scale.h>
 #include <util/emitx.h>
+#include <util/log.h>
+#include <util/iddef.h>
 
-ACLSPV_ABI_IMPL enum EMIT_EXPR_ aclspv_get_expr2(
+enum EMIT_EXPR_ aclspv_get_expr2(
 		aclspv_id_t* ae2f_restrict const	ret_id
 		, aclspv_id_t* ae2f_restrict const	r_type_opt
 		, const CXCursor			c_cur

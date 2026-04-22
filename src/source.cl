@@ -69,10 +69,21 @@ kernel_raw(0) void N_KERNEL_0(__constant uintptr_t* consti32, storage_class(3) c
 	int a2 = a0 + (a0 += a1);
 #if 1
 	aclattr("aclspv_btcast") long a = (double)(int)(float)(a0 + a1 + a2);
+
+	if(a) { a2 += 3; }
+
+	a2 += 8;
+	a2 += 8;
 #endif
 
 	goto GOTO;
+	return;
+
+	a2 += 8;
+	a2 += 8;
+
 GOTO:
+	a2 += 3;
 	return;
 }
 

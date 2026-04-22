@@ -6,15 +6,7 @@
 #ifndef	aclspv_spvty_h
 #define aclspv_spvty_h
 
-#include <ae2f/c90/StdInt.h>
-
-/**
- * @typedef	aclspv_wrd_t
- * @brief	integer as word
- * */
-typedef uint_least32_t	aclspv_wrd_t;
-
-extern char ACLSPV_CHECK[sizeof(aclspv_wrd_t) >= 4 ? 1 : -1];
+#include <aclspv.h>
 
 /**
  * @typedef	aclspv_opcode_t
@@ -50,12 +42,6 @@ extern char ACLSPV_CHECK[sizeof(aclspv_opcode_t) >= 2 ? 1 : -1];
  * @brief	number of parameter of opcode (aka `aclspv_opcode_t`)
  * */
 typedef aclspv_wrd_t	aclspv_num_opprm_t;
-
-/**
- * @typedef	aclspv_wrdcount_t
- * @brief	the integer type represents the number of word.
- * */
-typedef	aclspv_wrd_t	aclspv_wrdcount_t;
 
 /**
  * @typedef	aclpsv_id_t

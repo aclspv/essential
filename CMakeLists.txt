@@ -41,7 +41,7 @@ endif()
 ae2f_CoreLibFetchX(ae2f Core	main)
 ae2f_CoreLibFetchX(ae2f Pat	master)
 
-ae2f_CoreLibFetchX(KhronosGroup SPIRV-Headers main)
+ae2f_CoreLibFetchX_DNS(KhronosGroup KhronosGroup SPIRV-Headers main https://github.com/)
 
 if(${ACLSPV_FETCH_CLANG_ALWAYS})
 else()
@@ -86,7 +86,7 @@ ae2f_Macro_Lib_V2_REL(
 	ae3f aclspvCore INTERFACE
 	${PROJECT_SOURCE_DIR}/src/ "__NOTHING"
 	${PROJECT_SOURCE_DIR}/src/ "*.c*"
-	lib/ ".auto.h"
+	inc/.aclspv ".h"
 	${PROJECT_SOURCE_DIR}/cfg/aclspvCore.cmake.in
 	inc ${_aclspv_RELOADED} 
 	)

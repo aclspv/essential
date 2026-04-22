@@ -9,14 +9,13 @@
 #include <clang-c/Index.h>
 
 #include <aclspv.h>
-#include <aclspv/spvty.h>
 
 #include <ae2f/Keys.h>
 
+#include "./wrd.h"
 #include "./bind.h"
 #include "./literal.h"
-#include "../vec.auto.h"
-
+#include <.aclspv/vec.h>
 
 
 typedef struct {

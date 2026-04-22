@@ -8,11 +8,15 @@
 #include <ae2f/pat/vec.auto.h>
 #include <ae2f/c90/StdInt.h>
 #include <ae2f/cc.h>
+#include "./wrd.h"
 
 #include "./ctx.h"
+#include "./literal.h"
+#include "aclspv.h"
 
 #define	__ENUM()	\
-	__X(FNRET)
+	__X(FNRET),	\
+	__X(LBL_DO_SOMETHING)
 
 #define	__X(A)	ACLUTIL_FNCTX_STATEPAD0_##A
 
@@ -35,6 +39,9 @@ typedef struct {
 
 	/** @brief see `enum ACLSPV_FNCTX_STATEPAD0_` */
 	uint_leastenum_t	m_state0;
+
+	aclspv_id_t		m_retid;	/** return type id */
+	aclspv_wrdcount_t	m_lbl_snapshot;	/** last label destination */
 } aclutil_fnctx;
 
 

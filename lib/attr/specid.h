@@ -5,11 +5,11 @@
 
 #include <clang-c/Index.h>
 #include <ae2f/Keys.h>
-#include <aclspv/spvty.h>
 #include <stdio.h>
 #include <string.h>
+#include <util/wrd.h>
 
-static enum CXChildVisitResult	s_attr_specid(CXCursor h_cur, CXCursor h_parent, CXClientData ae2f_restrict wr_specid) {
+static enum CXChildVisitResult	s_attr_specid(CXCursor h_cur, ae2f_unused CXCursor h_parent, CXClientData ae2f_restrict wr_specid) {
 	CXString TEXT;
 	const char* NEEDLE;
 	unsigned SPECID = *((aclspv_wrd_t* ae2f_restrict)wr_specid);
@@ -32,8 +32,6 @@ static enum CXChildVisitResult	s_attr_specid(CXCursor h_cur, CXCursor h_parent, 
 
 	clang_disposeString(TEXT);
 	return CXChildVisit_Break;
-
-	(void)h_parent;
 }
 
 #endif

@@ -2,7 +2,6 @@
 
 #include "./iddef.h"
 #include "./emitx.h"
-#include "aclspv/spvty.h"
 #include "util/id.h"
 
 #include <assert.h>
@@ -36,7 +35,8 @@ ae2f_ccconst aclspv_bool_t aclid_is_unsigned(const B_id_default_t c_id_default) 
 		default:
 			return 0;
 	}
-	return 0;
+
+	ae2f_unreachable();
 }
 
 ae2f_ccconst aclspv_bool_t aclid_is_signed(const B_id_default_t c_id_default) {
@@ -59,10 +59,12 @@ ae2f_ccconst aclspv_bool_t aclid_is_signed(const B_id_default_t c_id_default) {
 		default:
 			return 0;
 	}
+
+	ae2f_unreachable();
 }
 
 ae2f_ccconst aclspv_bool_t aclid_is_int(const B_id_default_t c_id_default) {
-	return aclid_is_unsigned(c_id_default) || aclid_is_signed(c_id_default);
+	return aclid_is_unsigned(c_id_default) | aclid_is_signed(c_id_default);
 }
 
 ae2f_ccconst aclspv_bool_t aclid_is_float(const B_id_default_t c_id_default) {
@@ -85,6 +87,9 @@ ae2f_ccconst aclspv_bool_t aclid_is_float(const B_id_default_t c_id_default) {
 		default:
 			return 0;
 	}
+
+
+	ae2f_unreachable();
 }
 
 ae2f_ccconst aclspv_bool_t aclid_is_default(const B_id_default_t c_id_default) {
@@ -106,6 +111,8 @@ ae2f_ccconst aclspv_bool_t aclid_is_default(const B_id_default_t c_id_default) {
 		default:
 			return 0;
 	}
+
+	ae2f_unreachable();
 }
 
 ae2f_ccconst aclspv_bool_t 
@@ -124,6 +131,8 @@ ae2f_ccconst B_id_default_t aclid_getty_float(unsigned bit_width) {
 		default:
 			return ID_DEFAULT_END;
 	}
+
+	ae2f_unreachable();
 }
 
 ae2f_ccconst B_id_default_t aclid_getty_signed(unsigned bit_width) {
@@ -139,6 +148,8 @@ ae2f_ccconst B_id_default_t aclid_getty_signed(unsigned bit_width) {
 		default:
 			return ID_DEFAULT_END;
 	}
+
+	ae2f_unreachable();
 }
 
 ae2f_ccconst B_id_default_t aclid_getty_unsigned(unsigned bit_width) {
@@ -154,6 +165,8 @@ ae2f_ccconst B_id_default_t aclid_getty_unsigned(unsigned bit_width) {
 		default:
 			return ID_DEFAULT_END;
 	}
+
+	ae2f_unreachable();
 }
 
 ae2f_ccconst unsigned aclid_get_bit_width(const B_id_default_t c_id_default) {
@@ -182,6 +195,9 @@ ae2f_ccconst unsigned aclid_get_bit_width(const B_id_default_t c_id_default) {
 		default:
 			return 0;
 	}
+
+
+	ae2f_unreachable();
 }
 
 
@@ -189,26 +205,30 @@ ae2f_ccconst aclspv_bool_t aclid_is_arithmetic(const aclspv_id_t c_id) {
 	return aclid_is_number(c_id);
 }
 
+#include <ae2f/bll.h>
+
 /**
  * @fn		util_default_decide_cast
  * @returns	0 when invalid
  * */
 ae2f_ccconst B_id_default_t aclid_decide_cast(const e_id_default c_id0, const e_id_default c_id1) {
 	/** one is 0? */
-	unless(c_id0 && c_id1)
-		return c_id0 ? c_id0 : c_id1;
+	unless(c_id0 & c_id1)
+		return ae2f_bll_sel_bool_naive1(B_id_default_t, c_id0, c_id0, c_id1);
 
-	unless(aclid_is_arithmetic(c_id0) && aclid_is_arithmetic(c_id1))
+	unless(aclid_is_arithmetic(c_id0) & aclid_is_arithmetic(c_id1))
 		return 0;
 
-	unless(aclid_is_number(c_id0) && aclid_is_number(c_id1))
+	unless(aclid_is_number(c_id0) & aclid_is_number(c_id1))
 		return 0;
 
 	if(aclid_is_float(c_id0) != aclid_is_float(c_id1))
-		return aclid_is_float(c_id0) ? c_id0 : c_id1;
+		return ae2f_bll_sel_bool1(B_id_default_t, aclid_is_float(c_id0), c_id0, c_id1);
 
-	return aclid_get_bit_width(c_id0) > aclid_get_bit_width(c_id1)
-		? c_id0 : c_id1;
+	return ae2f_bll_sel_bool1(
+			B_id_default_t
+			, aclid_get_bit_width(c_id0) > aclid_get_bit_width(c_id1)
+			, c_id0 , c_id1);
 }
 
 aclspv_id_t aclid_mk_default_id(
@@ -216,8 +236,8 @@ aclspv_id_t aclid_mk_default_id(
 		h_util_ctx_t	h_ctx
 		)
 {
-	assert(h_ctx);
-	ae2f_unexpected_but_if(c_id_default == ID_DEFAULT_END)
+	ae2fpat_assertassume_strict(h_ctx);
+	if(c_id_default == ID_DEFAULT_END)
 		return 0;
 
 	if(h_ctx->m_id_defaults[c_id_default])
@@ -226,11 +246,19 @@ aclspv_id_t aclid_mk_default_id(
 #define CTX		h_ctx
 #define	ret_count	h_ctx->m_count.m_types
 	switch(c_id_default) {
-		default:
 		case ID_DEFAULT_END:
 			ae2f_unreachable();
+		default:
 			return 0;
 
+		case ID_DEFAULT_BOOL:
+			ae2f_expected_but_else((ret_count = util_emitx_2(
+							&CTX->m_section.m_types
+							, ret_count
+							, SpvOpTypeBool
+							, ID_DEFAULT_BOOL)))
+				return 0;
+			break;
 
 		case ID_DEFAULT_VOID:
 			/** OpTypeVoid */

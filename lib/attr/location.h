@@ -6,9 +6,7 @@
 #ifndef lib_attr_location_h
 #define lib_attr_location_h
 
-#include <clang-c/Index.h>
-#include <ae2f/Keys.h>
-#include <aclspv/spvty.h>
+#include <aclspv.h>
 #include <stdio.h>
 #include <string.h>
 

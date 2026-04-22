@@ -1,5 +1,6 @@
-#include "../../lib/vec.auto.h"
 #include "../../lib/util/scale.h"
+#include <.aclspv/vec.h>
+
 #include <assert.h>
 
 int main(void) {

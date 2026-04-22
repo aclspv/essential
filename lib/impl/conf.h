@@ -11,8 +11,6 @@
 #include <util/id.h>
 
 #include <aclspv.h>
-#include <aclspv/abi.h>
-
 #include <spirv/unified1/spirv.h>
 
 #define	wrd_caps	h_ctx->m_section.m_capability 

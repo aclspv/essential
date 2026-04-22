@@ -6,8 +6,7 @@
 
 #include "./id.h"
 #include "./ctx.h"
-#include "aclspv/abi.h"
-#include "aclspv/spvty.h"
+#include "./wrd.h"
 
 /**
  * @brief type alias for `enum ID_DEFAULT_`

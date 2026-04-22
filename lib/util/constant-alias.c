@@ -9,15 +9,17 @@
 #include "./cxtp.h"
 #include "./iddef.h"
 
+#include <ae2f/bll.h>
 
-ACLSPV_ABI_IMPL aclspv_id_t	aclutil_mk_constant_vec32_id(const aclspv_wrd_t c_val, h_util_ctx_t h_ctx)
+
+aclspv_id_t	aclutil_mk_constant_vec32_id(const aclspv_wrd_t c_val, h_util_ctx_t h_ctx)
 {
-	return aclid_mk_default_id(ID_DEFAULT_I32, h_ctx) 
+	return  aclid_mk_default_id(ID_DEFAULT_I32, h_ctx)
 		? aclutil_mk_cxtp_vec(ID_DEFAULT_I32, c_val, h_ctx)
 		: 0;
 }
 
-ACLSPV_ABI_IMPL aclspv_id_t	aclutil_mk_constant_arr8_id(const u64_least c_arrcount, h_util_ctx_t h_ctx)
+aclspv_id_t	aclutil_mk_constant_arr8_id(const u64_least c_arrcount, h_util_ctx_t h_ctx)
 {
 	const aclspv_id_t	VAL = c_arrcount <= 0xFFFFFFFF 
 		? aclutil_mk_constant_val_id((aclspv_wrd_t)c_arrcount, h_ctx)
@@ -28,7 +30,7 @@ ACLSPV_ABI_IMPL aclspv_id_t	aclutil_mk_constant_arr8_id(const u64_least c_arrcou
 		: 0;
 }
 
-ACLSPV_ABI_IMPL aclspv_id_t	aclutil_mk_constant_arr16_id(const u64_least c_arrcount, h_util_ctx_t h_ctx)
+aclspv_id_t	aclutil_mk_constant_arr16_id(const u64_least c_arrcount, h_util_ctx_t h_ctx)
 {
 	const aclspv_id_t	VAL = c_arrcount <= 0xFFFFFFFF 
 		? aclutil_mk_constant_val_id((aclspv_wrd_t)c_arrcount, h_ctx)
@@ -39,7 +41,7 @@ ACLSPV_ABI_IMPL aclspv_id_t	aclutil_mk_constant_arr16_id(const u64_least c_arrco
 		: 0;
 }
 
-ACLSPV_ABI_IMPL aclspv_id_t	aclutil_mk_constant_arr32_id(const u64_least c_arrcount, h_util_ctx_t h_ctx)
+aclspv_id_t	aclutil_mk_constant_arr32_id(const u64_least c_arrcount, h_util_ctx_t h_ctx)
 {
 	const aclspv_id_t	VAL = c_arrcount <= 0xFFFFFFFF 
 		? aclutil_mk_constant_val_id((aclspv_wrd_t)c_arrcount, h_ctx)
@@ -50,7 +52,7 @@ ACLSPV_ABI_IMPL aclspv_id_t	aclutil_mk_constant_arr32_id(const u64_least c_arrco
 		: 0;
 }
 
-ACLSPV_ABI_IMPL aclspv_id_t	aclutil_mk_constant_arr128_id(const u64_least c_arrcount, h_util_ctx_t h_ctx)
+aclspv_id_t	aclutil_mk_constant_arr128_id(const u64_least c_arrcount, h_util_ctx_t h_ctx)
 {
 	const aclspv_id_t ID_U32V4	= aclutil_mk_constant_vec32_id(4, h_ctx);
 	const aclspv_id_t	VAL = c_arrcount <= 0xFFFFFFFF 
@@ -62,7 +64,7 @@ ACLSPV_ABI_IMPL aclspv_id_t	aclutil_mk_constant_arr128_id(const u64_least c_arrc
 		: 0;
 }
 
-ACLSPV_ABI_IMPL aclspv_id_t	aclutil_mk_constant_struct_id(const aclspv_wrd_t c_arrcount, h_util_ctx_t h_ctx) {
+aclspv_id_t	aclutil_mk_constant_struct_id(const aclspv_wrd_t c_arrcount, h_util_ctx_t h_ctx) {
 	const aclspv_id_t ID_ARR32 = aclutil_mk_constant_arr32_id(c_arrcount, h_ctx);
 
 	return ID_ARR32 ? aclutil_mk_cxtp_struct_single(
@@ -71,7 +73,7 @@ ACLSPV_ABI_IMPL aclspv_id_t	aclutil_mk_constant_struct_id(const aclspv_wrd_t c_a
 			, 0, h_ctx) : 0;
 }
 
-ACLSPV_ABI_IMPL aclspv_id_t	aclutil_mk_constant_struct128_id(const aclspv_wrd_t c_arrcount, h_util_ctx_t h_ctx) {
+aclspv_id_t	aclutil_mk_constant_struct128_id(const aclspv_wrd_t c_arrcount, h_util_ctx_t h_ctx) {
 	const aclspv_id_t ID_ARR128 = aclutil_mk_constant_arr128_id(c_arrcount, h_ctx);
 	return ID_ARR128 ? aclutil_mk_cxtp_struct_single(
 			ID_ARR128
@@ -79,7 +81,7 @@ ACLSPV_ABI_IMPL aclspv_id_t	aclutil_mk_constant_struct128_id(const aclspv_wrd_t 
 			, 0, h_ctx) : 0;
 }
 
-ACLSPV_ABI_IMPL aclspv_id_t	aclutil_mk_constant_structpriv_id(const aclspv_wrd_t c_wrdcount, h_util_ctx_t h_ctx) {
+aclspv_id_t	aclutil_mk_constant_structpriv_id(const aclspv_wrd_t c_wrdcount, h_util_ctx_t h_ctx) {
 	const aclspv_id_t ID_ARR32 = aclutil_mk_constant_arr32_id(c_wrdcount, h_ctx);
 
 	return ID_ARR32 ? aclutil_mk_cxtp_struct_single(
@@ -88,7 +90,7 @@ ACLSPV_ABI_IMPL aclspv_id_t	aclutil_mk_constant_structpriv_id(const aclspv_wrd_t
 			, 0xFFFFFFFF, h_ctx) : 0;
 }
 
-ACLSPV_ABI_IMPL aclspv_id_t	aclutil_mk_constant_structprivspec_id(
+aclspv_id_t	aclutil_mk_constant_structprivspec_id(
 		const aclspv_wrd_t c_key, 
 		const u64_least c_wrdcount, 
 		h_util_ctx_t h_ctx
@@ -105,8 +107,8 @@ ACLSPV_ABI_IMPL aclspv_id_t	aclutil_mk_constant_structprivspec_id(
 		return 0;
 
 	ae2f_expected_but_else(ARR32_SPEC = aclutil_mk_cxtp_arr2(
-			ID_DEFAULT_I32, NUM_ID
-			, 4, h_ctx))
+				ID_DEFAULT_I32, NUM_ID
+				, 4, h_ctx))
 		return 0;
 
 	return aclutil_mk_cxtp_struct_single(

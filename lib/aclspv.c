@@ -5,8 +5,6 @@
 #include <string.h>
 
 #include <aclspv.h>
-#include <aclspv/abi.h>
-#include <aclspv/spvty.h>
 
 #include <clang-c/CXErrorCode.h>
 #include <clang-c/Index.h>
@@ -26,7 +24,6 @@
 #include "./emit/count_fn.h"
 #include "./emit/decl_glob_obj.h"
 #include "./emit/entp_body.h"
-#include "ae2f/c90/StdInt.h"
 
 
 /**
@@ -34,7 +31,7 @@
  * @brief	compile files and generate spir-v for vulkan
  * @returns	<INIT:aclspv_free_obj>
  * */
-ACLSPV_ABI_DECL e_aclspv_compile_t 
+ACLSPV_ABI_IMPL e_aclspv_compile_t 
 aclspv_compile(
 		struct CXUnsavedFile* ae2f_restrict const 	rdwr_unsaved,
 		const unsigned					c_unsaved_count,
@@ -200,6 +197,7 @@ aclspv_compile(
 			aclutil_fnctx	FNCTX;
 			FNCTX.m_ctx	= &CTX;
 			FNCTX.m_state0	= 0;
+			FNCTX.m_retid	= ID_DEFAULT_VOID;
 
 			CTX.m_count.m_fnimpl = 0;
 
@@ -210,7 +208,6 @@ aclspv_compile(
 
 			CTX.m_err = ACLSPV_COMPILE_ALLOC_FAILED;
 			CTX.m_tmp.m_w0 = IDX;
-
 
 			ae2f_expected_but_else(CTX.m_count.m_fndef = util_emitx_5(
 						&CTX.m_section.m_fndef
@@ -256,10 +253,15 @@ aclspv_compile(
 
 
 #undef	FNINFO
-			FNCTX.m_state0 &= (uint_leastenum_t)~ACLUTIL_FNCTX_STATE0_FNRET;
+
+			FNCTX.m_state0 = 0;
 			clang_visitChildren(((util_entp_t* ae2f_restrict)CTX.m_fnlist.m_entp.m_p)[IDX].m_fn
 					, aclemit_entp_body
 					, &FNCTX);
+
+			unless(FNCTX.m_state0 & ACLUTIL_FNCTX_STATE0_LBL_DO_SOMETHING) {
+				CTX.m_count.m_fnimpl = FNCTX.m_lbl_snapshot;
+			}
 
 			ae2f_unexpected_but_if(STATE_VAL) goto LBL_CLEANUP;
 
@@ -282,6 +284,7 @@ aclspv_compile(
 
 				CTX.m_count.m_fndef += CTX.m_count.m_fnimpl;
 			}
+
 
 			unless(FNCTX.m_state0 & ACLUTIL_FNCTX_STATE0_FNRET) {
 				ae2f_expected_but_else(CTX.m_count.m_fndef = emit_opcode(

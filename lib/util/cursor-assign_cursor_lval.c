@@ -1,8 +1,7 @@
-#include "aclspv.h"
-#include "util/log.h"
 #include <util/emitx.h>
 #include <util/cursor.h>
 #include <emit/expr.h>
+#include <ae2f/bll.h>
 
 ae2f_inline ae2f_ccconst static aclspv_bool_t s_is_lval(const enum CXCursorKind	c_cursorkind) {
 	switch((uint_fastenum_t)c_cursorkind) {
@@ -21,6 +20,10 @@ aclspv_id_t aclutil_assign_cursor_lval(
 		const util_literal* ae2f_restrict	rd_literal_to_assign,
 		util_literal*	ae2f_restrict		r_literal_opt
 		) {
+	util_literal	LIT_DUMMY;
+	r_literal_opt = ae2f_bll_sel_ptrbool_naive1(util_literal* ae2f_restrict, r_literal_opt, r_literal_opt, &LIT_DUMMY);
+	
+
 	if(s_is_lval(wr_cursor->m_cursor.kind)) return 0;
 	if(r_literal_opt) *r_literal_opt = (*wr_cursor).m_data.m_var_simple.m_literal;
 	if(rd_literal_to_assign) {
@@ -44,8 +47,7 @@ aclspv_id_t aclutil_assign_cursor_lval(
 				return 0;
 
 			case EMIT_EXPR_SUCCESS_LITERAL:
-				if(r_literal_opt) *r_literal_opt
-					= (*wr_cursor).m_data.m_var_simple.m_literal;
+				*r_literal_opt = (*wr_cursor).m_data.m_var_simple.m_literal;
 
 				dbg_prefix(a);
 				dbg_call((void), printf("assign_cursor_lval: initval%u", wr_cursor->m_data.m_var_simple.m_init_val));

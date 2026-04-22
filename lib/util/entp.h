@@ -3,7 +3,7 @@
 #ifndef __lib_build_entp
 #define __lib_build_entp
 
-#include <aclspv/spvty.h>
+#include <util/wrd.h>
 #include <clang-c/Index.h>
 
 typedef struct {

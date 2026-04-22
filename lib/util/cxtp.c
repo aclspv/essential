@@ -26,6 +26,7 @@ static enum CXChildVisitResult	__is_vector_visit(
 
 	unless(h_cur.kind == CXCursor_AnnotateAttr)
 		return CXChildVisit_Recurse;
+
 	TEXT = clang_getCursorSpelling(h_cur);
 
 	unless(strstr(TEXT.data, "aclspv_vec")) {
@@ -81,7 +82,7 @@ ae2f_inline static aclspv_wrdcount_t __find_node(const aclutil_cxtp* const ae2f_
 	while(IDX-- 
 			&& !__node_equal(
 				rd_tar
-				, ((const aclutil_cxtp* ae2f_restrict)h_ctx->m_type_uniques.m_p) + IDX)) 
+				, ((const aclutil_cxtp* ae2f_restrict)h_ctx->m_type_uniques.m_p) + IDX))
 	{}
 
 	return IDX;
@@ -161,13 +162,13 @@ aclspv_id_t aclutil_mk_cxtp_arr2(
 		unless(ID.m_isfirst)		return ID.m_id;
 
 		ae2f_expected_but_else(h_ctx->m_count.m_types = util_emitx_4(
-				&h_ctx->m_section.m_types
-				, h_ctx->m_count.m_types
-				, SpvOpTypeArray
-				, ID.m_id
-				, c_type_elm
-				, c_num_arr
-				)) return 0;
+					&h_ctx->m_section.m_types
+					, h_ctx->m_count.m_types
+					, SpvOpTypeArray
+					, ID.m_id
+					, c_type_elm
+					, c_num_arr
+					)) return 0;
 
 		if(c_decorate_stride ^ 0xFFFFFFFF)
 			ae2f_expected_but_else(h_ctx->m_count.m_decorate = util_emitx_4(
@@ -186,7 +187,7 @@ aclspv_id_t aclutil_mk_cxtp_arr2(
 aclspv_id_t aclutil_mk_cxtp_struct_single(
 		const aclspv_id_t	c_type_member,
 		const B_aclspv_cxtp_struct_decoration_field0_t	
-					c_decorate_field0,
+		c_decorate_field0,
 		const aclspv_wrd_t	c_memdecorate_offset,
 		const h_aclspv_ctx_t	h_ctx
 		)
@@ -206,12 +207,12 @@ aclspv_id_t aclutil_mk_cxtp_struct_single(
 		unless(ID.m_isfirst)		return ID.m_id;
 
 		ae2f_expected_but_else(h_ctx->m_count.m_types = util_emitx_3(
-				&h_ctx->m_section.m_types
-				, h_ctx->m_count.m_types
-				, SpvOpTypeStruct
-				, ID.m_id
-				, c_type_member
-				)) return 0;
+					&h_ctx->m_section.m_types
+					, h_ctx->m_count.m_types
+					, SpvOpTypeStruct
+					, ID.m_id
+					, c_type_member
+					)) return 0;
 
 		if(c_decorate_field0 & (ACLSPV_CXTP_STRUCT_DECORATION_FIELD0_BLOCK))
 			ae2f_expected_but_else(h_ctx->m_count.m_decorate = util_emitx_3(
@@ -222,7 +223,7 @@ aclspv_id_t aclutil_mk_cxtp_struct_single(
 						, SpvDecorationBlock
 						)) return 0;
 
-		if(c_memdecorate_offset != 0xFFFFFFFF) {
+		if(c_memdecorate_offset ^ 0xFFFFFFFF) {
 			ae2f_expected_but_else(h_ctx->m_count.m_decorate = util_emitx_5(
 						&h_ctx->m_section.m_decorate
 						, h_ctx->m_count.m_decorate
@@ -508,8 +509,12 @@ ae2f_extern aclspv_id_t aclutil_mk_cxtp_by_cursor(
 				clang_visitChildren(TYPEDEF, s_attr_storage_class, &SCLASS);
 				clang_visitChildren(c_cursor, s_attr_storage_class, &SCLASS);
 
-				if(SCLASS == SpvStorageClassMax)
-					SCLASS = SpvStorageClassFunction;	/** default fallback */
+				SCLASS = (enum SpvStorageClass_)ae2f_bll_sel_bool1(
+						uint_leastenum_t
+						, SCLASS == SpvStorageClassMax
+						, SpvStorageClassFunction	/* default fallback */
+						, SCLASS
+						);
 
 				return aclutil_mk_cxtp_ptr(ELMID, SCLASS, h_ctx);
 			}
@@ -519,8 +524,13 @@ ae2f_extern aclspv_id_t aclutil_mk_cxtp_by_cursor(
 				enum ACLUTIL_CXTYPE_ E		= ACLUTIL_CXTYPE_ARRAY;
 				const CXType ELM		= clang_getArrayElementType(TYPE);
 				const intmax_t _ELMCOUNT	= clang_getNumElements(TYPE);
-				const aclspv_wrd_t ELMCOUNT	= (umax)(_ELMCOUNT) & ~(umax)ACLSPV_MASK_WRD
-					? 0 : (aclspv_wrd_t)_ELMCOUNT;
+				const aclspv_wrd_t ELMCOUNT	= 
+					ae2f_bll_sel_bool_naive1(
+							aclspv_wrd_t
+							, (umax)(_ELMCOUNT) & ~(umax)ACLSPV_MASK_WRD
+							, 0 
+							,(aclspv_wrd_t)_ELMCOUNT
+							);
 
 				const aclspv_id_t	ELMID = aclutil_mk_cxtp_by_cursor(c_cursor, ELM, h_ctx);
 
@@ -539,7 +549,7 @@ ae2f_extern aclspv_id_t aclutil_mk_cxtp_by_cursor(
 				clang_visitChildren(TYPEDEF, s_attr_specid, &SPECID);
 				clang_visitChildren(c_cursor, s_attr_specid, &SPECID);
 
-				if(SPECID != 0xFFFFFFFF) {
+				if(SPECID ^ 0xFFFFFFFF) {
 					/** specid */
 					aclspv_id_t SPECID_WRD = aclutil_mk_constant_spec_id(
 							SPECID, ELMCOUNT, h_ctx);

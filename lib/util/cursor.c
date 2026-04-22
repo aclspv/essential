@@ -66,10 +66,32 @@ enum ACLSPV_COMPILE_ aclutil_tell_cursor_lbl(
 	{ ae2f_assume(wr_cursor || !c_num_cursor); }
 	ae2f_expected_if(wr_cursor) while(IDX--) {
 #define	CURSORDATA	wr_cursor[IDX].m_data.m_var_simple
+
 		if(wr_cursor[IDX].m_cursor.kind == CXCursor_VarDecl) {
 			CURSORDATA.m_met_branch	= 1;
-			unless(CURSORDATA.m_is_allocated) {
-				CURSORDATA.m_is_allocated = 1;
+			if(CURSORDATA.m_is_allocated) {
+				if(CURSORDATA.m_is_predictable &&
+						(CURSORDATA.m_init_val && !ae2f_expected(
+											 h_ctx->m_count.m_fnimpl = util_emitx_3(
+												 &h_ctx->m_section.m_fnimpl
+												 , h_ctx->m_count.m_fnimpl
+												 , SpvOpStore
+												 , CURSORDATA.m_id
+												 , CURSORDATA.m_init_val
+												 )
+											)
+						)) return ACLSPV_COMPILE_ALLOC_FAILED_CURSOR;
+
+				dbg_prefix(); dbg_call((void), fprintf(stderr
+							, "tell cursor label %u %u\n"
+							, IDX, (unsigned)CURSORDATA.m_is_predictable
+							));
+
+				CURSORDATA.m_is_predictable = 0;
+			}
+			else {
+				CURSORDATA.m_is_allocated	= 1;
+				CURSORDATA.m_is_predictable	= 0;
 
 				ae2f_expected_but_else(h_ctx->m_count.m_fndef = util_emitx_variable(
 							&h_ctx->m_section.m_fndef

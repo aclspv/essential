@@ -4,10 +4,10 @@
 #define lib_build_ctx_h
 
 #include "./id.h"
-#include <vec.auto.h>
+#include "./wrd.h"
+#include <.aclspv/vec.h>
 
 #include <aclspv.h>
-#include <aclspv/spvty.h>
 
 #define	_free(a, b)	free(a)
 
