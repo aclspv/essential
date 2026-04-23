@@ -51,7 +51,6 @@ void aclemit_body_if(CXCursor h_cur, aclutil_fnctx *restrict FNCTX) {
 		case EMIT_EXPR_SUCCESS_CONSTANT:
 			break;
 		case EMIT_EXPR_SUCCESS_LITERAL:
-			CTX->m_id -= IFPART.m_n;
 			if(LTLR.m_api_int) {
 				const enum CXChildVisitResult R = aclemit_entp_body(
 						IFPART.m_parts[1]
@@ -165,7 +164,7 @@ void aclemit_body_if(CXCursor h_cur, aclutil_fnctx *restrict FNCTX) {
 		aclutil_fnctx		FNCTX_NEW = *FNCTX;
 		FNCTX_NEW.m_state0 = 0;
 
-		ae2f_expected_but_else(CTX->m_count.m_fnimpl = util_emitx_2(
+		ae2f_ifezerr(CTX->m_count.m_fnimpl = util_emitx_2(
 					&CTX->m_section.m_fnimpl
 					, CTX->m_count.m_fnimpl
 					, SpvOpLabel

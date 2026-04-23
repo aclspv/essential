@@ -70,7 +70,7 @@ kernel_raw(0) void N_KERNEL_0(__constant uintptr_t* consti32, storage_class(3) c
 #if 1
 	aclattr("aclspv_btcast") long a = (double)(int)(float)(a0 + a1 + a2);
 
-	if(1) { a2 += 3; }  else if(a) { a2 += 4; }  
+	if(0) { a2 += 3; }  else if(a) { a2 += 4; }  else {}
 
 	a2 += 8;
 	a2 += 8;
