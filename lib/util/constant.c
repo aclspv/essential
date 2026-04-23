@@ -90,6 +90,7 @@ util_constant* aclutil_mk_constant_node(
 }
 
 #include <spirv/unified1/spirv.h>
+#include <ae2f/bll.h>
 
 aclspv_id_t aclutil_mk_constant_bool_id(
 		const aclspv_bool_t c_val,
@@ -99,17 +100,15 @@ aclspv_id_t aclutil_mk_constant_bool_id(
 	ae2f_expected_but_else(C) return 0;
 	if(C->m_const_val_bool) return C->m_const_val_bool;
 
-
 	ae2f_expected_but_else(aclid_mk_default_id(ID_DEFAULT_BOOL, h_ctx))
 		return 0;
 
-	ae2f_expected_but_else(h_ctx->m_count.m_types = util_emitx_4(
+	ae2f_expected_but_else(h_ctx->m_count.m_types = util_emitx_3(
 			&h_ctx->m_section.m_types
 			, h_ctx->m_count.m_types
-			, SpvOpConstant
+			, ae2f_bll_sel_bool1(aclspv_wrd_t, c_val, SpvOpConstantTrue, SpvOpConstantFalse)
 			, ID_DEFAULT_BOOL
 			, h_ctx->m_id
-			, c_val
 		    )) return 0;
 
 	return C->m_const_val_bool = h_ctx->m_id++;

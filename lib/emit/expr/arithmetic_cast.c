@@ -295,11 +295,13 @@ enum EMIT_EXPR_ aclexpr_arithmetic_cast_literal(
 					, c_old_type, c_new_type
 				    )));
 
-	unless(aclid_is_number(c_old_type) && aclid_is_number(c_new_type)) {
-		ae2fpat_assertassume(aclid_is_number(c_old_type));
-		ae2fpat_assertassume(aclid_is_number(c_new_type));
+	ae2f_expected_but_else(aclid_is_arithmetic(c_old_type) && aclid_is_arithmetic(c_new_type)) {
 		return EMIT_EXPR_NOT_THE_CASE;
 	}
+
+	ae2f_expected_but_else(aclid_mk_default_id(c_old_type, h_ctx) 
+			&& aclid_mk_default_id(c_new_type, h_ctx))
+		return EMIT_EXPR_NOT_THE_CASE;
 
 	if(aclid_is_float(c_old_type) && aclid_is_int(c_new_type)) {
 		dbg_puts(("Cast (float -> int)"));
@@ -358,26 +360,52 @@ enum EMIT_EXPR_ aclexpr_arithmetic_cast_literal(
 		}
 	else if(aclid_is_int(c_old_type) && c_new_type == ID_DEFAULT_BOOL) {
 		RESULT.m_u64 = !!c_old_literal.m_api_uintmax;
-	} else if(aclid_is_float(c_old_type) && c_new_type == ID_DEFAULT_BOOL) switch(aclid_get_bit_width(c_old_type)) {
-		case 64:
-			RESULT.m_api_uintmax = !!(i64_least)c_old_literal.m_dbl;
-			break;
-		case 32:
-			RESULT.m_api_uintmax = !!(i32_least)c_old_literal.m_flt;
-			break;
-		default:
-			return EMIT_EXPR_FAILURE;
+		*r_newid = aclutil_mk_constant_bool_id((aclspv_bool_t)RESULT.m_u64, h_ctx);
+		if(wr_new_literal_opt) *wr_new_literal_opt = RESULT;
+		return EMIT_EXPR_SUCCESS_LITERAL;
+	} else if(aclid_is_float(c_old_type) && c_new_type == ID_DEFAULT_BOOL) {
+		switch(aclid_get_bit_width(c_old_type)) {
+			case 64:
+				RESULT.m_api_int = !!(i64_least)c_old_literal.m_dbl;
+				break;
+			case 32:
+				RESULT.m_api_int = !!(i32_least)c_old_literal.m_flt;
+				break;
+			default:
+				return EMIT_EXPR_NOT_THE_CASE;
+		}
+
+		*r_newid = aclutil_mk_constant_bool_id((aclspv_bool_t)RESULT.m_u64, h_ctx);
+		RESULT.m_u64 = !!c_old_literal.m_api_uintmax;
+		if(wr_new_literal_opt) *wr_new_literal_opt = RESULT;
+		return EMIT_EXPR_SUCCESS_LITERAL;
 	} else if (aclid_is_int(c_new_type) && c_old_type == ID_DEFAULT_BOOL) {
-		RESULT.m_u64 = c_old_literal.m_api_uintmax;
-	} else if (aclid_is_float(c_new_type) && c_old_type == ID_DEFAULT_BOOL) switch(aclid_get_bit_width(c_old_type)) {
-		case 64:
-			RESULT.m_dbl = (double)(c_old_literal.m_api_uintmax);
-			break;
-		case 32:
-			RESULT.m_flt = (float)(c_old_literal.m_api_uintmax);
-			break;
-		default:
-			return EMIT_EXPR_FAILURE;
+		RESULT.m_api_uintmax = c_old_literal.m_api_uintmax;
+		*r_newid = aclutil_mk_constant_val_by_enum(
+				RESULT.m_api_uintmax = c_old_literal.m_api_uintmax
+				, h_ctx
+				, c_new_type
+				);
+		if(wr_new_literal_opt) *wr_new_literal_opt = RESULT;
+		return EMIT_EXPR_SUCCESS_LITERAL;
+	} else if (aclid_is_float(c_new_type) && c_old_type == ID_DEFAULT_BOOL) {
+		switch(aclid_get_bit_width(c_old_type)) {
+			case 64:
+				RESULT.m_dbl = (double)(c_old_literal.m_api_uintmax);
+				break;
+			case 32:
+				RESULT.m_flt = (float)(c_old_literal.m_api_uintmax);
+				break;
+			default:
+				return EMIT_EXPR_FAILURE;
+		}
+
+		if(wr_new_literal_opt) *wr_new_literal_opt = RESULT;
+		*r_newid = aclutil_mk_constant_val_by_enum(
+				RESULT.m_api_uintmax
+				, h_ctx
+				, c_new_type);
+		return EMIT_EXPR_SUCCESS_LITERAL;
 	}
 
 

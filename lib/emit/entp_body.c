@@ -564,12 +564,14 @@ enum CXChildVisitResult aclemit_entp_body(CXCursor h_cur, ae2f_unused CXCursor h
 				aclspv_id_t		IDVAL = 0;
 
 				IFPART.m_n				= 0;
+				IFPART.m_n_dummy			= 0;
 				IFPART.m_b_true				= CTX->m_id++;
 				IFPART.m_b_false = IFPART.m_b_default	= CTX->m_id++;
+				IFPART.m_ctx				= CTX;
 
 				clang_visitChildren(h_cur, s_attr_ifpart, &IFPART);
 				dbg_prefix(a);
-				dbg_call(fprintf, (stderr, "number ifpart: %u\n", IFPART.m_n));
+				dbg_call(fprintf, (stderr, "number ifpart: %u %u\n", IFPART.m_n, IFPART.m_n_dummy));
 
 
 				dbg_prefix(a);
@@ -630,6 +632,17 @@ enum CXChildVisitResult aclemit_entp_body(CXCursor h_cur, ae2f_unused CXCursor h
 								, IFPART.m_b_true
 								)) goto LBL_FAIL;
 
+					FNCTX_NEW.m_lbl_snapshot = CTX->m_count.m_fnimpl;
+
+					(void)aclemit_entp_body(
+							IFPART.m_parts[1]
+							, IFPART.m_parts[1]
+							, &FNCTX_NEW
+							);
+
+					ae2f_unexpected_but_if(CTX->m_err)
+						goto LBL_FAIL;
+
 					clang_visitChildren(
 							IFPART.m_parts[1]
 							, aclemit_entp_body
@@ -663,6 +676,17 @@ enum CXChildVisitResult aclemit_entp_body(CXCursor h_cur, ae2f_unused CXCursor h
 								, SpvOpLabel
 								, IFPART.m_b_false
 								)) goto LBL_FAIL;
+
+					FNCTX_NEW.m_lbl_snapshot = CTX->m_count.m_fnimpl;
+
+					(void)aclemit_entp_body(
+							IFPART.m_parts[2]
+							, IFPART.m_parts[2]
+							, &FNCTX_NEW
+							);
+
+					ae2f_unexpected_but_if(CTX->m_err)
+						goto LBL_FAIL;
 
 					clang_visitChildren(
 							IFPART.m_parts[2]

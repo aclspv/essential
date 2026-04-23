@@ -202,7 +202,7 @@ ae2f_ccconst unsigned aclid_get_bit_width(const B_id_default_t c_id_default) {
 
 
 ae2f_ccconst aclspv_bool_t aclid_is_arithmetic(const aclspv_id_t c_id) {
-	return aclid_is_number(c_id);
+	return aclid_is_number(c_id) || c_id == ID_DEFAULT_BOOL;
 }
 
 #include <ae2f/bll.h>
