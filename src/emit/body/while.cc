@@ -1,6 +1,8 @@
 #ifndef	aclemit_body_while_cc
 #define aclemit_body_while_cc
 
+#include "util/log.h"
+#include <clang-c/Index.h>
 #include <spirv/unified1/spirv.h>
 #include <util/fnctx.h>
 #include <util/emitx.h>
@@ -36,6 +38,7 @@ ae2f_MAC((L, )) aclemit_body_while(CXCursor h_cur, aclutil_fnctx * ae2f_restrict
 	L$$GETKINDER.m_cursor		= &L$$CUR[0];
 	L$$GETKINDER.m_num_grepped	= 0;
 	L$$GETKINDER.m_num_wanted	= 2;
+	L$$GETKINDER.m_res		= CXChildVisit_Continue;
 
 	L$$SNAPSHOT			= (h_fnctx)->m_ctx->m_count.m_fnimpl;
 	L$$LITERAL.m_api_uintmax	= 0;
@@ -51,6 +54,10 @@ ae2f_MAC((L, )) aclemit_body_while(CXCursor h_cur, aclutil_fnctx * ae2f_restrict
 			, &L$$WEIGHTS[0]);
 
 	if(ae2f_expected_not_strict(((~L$$GETKINDER.m_num_grepped) >> 1) & 1)) {
+		dbg_prefix();
+		dbg_call((void), fprintf(stderr, "LACKCOMPONENTS: %u %u\n"
+					, L$$GETKINDER.m_num_grepped
+					, (((~L$$GETKINDER.m_num_grepped) >> 1) & 1)));
 		(h_fnctx)->m_ctx->m_err = ACLSPV_COMPILE_WHILE_LACK_COMPONENTS;
 		goto L$$RET;
 	}

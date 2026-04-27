@@ -38,6 +38,8 @@ static enum CXChildVisitResult	s_aclattr_bratio(
 		return CXChildVisit_Break;
 	}
 
+	clang_disposeString(ATTR_KIND);
+
 	return CXChildVisit_Continue;
 }
 #endif
