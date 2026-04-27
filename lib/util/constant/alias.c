@@ -5,9 +5,9 @@
  * 	- later I will clean them up
  * */
 
-#include "./constant.h"
-#include "./cxtp.h"
-#include "./iddef.h"
+#include "../constant.h"
+#include "../cxtp.h"
+#include "../iddef.h"
 
 #include <ae2f/bll.h>
 

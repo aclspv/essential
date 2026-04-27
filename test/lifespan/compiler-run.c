@@ -10,10 +10,11 @@
 sizeof(A_0)
 	+ sizeof(A_1) - 1
 	+ sizeof(A_2) - 1
+#if	0
 	+ sizeof(A_3) - 1
 	+ sizeof(A_4) - 1
-#if 1
 	+ sizeof(A_5) - 1
+	+ sizeof(A_6) - 1
 #endif
 	];
 
@@ -34,10 +35,11 @@ sizeof(B_0)
 		strcpy(maincontent, A_0);
 		strcat(maincontent, A_1);
 		strcat(maincontent, A_2);
+#if	0
 		strcat(maincontent, A_3);
 		strcat(maincontent, A_4);
-#if 1
 		strcat(maincontent, A_5);
+		strcat(maincontent, A_6);
 #endif
 
 		strcpy(oclhead, B_0);

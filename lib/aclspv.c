@@ -24,6 +24,7 @@
 #include "./emit/count_fn.h"
 #include "./emit/decl_glob_obj.h"
 #include "./emit/entp_body.h"
+#include "ae2f/bll.h"
 
 
 /**
@@ -47,18 +48,27 @@ aclspv_compile(
 	CXCursor		CXROOTCUR;
 
 	enum CXErrorCode	CXERR	= CXError_Success;
-	x_aclspv_ctx	CTX;
+	x_aclspv_ctx	CTX; 
 
 	unsigned	CXTU_IDX_ERR;
 #define	STATE_VAL	CTX.m_err
 
-	assert(rdwr_unsaved);
-	assert(rwr_output);
+	ae2f_ifezerr(rdwr_unsaved) {
+		err_puts("`rdwr_unsaved` is null");
+		STATE_VAL = ACLSPV_COMPILE_PRM_INVAL_NIL;
+		goto LBL_ERRCLEANUP;
+	}
+
+	ae2f_ifezerr(rwr_output) {
+		err_puts("`rwr_output` is null");
+		STATE_VAL = ACLSPV_COMPILE_PRM_INVAL_NIL;
+		goto LBL_ERRCLEANUP;
+	}
 
 	memset(&CTX, 0, sizeof(CTX));
 
 #if	1	/** just know this: this is just for development step. */
-	CTX.m_flag0 |= ACLSPV_CTX_FLAG0_SYMBOL;
+	CTX.m_flag0 |= ACLSPV_CTX_FLAG0_SYMBOL | ACLSPV_CTX_FLAG0_OGL | ACLSPV_CTX_FLAG0_LOGICAL;
 #endif
 
 	_aclspv_grow_vec(_aclspv_malloc, _aclspv_free, CTX.m_type_uniques		, (1 << 30));
@@ -81,7 +91,10 @@ aclspv_compile(
 	_aclspv_grow_vec(_aclspv_malloc, _aclspv_free, CTX.m_tmp.m_v1			, (1 << 30));
 	_aclspv_grow_vec(_aclspv_malloc, _aclspv_free, CTX.m_tmp.m_v2			, (1 << 30));
 
-	init_scale(&CTX.m_scale_vars, 0);
+	ae2f_ifezerr(init_scale(&CTX.m_scale_vars, 0)) {
+		STATE_VAL = ACLSPV_COMPILE_ALLOC_FAILED;
+		goto LBL_ERRCLEANUP;
+	}
 
 	unless(ae2f_expected(CXIDX)) {
 		CTX.m_err = ACLSPV_COMPILE_MET_INVAL;
@@ -170,11 +183,10 @@ aclspv_compile(
 				);
 
 		ae2f_expected_but_else(VOID)
-			goto LBL_CLEANUP;
+			goto LBL_ERRCLEANUP;
 
 		ae2f_expected_but_else(ID_DEFAULT_FN_VOID) {
-			assert(0);
-			goto LBL_CLEANUP;
+			goto LBL_ERRCLEANUP;
 		}
 
 
@@ -198,6 +210,8 @@ aclspv_compile(
 			FNCTX.m_ctx	= &CTX;
 			FNCTX.m_state0	= 0;
 			FNCTX.m_retid	= ID_DEFAULT_VOID;
+			FNCTX.m_var_stage	= 1;
+
 
 			CTX.m_count.m_fnimpl = 0;
 
@@ -206,7 +220,6 @@ aclspv_compile(
 				goto LBL_CLEANUP;
 			}
 
-			CTX.m_err = ACLSPV_COMPILE_ALLOC_FAILED;
 			CTX.m_tmp.m_w0 = IDX;
 
 			ae2f_expected_but_else(CTX.m_count.m_fndef = util_emitx_5(
@@ -217,14 +230,19 @@ aclspv_compile(
 						, FNINFO.m_id
 						, 0
 						, ID_DEFAULT_FN_VOID
-						)) goto LBL_CLEANUP;
+						)) {
+				CTX.m_err = ACLSPV_COMPILE_ALLOC_FAILED;
+				goto LBL_CLEANUP;
+			}
 
 			ae2f_expected_but_else(CTX.m_count.m_fndef = util_emitx_2(
 						&CTX.m_section.m_fndef
 						, CTX.m_count.m_fndef
 						, SpvOpLabel
-						, CTX.m_id++))
+						, CTX.m_id++)) {
+				CTX.m_err = ACLSPV_COMPILE_ALLOC_FAILED;
 				goto LBL_CLEANUP;
+			}
 
 			IDX = (aclspv_wrd_t)FNSCALE->m_sz / (size_t)sizeof(util_bind);
 			CTX.m_num_cursor	= IDX;
@@ -263,7 +281,7 @@ aclspv_compile(
 				CTX.m_count.m_fnimpl = FNCTX.m_lbl_snapshot;
 			}
 
-			ae2f_unexpected_but_if(STATE_VAL) goto LBL_CLEANUP;
+			ae2f_ifnezerr(STATE_VAL) goto LBL_CLEANUP;
 
 			if(CTX.m_count.m_fnimpl) {
 				_aclspv_grow_vec_with_copy(_aclspv_malloc, _aclspv_free, _aclspv_memcpy, L_new
@@ -312,13 +330,21 @@ aclspv_compile(
 	}
 
 
-
-	if(ae2f_expected_not(STATE_VAL = CTX.m_err))
-		goto LBL_CLEANUP;
-
+	ae2f_ifnezerr(CTX.m_err)
+		goto LBL_ERRCLEANUP;
 
 	if(ae2f_expected_not(STATE_VAL = impl_asm(&CTX)))
-		goto LBL_CLEANUP;
+		goto LBL_ERRCLEANUP;
+
+	goto LBL_CLEANUP;
+
+LBL_ERRCLEANUP:
+	CTX.m_err = ae2f_bll_sel_bool_naive1(
+			uint_fastenum_t
+			, CTX.m_err
+			, CTX.m_err
+			, ACLSPV_COMPILE_UNHANDLED
+			);
 
 LBL_CLEANUP:
 	clang_disposeTranslationUnit(CXTU);

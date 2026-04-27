@@ -2,8 +2,6 @@
 
 
 #include "./decl_glob_obj.h"
-#include "aclspv.h"
-#include "attr/execmodel.h"
 
 #include <assert.h>
 #include <string.h>
@@ -84,12 +82,14 @@ static enum CXChildVisitResult emit_decl_glob_obj_visit_fetch(CXCursor h_cur, CX
 	}
 
 	/** FETCH BIND */
-	assert(INTERFACES_MGR->m_id == (size_t)CTX->m_tmp.m_w0);
-	{ ae2f_assume(INTERFACES_MGR->m_id == (size_t)CTX->m_tmp.m_w0); }
+	ae2fpat_assertassume_strict(
+			INTERFACES_MGR->m_id == (size_t)CTX->m_tmp.m_w0
+			);
 
-	ae2f_unexpected_but_if(
-			grow_last_scale(&CTX->m_scale_vars, (size_t)(sizeof(util_bind) * (ARG_IDX + 1)))
-			) {
+	ae2f_unexpected_but_if(grow_last_scale(
+				&CTX->m_scale_vars
+				, (size_t)(sizeof(util_bind) * (ARG_IDX + 1))
+				)) {
 		CTX->m_err = ACLSPV_COMPILE_ALLOC_FAILED;
 		return CXChildVisit_Break;
 	}
@@ -99,7 +99,7 @@ static enum CXChildVisitResult emit_decl_glob_obj_visit_fetch(CXCursor h_cur, CX
 	INFO->m_unified.m_entp_idx		= CTX->m_tmp.m_w0;
 
 	/** not pointer|array type -> is push constant! */
-	unless(PARAM_TY.kind == CXType_Pointer || PARAM_TY.kind == CXType_ConstantArray) {
+	unless((PARAM_TY.kind == CXType_Pointer) | (PARAM_TY.kind == CXType_ConstantArray)) {
 		unless(PUSH_SIZE) {
 			PSH_CONSTANT_ID = CTX->m_id++;
 		}
@@ -168,9 +168,9 @@ LBL_ABRT_NALLOC:
 
 			free(NAME_MERGE);
 		}
+
 		clang_disposeString(FUNC_NAME);
 		clang_disposeString(PARAM_NAME);
-
 	}
 
 	INFO->m_unified.m_storage_class = SpvStorageClassMax;

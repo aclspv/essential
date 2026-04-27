@@ -9,7 +9,8 @@
 #include <util/constant.h>
 
 #include "../expr.h"
-#include "ae2f/c90/StdInt.h"
+#include <ae2f/c90/StdInt.h>
+#include "aclspv.h"
 #include "ae2f/cc.h"
 #include "util/id.h"
 #include "util/wrd.h"
@@ -23,9 +24,23 @@ enum EMIT_EXPR_ aclexpr_arithmetic_cast_non_literal(
 		const h_util_ctx_t			h_ctx
 		)
 {
-	ae2fpat_assertassume(c_old_type);	ae2fpat_assertassume(c_new_type);
-	ae2fpat_assertassume(c_old_id);	ae2fpat_assertassume(r_newid);
+	ae2fpat_assertassume(r_newid);
 	ae2fpat_assertassume(h_ctx);
+
+	ae2f_ifezerr(c_old_type) {
+		h_ctx->m_err = ACLSPV_COMPILE_ARITHMETIC_CAST_TYPE_IS_UNDEFINED_OLD;
+		return EMIT_EXPR_FAILURE;
+	}
+
+	ae2f_ifezerr(c_new_type) {
+		h_ctx->m_err = ACLSPV_COMPILE_ARITHMETIC_CAST_TYPE_IS_UNDEFINED_NEW;
+		return EMIT_EXPR_FAILURE;
+	}
+
+	ae2f_ifezerr(c_old_id) {
+		h_ctx->m_err = ACLSPV_COMPILE_ARITHMETIC_CAST_ID_IS_UNDEFINED_OLD;
+		return EMIT_EXPR_FAILURE;
+	}
 
 	dbg_puts(("Arithmetic cast: non-literal"));
 
@@ -467,12 +482,23 @@ enum EMIT_EXPR_ aclexpr_arithmetic_cast(
 		const h_util_ctx_t	h_ctx
 		)
 {
-	ae2fpat_assertassume(c_old_type);
 	ae2fpat_assertassume(r_newid);
 	ae2fpat_assertassume(h_ctx);
 
-	/** c_new_type = ae2f_bll_sel_bool1(aclspv_id_t, c_new_type, c_new_type, c_old_type); */
-	ae2fpat_assertassume(c_new_type);
+	ae2f_ifezerr(c_old_type) {
+		h_ctx->m_err = ACLSPV_COMPILE_ARITHMETIC_CAST_TYPE_IS_UNDEFINED_OLD;
+		return EMIT_EXPR_FAILURE;
+	}
+
+	ae2f_ifezerr(c_new_type) {
+		h_ctx->m_err = ACLSPV_COMPILE_ARITHMETIC_CAST_TYPE_IS_UNDEFINED_NEW;
+		return EMIT_EXPR_FAILURE;
+	}
+
+	ae2f_ifezerr(c_old_id) {
+		h_ctx->m_err = ACLSPV_COMPILE_ARITHMETIC_CAST_ID_IS_UNDEFINED_OLD;
+		return EMIT_EXPR_FAILURE;
+	}
 
 	(void)aclid_mk_default_id(c_new_type, h_ctx);
 	(void)aclid_mk_default_id(c_old_type, h_ctx);

@@ -1,6 +1,10 @@
 #include "./entp_body.h"
 #include "./expr.h"
-#include "./body/if.h"
+
+#include <.aclspv/emit/body/if.h>
+#include <.aclspv/emit/body/while.h>
+#include <.aclspv/emit/body/vardecl.h>
+#include <.aclspv/util/mkname.h>
 
 #include <aclspv.h>
 
@@ -11,62 +15,17 @@
 
 #include <clang-c/CXString.h>
 
-#include <clang-c/Index.h>
-#include <util/fnctx.h>
-#include <util/emitx.h>
-#include <util/iddef.h>
 #include <util/constant.h>
-#include <util/cursor.h>
 #include <util/scale.h>
 #include <util/literal.h>
 #include <util/u32_to_hex8.auto.h>
-#include <util/cxtp.h>
-#include <util/log.h>
-
-#include <attr/specid.h>
-#include <attr/btcast.h>
 
 #include <spirv/unified1/spirv.h>
-
-
-#define	___mkname_on_dbg(c_ID)	if(CTX->m_flag0 & ACLSPV_CTX_FLAG0_SYMBOL) {	\
-	const aclspv_wrd_t POS	= CTX->m_count.m_name;				\
-	_aclspv_grow_vec(_aclspv_malloc, _aclspv_free				\
-			, CTX->m_tmp.m_v0, strlen(SPELL.data) + 10		\
-			);							\
-	ae2f_expected_but_else(CTX->m_tmp.m_v0.m_p)				\
-	goto LBL_FAIL;								\
-	((char* ae2f_restrict)CTX->m_tmp.m_v0.m_p)[8] = ':';			\
-	((char* ae2f_restrict)CTX->m_tmp.m_v0.m_p)[9] = '\0';			\
-	_util_u32_to_hex8((c_ID)			\
-			, ((char* ae2f_restrict)CTX->m_tmp.m_v0.m_p));	\
-	strcat(CTX->m_tmp.m_v0.m_p, SPELL.data);			\
-	ae2f_expected_but_else((CTX->m_count.m_name = emit_opcode(	\
-					&CTX->m_section.m_name		\
-					, CTX->m_count.m_name	\
-					, SpvOpName, 0))			\
-					) goto LBL_FAIL;					\
-	ae2f_expected_but_else((CTX->m_count.m_name = util_emit_wrd(		\
-					&CTX->m_section.m_name		\
-					, CTX->m_count.m_name	\
-					, c_ID	\
-					)))						\
-	goto LBL_FAIL;								\
-	ae2f_expected_but_else((CTX->m_count.m_name = util_emit_str(			\
-					&CTX->m_section.m_name			\
-					, CTX->m_count.m_name		\
-					, CTX->m_tmp.m_v0.m_p 			\
-					)))						\
-	goto LBL_FAIL;								\
-	set_oprnd_count_for_opcode(get_wrd_of_vec(					\
-				&CTX->m_section.m_name)[POS]				\
-				, CTX->m_count.m_name - POS - 1);				\
-}
 
 enum CXChildVisitResult aclemit_entp_body(CXCursor h_cur, ae2f_unused CXCursor h_parent, CXClientData rdwr_data) {
 #define	FNCTX		((aclutil_fnctx* ae2f_restrict) rdwr_data)
 #define	CTX		FNCTX->m_ctx
-#define	jmpfail(c_why)	{ (CTX)->m_err = (c_why); goto LBL_FAIL; }
+#define	jmpfail(c_why)	{ (CTX)->m_err = (c_why); goto LBL_BREAK; }
 	const enum CXCursorKind KIND	= (h_cur).kind;
 	const CXString KINDSPELL	= clang_getCursorKindSpelling(KIND);
 	const CXString SPELL		= clang_getCursorSpelling(h_cur);
@@ -76,325 +35,22 @@ enum CXChildVisitResult aclemit_entp_body(CXCursor h_cur, ae2f_unused CXCursor h
 		goto LBL_FAIL;
 	}
 
+	ae2f_ifnezerr(CTX->m_err) {
+		goto LBL_BREAK;
+	}
+
 	FNCTX->m_state0 |= (uint_leastenum_t)(KIND != CXCursor_LabelStmt && KIND != CXCursor_ReturnStmt) << (uint_leastenum_t)(ACLUTIL_FNCTX_STATEPAD0_LBL_DO_SOMETHING);
 	FNCTX->m_state0 &= ~((uint_leastenum_t)(KIND != CXCursor_ReturnStmt) << (uint_leastenum_t)(ACLUTIL_FNCTX_STATEPAD0_FNRET));
 
 	switch((uintmax_t)KIND) {
 		case CXCursor_VarDecl:
-			{
-				aclspv_wrdcount_t IDX = aclutil_mk_cursor_base(
-						CTX->m_num_cursor
-						, &CTX->m_cursors
-						, h_cur);
-
-				aclspv_id_t	TYPE_ID = 0;
-
-				const CXType	TYPE = clang_getCanonicalType(clang_getCursorType(h_cur));
-
-				ae2f_unexpected_but_if(IDX == CTX->m_num_cursor + 1)
-					goto LBL_FAIL;
-
-#define	CURSOR	((util_cursor* ae2f_restrict)CTX->m_cursors.m_p)[IDX]
-
-				if(IDX == CTX->m_num_cursor)
-					++CTX->m_num_cursor;
-
-				switch((uintmax_t)TYPE.kind) {
-					case CXType_UInt:
-					case CXType_UShort:
-					case CXType_UChar:
-						ae2f_expected_but_else(aclid_mk_default_id(ID_DEFAULT_U32, CTX))
-							goto LBL_FAIL;
-
-
-						TYPE_ID = aclutil_mk_cxtp_ptr(
-								ID_DEFAULT_U32
-								, SpvStorageClassFunction
-								, CTX
-								);
-
-						CURSOR.m_data.m_var_simple.m_type_id = ID_DEFAULT_U32;
-
-
-						ae2f_unexpected_but_if(0) {
-							ae2f_unreachable();
-							case CXType_Int:
-							case CXType_Short:
-							case CXType_SChar:
-							ae2f_expected_but_else(aclid_mk_default_id(ID_DEFAULT_I32, CTX))
-								goto LBL_FAIL;
-							TYPE_ID = aclutil_mk_cxtp_ptr(
-									ID_DEFAULT_I32
-									, SpvStorageClassFunction
-									, CTX
-									);
-
-							CURSOR.m_data.m_var_simple.m_type_id = ID_DEFAULT_I32;
-						}
-
-						CURSOR.m_data.m_var_simple.m_fits_32bit = 1;
-
-						ae2f_unexpected_but_if(0)
-						{
-							ae2f_unreachable();
-							case CXType_ULongLong:
-							case CXType_ULong:
-							ae2f_expected_but_else(aclid_mk_default_id(ID_DEFAULT_U64, CTX))
-								goto LBL_FAIL;
-							TYPE_ID = aclutil_mk_cxtp_ptr(
-									ID_DEFAULT_U64
-									, SpvStorageClassFunction
-									, CTX
-									);
-
-							CURSOR.m_data.m_var_simple.m_type_id = ID_DEFAULT_U64;
-						}
-
-						ae2f_unexpected_but_if(0)
-						{
-							ae2f_unreachable();
-							case CXType_LongLong:
-							case CXType_Long:
-							ae2f_expected_but_else(aclid_mk_default_id(ID_DEFAULT_I64, CTX))
-								goto LBL_FAIL;
-							TYPE_ID = aclutil_mk_cxtp_ptr(
-									ID_DEFAULT_I64
-									, SpvStorageClassFunction
-									, CTX
-									);
-
-							CURSOR.m_data.m_var_simple.m_type_id = ID_DEFAULT_I64;
-						}
-
-						CURSOR.m_data.m_var_simple.m_is_integer = 1;
-						CURSOR.m_data.m_var_simple.m_fits_64bit = 1;
-
-						break;
-
-
-						ae2f_unexpected_but_if(0) {
-							ae2f_unreachable();
-							case CXType_BFloat16:
-							case CXType_Float16:
-							ae2f_expected_but_else(aclid_mk_default_id(ID_DEFAULT_F16, CTX))
-								goto LBL_FAIL;
-							TYPE_ID = aclutil_mk_cxtp_ptr(
-									ID_DEFAULT_F16
-									, SpvStorageClassFunction
-									, CTX
-									);
-
-							CURSOR.m_data.m_var_simple.m_type_id = ID_DEFAULT_F16;
-						}
-
-						ae2f_unexpected_but_if(0) {
-							ae2f_unreachable();
-							case CXType_Float:
-							ae2f_expected_but_else(aclid_mk_default_id(ID_DEFAULT_F32, CTX))
-								goto LBL_FAIL;
-							TYPE_ID = aclutil_mk_cxtp_ptr(
-									ID_DEFAULT_F32
-									, SpvStorageClassFunction
-									, CTX
-									);
-
-							CURSOR.m_data.m_var_simple.m_type_id = ID_DEFAULT_F32;
-						}
-
-						CURSOR.m_data.m_var_simple.m_fits_32bit = 1;
-
-						ae2f_unexpected_but_if(0) {
-							ae2f_unreachable();
-							case CXType_Double:
-							ae2f_expected_but_else(aclid_mk_default_id(ID_DEFAULT_F64, CTX))
-								goto LBL_FAIL;
-							TYPE_ID = aclutil_mk_cxtp_ptr(
-									ID_DEFAULT_F64
-									, SpvStorageClassFunction
-									, CTX
-									);
-							CURSOR.m_data.m_var_simple.m_type_id = ID_DEFAULT_F64;
-						}
-						CURSOR.m_data.m_var_simple.m_fits_64bit = 1;
-						CURSOR.m_data.m_var_simple.m_is_predictable = 0;
-
-						break;
-
-						/** complex types. we make it later. */
-
-					case CXType_Record:
-						{
-							const intmax_t	TY_SIZEOF_ = clang_Type_getSizeOf(TYPE);
-							const uintmax_t	 TY_SIZEOF = TY_SIZEOF_ < 0 ? 0 : (uintmax_t)TY_SIZEOF_;
-							const aclspv_wrd_t	 TY_SIZE_WRD = TY_SIZEOF < UINT32_MAX 
-								? (aclspv_wrd_t)TY_SIZEOF : 0;
-
-							ae2f_expected_but_else(TY_SIZE_WRD)
-								jmpfail(ACLSPV_COMPILE_MET_INVAL);
-
-							ae2f_expected_but_else(TYPE_ID = aclutil_mk_constant_ptr_func(
-										(TY_SIZE_WRD + 3) >> 2
-										, CTX))
-								goto LBL_FAIL;
-							CURSOR.m_data.m_var_simple.m_type_id = aclutil_mk_constant_structpriv_id(
-									(TY_SIZE_WRD + 3) >> 2, CTX
-									);
-						}
-						break;
-
-					default:
-						{
-							CXString NAME = clang_getTypeSpelling(TYPE);
-							err_prefix(a);
-							err_call(
-									fprintf, (
-										stderr
-										, "Met the unknown type(%u): %s\n"
-										, TYPE.kind
-										, (const char*)NAME.data
-										);
-								)
-								clang_disposeString(NAME);
-						}
-						break;
-				}
-
-				ae2f_expected_but_else(TYPE_ID)
-					goto LBL_FAIL;
-
-				CURSOR.m_data.m_var_simple.m_ptr_type_id = TYPE_ID;
-				CURSOR.m_data.m_var_simple.m_id = CTX->m_id++;
-				CURSOR.m_data.m_var_simple.m_is_predictable = 0;
-				CURSOR.m_data.m_var_simple.m_mask_literal = 0;
-
-				/**
-				 * TODO:
-				 * So far I have defined the variable but not with the initialiser.
-				 * Make initialising part if possible.
-				 * */
-				if(aclid_is_arithmetic(CURSOR.m_data.m_var_simple.m_type_id))
-				{
-					CXCursor	VAR_INIT = clang_Cursor_getVarDeclInitializer(h_cur);
-
-#if 1
-					aclspv_id_t	SPECID = 0xFFFFFFFF;
-
-					clang_visitChildren(h_cur, s_attr_specid, &SPECID);
-
-					if(SPECID != 0xFFFFFFFF) {
-						/** specid! */
-						util_constant* ae2f_restrict const NODE
-							= aclutil_mk_constant_node(SPECID, CTX);
-
-#if 1 
-						dbg_prefix(i);
-						dbg_call(fprintf, (stderr, "Spec ID detected: %u\n", SPECID));
-#endif
-
-						if(NODE && NODE->m_const_spec_id) {
-							dbg_prefix(a);
-							dbg_call(fprintf, (stderr, "Spec ID definition spotted.: %u\n"
-										, NODE->m_const_spec_id));
-
-							switch(aclexpr_arithmetic_cast_non_literal(
-										NODE->m_const_spec_id
-										, NODE->m_const_spec_type
-										, UTIL_LITERAL_CONSTANT
-										, &CURSOR.m_data.m_var_simple.m_init_val
-										, CURSOR.m_data.m_var_simple.m_type_id
-										, CTX
-										))
-							{
-								case EMIT_EXPR_SUCCESS_LITERAL:
-								default:
-									assert(0 && "unreachable & default");
-									ae2f_unreachable();
-									break;
-								case EMIT_EXPR_NOT_THE_CASE:
-									assert(0 && "not the case");
-									ae2f_unreachable();
-									break;
-
-								case EMIT_EXPR_FAILURE:
-									goto LBL_FAIL;
-									ae2f_unexpected_but_if(0) {
-										ae2f_unreachable();
-										case EMIT_EXPR_SUCCESS:
-										CURSOR.m_data.m_var_simple.m_mask_literal
-											= UTIL_LITERAL_RT;
-									}
-
-									ae2f_unexpected_but_if(0) {
-										ae2f_unreachable();
-										case EMIT_EXPR_SUCCESS_CONSTANT:
-										CURSOR.m_data.m_var_simple.m_mask_literal 
-											= UTIL_LITERAL_CONSTANT;
-									}
-
-									CURSOR.m_data.m_var_simple.m_is_predictable = 1;
-							}
-						}
-
-
-						goto LBL_DONE;
-					}
-#endif
-
-					unless(clang_Cursor_isNull(VAR_INIT)) {
-						fn_aclspv_get_expr_t*	FN_GETEXPR = aclspv_get_expr;
-
-						{
-							int IS_BTCAST = 0;
-							clang_visitChildren(h_cur, s_attr_btcast, &IS_BTCAST);
-							if(IS_BTCAST) FN_GETEXPR = aclspv_get_expr_btcast;
-						}
-
-						dbg_puts(("Variable has constructor."));
-
-						switch(FN_GETEXPR(
-									&CURSOR.m_data.m_var_simple.m_init_val
-									, CURSOR.m_data.m_var_simple.m_type_id
-									, VAR_INIT
-									, &CURSOR.m_data.m_var_simple.m_literal
-									, CTX))
-						{
-							case EMIT_EXPR_NOT_THE_CASE:
-								CTX->m_err = ACLSPV_COMPILE_NO_IMPL;
-								break;
-
-							default:
-							case EMIT_EXPR_FAILURE:
-								CTX->m_err = ACLSPV_COMPILE_MET_INVAL;
-								break;
-
-							case EMIT_EXPR_SUCCESS_LITERAL:
-								CURSOR.m_data.m_var_simple.m_mask_literal
-									|= UTIL_LITERAL_MASK_LITERAL;
-
-								dbg_puts(("Constructor is literal."));
-								ae2f_fallthrough;
-							case EMIT_EXPR_SUCCESS_CONSTANT:
-
-								dbg_puts(("Constructor may be constant."));
-								CURSOR.m_data.m_var_simple.m_mask_literal 
-									|= UTIL_LITERAL_CONSTANT;
-								ae2f_fallthrough;
-							case EMIT_EXPR_SUCCESS:
-								CURSOR.m_data.m_var_simple.m_is_predictable = 1;
-								break;
-						}
-					}
-				}
-
-#undef	CURSOR
-
-			}
-			goto LBL_DONE;
+			_aclemit_body_vardecl(VDCL, h_cur, FNCTX);
+			ae2f_cgoto2_strict(ae2f_expected_strict(!CTX->m_err), LBL_DONE, LBL_FAIL);
 
 		case CXCursor_ReturnStmt:
 			if(FNCTX->m_state0 & (uint_leastenum_t)(ACLUTIL_FNCTX_STATE0_LBL_DO_SOMETHING)) {
 				aclutil_tell_cursor_lbl(CTX->m_num_cursor, CTX->m_cursors.m_p
-						, CTX);
+						, CTX, FNCTX->m_var_stage + 1);
 			} else {
 				CTX->m_count.m_fnimpl = FNCTX->m_lbl_snapshot;
 			}
@@ -430,7 +86,9 @@ enum CXChildVisitResult aclemit_entp_body(CXCursor h_cur, ae2f_unused CXCursor h
 
 			ae2f_unexpected_but_if(CTX->m_err = aclutil_tell_cursor_lbl(
 						CTX->m_num_cursor
-						, CTX->m_cursors.m_p, CTX))
+						, CTX->m_cursors.m_p
+						, CTX
+						, FNCTX->m_var_stage + 1))
 				goto LBL_FAIL;
 			{
 
@@ -464,9 +122,10 @@ enum CXChildVisitResult aclemit_entp_body(CXCursor h_cur, ae2f_unused CXCursor h
 							, CURSOR.m_data.m_goto_lbl.m_id
 							)) goto LBL_FAIL;
 
-				___mkname_on_dbg(CURSOR.m_data.m_goto_lbl.m_id);
+				_aclutil_mkname_dbg(L, CURSOR.m_data.m_goto_lbl.m_id, SPELL.data, *CTX, CTX->m_tmp.m_v0);
+
 #undef	CURSOR
-			} goto LBL_DONE;
+			} ae2f_cgoto2_strict(ae2f_expected_strict(!CTX->m_err), LBL_RECURSE, LBL_FAIL);
 		case CXCursor_GotoStmt:
 			{
 				CXCursor LBL_STMT = clang_getCursorReferenced(h_cur);
@@ -497,7 +156,7 @@ enum CXChildVisitResult aclemit_entp_body(CXCursor h_cur, ae2f_unused CXCursor h
 
 				if(FNCTX->m_state0 & (uint_leastenum_t)(ACLUTIL_FNCTX_STATE0_LBL_DO_SOMETHING)) {
 					aclutil_tell_cursor_lbl(CTX->m_num_cursor, CTX->m_cursors.m_p
-							, CTX);
+							, CTX, FNCTX->m_var_stage + 1);
 				}
 
 				ae2f_expected_but_else(CTX->m_count.m_fnimpl = util_emitx_2(
@@ -519,10 +178,6 @@ enum CXChildVisitResult aclemit_entp_body(CXCursor h_cur, ae2f_unused CXCursor h
 				FNCTX->m_state0 &= ~(uint_leastenum_t)(ACLUTIL_FNCTX_STATE0_LBL_DO_SOMETHING);
 			}
 			goto LBL_DONE;
-
-			/** Literals in function scope does literally nothing in my opinion */
-			goto LBL_DONE;
-
 
 			/** 
 			 * if this is surely just {},
@@ -546,8 +201,7 @@ enum CXChildVisitResult aclemit_entp_body(CXCursor h_cur, ae2f_unused CXCursor h
 				ae2f_ifezerr(EXPR_IDX != CTX->m_num_cursor + 1)
 					goto LBL_FAIL;
 
-				if(EXPR_IDX == CTX->m_num_cursor)
-					++CTX->m_num_cursor;
+				CTX->m_num_cursor += EXPR_IDX == CTX->m_num_cursor;
 
 				ae2f_ifezerr(aclspv_get_expr(
 							&CONDVALID
@@ -557,11 +211,18 @@ enum CXChildVisitResult aclemit_entp_body(CXCursor h_cur, ae2f_unused CXCursor h
 							, CTX))
 					goto LBL_FAIL;
 			}
-			goto LBL_DONE;
+			ae2f_cgoto2_strict(ae2f_expected_strict(!CTX->m_err), LBL_DONE, LBL_FAIL);
 #endif
-		case CXCursor_IfStmt:
-			aclemit_body_if(h_cur, FNCTX);
-			ae2f_cgoto2(CTX->m_err, LBL_FAIL, LBL_DONE);
+		case CXCursor_IfStmt: 
+			_aclemit_body_if(IF, h_cur, FNCTX);
+			ae2f_cgoto2_strict(ae2f_expected_strict(!CTX->m_err), LBL_DONE, LBL_FAIL);
+
+		case CXCursor_WhileStmt:
+			_aclemit_body_while(WHILE, h_cur, FNCTX);
+			ae2f_cgoto2_strict(ae2f_expected_strict(!CTX->m_err), LBL_DONE, LBL_FAIL);
+
+		case CXCursor_BreakStmt:
+		case CXCursor_ContinueStmt:
 
 		case CXCursor_UnaryOperator:
 		case CXCursor_CallExpr:
@@ -571,16 +232,11 @@ enum CXChildVisitResult aclemit_entp_body(CXCursor h_cur, ae2f_unused CXCursor h
 		case CXCursor_DeclRefExpr:
 		case CXCursor_UnaryExpr:
 		case CXCursor_DoStmt:
-
 		case CXCursor_ForStmt:
-		case CXCursor_WhileStmt:
-		case CXCursor_BreakStmt:
-		case CXCursor_ContinueStmt:
 
 		case CXCursor_SwitchStmt:
 		case CXCursor_CaseStmt:
 		case CXCursor_AsmStmt: case CXCursor_MSAsmStmt:
-
 
 		case CXCursor_StmtExpr:
 		default:
@@ -593,34 +249,27 @@ enum CXChildVisitResult aclemit_entp_body(CXCursor h_cur, ae2f_unused CXCursor h
 				, (const char*)SPELL.data
 				, (const char*)KINDSPELL.data));
 
-	CTX->m_err = ACLSPV_COMPILE_OK;
+LBL_RECURSE:
 	clang_disposeString(SPELL);
 	clang_disposeString(KINDSPELL);
 	return CXChildVisit_Recurse;
 
 	ae2f_unreachable();
 LBL_FAIL:
-	CTX->m_err = ae2f_bll_sel_bool_naive1(e_aclspv_compile_t, CTX->m_err, CTX->m_err, ACLSPV_COMPILE_NOT_GREPPED_BODY);
+	CTX->m_err = ae2f_bll_sel_bool_naive1(e_aclspv_compile_t, CTX->m_err, CTX->m_err, ACLSPV_COMPILE_UNHANDLED_BODY);
+
+LBL_BREAK:
 	clang_disposeString(SPELL);
 	clang_disposeString(KINDSPELL);
 	return CXChildVisit_Break;
 
 	ae2f_unreachable();
 LBL_DONE:
-	CTX->m_err = ACLSPV_COMPILE_OK;
 	clang_disposeString(SPELL);
 	clang_disposeString(KINDSPELL);
 	return CXChildVisit_Continue;
 
-	ae2f_unreachable();
-LBL_RECURSE:
-	CTX->m_err = ACLSPV_COMPILE_OK;
-	clang_disposeString(SPELL);
-	clang_disposeString(KINDSPELL);
-	return CXChildVisit_Recurse;
-
 #undef	CTX
 #undef	jmpfail
-#undef	___mkname_on_dbg
 }
 

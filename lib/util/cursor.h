@@ -31,6 +31,9 @@ typedef struct {
 	 * */
 	union {
 		struct {
+			util_literal	m_literal;
+			umax		m_stage_lvl;
+
 			/**
 			 * @var	m_id
 			 *
@@ -49,6 +52,9 @@ typedef struct {
 			 * */
 			aclspv_id_t	m_init_val;
 
+
+			B_util_literal_t	m_mask_literal	: 2;
+
 			/** 
 			 * @var m_is_constant
 			 *
@@ -59,34 +65,11 @@ typedef struct {
 			 * is this variable not seem to be referenced?
 			 * */
 			aclspv_wrd_t	m_is_predictable	: 1;
-			B_util_literal_t	m_mask_literal	: 2;
-
-
-			/**
-			 * @var	m_is_integer
-			 * @brief
-			 * is this integer?
-			 * */
-			aclspv_wrd_t	m_is_integer		: 1;
-
-			/** have met branch? */
-			aclspv_wrd_t	m_met_branch		: 1;
 
 			/** is function actually allocated? */
 			aclspv_wrd_t	m_is_allocated		: 1;
-
-			/**
-			 * @var	m_fits_32bit
-			 * @brief
-			 * does this fits 32-bit wide?
-			 * */
-			aclspv_wrd_t	m_fits_32bit		: 1;
-			aclspv_wrd_t	m_fits_64bit		: 1;
-			aclspv_wrd_t	m_flag_unused		: 23;
-
-			util_literal	m_literal;
-
-
+			aclspv_wrd_t	m_is_occupied		: 1;
+			aclspv_wrd_t	m_is_owner		: 1;
 		} 
 		/** when cursor kind is vardecl */
 		m_var_simple;
@@ -126,10 +109,18 @@ ae2f_extern  aclspv_wrdcount_t aclutil_mk_cursor_base(
 ae2f_extern  enum ACLSPV_COMPILE_ aclutil_tell_cursor_lbl(
 		const aclspv_wrdcount_t c_num_cursor, 
 		util_cursor* ae2f_restrict const wr_cursor, 
-		const h_util_ctx_t h_ctx
+		const h_util_ctx_t h_ctx,
+		uintmax_t				c_stage_lvl
 		);
 
-ae2f_extern aclspv_id_t aclutil_assign_cursor_lval(
+aclspv_id_t aclutil_from_cursor_find_stagedval(
+		const aclspv_wrdcount_t		c_num_cursor,
+		const x_aclspv_vec* const ae2f_restrict h_cursors,
+		const umax c_stage, 
+		const aclspv_id_t c_ty
+		);
+
+ae2f_extern aclspv_wrdcount_t aclutil_assign_cursor_lval(
 		util_cursor* ae2f_restrict const wr_cursor,
 		const h_util_ctx_t			h_ctx,
 		const aclspv_id_t			c_val,

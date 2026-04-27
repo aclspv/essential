@@ -1,7 +1,10 @@
+#include <clang-c/CXString.h>
 #include <util/emitx.h>
 #include <util/cursor.h>
 #include <emit/expr.h>
 #include <ae2f/bll.h>
+#include <ae2f/cgoto.h>
+#include <.aclspv/util/mkname.h>
 
 ae2f_inline ae2f_ccconst static aclspv_bool_t s_is_lval(const enum CXCursorKind	c_cursorkind) {
 	switch((uint_fastenum_t)c_cursorkind) {
@@ -51,7 +54,8 @@ aclspv_id_t aclutil_assign_cursor_lval(
 
 				dbg_prefix(a);
 				dbg_call((void), printf("assign_cursor_lval: initval%u", wr_cursor->m_data.m_var_simple.m_init_val));
-				return (*wr_cursor).m_data.m_var_simple.m_init_val;
+
+				goto LBL_RETNOLBL;
 		}
 	}
 
@@ -81,7 +85,7 @@ aclspv_id_t aclutil_assign_cursor_lval(
 	}
 
 	if((*wr_cursor).m_data.m_var_simple.m_is_predictable) {
-		return (*wr_cursor).m_data.m_var_simple.m_init_val;
+		goto LBL_RETNOLBL;
 	}
 
 	(*wr_cursor).m_data.m_var_simple.m_is_predictable	= 1;
@@ -95,6 +99,22 @@ aclspv_id_t aclutil_assign_cursor_lval(
 		h_ctx->m_err = ACLSPV_COMPILE_ALLOC_FAILED_CURSOR;
 		return 0;
 	}
+
+	{
+		CXString SPL = clang_getCursorSpelling((wr_cursor)->m_cursor);
+
+		if(SPL.data) {
+			_aclutil_mkname_dbg(L, wr_cursor->m_data.m_var_simple.m_init_val
+					, SPL.data
+					, *(h_ctx)
+					, (h_ctx)->m_tmp.m_v0
+					);
+		}
+
+		clang_disposeString(SPL);
+	}
+
+LBL_RETNOLBL:
 
 	return (*wr_cursor).m_data.m_var_simple.m_init_val;
 }

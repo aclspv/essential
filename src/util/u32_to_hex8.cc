@@ -5,10 +5,6 @@
 
 #include <ae2f/pat/macrofunc.h>
 
-#if	!__ae2f_MACRO_GENERATED
-void	util_u32_to_hex8(const unsigned c_wrd, char  ret[8]);
-#endif
-
 #define		util_u32_to_hex_lookup(a)	\
 	((a) == 0x0 ? '0' :			\
 	(a) == 0x1 ? '1' :			\

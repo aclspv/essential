@@ -9,20 +9,9 @@ set(ae2f_ProjRoot ${CMAKE_CURRENT_SOURCE_DIR} CACHE STRING "Tree root for projec
 set(ae2f_BinRoot ${CMAKE_CURRENT_BINARY_DIR} CACHE STRING "Tree root for project")
 set(ae2f_submod  .submod CACHE STRING "Relative path to submodule (subdirectory)")
 
-option(aclspv_N_RELOAD_ALWAYS	"reloads aclspv always on configuration when set `OFF`" ON)
-
 if(NOT CMAKE_BUILD_TYPE)
 	set(CMAKE_BUILD_TYPE Debug)
 endif()
-
-
-if(NOT aclspv_RELOADED)
-	set(_aclspv_RELOADED OFF)
-else()
-	set(_aclspv_RELOADED OFF)
-endif()
-
-option(aclspv_RELOADED "aclspv has been reloaded" ${aclspv_N_RELOAD_ALWAYS})
 
 # Execute git to fetch CoreScript when repository does not exist
 set(ae2f_CoreScript_Wh ${ae2f_ProjRoot}/${ae2f_submod}/ae2f/CoreScript)
@@ -88,7 +77,7 @@ ae2f_Macro_Lib_V2_REL(
 	${PROJECT_SOURCE_DIR}/src/ "*.c*"
 	inc/.aclspv ".h"
 	${PROJECT_SOURCE_DIR}/cfg/aclspvCore.cmake.in
-	inc ${_aclspv_RELOADED} 
+	inc ON
 	)
 
 ae2f_FileRaw_init(1 100)
@@ -110,7 +99,7 @@ add_library(
 	${PROJECT_SOURCE_DIR}/test/lifespan/ocl.auto.h
 	)
 
-target_link_libraries(${ae3f__aclspvCore__TENT} 
+target_link_libraries(ae3f-aclspvCore 
 	INTERFACE SPIRV-Headers::SPIRV-Headers
 	INTERFACE ae2f::Pat
 	)
@@ -128,7 +117,9 @@ ae2f_CoreLibTentConfigCustom(
 	)
 
 target_link_libraries(${ae3f__aclspvABI__TENT} PUBLIC ae3f::aclspvCore)
-target_include_directories(${ae3f__aclspvABI__TENT} 
+target_include_directories(ae3f-aclspvCore INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/lib>)
+
+target_include_directories(${ae3f__aclspvABI__TENT}
 	PRIVATE lib ${CLANG_INCLUDE_DIRS}
 	)
 

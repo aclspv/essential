@@ -6,11 +6,13 @@
 #ifndef aclexpr_visit_simple1_h
 #define aclexpr_visit_simple1_h
 
+#include "util/iddef.h"
 #include "util/literal.h"
 #include <util/cursor.h>
 #include <util/emitx.h>
 #include <util/constant.h>
 #include <emit/expr.h>
+#include <.aclspv/util/mkname.h>
 
 /** 
  * binary expression with 1 operators.
@@ -149,7 +151,7 @@ ae2f_inline static enum EMIT_EXPR_ s_simple(
 #define	DECL_INFO	DECL_IDX[((util_cursor* ae2f_restrict)h_ctx->m_cursors.m_p)]
 
 				/** NaN is undefined behaviour here */
-				unless(aclid_is_number(DECL_INFO.m_data.m_var_simple.m_type_id)) {
+				unless(aclid_is_arithmetic(DECL_INFO.m_data.m_var_simple.m_type_id)) {
 					err_puts(("Arithmetic is no number [NOIMPL]"));
 					return EMIT_EXPR_FAILURE;
 				}
@@ -159,7 +161,8 @@ ae2f_inline static enum EMIT_EXPR_ s_simple(
 							&DECL_INFO, h_ctx
 							, 0, 0
 							, 0, 0
-							, rwr_literal_opt)) switch(DECL_INFO.m_data.m_var_simple.m_mask_literal) {
+							, rwr_literal_opt)) 
+					switch(DECL_INFO.m_data.m_var_simple.m_mask_literal) {
 					case UTIL_LITERAL_MASK_LITERAL:
 					case UTIL_LITERAL_LITERAL:
 

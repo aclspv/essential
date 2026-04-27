@@ -1,10 +1,7 @@
 
 #include "./constant.h"
-#include "./constant/ptr.auto.h"
 #include "./emitx.h"
 #include "./iddef.h"
-#include "ae2f/c90/StdInt.h"
-#include "util/id.h"
 
 #include <string.h>
 #include <ae2f/pat/dbg.h>

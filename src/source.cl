@@ -5,107 +5,44 @@
  * macros will be defined in opencl-base.h
  **/
 
-
-typedef short short4[4] vector();
-
-struct STRUCTURE {
-	int aa;
-	struct {
-		float D;
-		double C;
-	} M;
-	int a;
-	int b;
-};
-
-enum {
-	LOCU32_COUNT = 15
-};
-
-__constant const int LOCU32_COUNT_0 = 3;
-
-#if 1
-void not_kernel(void) {}
-#endif
+#define	double float
 
 __attribute__((annotate("reqd_work_group_size(2, 2, 2)"))) /** work group size should be specified on constant time. */
-__kernel void KERNEL_0(
-		       uint pushu32,
+kernel_raw(0) void N_KERNEL_0(
+__constant uintptr_t* consti32, 
+storage_class(3) const uint* u32out
 
-		       /** this is descriptor set specifier */
-		       __global uint* __attribute__((annotate("aclspv_set(2)"))) globu32, 
-		       /** 
-		        * spec constant id could & must be specified on use. 
-			* this is one of its declaration: array size specified constant.
-			*/
-		       __local double __attribute__((annotate("aclspv_specid(0)")))
-		       locu32_0[LOCU32_COUNT], /** local(workgroup) must be array */
-
-		       __local float locuf32_1[1],
-		       __global float* globf32, 
-		       float pushf32, 
-
-		       /** Push constant could use fixed array, and compound struct, but they cannot use spec constant-fixed array for it. */
-		       struct STRUCTURE push_struct
-		       )
-{
-#if 0
-	globu32[get_global_id(0)] += pushu32 + sin(globf32[get_global_id(0)]); 
-	(void)(1 + get_global_id(0));
-	return;
-#endif
-}
-
-
-kernel_raw(0) void N_KERNEL_0(__constant uintptr_t* consti32, storage_class(3) const uint* u32out) {
-	aclattr("aclspv_btcast") float a0 = 1078774989;
+) {
+	btcast float a0 = 1078774989;
 	int a1 
 #if 0
 		= 1
 #else
-		aclattr("aclspv_specid(0)")
+		specid(0)
 #endif
 			;
 	int a2 = a0 + (a0 += a1);
 #if 1
-	aclattr("aclspv_btcast") long a = (double)(int)(float)(a0 + a1 + a2);
+	btcast long a = (double)(int)(float)(a0 + a1 + a2);
 
-	if(0) { a2 += 3; }  else if(a) { a2 += 4; }  else {}
+	if(0) { int B = 3; a2 += (B -= 2); } 
+	else if(a) { int B = 4; a2 += B; if(1) { int C = 3; a2 += C; } }  else {}
+
+	while(a2 -= 1 aclattr("aclspv_bratio (2, 3)")) {
+		a1 += a2;
+	}
 
 	a2 += 8;
 	a2 += 8;
 #endif
 
 	goto GOTO;
-	return;
 
 	a2 += 8;
 	a2 += 8;
 
 GOTO:
 	a2 += 3;
+	a2 += 3;
 	return;
 }
-
-kernel void do_none(void)
-{
-#if 0
-    size_t g = get_global_id(0);
-#endif
-    struct { char a; int b; } C;
-}
-
-
-
-
-#if 0
-kernel void do_add_sub(__global short4 *add_out, __global short4 *sub_out,
-                       __global short4 *x, __global short4 *y)
-{
-    size_t g = get_global_id(0);
-
-    add_out[g] = x[g] + y[g];
-    sub_out[g] = x[g] - y[g];
-}
-
-#endif
