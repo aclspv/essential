@@ -6,6 +6,8 @@
 #include <util/log.h>
 #include <util/wrd.h>
 #include <string.h>
+#include <stdio.h>
+
 
 /** 
  * @param wr_ratio : aclspv_wrd_t[2] { true_weight , false_weight }
@@ -19,6 +21,8 @@ static enum CXChildVisitResult	s_aclattr_bratio(
 
 
 	ATTR_KIND = clang_getCursorSpelling(h_cur);
+	dbg_puts("[s_aclattr_bratio]");
+	dbg_puts(ATTR_KIND.data);
 
 	if(h_cur.kind == CXCursor_AnnotateAttr 
 			&& (NIDDLE = strstr(clang_getCString(ATTR_KIND)
@@ -26,7 +30,7 @@ static enum CXChildVisitResult	s_aclattr_bratio(
 		unsigned	A0 = 0, A1 = 0;
 
 		dbg_puts("s_attr_bratio::detected");
-		sscanf(NIDDLE, "aclspv_bratio ( %u , %u )"
+		sscanf(NIDDLE, " aclspv_bratio ( %u , %u )"
 				, &A0
 				, &A1
 		      );
@@ -40,6 +44,6 @@ static enum CXChildVisitResult	s_aclattr_bratio(
 
 	clang_disposeString(ATTR_KIND);
 
-	return CXChildVisit_Continue;
+	return CXChildVisit_Recurse;
 }
 #endif

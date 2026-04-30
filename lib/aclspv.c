@@ -67,6 +67,7 @@ aclspv_compile(
 
 	memset(&CTX, 0, sizeof(CTX));
 
+
 #if	1	/** just know this: this is just for development step. */
 	CTX.m_flag0 |= ACLSPV_CTX_FLAG0_SYMBOL | ACLSPV_CTX_FLAG0_OGL | ACLSPV_CTX_FLAG0_LOGICAL;
 #endif

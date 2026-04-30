@@ -15,7 +15,7 @@
 #include <spirv/unified1/spirv.h>
 
 
-static enum CXChildVisitResult	__is_vector_visit(
+static enum CXChildVisitResult	s_is_vector_visit(
 		CXCursor h_cur,
 		CXCursor h_parent,
 		CXClientData ae2f_restrict wr_storage_class
@@ -44,7 +44,7 @@ LBL_FINI:
 }
 
 
-ae2f_inline static aclspv_bool_t __node_equal(const aclutil_cxtp* const ae2f_restrict A, const aclutil_cxtp* const ae2f_restrict B)
+ae2f_inline static aclspv_bool_t s_ndeq(const aclutil_cxtp* const ae2f_restrict A, const aclutil_cxtp* const ae2f_restrict B)
 {
 	if(A->m_class != B->m_class) return 0;
 	switch(A->m_class) {
@@ -80,7 +80,7 @@ ae2f_inline static aclspv_wrdcount_t __find_node(const aclutil_cxtp* const ae2f_
 		return 0xFFFFFFFF;
 
 	while(IDX-- 
-			&& !__node_equal(
+			&& !s_ndeq(
 				rd_tar
 				, ((const aclutil_cxtp* ae2f_restrict)h_ctx->m_type_uniques.m_p) + IDX))
 	{}
@@ -536,8 +536,8 @@ ae2f_extern aclspv_id_t aclutil_mk_cxtp_by_cursor(
 
 				aclspv_wrd_t	SPECID = 0xFFFFFFFF;
 
-				clang_visitChildren(TYPEDEF, __is_vector_visit, &E);
-				clang_visitChildren(c_cursor, __is_vector_visit, &E);
+				clang_visitChildren(TYPEDEF, s_is_vector_visit, &E);
+				clang_visitChildren(c_cursor, s_is_vector_visit, &E);
 
 				if(E == ACLUTIL_CXTYPE_VECTOR) {
 					return aclutil_mk_cxtp_vec(

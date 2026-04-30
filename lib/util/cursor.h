@@ -17,6 +17,13 @@
 #include "./literal.h"
 #include <.aclspv/vec.h>
 
+enum	ACLUTIL_CURSOR_VAR_ {
+	ACLUTIL_CURSOR_VAR_LITERAL	= 0x3,
+	ACLUTIL_CURSOR_VAR_PREDICTABLE	= 0x4,
+	ACLUTIL_CURSOR_VAR_ALLOCATED	= 0x8,
+	ACLUTIL_CURSOR_VAR_OCCUPIED	= 0x10,
+	ACLUTIL_CURSOR_VAR_OWNER	= 0x20
+};
 
 typedef struct {
 	/**
@@ -52,24 +59,14 @@ typedef struct {
 			 * */
 			aclspv_id_t	m_init_val;
 
-
-			B_util_literal_t	m_mask_literal	: 2;
-
-			/** 
-			 * @var m_is_constant
-			 *
-			 * @brief
-			 * is initial value constant?
-			 * is this variable not seem to be modified?
-			 * 	> or is modified value predictable?
-			 * is this variable not seem to be referenced?
+			/**
+			 * [0,1]	mask_literal
+			 * [2]		is predictable
+			 * [3]		is allocated
+			 * [4]		is m_is_occupied
+			 * [5]		is owner
 			 * */
-			aclspv_wrd_t	m_is_predictable	: 1;
-
-			/** is function actually allocated? */
-			aclspv_wrd_t	m_is_allocated		: 1;
-			aclspv_wrd_t	m_is_occupied		: 1;
-			aclspv_wrd_t	m_is_owner		: 1;
+			aclspv_wrd_t	m_mask;
 		} 
 		/** when cursor kind is vardecl */
 		m_var_simple;

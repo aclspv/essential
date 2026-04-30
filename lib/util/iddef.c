@@ -171,6 +171,9 @@ ae2f_ccconst B_id_default_t aclid_getty_unsigned(unsigned bit_width) {
 
 ae2f_ccconst unsigned aclid_get_bit_width(const B_id_default_t c_id_default) {
 	switch(c_id_default) {
+		case ID_DEFAULT_BOOL:
+			return 1;
+
 		case ID_DEFAULT_I8:
 		case ID_DEFAULT_U8:
 			return 8;
@@ -215,6 +218,9 @@ ae2f_ccconst B_id_default_t aclid_decide_cast(const e_id_default c_id0, const e_
 	/** one is 0? */
 	unless(c_id0 & c_id1)
 		return ae2f_bll_sel_bool_naive1(B_id_default_t, c_id0, c_id0, c_id1);
+
+	unless(c_id0 ^ c_id1)
+		return c_id0;
 
 	unless(aclid_is_arithmetic(c_id0) & aclid_is_arithmetic(c_id1))
 		return 0;

@@ -34,3 +34,4 @@ typedef	u32 uptr;typedef i32 iptr;
 #endif
 #define	btcast		aclattr("aclspv_btcast")
 #define specid(a)	aclattr("aclspv_specid( " #a " )")
+#define	bratio(t, f) aclattr("aclspv_bratio ("#t","#f")")

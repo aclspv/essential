@@ -162,7 +162,7 @@ ae2f_inline static enum EMIT_EXPR_ s_simple(
 							, 0, 0
 							, 0, 0
 							, rwr_literal_opt)) 
-					switch(DECL_INFO.m_data.m_var_simple.m_mask_literal) {
+					switch(DECL_INFO.m_data.m_var_simple.m_mask & ACLUTIL_CURSOR_VAR_LITERAL) {
 					case UTIL_LITERAL_MASK_LITERAL:
 					case UTIL_LITERAL_LITERAL:
 

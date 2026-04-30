@@ -2,6 +2,7 @@
 #define aclemit_body_if_cc
 
 #include <attr/ifpart.h>
+#include <attr/branchratio.h>
 
 #include <clang-c/Index.h>
 #include <emit/expr.h>
@@ -23,8 +24,7 @@ ae2f_MAC((L, )) aclemit_body_if(CXCursor h_cur, aclutil_fnctx * ae2f_restrict h_
 
 	struct s_attr_ifpart_t	L$$IFPART;
 	aclspv_wrd_t		L$$IDVAL = 0,
-				L$$WEIGHT_TRUE = 0,
-				L$$WEIGHT_FALSE = 0,
+				L$$WEIGHTS[2] = {0, 0},
 				L$$IFCTL = SpvSelectionControlMaskNone;
 
 	util_literal		L$$LTLR;
@@ -39,6 +39,7 @@ ae2f_MAC((L, )) aclemit_body_if(CXCursor h_cur, aclutil_fnctx * ae2f_restrict h_
 	L$$IFPART.m_ctx				= (h_fnctx->m_ctx);
 
 	clang_visitChildren(h_cur, s_attr_ifpart, &L$$IFPART);
+
 	dbg_prefix(a);
 	dbg_call(fprintf, (stderr, "number ifpart: %u %u\n", L$$IFPART.m_n, L$$IFPART.m_n_dummy));
 
@@ -106,6 +107,12 @@ ae2f_MAC((L, )) aclemit_body_if(CXCursor h_cur, aclutil_fnctx * ae2f_restrict h_
 		goto L$$LBL_END;
 	}
 
+	aclutil_visitfromroot(
+			L$$IFPART.m_parts[1]
+			, s_aclattr_bratio
+			, &L$$WEIGHTS[0]
+			);
+
 	ae2f_unexpected_but_if((h_fnctx->m_ctx)->m_err = aclutil_tell_cursor_lbl(
 				(h_fnctx->m_ctx)->m_num_cursor
 				, (h_fnctx->m_ctx)->m_cursors.m_p
@@ -120,7 +127,7 @@ ae2f_MAC((L, )) aclemit_body_if(CXCursor h_cur, aclutil_fnctx * ae2f_restrict h_
 				, L$$IFCTL	/** attribute */
 				)) goto L$$LBL_END;
 
-	if(L$$WEIGHT_TRUE || L$$WEIGHT_FALSE) {
+	if(L$$WEIGHTS[0] || L$$WEIGHTS[1]) {
 		ae2f_expected_but_else((h_fnctx->m_ctx)->m_count.m_fnimpl = util_emitx_6(
 					&(h_fnctx->m_ctx)->m_section.m_fnimpl
 					, (h_fnctx->m_ctx)->m_count.m_fnimpl
@@ -128,8 +135,8 @@ ae2f_MAC((L, )) aclemit_body_if(CXCursor h_cur, aclutil_fnctx * ae2f_restrict h_
 					, L$$IDVAL
 					, L$$IFPART.m_b_true
 					, L$$IFPART.m_b_false
-					, L$$WEIGHT_TRUE
-					, L$$WEIGHT_FALSE
+					, L$$WEIGHTS[0]
+					, L$$WEIGHTS[1]
 					)) goto L$$LBL_END;
 	} else {
 		ae2f_expected_but_else((h_fnctx->m_ctx)->m_count.m_fnimpl = util_emitx_4(

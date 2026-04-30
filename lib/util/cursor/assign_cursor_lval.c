@@ -1,3 +1,4 @@
+#include "aclspv.h"
 #include <clang-c/CXString.h>
 #include <util/emitx.h>
 #include <util/cursor.h>
@@ -30,9 +31,7 @@ aclspv_id_t aclutil_assign_cursor_lval(
 	if(s_is_lval(wr_cursor->m_cursor.kind)) return 0;
 	if(r_literal_opt) *r_literal_opt = (*wr_cursor).m_data.m_var_simple.m_literal;
 	if(rd_literal_to_assign) {
-		(*wr_cursor).m_data.m_var_simple.m_is_predictable	= 1;
-		(*wr_cursor).m_data.m_var_simple.m_mask_literal
-			= 3;
+		(*wr_cursor).m_data.m_var_simple.m_mask |= 3 | ACLUTIL_CURSOR_VAR_PREDICTABLE;
 
 		switch(aclexpr_arithmetic_cast_literal(
 					c_val_ty
@@ -60,7 +59,7 @@ aclspv_id_t aclutil_assign_cursor_lval(
 	}
 
 	if(c_val) {
-		(*wr_cursor).m_data.m_var_simple.m_is_predictable	= 1;
+		(*wr_cursor).m_data.m_var_simple.m_mask	|= ACLUTIL_CURSOR_VAR_PREDICTABLE;
 		switch(aclexpr_arithmetic_cast_non_literal(
 					c_val
 					, c_val_ty
@@ -76,19 +75,19 @@ aclspv_id_t aclutil_assign_cursor_lval(
 				return 0;
 
 			case EMIT_EXPR_SUCCESS:
-				(*wr_cursor).m_data.m_var_simple.m_mask_literal &= 0;
+				(*wr_cursor).m_data.m_var_simple.m_mask &= (aclspv_wrd_t)~ACLUTIL_CURSOR_VAR_LITERAL;
 				ae2f_fallthrough;
 			case EMIT_EXPR_SUCCESS_CONSTANT:
-				(*wr_cursor).m_data.m_var_simple.m_mask_literal &= 1;
+				(*wr_cursor).m_data.m_var_simple.m_mask &= (aclspv_wrd_t)~ACLUTIL_CURSOR_VAR_LITERAL | 1;
 				return (*wr_cursor).m_data.m_var_simple.m_init_val;
 		}
 	}
 
-	if((*wr_cursor).m_data.m_var_simple.m_is_predictable) {
+	if((*wr_cursor).m_data.m_var_simple.m_mask & ACLUTIL_CURSOR_VAR_PREDICTABLE) {
 		goto LBL_RETNOLBL;
 	}
 
-	(*wr_cursor).m_data.m_var_simple.m_is_predictable	= 1;
+	(*wr_cursor).m_data.m_var_simple.m_mask	 |= ACLUTIL_CURSOR_VAR_PREDICTABLE;
 	ae2f_expected_but_else(h_ctx->m_count.m_fnimpl = util_emitx_4(
 				&h_ctx->m_section.m_fnimpl
 				, h_ctx->m_count.m_fnimpl

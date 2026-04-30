@@ -26,9 +26,10 @@ storage_class(3) const uint* u32out
 	btcast long a = (double)(int)(float)(a0 + a1 + a2);
 
 	if(0) { int B = 3; a2 += (B -= 2); } 
-	else if(a) { int B = 4; a2 += B; if(1) { int C = 3; a2 += C; } }  else {}
+	else if(a) { bratio(3, 3) int B = 4; a2 += B; if(1) { int C = 3; a2 += C; } }  else {}
 
-	while(a2 -= 1 aclattr("aclspv_bratio (2, 3)")) {
+	while(a2 -= 1) {
+		bratio(0, 0) int AAA;
 		a1 += a2;
 	}
 

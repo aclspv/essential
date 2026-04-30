@@ -1,3 +1,4 @@
+#include "aclspv.h"
 #include <util/cxtp.h>
 #include <util/cursor.h>
 #include <util/constant.h>
@@ -140,7 +141,7 @@ ae2f_MAC((L, )) aclemit_body_vardecl(CXCursor h_cur, aclutil_fnctx* ae2f_restric
 						);
 				L$$PCURSOR->m_data.m_var_simple.m_type_id = ID_DEFAULT_F64;
 			}
-			L$$PCURSOR->m_data.m_var_simple.m_is_predictable = 0;
+			L$$PCURSOR->m_data.m_var_simple.m_mask |= ACLUTIL_CURSOR_VAR_PREDICTABLE;
 			L$$PCURSOR->m_data.m_var_simple.m_stage_lvl = h_fnctx->m_var_stage;
 
 			break;
@@ -191,9 +192,9 @@ ae2f_MAC((L, )) aclemit_body_vardecl(CXCursor h_cur, aclutil_fnctx* ae2f_restric
 
 	L$$PCURSOR->m_data.m_var_simple.m_ptr_type_id = L$$TYPE_ID;
 	L$$PCURSOR->m_data.m_var_simple.m_id = L$$CTX->m_id++;
-	L$$PCURSOR->m_data.m_var_simple.m_is_predictable = 0;
-	L$$PCURSOR->m_data.m_var_simple.m_mask_literal = 0;
-	L$$PCURSOR->m_data.m_var_simple.m_is_allocated = 0;
+
+	L$$PCURSOR->m_data.m_var_simple.m_mask = 0;
+
 	L$$PCURSOR->m_data.m_var_simple.m_stage_lvl = h_fnctx->m_var_stage;
 
 	if(aclid_is_arithmetic(L$$PCURSOR->m_data.m_var_simple.m_type_id)) {
@@ -206,16 +207,16 @@ ae2f_MAC((L, )) aclemit_body_vardecl(CXCursor h_cur, aclutil_fnctx* ae2f_restric
 
 		if(L$$STAGEDIDX < L$$ORIGIN_CURSORS_NUM) {
 			(void)L$$CTX->m_id;
-			L$$PCURSOR->m_data.m_var_simple.m_is_owner = 0;
+			L$$PCURSOR->m_data.m_var_simple.m_mask &= ~(aclspv_wrd_t)ACLUTIL_CURSOR_VAR_OWNER;
 			L$$PCURSOR->m_data.m_var_simple.m_id
 				= L$$PCURSOR[L$$STAGEDIDX - L$$IDX].m_data.m_var_simple.m_id;
-			L$$PCURSOR[L$$STAGEDIDX - L$$IDX].m_data.m_var_simple.m_is_occupied = 1;
+			L$$PCURSOR[L$$STAGEDIDX - L$$IDX].m_data.m_var_simple.m_mask |= ACLUTIL_CURSOR_VAR_OCCUPIED;
 		} else {
-			L$$PCURSOR->m_data.m_var_simple.m_is_owner = 1;
+			L$$PCURSOR->m_data.m_var_simple.m_mask |= ACLUTIL_CURSOR_VAR_OWNER;
 			dbg_puts("is the owner");
 		}
 
-		L$$PCURSOR->m_data.m_var_simple.m_is_occupied = 1;
+		L$$PCURSOR->m_data.m_var_simple.m_mask |= ACLUTIL_CURSOR_VAR_OCCUPIED;
 	}
 
 	if(aclid_is_arithmetic(L$$PCURSOR->m_data.m_var_simple.m_type_id))
@@ -262,18 +263,18 @@ ae2f_MAC((L, )) aclemit_body_vardecl(CXCursor h_cur, aclutil_fnctx* ae2f_restric
 						ae2f_unexpected_but_if(0) {
 							ae2f_unreachable();
 							case EMIT_EXPR_SUCCESS:
-							L$$PCURSOR->m_data.m_var_simple.m_mask_literal
-								= UTIL_LITERAL_RT;
+							L$$PCURSOR->m_data.m_var_simple.m_mask
+								&= (aclspv_wrd_t)~ACLUTIL_CURSOR_VAR_LITERAL;
 						}
 
 						ae2f_unexpected_but_if(0) {
 							ae2f_unreachable();
 							case EMIT_EXPR_SUCCESS_CONSTANT:
-							L$$PCURSOR->m_data.m_var_simple.m_mask_literal 
-								= UTIL_LITERAL_CONSTANT;
+							L$$PCURSOR->m_data.m_var_simple.m_mask
+								&= ~(aclspv_wrd_t)ACLUTIL_CURSOR_VAR_LITERAL | UTIL_LITERAL_CONSTANT;
 						}
 
-						L$$PCURSOR->m_data.m_var_simple.m_is_predictable = 1;
+						L$$PCURSOR->m_data.m_var_simple.m_mask |= ACLUTIL_CURSOR_VAR_PREDICTABLE;
 				}
 			}
 
@@ -309,7 +310,7 @@ ae2f_MAC((L, )) aclemit_body_vardecl(CXCursor h_cur, aclutil_fnctx* ae2f_restric
 					break;
 
 				case EMIT_EXPR_SUCCESS_LITERAL:
-					L$$PCURSOR->m_data.m_var_simple.m_mask_literal
+					L$$PCURSOR->m_data.m_var_simple.m_mask
 						|= UTIL_LITERAL_MASK_LITERAL;
 
 					dbg_puts(("Constructor is literal."));
@@ -317,11 +318,11 @@ ae2f_MAC((L, )) aclemit_body_vardecl(CXCursor h_cur, aclutil_fnctx* ae2f_restric
 				case EMIT_EXPR_SUCCESS_CONSTANT:
 
 					dbg_puts(("Constructor may be constant."));
-					L$$PCURSOR->m_data.m_var_simple.m_mask_literal 
+					L$$PCURSOR->m_data.m_var_simple.m_mask
 						|= UTIL_LITERAL_CONSTANT;
 					ae2f_fallthrough;
 				case EMIT_EXPR_SUCCESS:
-					L$$PCURSOR->m_data.m_var_simple.m_is_predictable = 1;
+					L$$PCURSOR->m_data.m_var_simple.m_mask |= ACLUTIL_CURSOR_VAR_PREDICTABLE;
 					break;
 			}
 		}

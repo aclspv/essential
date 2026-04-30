@@ -81,8 +81,9 @@ enum ACLSPV_COMPILE_ aclutil_tell_cursor_lbl(
 		if(wr_cursor[IDX].m_data.m_var_simple.m_stage_lvl >= c_cursor_lvl)
 			continue;
 
-		if(CURSORDATA.m_is_allocated && CURSORDATA.m_is_occupied) {
-			if(CURSORDATA.m_is_predictable &&
+		if((CURSORDATA.m_mask & (ACLUTIL_CURSOR_VAR_ALLOCATED | ACLUTIL_CURSOR_VAR_OCCUPIED)) 
+				== (ACLUTIL_CURSOR_VAR_ALLOCATED | ACLUTIL_CURSOR_VAR_OCCUPIED)) {
+			if(CURSORDATA.m_mask & ACLUTIL_CURSOR_VAR_PREDICTABLE &&
 					(CURSORDATA.m_init_val && !ae2f_expected(
 										 h_ctx->m_count.m_fnimpl = util_emitx_3(
 											 &h_ctx->m_section.m_fnimpl
@@ -96,14 +97,14 @@ enum ACLSPV_COMPILE_ aclutil_tell_cursor_lbl(
 
 			dbg_prefix(); dbg_call((void), fprintf(stderr
 						, "tell cursor label %u %u\n"
-						, IDX, (unsigned)CURSORDATA.m_is_predictable
+						, IDX, (unsigned)CURSORDATA.m_mask & ACLUTIL_CURSOR_VAR_PREDICTABLE
 						));
 
-			CURSORDATA.m_is_predictable = 0;
+			CURSORDATA.m_mask &= ~(aclspv_wrd_t)ACLUTIL_CURSOR_VAR_PREDICTABLE;
 		}
-		else if(CURSORDATA.m_is_owner) {
-			CURSORDATA.m_is_allocated	= 1;
-			CURSORDATA.m_is_predictable	= 0;
+		else if(CURSORDATA.m_mask & ACLUTIL_CURSOR_VAR_OWNER) {
+			CURSORDATA.m_mask |= ACLUTIL_CURSOR_VAR_ALLOCATED;
+			CURSORDATA.m_mask &= ~(aclspv_wrd_t)(ACLUTIL_CURSOR_VAR_PREDICTABLE);
 
 			ae2f_expected_but_else(h_ctx->m_count.m_fndef = util_emitx_variable(
 						&h_ctx->m_section.m_fndef
@@ -203,7 +204,7 @@ aclspv_wrdcount_t aclutil_from_cursor_find_stagedval(
 		if(C.m_data.m_var_simple.m_stage_lvl <= c_stage)
 			continue;
 
-		if(C.m_data.m_var_simple.m_is_occupied)
+		if(C.m_data.m_var_simple.m_mask & ACLUTIL_CURSOR_VAR_OCCUPIED)
 			continue;
 
 		return CURI;
