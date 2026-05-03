@@ -75,8 +75,8 @@ enum ACLSPV_COMPILE_ aclutil_tell_cursor_lbl(
 
 		dbg_prefix();
 		dbg_call((void), fprintf(stderr, "stagecmp %lu %lu\n"
-					, wr_cursor[IDX].m_data.m_vardecl.m_stage_lvl
-					, c_cursor_lvl));
+					, (unsigned long)wr_cursor[IDX].m_data.m_vardecl.m_stage_lvl
+					, (unsigned long)c_cursor_lvl));
 
 		if(wr_cursor[IDX].m_data.m_vardecl.m_stage_lvl >= c_cursor_lvl)
 			continue;
