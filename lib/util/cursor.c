@@ -74,7 +74,7 @@ enum ACLSPV_COMPILE_ aclutil_tell_cursor_lbl(
 			continue;
 
 		dbg_prefix();
-		dbg_call((void), fprintf(stderr, "stagecmp %zu %zu\n"
+		dbg_call((void), fprintf(stderr, "stagecmp %lu %lu\n"
 					, wr_cursor[IDX].m_data.m_vardecl.m_stage_lvl
 					, c_cursor_lvl));
 
