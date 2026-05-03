@@ -7,7 +7,7 @@
 #include <spirv/unified1/spirv.h>
 #include "./ctx.h"
 #include "./emitx.h"
-#include "./u32_to_hex8.auto.h"
+#include <.aclspv/util/u32_to_hex8.h>
 #include "aclspv.h"
 #include "util/log.h"
 
@@ -69,16 +69,16 @@ enum ACLSPV_COMPILE_ aclutil_tell_cursor_lbl(
 	assert(wr_cursor || !c_num_cursor);
 	{ ae2f_assume(wr_cursor || !c_num_cursor); }
 	ae2f_expected_if(wr_cursor) while(IDX--) {
-#define	CURSORDATA	wr_cursor[IDX].m_data.m_var_simple
+#define	CURSORDATA	wr_cursor[IDX].m_data.m_vardecl
 		unless(wr_cursor[IDX].m_cursor.kind == CXCursor_VarDecl)
 			continue;
 
 		dbg_prefix();
 		dbg_call((void), fprintf(stderr, "stagecmp %zu %zu\n"
-					, wr_cursor[IDX].m_data.m_var_simple.m_stage_lvl
+					, wr_cursor[IDX].m_data.m_vardecl.m_stage_lvl
 					, c_cursor_lvl));
 
-		if(wr_cursor[IDX].m_data.m_var_simple.m_stage_lvl >= c_cursor_lvl)
+		if(wr_cursor[IDX].m_data.m_vardecl.m_stage_lvl >= c_cursor_lvl)
 			continue;
 
 		if((CURSORDATA.m_mask & (ACLUTIL_CURSOR_VAR_ALLOCATED | ACLUTIL_CURSOR_VAR_OCCUPIED)) 
@@ -198,13 +198,13 @@ aclspv_wrdcount_t aclutil_from_cursor_find_stagedval(
 		if(clang_getCursorKind(C.m_cursor) != CXCursor_VarDecl)
 			continue;
 
-		if(C.m_data.m_var_simple.m_type_id ^ c_ty)
+		if(C.m_data.m_vardecl.m_type_id ^ c_ty)
 			continue;
 
-		if(C.m_data.m_var_simple.m_stage_lvl <= c_stage)
+		if(C.m_data.m_vardecl.m_stage_lvl <= c_stage)
 			continue;
 
-		if(C.m_data.m_var_simple.m_mask & ACLUTIL_CURSOR_VAR_OCCUPIED)
+		if(C.m_data.m_vardecl.m_mask & ACLUTIL_CURSOR_VAR_OCCUPIED)
 			continue;
 
 		return CURI;

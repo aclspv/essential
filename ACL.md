@@ -1,5 +1,5 @@
-# OpenCL C
-> `aclspv` uses dialect of OpenCL C.  
+# Annotated C-family Language
+> `aclang`, annotated C-family language uses subset of OpenCL C.  
 > This page describes the specification of `aclspv`'s target language.
 
 # Possible required capabilitties
@@ -100,12 +100,17 @@ aclspv_location(location)
 > Specifies the location of `input` or `output`  
 - When not specified, every input our output's location will be 0.
 
-aclspv_btcast
+aclspv_btcast  
 > Tells that the final casting of variable would be bit-casting when it is arithmetic casting.
 
-aclspv_glcmagic  
+aclspv_glcmagic    
 > Specifies that user wants the input automatically on GLCompute.
 - Provided aclspv_execmodel is not GLCompute(5), this attribute will be ignored.
+
+aclspv_vecdecl(vec_elm_num)  
+> declare a type as a vector
+
+aclspv_bratio(weight_true_branch, weight_false_branch)  
 
 # Restriction
 > Some statements / extensions may not be planned to be supported for now.

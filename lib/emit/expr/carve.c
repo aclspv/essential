@@ -1,4 +1,5 @@
 #include "./carve.h"
+#include "util/op.h"
 #include <util/wrdemit.h>
 #include <util/scale.h>
 #include <util/cursor.h>
@@ -22,6 +23,7 @@ aclspv_bool_t aclexpr_carve(
 		= (void*)(((uptr* ae2f_restrict)(rdwr_data)) + 6);
 
 	aclspv_wrd_t	NUM_OPRND;
+
 	util_opbincfg_extra* ae2f_restrict LST_EXTRA; 
 
 
@@ -32,8 +34,6 @@ aclspv_bool_t aclexpr_carve(
 	typedef struct {
 		u32_least	m_count_oprnd;
 	} cmdcounterstckelm;
-
-	aclspv_bool_t		OPCODE_ASSIGN;
 
 	ae2f_unused typedef char aclspv_STATICASSERT_ELMSIZE[
 		sizeof(exprstck) == sizeof(cmdcounterstckelm)
@@ -111,14 +111,12 @@ aclspv_bool_t aclexpr_carve(
 		case 2:
 			LST_SCALE_BUF[UTIL_OPBINCFG_MASKLITERAL]= UTIL_LITERAL_MASK_LITERAL;
 			LST_SCALE_BUF[UTIL_OPBINCFG_RESID]	= *rdwr_prv_idval = CTX->m_id++;
-			OPCODE_ASSIGN = util_opbin2_is_assign(LST_SCALE_BUF[UTIL_OPBINCFG_OPCODE]);
-			dbg_prefix(a);
-			dbg_call((void), printf("OPCODE[%u]_ASSIGN: %u\n", LST_SCALE_BUF[UTIL_OPBINCFG_OPCODE], OPCODE_ASSIGN));
 
 			unless(LST_SCALE_BUF[UTIL_OPBINCFG_RESTYID])
 				LST_SCALE_BUF[UTIL_OPBINCFG_RESTYID] = aclid_decide_cast(
 						LST_EXTRA[0].m_type_original
 						, LST_EXTRA[1].m_type_original
+						, CTX
 						);	/** only when bin2 (arithmetic thing) */
 
 			rdwr_prv_extra->m_type_original = LST_SCALE_BUF[UTIL_OPBINCFG_RESTYID];
@@ -133,7 +131,7 @@ aclspv_bool_t aclexpr_carve(
 			dbg_call((void), fprintf(stderr, "NUM_OPRND: %u\n", NUM_OPRND));
 
 
-			/**** KERNEL SHIT *****/
+			/**** @fixme KERNEL SHIT *****/
 			unless(aclid_is_int(LST_SCALE_BUF[UTIL_OPBINCFG_RESTYID])) {
 				rdwr_prv_extra->m_mask_literal
 					&= LST_SCALE_BUF[UTIL_OPBINCFG_MASKLITERAL]
@@ -289,29 +287,6 @@ aclspv_bool_t aclexpr_carve(
 
 							dbg_prefix();
 							dbg_call((void), printf("literal id: %u\n", *rdwr_prv_idval));;
-
-							if(OPCODE_ASSIGN) {
-								CXCursor	RFD = clang_getCursorReferenced(LST_EXTRA[0].m_cursor);
-								const aclspv_wrd_t IDX = aclutil_find_cursor(
-										CTX->m_num_cursor
-										, CTX->m_cursors.m_p
-										, RFD
-										);
-
-								/** FIXME: error */
-								ae2f_unexpected_but_if(IDX == CTX->m_num_cursor)
-									return 1;
-
-								ae2f_expected_but_else(aclutil_assign_cursor_lval(
-										&((util_cursor*)CTX->m_cursors.m_p)[IDX]
-										, CTX
-										, 0
-										, LST_SCALE_BUF[UTIL_OPBINCFG_RESTYID]
-										, 2
-										, &rdwr_prv_extra->m_literal
-										, 0)) return 1;
-							}
-
 							return 0;
 						}
 					}
@@ -356,29 +331,6 @@ aclspv_bool_t aclexpr_carve(
 			      );
 
 			TMPL_COUNT += LST_CMD_COUNT - (LST_SCALE_BUF[1] == UTIL_LITERAL_RT);
-
-			if(OPCODE_ASSIGN) {
-				CXCursor	RFD = clang_getCursorReferenced(LST_EXTRA[0].m_cursor);
-				const aclspv_wrd_t IDX = aclutil_find_cursor(
-						CTX->m_num_cursor
-						, CTX->m_cursors.m_p
-						, RFD
-						);
-
-				ae2f_unexpected_but_if(IDX == CTX->m_num_cursor)
-					return 1;
-
-				ae2f_expected_but_else(aclutil_assign_cursor_lval(
-							((util_cursor* ae2f_restrict)CTX->m_cursors.m_p) + IDX
-							, CTX
-							, *rdwr_prv_idval
-							, ((util_cursor* ae2f_restrict)CTX->m_cursors.m_p)[IDX].m_data.m_var_simple.m_type_id
-							, LST_EXTRA[0].m_mask_literal
-							, 0, 0))
-					return 1;
-
-				dbg_puts("OPCODE_ASSIGN");
-			}
 	}
 
 #undef		LST_CMD_COUNT

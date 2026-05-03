@@ -2,17 +2,17 @@
 
 #include "./iddef.h"
 #include "./emitx.h"
-#include "util/id.h"
+#include "./cxtp.h"
 
 #include <assert.h>
 #include <spirv/unified1/spirv.h>
 
-ae2f_ccconst aclspv_bool_t aclid_is_castable(const B_id_default_t c_id) {
-	return aclid_is_arithmetic(c_id);
+ae2f_ccconst aclspv_bool_t aclid_is_castable(const B_id_default_t c_id, const h_aclspv_ctx_t h_ctx) {
+	return aclid_is_arithmetic(c_id, h_ctx);
 }
 
-ae2f_ccconst aclspv_bool_t aclid_is_castable1(const B_id_default_t c_id0, const B_id_default_t c_id1) {
-	return aclid_is_arithmetic(c_id0) && aclid_is_arithmetic(c_id1);
+ae2f_ccconst aclspv_bool_t aclid_is_castable1(const B_id_default_t c_id0, const B_id_default_t c_id1, const h_aclspv_ctx_t h_ctx) {
+	return aclid_is_arithmetic(c_id0, h_ctx) && aclid_is_arithmetic(c_id1, h_ctx);
 }
 
 ae2f_ccconst aclspv_bool_t aclid_is_unsigned(const B_id_default_t c_id_default) {
@@ -199,13 +199,21 @@ ae2f_ccconst unsigned aclid_get_bit_width(const B_id_default_t c_id_default) {
 			return 0;
 	}
 
-
 	ae2f_unreachable();
 }
 
+ae2f_ccconst aclspv_bool_t	aclid_is_vectorisable(const aclspv_id_t c_id) {
+	return c_id == ID_DEFAULT_BOOL || aclid_is_number(c_id);
+}
 
-ae2f_ccconst aclspv_bool_t aclid_is_arithmetic(const aclspv_id_t c_id) {
-	return aclid_is_number(c_id) || c_id == ID_DEFAULT_BOOL;
+aclspv_bool_t	aclid_is_arithmetic(const aclspv_id_t c_id, const h_aclspv_ctx_t h_ctx) 
+{
+	ae2fpat_assertassume(h_ctx);
+
+	if(aclutil_cxtp_get_veccfg(c_id, h_ctx).m_num)
+		return 1;
+
+	return aclid_is_vectorisable(c_id);
 }
 
 #include <ae2f/bll.h>
@@ -214,7 +222,7 @@ ae2f_ccconst aclspv_bool_t aclid_is_arithmetic(const aclspv_id_t c_id) {
  * @fn		util_default_decide_cast
  * @returns	0 when invalid
  * */
-ae2f_ccconst B_id_default_t aclid_decide_cast(const e_id_default c_id0, const e_id_default c_id1) {
+ae2f_ccconst B_id_default_t aclid_decide_cast(const e_id_default c_id0, const e_id_default c_id1, const h_aclspv_ctx_t h_ctx) {
 	/** one is 0? */
 	unless(c_id0 & c_id1)
 		return ae2f_bll_sel_bool_naive1(B_id_default_t, c_id0, c_id0, c_id1);
@@ -222,7 +230,7 @@ ae2f_ccconst B_id_default_t aclid_decide_cast(const e_id_default c_id0, const e_
 	unless(c_id0 ^ c_id1)
 		return c_id0;
 
-	unless(aclid_is_arithmetic(c_id0) & aclid_is_arithmetic(c_id1))
+	unless(aclid_is_arithmetic(c_id0, h_ctx) & aclid_is_arithmetic(c_id1, h_ctx))
 		return 0;
 
 	unless(aclid_is_number(c_id0) & aclid_is_number(c_id1))

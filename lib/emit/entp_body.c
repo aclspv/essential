@@ -18,7 +18,7 @@
 #include <util/constant.h>
 #include <util/scale.h>
 #include <util/literal.h>
-#include <util/u32_to_hex8.auto.h>
+#include <.aclspv/util/u32_to_hex8.h>
 
 #include <spirv/unified1/spirv.h>
 

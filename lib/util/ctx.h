@@ -102,13 +102,23 @@ typedef struct a_aclspv_ctx {
 	x_aclspv_vec		m_type_uniques;
 
 	struct {
-		aclspv_wrd_t	m_w0;
-		aclspv_wrd_t	m_w1;
-		aclspv_wrd_t	m_w2;
-		aclspv_wrd_t	m_w3;
+		aclspv_wrd_t	m_w0, m_w1, m_w2, m_w3;
 
+		/** 
+		 * [emit::body] name
+		 * [emit::body] vector initialiser
+		 * */
 		x_aclspv_vec	m_v0;
+
+
+		/**
+		 * [emit::body] boot scale
+		 * */
 		x_aclspv_vec	m_v1;
+
+		/**
+		 * [emit::body] command counter stack
+		 * */
 		x_aclspv_vec	m_v2;
 	}	m_tmp;
 

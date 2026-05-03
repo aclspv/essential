@@ -49,6 +49,7 @@ typedef struct {
 			 * */
 			aclspv_id_t	m_id;
 			aclspv_id_t	m_type_id;
+			aclspv_id_t	m_etype_id;	/** element type */
 			aclspv_id_t	m_ptr_type_id;
 
 			/**
@@ -60,16 +61,22 @@ typedef struct {
 			aclspv_id_t	m_init_val;
 
 			/**
+			 * @brief
 			 * [0,1]	mask_literal
 			 * [2]		is predictable
 			 * [3]		is allocated
 			 * [4]		is m_is_occupied
 			 * [5]		is owner
+			 *
+			 * @see ACLUTIL_CURSOR_VAR_
 			 * */
 			aclspv_wrd_t	m_mask;
-		} 
-		/** when cursor kind is vardecl */
-		m_var_simple;
+			aclspv_wrd_t	m_num;
+			aclspv_wrd_t	m_idx;
+			aclspv_wrd_t	m_nxt;
+		}
+		/** when cursor kind is arithmetic variable declaration */
+		m_vardecl;
 
 		struct {
 			/** @brief label id for goto */
@@ -80,7 +87,7 @@ typedef struct {
 
 		struct {
 			util_bind	m_info;
-		} 
+		}
 		/** when cursor kind is param decl */
 		m_prm_decl;
 	} m_data;

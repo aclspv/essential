@@ -8,7 +8,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-
 #include <util/ctx.h>
 #include <util/emitx.h>
 #include <util/is_kernel.h>

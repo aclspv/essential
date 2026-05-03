@@ -14,7 +14,7 @@ storage_class(3) const uint* u32out
 
 ) {
 	btcast float a0 = 1078774989;
-	int a1 
+	char a1 
 #if 0
 		= 1
 #else

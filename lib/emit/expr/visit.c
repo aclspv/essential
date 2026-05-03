@@ -7,6 +7,8 @@
 
 #include "./visit.h"
 #include "./carve.h"
+#include "aclspv.h"
+#include "util/log.h"
 
 #if	1
 #include "./visit/simple.h"
@@ -185,6 +187,7 @@ enum CXChildVisitResult aclexpr_visit(
 			while(LST_SCALE->m_id && GETLASTEL_CMDCOUNTERSTCK().m_count_oprnd == LST_SCALE_BUF[0]) {
 				util_opbincfg_extra	EXTRA_PRV;
 				aclspv_wrd_t	IDVAL_PRV;
+				aclspv_bool_t	IS_ASSIGN	= LST_EXTRA[0].m_is_assign;
 
 				(void)--GETLASTEL_CMDCOUNTERSTCK().m_count_oprnd;
 
@@ -209,11 +212,46 @@ enum CXChildVisitResult aclexpr_visit(
 								, "count operand: %u\n"
 								, LST_SCALE_BUF[0] - 1
 							 )));
+
 				ae2f_unexpected_but_if(aclexpr_carve(
 							rdwr_data
 							, &IDVAL_PRV
 							, &EXTRA_PRV))
 					return CXChildVisit_Break;
+
+				if(IS_ASSIGN) {
+					CXCursor	CASSIGN		= LST_EXTRA[0].m_cursor;
+					aclspv_wrd_t IDX = aclutil_find_cursor(
+							CTX->m_num_cursor
+							, CTX->m_cursors.m_p
+							, clang_getCursorDefinition(CASSIGN));
+
+					aclspv_wrd_t	CLVAL;
+
+					dbg_prefix(a);
+					dbg_call((void), fprintf(stderr, "assign after carve %u in type %u\n"
+								, IDVAL_PRV
+								, EXTRA_PRV.m_type_original
+								));
+
+					CLVAL = aclutil_assign_cursor_lval(
+							&((util_cursor* ae2f_restrict)CTX->m_cursors.m_p)[IDX]
+							, CTX, IDVAL_PRV, EXTRA_PRV.m_type_original
+							, EXTRA_PRV.m_mask_literal
+							, &EXTRA_PRV.m_literal, 0);
+
+					ae2f_ifezerr(CLVAL) {
+						err_puts("[carve] aclutil_assign_cursor_lval has been failed.");
+					}
+
+					dbg_prefix();
+					dbg_call((void), fprintf(stderr
+								, "[carve::%u] after assign %u with type %u\n"
+								, CLVAL
+								, ((util_cursor* ae2f_restrict)CTX->m_cursors.m_p)[IDX].m_data.m_vardecl.m_init_val
+								, ((util_cursor* ae2f_restrict)CTX->m_cursors.m_p)[IDX].m_data.m_vardecl.m_type_id
+								));
+				}
 
 				del_scale_from_vec_last(&CMDSTCK_SCALE);
 				(void)(NUM_CMDCOUNTERSTCK && --NUM_CMDCOUNTERSTCK);
@@ -240,8 +278,7 @@ enum CXChildVisitResult aclexpr_visit(
 				(void)(LST_SCALE->m_id && ++GETLASTEL_CMDCOUNTERSTCK(a).m_count_oprnd);
 			}
 
-
-			return CXChildVisit_Continue;
+			return ae2f_bll_sel_bool_naive1(uint_leastenum_t, CTX->m_err, CXChildVisit_Break, CXChildVisit_Continue);
 
 		case EMIT_EXPR_NOT_THE_CASE:
 			dbg_puts("Operator 1: not the case");
@@ -298,8 +335,6 @@ enum CXChildVisitResult aclexpr_visit(
 		case EMIT_EXPR_NOT_THE_CASE:
 			break;
 	}
-
-	CTX->m_err = ACLSPV_COMPILE_OK;
 
 	dbg_prefix(a);
 	dbg_call(ae2f_NONE, (fprintf(stderr, "Type Casted Current: %u\n", TYPE_CAST_CURRENT)));

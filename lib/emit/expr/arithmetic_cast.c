@@ -1,29 +1,34 @@
+
+#include <ae2f/c90/StdInt.h>
 #include <ae2f/pat/dbg.h>
 #include <ae2f/bll.h>
 
-#include <spirv/unified1/spirv.h>
 #include <util/literal.h>
 #include <util/iddef.h>
 #include <util/emitx.h>
 #include <util/ctx.h>
 #include <util/constant.h>
+#include <util/cxtp.h>
 
 #include "../expr.h"
-#include <ae2f/c90/StdInt.h>
-#include "aclspv.h"
-#include "ae2f/cc.h"
-#include "util/id.h"
-#include "util/wrd.h"
+#include "util/log.h"
 
-enum EMIT_EXPR_ aclexpr_arithmetic_cast_non_literal(
+
+static enum EMIT_EXPR_ s_non_literal_novec(
 		const aclspv_id_t	c_old_id,
 		const aclspv_id_t	c_old_type,
 		const B_util_literal_t	c_flag_literal,
 		aclspv_id_t* ae2f_restrict		r_newid,
 		aclspv_id_t				c_new_type,
-		const h_util_ctx_t			h_ctx
+		const h_util_ctx_t			h_ctx,
+
+
+		const aclspv_id_t	c_new_ty_eval_opt	/** actual type on emitting */
 		)
 {
+	const aclspv_id_t 
+		TYEVAL_NEW	= ae2f_bll_sel_bool_naive1(aclspv_id_t, c_new_ty_eval_opt, c_new_ty_eval_opt, c_new_type);
+
 	ae2fpat_assertassume(r_newid);
 	ae2fpat_assertassume(h_ctx);
 
@@ -58,8 +63,10 @@ enum EMIT_EXPR_ aclexpr_arithmetic_cast_non_literal(
 	}
 
 	/** down here, two types are different */
-
 	dbg_puts("two are not same");
+
+	unless(aclid_is_vectorisable(c_old_type) && aclid_is_vectorisable(c_new_type))
+		return EMIT_EXPR_NOT_THE_CASE;
 
 	/** two are float */
 	if (aclid_is_float(c_old_type) && aclid_is_float(c_new_type)) {
@@ -69,7 +76,7 @@ enum EMIT_EXPR_ aclexpr_arithmetic_cast_non_literal(
 						&h_ctx->m_section.m_types
 						, h_ctx->m_count.m_types
 						, SpvOpSpecConstantOp
-						, c_new_type
+						, TYEVAL_NEW
 						, *r_newid = h_ctx->m_id++
 						, SpvOpFConvert
 						, c_old_id))
@@ -82,7 +89,7 @@ enum EMIT_EXPR_ aclexpr_arithmetic_cast_non_literal(
 						&h_ctx->m_section.m_fnimpl
 						, h_ctx->m_count.m_fnimpl
 						, SpvOpFConvert
-						, c_new_type
+						, TYEVAL_NEW
 						, *r_newid = h_ctx->m_id++
 						, c_old_id
 						)
@@ -105,7 +112,7 @@ enum EMIT_EXPR_ aclexpr_arithmetic_cast_non_literal(
 					, SpvOpUConvert
 					, SpvOpSConvert);
 
-		unless(aclid_get_bit_width(c_old_type) ^ aclid_get_bit_width(c_new_type)) {
+		unless(aclid_get_bit_width(c_old_type) != aclid_get_bit_width(c_new_type)) {
 			const aclspv_wrd_t	VAL_ZER_CND = aclid_get_bit_width(c_old_type) == 64;
 			const aclspv_id_t	VAL_ZERO = 
 				ae2f_bll_sel_bool_naive1(
@@ -124,7 +131,7 @@ enum EMIT_EXPR_ aclexpr_arithmetic_cast_non_literal(
 							&h_ctx->m_section.m_types
 							, h_ctx->m_count.m_types
 							, SpvOpSpecConstantOp
-							, c_new_type
+							, TYEVAL_NEW
 							, *r_newid = h_ctx->m_id++
 							, SpvOpBitwiseOr 
 							, c_old_id
@@ -138,7 +145,7 @@ enum EMIT_EXPR_ aclexpr_arithmetic_cast_non_literal(
 							&h_ctx->m_section.m_fnimpl
 							, h_ctx->m_count.m_fnimpl
 							, SpvOpBitwiseOr
-							, c_new_type
+							, TYEVAL_NEW
 							, *r_newid = h_ctx->m_id++
 							, c_old_id
 							, VAL_ZERO
@@ -156,7 +163,7 @@ enum EMIT_EXPR_ aclexpr_arithmetic_cast_non_literal(
 						&h_ctx->m_section.m_types
 						, h_ctx->m_count.m_types
 						, SpvOpSpecConstantOp
-						, c_new_type
+						, TYEVAL_NEW
 						, *r_newid = h_ctx->m_id++
 						, OPCODE 
 						, c_old_id))
@@ -169,7 +176,7 @@ enum EMIT_EXPR_ aclexpr_arithmetic_cast_non_literal(
 						&h_ctx->m_section.m_fnimpl
 						, h_ctx->m_count.m_fnimpl
 						, OPCODE 
-						, c_new_type
+						, TYEVAL_NEW
 						, *r_newid = h_ctx->m_id++
 						, c_old_id
 						)
@@ -195,7 +202,7 @@ enum EMIT_EXPR_ aclexpr_arithmetic_cast_non_literal(
 						&h_ctx->m_section.m_types
 						, h_ctx->m_count.m_types
 						, SpvOpSpecConstantOp
-						, c_new_type
+						, TYEVAL_NEW
 						, *r_newid = h_ctx->m_id++
 						,OPCODE 
 						, c_old_id, V0))
@@ -208,7 +215,7 @@ enum EMIT_EXPR_ aclexpr_arithmetic_cast_non_literal(
 						&h_ctx->m_section.m_fnimpl
 						, h_ctx->m_count.m_fnimpl
 						,OPCODE 
-						, c_new_type
+						, TYEVAL_NEW
 						, *r_newid = h_ctx->m_id++
 						, c_old_id 
 						, V0
@@ -218,7 +225,7 @@ enum EMIT_EXPR_ aclexpr_arithmetic_cast_non_literal(
 		}
 	}
 
-	if((aclid_is_int(c_new_type) | aclid_is_int(c_new_type)) && c_old_type == ID_DEFAULT_BOOL) {
+	if((aclid_is_int(c_new_type)) && c_old_type == ID_DEFAULT_BOOL) {
 		aclspv_id_t		V0, V1;
 
 		ae2f_expected_but_else(V0 = aclutil_mk_constant_val_by_enum(0, h_ctx, c_old_type))
@@ -234,7 +241,7 @@ enum EMIT_EXPR_ aclexpr_arithmetic_cast_non_literal(
 						&h_ctx->m_section.m_types
 						, h_ctx->m_count.m_types
 						, SpvOpSpecConstantOp
-						, c_new_type
+						, TYEVAL_NEW
 						, *r_newid = h_ctx->m_id++
 						, SpvOpSelect
 						, c_old_id, V1, V0))
@@ -247,7 +254,7 @@ enum EMIT_EXPR_ aclexpr_arithmetic_cast_non_literal(
 						&h_ctx->m_section.m_fnimpl
 						, h_ctx->m_count.m_fnimpl
 						, SpvOpINotEqual
-						, c_new_type
+						, TYEVAL_NEW
 						, *r_newid = h_ctx->m_id++
 						, c_old_id
 						, V1, V0
@@ -264,7 +271,7 @@ enum EMIT_EXPR_ aclexpr_arithmetic_cast_non_literal(
 					&h_ctx->m_section.m_fnimpl
 					, h_ctx->m_count.m_fnimpl
 					, SpvOpConvertSToF 
-					, c_new_type
+					, TYEVAL_NEW
 					, *r_newid = h_ctx->m_id++
 					, c_old_id
 					)
@@ -289,8 +296,128 @@ enum EMIT_EXPR_ aclexpr_arithmetic_cast_non_literal(
 		return EMIT_EXPR_SUCCESS;
 	}
 
-	ae2fpat_assertassume(0 && "NOT_THE_CASE");
 	return EMIT_EXPR_NOT_THE_CASE;
+}
+
+#include <util/vec.h>
+
+static enum EMIT_EXPR_ s_non_literal_vec(
+		const aclspv_id_t	c_old_id,
+		const aclspv_id_t	c_old_type,
+		const B_util_literal_t	c_flag_literal,
+		aclspv_id_t* ae2f_restrict		r_newid,
+		aclspv_id_t				c_new_type,
+		const h_util_ctx_t			h_ctx
+		) {
+	struct aclutil_cxtp_veccfg_t 
+		VCFG_OLD, VCFG_NEW;
+
+	unless(aclid_is_arithmetic(c_old_type, h_ctx) && aclid_is_arithmetic(c_new_type, h_ctx))
+		return EMIT_EXPR_NOT_THE_CASE;
+
+	/** old and new */
+	VCFG_OLD = aclutil_cxtp_get_veccfg(c_old_type, h_ctx);
+	VCFG_NEW = aclutil_cxtp_get_veccfg(c_new_type, h_ctx);
+
+	if(VCFG_OLD.m_num == VCFG_NEW.m_num) {
+		return s_non_literal_novec(
+				c_old_id
+				, VCFG_OLD.m_ty_elm
+				, c_flag_literal
+				, r_newid
+				, VCFG_NEW.m_ty_elm
+				, h_ctx
+				, c_new_type
+				);
+	} else if(VCFG_NEW.m_num && !VCFG_OLD.m_num) {
+		aclspv_wrd_t	IDXV = VCFG_NEW.m_num;
+		aclspv_id_t	VID;
+
+		_aclspv_grow_vec(
+				_aclspv_malloc
+				, _aclspv_free
+				, h_ctx->m_tmp.m_v0
+				, count_to_sz(IDXV));
+
+		ae2f_ifezerr(h_ctx->m_tmp.m_v0.m_p) {
+			h_ctx->m_err = ACLSPV_COMPILE_ALLOC_FAILED;
+			return EMIT_EXPR_FAILURE;
+		}
+
+		ae2fpat_assertassume(IDXV <= h_ctx->m_tmp.m_v0.m_sz);
+
+		while(IDXV-- && ae2f_expected_strict(IDXV < VCFG_NEW.m_num)) {
+			get_wrd_of_vec(&h_ctx->m_tmp.m_v0)[c_old_id]
+				= c_old_id;
+		}
+
+		VID = aclutil_mkvec(
+				VCFG_NEW.m_num
+				, VCFG_OLD.m_ty_elm
+				, h_ctx->m_tmp.m_v0.m_p
+				, c_flag_literal
+				, h_ctx);
+
+		ae2f_ifnezerr(h_ctx->m_err)	return EMIT_EXPR_FAILURE;
+		ae2f_ifezerr(VID)		return EMIT_EXPR_FAILURE;
+
+		return s_non_literal_novec(
+				c_old_id
+				, VCFG_OLD.m_ty_elm
+				, c_flag_literal
+				, r_newid
+				, VCFG_NEW.m_ty_elm
+				, h_ctx
+				, c_new_type
+				);
+	} else if(!VCFG_NEW.m_num && VCFG_OLD.m_num) {
+
+	}
+
+	return EMIT_EXPR_NOT_THE_CASE;
+}
+
+enum EMIT_EXPR_ aclexpr_arithmetic_cast_non_literal(
+		const aclspv_id_t	c_old_id,
+		const aclspv_id_t	c_old_type,
+		const B_util_literal_t	c_flag_literal,
+		aclspv_id_t* ae2f_restrict		r_newid,
+		aclspv_id_t				c_new_type,
+		const h_util_ctx_t			h_ctx
+		) {
+	enum EMIT_EXPR_ R = s_non_literal_novec(
+			c_old_id
+			, c_old_type
+			, c_flag_literal
+			, r_newid
+			, c_new_type
+			, h_ctx
+			, 0);
+
+	dbg_prefix(;);
+	dbg_call((void), fprintf(stderr, "cast_non_literal %u %u\n", c_old_type, c_new_type));
+
+	switch(R) {
+		default:
+			ae2f_unreachable();
+		case EMIT_EXPR_NOT_THE_CASE:
+			break;
+
+		case EMIT_EXPR_SUCCESS:
+		case EMIT_EXPR_SUCCESS_LITERAL:
+		case EMIT_EXPR_SUCCESS_CONSTANT:
+		case EMIT_EXPR_FAILURE:
+			return R;
+	}
+
+	return s_non_literal_vec(
+			c_old_id
+			, c_old_type
+			, c_flag_literal
+			, r_newid
+			, c_new_type
+			, h_ctx
+			);
 }
 
 enum EMIT_EXPR_ aclexpr_arithmetic_cast_literal(
@@ -310,7 +437,7 @@ enum EMIT_EXPR_ aclexpr_arithmetic_cast_literal(
 					, c_old_type, c_new_type
 				    )));
 
-	ae2f_expected_but_else(aclid_is_arithmetic(c_old_type) && aclid_is_arithmetic(c_new_type)) {
+	ae2f_expected_but_else(aclid_is_arithmetic(c_old_type, h_ctx) && aclid_is_arithmetic(c_new_type, h_ctx)) {
 		return EMIT_EXPR_NOT_THE_CASE;
 	}
 

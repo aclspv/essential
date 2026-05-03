@@ -8,6 +8,7 @@
 
 #include "util/iddef.h"
 #include "util/literal.h"
+#include "util/log.h"
 #include <util/cursor.h>
 #include <util/emitx.h>
 #include <util/constant.h>
@@ -151,18 +152,22 @@ ae2f_inline static enum EMIT_EXPR_ s_simple(
 #define	DECL_INFO	DECL_IDX[((util_cursor* ae2f_restrict)h_ctx->m_cursors.m_p)]
 
 				/** NaN is undefined behaviour here */
-				unless(aclid_is_arithmetic(DECL_INFO.m_data.m_var_simple.m_type_id)) {
-					err_puts(("Arithmetic is no number [NOIMPL]"));
+				unless(aclid_is_arithmetic(DECL_INFO.m_data.m_vardecl.m_type_id, h_ctx)) {
+					err_prefix(a);
+					err_call((void), (fprintf(stderr
+									, "Type(%u) is no arithmetic [NOIMPL]\n"
+									, DECL_INFO.m_data.m_vardecl.m_type_id))
+							);
 					return EMIT_EXPR_FAILURE;
 				}
 
-				*wr_type_fetched = DECL_INFO.m_data.m_var_simple.m_type_id;
+				*wr_type_fetched = DECL_INFO.m_data.m_vardecl.m_type_id;
 				ae2f_expected_if(*wr_newid = aclutil_assign_cursor_lval(
 							&DECL_INFO, h_ctx
 							, 0, 0
 							, 0, 0
 							, rwr_literal_opt)) 
-					switch(DECL_INFO.m_data.m_var_simple.m_mask & ACLUTIL_CURSOR_VAR_LITERAL) {
+					switch(DECL_INFO.m_data.m_vardecl.m_mask & ACLUTIL_CURSOR_VAR_LITERAL) {
 					case UTIL_LITERAL_MASK_LITERAL:
 					case UTIL_LITERAL_LITERAL:
 

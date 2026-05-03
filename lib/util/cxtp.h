@@ -73,54 +73,62 @@ typedef struct {
 } aclutil_cxtp;
 
 /** Returns the type id of type */
-ae2f_extern aclspv_id_t aclutil_mk_cxtp_by_cursor(
+aclspv_id_t aclutil_mk_cxtp_by_cursor(
 		const CXCursor		c_cursor,
 		const CXType		c_type,
 		const h_aclspv_ctx_t	h_ctx
 		);
 
-ae2f_extern aclspv_id_t aclutil_mk_cxtp_arr(
+aclspv_id_t aclutil_mk_cxtp_arr(
 		const aclspv_id_t	c_type_elm,
 		const aclspv_id_t	c_num_arr,
 		const h_aclspv_ctx_t	h_ctx
 		);
 
 /** array with stride */
-ae2f_extern aclspv_id_t aclutil_mk_cxtp_arr2(
+aclspv_id_t aclutil_mk_cxtp_arr2(
 		const aclspv_id_t	c_type_elm,
 		const aclspv_id_t	c_num_arr,
 		const aclspv_wrdcount_t	c_decorate_stride,
 		const h_aclspv_ctx_t	h_ctx
 		);
 
-ae2f_extern aclspv_id_t aclutil_mk_cxtp_vec(
+aclspv_id_t aclutil_mk_cxtp_vec(
 		const aclspv_id_t	c_type_elm,
 		const aclspv_wrd_t	c_num_arr,
 		const h_aclspv_ctx_t	h_ctx
 		);
 
-ae2f_extern aclspv_id_t aclutil_mk_cxtp_ptr(
+aclspv_id_t aclutil_mk_cxtp_ptr(
 		const aclspv_id_t		c_type_elm,
 		const enum SpvStorageClass_	c_storage_class,
 		const h_aclspv_ctx_t		h_ctx
 		);
 
-ae2f_extern aclspv_id_t aclutil_mk_cxtp_fn_no_prm(
+aclspv_id_t aclutil_mk_cxtp_fn_no_prm(
 		const aclspv_id_t	c_ret_id,
 		const h_aclspv_ctx_t	h_ctx
 		);
 
-ae2f_extern aclspv_id_t aclutil_mk_cxtp_fn_with_prm(
+aclspv_id_t aclutil_mk_cxtp_fn_with_prm(
 		const CXCursor		c_cursor_compound,
 		const CXType		c_type_compound,
 		const h_aclspv_ctx_t	h_ctx
 		);
 
-ae2f_extern aclspv_id_t aclutil_mk_cxtp_struct_single(
+aclspv_id_t aclutil_mk_cxtp_struct_single(
 		const aclspv_id_t	c_type_member,
 		const B_aclspv_cxtp_struct_decoration_field0_t	
-					c_decorate_field0,
+		c_decorate_field0,
 		const aclspv_wrd_t	c_memdecorate_offset,
+		const h_aclspv_ctx_t	h_ctx
+		);
+
+struct aclutil_cxtp_veccfg_t {
+	aclspv_id_t	m_ty_elm;
+	aclspv_wrd_t	m_num;
+}	aclutil_cxtp_get_veccfg(
+		const aclspv_id_t	c_ty_vec,
 		const h_aclspv_ctx_t	h_ctx
 		);
 

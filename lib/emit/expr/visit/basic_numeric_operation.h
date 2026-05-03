@@ -13,6 +13,7 @@
 #include <util/emitx.h>
 
 #include "../../expr.h"
+#include "ae2f/cc.h"
 #include "util/log.h"
 
 ae2f_inline static enum EMIT_EXPR_ s_basic_numeric_operation(
@@ -22,6 +23,7 @@ ae2f_inline static enum EMIT_EXPR_ s_basic_numeric_operation(
 		)
 {
 	enum UTIL_OPBIN2_	OPCODE;
+	aclspv_bool_t		IS_ASSIGN = 0;
 
 	ae2f_expected_but_else(h_ctx) {
 		assert(0 && "emit_expr_bin_2::h_ctx is null");
@@ -41,8 +43,8 @@ ae2f_inline static enum EMIT_EXPR_ s_basic_numeric_operation(
 		}
 
 		dbg_prefix(a);
-		dbg_call((void), printf("Binary Operator: %s\n", OP));
-		dbg_call((void), printf("Binary Operator Kind: %s\n", OPKND));
+		dbg_call((void), fprintf(stderr, "Binary Operator: %s\n", OP));
+		dbg_call((void), fprintf(stderr, "Binary Operator Kind: %s\n", OPKND));
 
 		clang_disposeString(SPL);
 		clang_disposeString(KNDSPL);
@@ -63,37 +65,31 @@ ae2f_inline static enum EMIT_EXPR_ s_basic_numeric_operation(
 			return EMIT_EXPR_NOT_THE_CASE;
 
 		case CXBinaryOperator_AddAssign:
-			OPCODE = UTIL_OPBIN2_ADDASSIGN;
-			break;
+			IS_ASSIGN |= 1; ae2f_fallthrough;
 		case CXBinaryOperator_Add:
 			OPCODE = UTIL_OPBIN2_ADD;
 			break;
 
 		case CXBinaryOperator_SubAssign:
-			OPCODE = UTIL_OPBIN2_SUBASSIGN;
-			break;
+			IS_ASSIGN |= 1; ae2f_fallthrough;
 		case CXBinaryOperator_Sub:
 			OPCODE = UTIL_OPBIN2_SUB;
 			break;
 
 		case CXBinaryOperator_MulAssign:
-			OPCODE = UTIL_OPBIN2_MULASSIGN;
-			break;
+			IS_ASSIGN |= 1; ae2f_fallthrough;
 		case CXBinaryOperator_Mul:
 			OPCODE = UTIL_OPBIN2_MUL;
 			break;
 
 		case CXBinaryOperator_DivAssign:
-			OPCODE = UTIL_OPBIN2_DIVASSIGN;
-			break;
+			IS_ASSIGN |= 1; ae2f_fallthrough;
 		case CXBinaryOperator_Div:
 			OPCODE = UTIL_OPBIN2_DIV;
 			break;
 
 		case CXBinaryOperator_RemAssign:
-			OPCODE = UTIL_OPBIN2_REMASSIGN;
-			break;
-
+			IS_ASSIGN |= 1; ae2f_fallthrough;
 		case CXBinaryOperator_Rem:
 			OPCODE = UTIL_OPBIN2_REM;
 			break;
@@ -127,6 +123,9 @@ ae2f_inline static enum EMIT_EXPR_ s_basic_numeric_operation(
 		VEC[5] = OPCODE;
 		VEC[6] = 0;
 		VEC[7] = 0;
+
+		((util_opbincfg_extra* ae2f_restrict)(void* ae2f_restrict)(&VEC[(UTIL_OPBINCFG_END + 2)]))[0].m_is_assign = IS_ASSIGN;
+		((util_opbincfg_extra* ae2f_restrict)(void* ae2f_restrict)(&VEC[(UTIL_OPBINCFG_END + 2)]))[1].m_is_assign = IS_ASSIGN;
 	}
 
 	return EMIT_EXPR_SUCCESS_LITERAL;

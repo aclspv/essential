@@ -1,4 +1,5 @@
 #include "aclspv.h"
+#include "util/literal.h"
 #include <clang-c/CXString.h>
 #include <util/emitx.h>
 #include <util/cursor.h>
@@ -10,7 +11,8 @@
 ae2f_inline ae2f_ccconst static aclspv_bool_t s_is_lval(const enum CXCursorKind	c_cursorkind) {
 	switch((uint_fastenum_t)c_cursorkind) {
 		default: return 0;
-		case CXCursor_DeclRefExpr:
+		case CXCursor_VariableRef:
+		case CXCursor_VarDecl:
 			return 1;
 	}
 }
@@ -26,19 +28,27 @@ aclspv_id_t aclutil_assign_cursor_lval(
 		) {
 	util_literal	LIT_DUMMY;
 	r_literal_opt = ae2f_bll_sel_ptrbool_naive1(util_literal* ae2f_restrict, r_literal_opt, r_literal_opt, &LIT_DUMMY);
+
+	dbg_prefix();
+	dbg_call((void), fprintf(stderr, "assign_cursor_lval | typeid: %u typeid_req: %u\n"
+				, c_val_ty
+				, (*wr_cursor).m_data.m_vardecl.m_type_id));
 	
 
-	if(s_is_lval(wr_cursor->m_cursor.kind)) return 0;
-	if(r_literal_opt) *r_literal_opt = (*wr_cursor).m_data.m_var_simple.m_literal;
-	if(rd_literal_to_assign) {
-		(*wr_cursor).m_data.m_var_simple.m_mask |= 3 | ACLUTIL_CURSOR_VAR_PREDICTABLE;
+	unless(s_is_lval(wr_cursor->m_cursor.kind)) {
+		h_ctx->m_err = ACLSPV_COMPILE_ASSIGN_ON_NON_LVAL;
+		return 0; 
+	}
+	if(r_literal_opt) *r_literal_opt = (*wr_cursor).m_data.m_vardecl.m_literal;
+	if(rd_literal_to_assign && (c_masklit & UTIL_LITERAL_LITERAL)) {
+		(*wr_cursor).m_data.m_vardecl.m_mask |= 3 | ACLUTIL_CURSOR_VAR_PREDICTABLE;
 
 		switch(aclexpr_arithmetic_cast_literal(
 					c_val_ty
 					, *rd_literal_to_assign
-					, &(*wr_cursor).m_data.m_var_simple.m_init_val
-					, (*wr_cursor).m_data.m_var_simple.m_type_id
-					, &(*wr_cursor).m_data.m_var_simple.m_literal
+					, &(*wr_cursor).m_data.m_vardecl.m_init_val
+					, (*wr_cursor).m_data.m_vardecl.m_type_id
+					, &(*wr_cursor).m_data.m_vardecl.m_literal
 					, h_ctx))
 		{
 			case EMIT_EXPR_NOT_THE_CASE:
@@ -49,23 +59,25 @@ aclspv_id_t aclutil_assign_cursor_lval(
 				return 0;
 
 			case EMIT_EXPR_SUCCESS_LITERAL:
-				*r_literal_opt = (*wr_cursor).m_data.m_var_simple.m_literal;
+				*r_literal_opt = (*wr_cursor).m_data.m_vardecl.m_literal;
 
 				dbg_prefix(a);
-				dbg_call((void), printf("assign_cursor_lval: initval%u", wr_cursor->m_data.m_var_simple.m_init_val));
+				dbg_call((void), printf("assign_cursor_lval: initval %u\n", wr_cursor->m_data.m_vardecl.m_init_val));
 
 				goto LBL_RETNOLBL;
 		}
 	}
 
 	if(c_val) {
-		(*wr_cursor).m_data.m_var_simple.m_mask	|= ACLUTIL_CURSOR_VAR_PREDICTABLE;
+		dbg_puts("[assign] c_val");
+		(*wr_cursor).m_data.m_vardecl.m_mask	|= ACLUTIL_CURSOR_VAR_PREDICTABLE;
+		(*wr_cursor).m_data.m_vardecl.m_mask	&= ~((aclspv_wrd_t)ACLUTIL_CURSOR_VAR_LITERAL);
 		switch(aclexpr_arithmetic_cast_non_literal(
 					c_val
 					, c_val_ty
 					, c_masklit
-					, &(*wr_cursor).m_data.m_var_simple.m_init_val
-					, (*wr_cursor).m_data.m_var_simple.m_type_id
+					, &(*wr_cursor).m_data.m_vardecl.m_init_val
+					, (*wr_cursor).m_data.m_vardecl.m_type_id
 					, h_ctx
 					)) {
 			case EMIT_EXPR_SUCCESS_LITERAL:
@@ -73,28 +85,29 @@ aclspv_id_t aclutil_assign_cursor_lval(
 			case EMIT_EXPR_NOT_THE_CASE:
 			default:
 				return 0;
+			case EMIT_EXPR_SUCCESS_CONSTANT:
+				(*wr_cursor).m_data.m_vardecl.m_mask |= UTIL_LITERAL_CONSTANT;
+				ae2f_fallthrough;
 
 			case EMIT_EXPR_SUCCESS:
-				(*wr_cursor).m_data.m_var_simple.m_mask &= (aclspv_wrd_t)~ACLUTIL_CURSOR_VAR_LITERAL;
-				ae2f_fallthrough;
-			case EMIT_EXPR_SUCCESS_CONSTANT:
-				(*wr_cursor).m_data.m_var_simple.m_mask &= (aclspv_wrd_t)~ACLUTIL_CURSOR_VAR_LITERAL | 1;
-				return (*wr_cursor).m_data.m_var_simple.m_init_val;
+				ae2f_ifezerr(wr_cursor->m_data.m_vardecl.m_init_val)
+					h_ctx->m_err = ACLSPV_COMPILE_ASSIGN_CAST_GOT_ZERO;
+				return (*wr_cursor).m_data.m_vardecl.m_init_val;
 		}
 	}
 
-	if((*wr_cursor).m_data.m_var_simple.m_mask & ACLUTIL_CURSOR_VAR_PREDICTABLE) {
+	if((*wr_cursor).m_data.m_vardecl.m_mask & ACLUTIL_CURSOR_VAR_PREDICTABLE) {
 		goto LBL_RETNOLBL;
 	}
 
-	(*wr_cursor).m_data.m_var_simple.m_mask	 |= ACLUTIL_CURSOR_VAR_PREDICTABLE;
+	(*wr_cursor).m_data.m_vardecl.m_mask	 |= ACLUTIL_CURSOR_VAR_PREDICTABLE;
 	ae2f_expected_but_else(h_ctx->m_count.m_fnimpl = util_emitx_4(
 				&h_ctx->m_section.m_fnimpl
 				, h_ctx->m_count.m_fnimpl
 				, SpvOpLoad
-				, (*wr_cursor).m_data.m_var_simple.m_type_id
-				, (*wr_cursor).m_data.m_var_simple.m_init_val = h_ctx->m_id++
-				, (*wr_cursor).m_data.m_var_simple.m_id)) {
+				, (*wr_cursor).m_data.m_vardecl.m_type_id
+				, (*wr_cursor).m_data.m_vardecl.m_init_val = h_ctx->m_id++
+				, (*wr_cursor).m_data.m_vardecl.m_id)) {
 		h_ctx->m_err = ACLSPV_COMPILE_ALLOC_FAILED_CURSOR;
 		return 0;
 	}
@@ -103,7 +116,7 @@ aclspv_id_t aclutil_assign_cursor_lval(
 		CXString SPL = clang_getCursorSpelling((wr_cursor)->m_cursor);
 
 		if(SPL.data) {
-			_aclutil_mkname_dbg(L, wr_cursor->m_data.m_var_simple.m_init_val
+			_aclutil_mkname_dbg(L, wr_cursor->m_data.m_vardecl.m_init_val
 					, SPL.data
 					, *(h_ctx)
 					, (h_ctx)->m_tmp.m_v0
@@ -115,5 +128,5 @@ aclspv_id_t aclutil_assign_cursor_lval(
 
 LBL_RETNOLBL:
 
-	return (*wr_cursor).m_data.m_var_simple.m_init_val;
+	return (*wr_cursor).m_data.m_vardecl.m_init_val;
 }

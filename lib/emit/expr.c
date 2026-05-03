@@ -3,11 +3,13 @@
 #include "./expr.h"
 
 #include <ae2f/bll.h>
+
 #include <util/op.h>
 #include <util/scale.h>
 #include <util/emitx.h>
 #include <util/log.h>
 #include <util/iddef.h>
+#include <util/visitfromroot.h>
 
 enum EMIT_EXPR_ aclspv_get_expr2(
 		aclspv_id_t* ae2f_restrict const	ret_id
@@ -65,23 +67,8 @@ enum EMIT_EXPR_ aclspv_get_expr2(
 				, SCALE_BOOT[1], (void*)(SCALE_BOOT + 1))
 		);
 
-	if(aclexpr_visit(c_cur, c_cur, BUF) == CXChildVisit_Break)
-		return EMIT_EXPR_FAILURE;
-
-	ae2f_expected_but_else(h_ctx->m_tmp.m_v0.m_p)
-		return EMIT_EXPR_FAILURE;
-
-	ae2f_expected_but_else(h_ctx->m_tmp.m_v1.m_p)
-		return EMIT_EXPR_FAILURE;
-
-
-	dbg_prefix(a);
-	dbg_call(fprintf, (stderr
-				, "Constant flag after first emit_expr %u[%p]\n"
-				, SCALE_BOOT[1], (void*)(SCALE_BOOT + 1))
-		);
-
-	clang_visitChildren(c_cur, aclexpr_visit, BUF);
+	(void)aclutil_visitfromroot(c_cur, aclexpr_visit, BUF);
+	ae2f_ifnezerr(h_ctx->m_err) return EMIT_EXPR_FAILURE;
 
 	dbg_prefix(a);
 	dbg_call(fprintf, (stderr, "BUF[3]: %u\n", (unsigned)BUF[UTIL_OPBINCFG_RESTYID]));
@@ -378,23 +365,8 @@ enum EMIT_EXPR_ aclspv_get_expr(
 				, (void*)(SCALE_BOOT + 1))
 		);
 
-	if(aclexpr_visit(c_cur, c_cur, BUF) == CXChildVisit_Break)
-		return EMIT_EXPR_FAILURE;
-
-	ae2f_expected_but_else(h_ctx->m_tmp.m_v0.m_p)
-		return EMIT_EXPR_FAILURE;
-
-	ae2f_expected_but_else(h_ctx->m_tmp.m_v1.m_p)
-		return EMIT_EXPR_FAILURE;
-
-
-	dbg_prefix(a);
-	dbg_call(fprintf, (stderr
-				, "Constant flag after first emit_expr %u[%p]\n"
-				, SCALE_BOOT[1], (void*)(SCALE_BOOT + 1))
-		);
-
-	clang_visitChildren(c_cur, aclexpr_visit, BUF);
+	(void)aclutil_visitfromroot(c_cur, aclexpr_visit, BUF);
+	ae2f_ifnezerr(h_ctx->m_err) return EMIT_EXPR_FAILURE;
 
 	dbg_prefix(a);
 	dbg_call(fprintf, (stderr, "BUF[3]: %u\n", (unsigned)BUF[3]));

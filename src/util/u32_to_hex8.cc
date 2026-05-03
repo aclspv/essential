@@ -1,7 +1,7 @@
 /** @file u32_to_hex8.auto.h */
 
-#ifndef util_u32_to_hex8_h
-#define util_u32_to_hex8_h
+#ifndef util_u32_to_hex8_cc
+#define util_u32_to_hex8_cc
 
 #include <ae2f/pat/macrofunc.h>
 
