@@ -58,9 +58,14 @@ typedef enum ACLSPV_COMPILE_ {
 	ACLSPV_COMPILE_ALLOC_FAILED_EXPR,
 	ACLSPV_COMPILE_ALLOC_FAILED_DECLGLOBOBJ,
 	ACLSPV_COMPILE_ALLOC_FAILED_VEC,
+	ACLSPV_COMPILE_ALLOC_FAILED_ID,
+	ACLSPV_COMPILE_ALLOC_FAILED_ASM,
 
 	ACLSPV_COMPILE_MET_INVAL,
+
 	ACLSPV_COMPILE_ERR_CLANG,
+	ACLSPV_COMPILE_ERR_CLANGIDX,
+
 	ACLSPV_COMPILE_TOO_BIG,
 	ACLSPV_COMPILE_NO_IMPL,
 	ACLSPV_COMPILE_WORKGROUP_MUST_BE_CONSTANT_ARRAY,
@@ -147,17 +152,16 @@ typedef enum ID_DEFAULT_ {
 	ID_DEFAULT_END
 } e_id_default;
 
+typedef struct a_aclspv_ctx* ae2f_restrict h_aclspv_ctx_t;
+
+
 typedef struct a_aclspv_ctx {
 	/** @brief see `ACLSPV_CTX_FLAG0_` */
 	uint_leastenum_t	m_flag0;
 
 	e_aclspv_compile_t	m_err;
 
-	/**
-	 * @var		m_ret
-	 * @brief	word count for m_ret
-	 * */
-	aclspv_wrdcount_t	m_num_ret;
+	aclspv_wrd_t		m_spirv_ver;
 
 	/** 
 	 * @brief
@@ -177,12 +181,6 @@ typedef struct a_aclspv_ctx {
 	 * @brief	id
 	 * */
 	aclspv_id_t		m_id;
-
-	/**
-	 * @var		m_ret
-	 * @brief	fully emitted spir-v
-	 * */
-	x_aclspv_vec		m_ret;
 
 	/** 
 	 * @var m_scale_vars 
@@ -292,6 +290,45 @@ typedef struct a_aclspv_ctx {
 	aclspv_id_t		m_id_defaults[ID_DEFAULT_END];
 } x_aclspv_ctx;
 
-typedef x_aclspv_ctx* ae2f_restrict h_aclspv_ctx_t;
+/**
+ * @fn	aclspv_compile
+ * @brief	compile files and generate spir-v for vulkan
+ * @returns	<INIT:aclspv_free_obj>
+ * */
+ae2f_extern ACLSPV_ABI_DECL enum ACLSPV_COMPILE_ 
+aclspv_compile(
+		struct CXUnsavedFile* ae2f_restrict const 	rdwr_unsaved,
+		const unsigned					c_unsaved_count,
+		const char* ae2f_restrict const * ae2f_restrict const	rd_argv_opt,
+		const int						c_argc,
+		aclspv_wrdcount_t* ae2f_restrict			rwr_output_count_opt,
+		aclspv_wrd_t* ae2f_restrict* ae2f_restrict		rwr_output,
+		enum CXErrorCode* ae2f_restrict				rwr_cxerr_opt
+	      );
+
+ae2f_extern ACLSPV_ABI_DECL enum ACLSPV_COMPILE_ aclspv_init_ctx(
+		const h_aclspv_ctx_t	i_ctx,
+		const aclspv_wrd_t	c_init_size_exp,
+		const aclspv_wrd_t	c_init_flag0,
+		const aclspv_wrd_t	c_spirv_version
+		);
+
+ae2f_extern ACLSPV_ABI_DECL enum ACLSPV_COMPILE_ aclspv_ctx_compile(
+		const h_aclspv_ctx_t	h_ctx,
+		CXCursor		c_cur_root
+		);
+
+ae2f_extern ACLSPV_ABI_DECL void aclspv_fini_ctx(
+		const h_aclspv_ctx_t	d_ctx
+		);
+
+ae2f_extern enum ACLSPV_COMPILE_ aclspv_dump_ctx_output(
+		const x_aclspv_ctx* ae2f_restrict		h_ctx,
+		aclspv_wrdcount_t* ae2f_restrict const		r_output_count_opt,
+		aclspv_wrd_t* ae2f_restrict* ae2f_restrict	r_output_opt
+		);
+
+
+
 
 #endif

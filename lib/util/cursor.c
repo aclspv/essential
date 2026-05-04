@@ -81,7 +81,7 @@ enum ACLSPV_COMPILE_ aclutil_tell_cursor_lbl(
 		if(wr_cursor[IDX].m_data.m_vardecl.m_stage_lvl >= c_cursor_lvl)
 			continue;
 
-		if((CURSORDATA.m_mask & (ACLUTIL_CURSOR_VAR_ALLOCATED | ACLUTIL_CURSOR_VAR_OCCUPIED)) 
+		if((CURSORDATA.m_mask & (ACLUTIL_CURSOR_VAR_ALLOCATED | ACLUTIL_CURSOR_VAR_OCCUPIED))
 				== (ACLUTIL_CURSOR_VAR_ALLOCATED | ACLUTIL_CURSOR_VAR_OCCUPIED)) {
 			if(CURSORDATA.m_mask & ACLUTIL_CURSOR_VAR_PREDICTABLE &&
 					(CURSORDATA.m_init_val && !ae2f_expected(

@@ -16,6 +16,7 @@ kernel_raw(0) void KERNEL() {
 	goto L0;
 
 L0:
+	a += b;
 	return;
 }
 

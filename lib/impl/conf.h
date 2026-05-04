@@ -19,7 +19,7 @@
 #define	wrd_ext		h_ctx->m_section.m_ext
 #define	wrd_ext_count	h_ctx->m_count.m_ext
 
-ae2f_inline static e_aclspv_compile_t impl_conf(
+ae2f_always_inline static e_aclspv_compile_t impl_conf(
 		const h_util_ctx_t		h_ctx
 		)
 {

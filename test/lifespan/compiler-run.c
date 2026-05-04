@@ -69,6 +69,7 @@ sizeof(B_0)
 			      );
 
 		printf("aclspv_compile: %u\n", RET);
+		printf("output spirv: %p, %u\n", (void*)spirv0, spirv_count);
 
 		assert(spirv0);
 
@@ -83,6 +84,7 @@ FPOPEN_FAILED:
 			;
 		}
 
+		puts("freeing spirv");
 		free(spirv0);
 
 		return 0;
