@@ -3,22 +3,6 @@
 #ifndef aclid_h
 #define aclid_h
 
-/** type id */
-typedef enum ID_DEFAULT_ {
-	ID_DEFAULT_VOID = 1, 
-	ID_DEFAULT_BOOL,
-	ID_DEFAULT_I8,
-	ID_DEFAULT_U8,
-	ID_DEFAULT_I16,
-	ID_DEFAULT_U16,
-	ID_DEFAULT_I32,
-	ID_DEFAULT_U32,
-	ID_DEFAULT_I64,
-	ID_DEFAULT_U64,
-	ID_DEFAULT_F16,
-	ID_DEFAULT_F32,
-	ID_DEFAULT_F64,
-	ID_DEFAULT_END
-} e_id_default;
+#include <aclspv.h>
 
 #endif

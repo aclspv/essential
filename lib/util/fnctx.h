@@ -8,11 +8,11 @@
 #include <ae2f/pat/vec.auto.h>
 #include <ae2f/c90/StdInt.h>
 #include <ae2f/cc.h>
-#include "./wrd.h"
 
+#include "./wrd.h"
 #include "./ctx.h"
-#include "./literal.h"
-#include "aclspv.h"
+
+#include <aclspv.h>
 
 #define	__ENUM()	\
 	__X(FNRET),	\

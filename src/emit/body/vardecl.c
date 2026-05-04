@@ -33,7 +33,9 @@ ae2f_MAC((L, )) aclemit_body_vardecl(CXCursor h_cur, aclutil_fnctx* ae2f_restric
 	const CXType	L$$TYPE = clang_getCanonicalType(clang_getCursorType(h_cur));
 	util_cursor* L$$PCURSOR = &((util_cursor* ae2f_restrict)L$$CTX->m_cursors.m_p)[L$$IDX];
 
-	const aclspv_wrd_t	L$$VECNUM	= aclattr_vecdecl(1, h_cur);
+	const aclspv_wrd_t	L$$VECNUM_	= aclattr_vecdecl(0, h_cur);
+	const aclspv_wrd_t	L$$VECNUM	= L$$VECNUM_ ? L$$VECNUM_ : aclattr_vecdecl(1
+			, clang_getTypeDeclaration(clang_getCursorType(h_cur)));
 
 	ae2f_unexpected_but_if(L$$IDX == L$$CTX->m_num_cursor + 1)
 		goto L$$LBL_END;

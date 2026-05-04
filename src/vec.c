@@ -2,14 +2,10 @@
 #define	aclspv_pass_ctx_auto_h
 
 #include <stddef.h>
+#include <aclspv.h>
 #include <ae2f/Keys.h>
 #include <ae2f/Cast.h>
 #include <ae2f/pat/macrofunc.h>
-
-typedef struct {
-	void* ae2f_restrict 	m_p;
-	size_t	m_sz;
-} x_aclspv_vec;
 
 #if	!__ae2f_MACRO_GENERATED
 
@@ -40,7 +36,7 @@ ae2f_MAC((f_malloc, f_free, ))
 	aclspv_grow_vec(x_aclspv_vec rc_vec, const size_t c_new_sz) {
 		if((c_new_sz) > (rc_vec).m_sz) {
 			f_free((rc_vec).m_p, (c_new_sz));
-			ae2f_expected_if(((rc_vec).m_p = f_malloc(c_new_sz))) {
+			ae2f_ifneznrm(((rc_vec).m_p = f_malloc(c_new_sz))) {
 				(rc_vec).m_sz = (c_new_sz);
 			} else {
 				(rc_vec).m_sz = 0ul;
@@ -54,7 +50,7 @@ ae2f_MAC((f_malloc, f_free, f_memcpy, L_new, ))
 			void* ae2f_restrict 
 				L_new = f_malloc(c_new_sz);
 
-			ae2f_expected_if(L_new) {
+			ae2f_ifneznrm(L_new) {
 				if((rc_vec).m_p) {
 					f_memcpy(L_new, (rc_vec).m_p, (rc_vec).m_sz);
 					f_free((rc_vec).m_p, (rc_vec).m_sz);

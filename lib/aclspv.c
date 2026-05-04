@@ -76,8 +76,6 @@ aclspv_compile(
 	_aclspv_grow_vec(_aclspv_malloc, _aclspv_free, CTX.m_scale_vars			, (1 << 30));
 	_aclspv_grow_vec(_aclspv_malloc, _aclspv_free, CTX.m_cursors			, (1 << 30));
 
-	/** FIXME: constant_cache */
-
 	_aclspv_grow_vec(_aclspv_malloc, _aclspv_free, CTX.m_section.m_capability	, (1 << 30));
 	_aclspv_grow_vec(_aclspv_malloc, _aclspv_free, CTX.m_section.m_entp		, (1 << 30));
 	_aclspv_grow_vec(_aclspv_malloc, _aclspv_free, CTX.m_section.m_ext		, (1 << 30));

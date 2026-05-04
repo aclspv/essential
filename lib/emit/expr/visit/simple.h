@@ -6,9 +6,6 @@
 #ifndef aclexpr_visit_simple1_h
 #define aclexpr_visit_simple1_h
 
-#include "util/iddef.h"
-#include "util/literal.h"
-#include "util/log.h"
 #include <util/cursor.h>
 #include <util/emitx.h>
 #include <util/constant.h>

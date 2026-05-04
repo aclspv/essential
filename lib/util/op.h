@@ -1,6 +1,7 @@
 #ifndef util_op_h
 #define util_op_h
 
+#include "util/cxtp.h"
 #include "util/id.h"
 #include <clang-c/Index.h>
 enum UTIL_OPBINCFG_ {
@@ -58,11 +59,15 @@ ae2f_unused ae2f_inline static ae2f_ccconst aclspv_bool_t	util_opbin2_is_assign(
 	return c_op2 == UTIL_OPBIN2_ASSIGN;
 }
 
-ae2f_unused ae2f_inline static ae2f_ccconst B_util_opbin2_t util_opbin2_to_spvop(
+ae2f_unused ae2f_inline static B_util_opbin2_t util_opbin2_to_spvop(
 		const e_id_default c_id, 
-		const enum UTIL_OPBIN2_ c_op2
-		) 
+		const enum UTIL_OPBIN2_ c_op2,
+		const h_aclspv_ctx_t	h_ctx
+		)
 {
+	aclspv_id_t	ID = aclid_is_vectorisable(c_id) ? c_id
+		: aclutil_cxtp_get_veccfg(c_id, h_ctx).m_ty_elm;
+
 	switch(c_op2) {
 		case UTIL_OPBIN2_NONE:
 		case UTIL_OPBIN2_ASSIGN:
@@ -70,45 +75,45 @@ ae2f_unused ae2f_inline static ae2f_ccconst B_util_opbin2_t util_opbin2_to_spvop
 			return 0;
 
 		case UTIL_OPBIN2_ADD:
-			if(aclid_is_int(c_id))
+			if(aclid_is_int(ID))
 				return SpvOpIAdd;
-			else if(aclid_is_float(c_id))
+			else if(aclid_is_float(ID))
 				return SpvOpFAdd;
 			else return 0;
 
 		case UTIL_OPBIN2_DIV:
-			if(aclid_is_signed(c_id))
+			if(aclid_is_signed(ID))
 				return SpvOpSDiv;
-			else if (aclid_is_unsigned(c_id))
+			else if (aclid_is_unsigned(ID))
 				return SpvOpUDiv;
-			else if(aclid_is_float(c_id))
+			else if(aclid_is_float(ID))
 				return SpvOpFDiv;
 			else return 0;
 
 		case UTIL_OPBIN2_MUL:
-			if(aclid_is_signed(c_id))
+			if(aclid_is_signed(ID))
 				return SpvOpIMul;
-			else if (aclid_is_unsigned(c_id))
+			else if (aclid_is_unsigned(ID))
 				return SpvOpIMul;
-			else if(aclid_is_float(c_id))
+			else if(aclid_is_float(ID))
 				return SpvOpFMul;
 			else return 0;
 
 		case UTIL_OPBIN2_REM:
-			if(aclid_is_signed(c_id))
+			if(aclid_is_signed(ID))
 				return SpvOpSRem;
-			else if (aclid_is_unsigned(c_id))
+			else if (aclid_is_unsigned(ID))
 				return SpvOpUMod;
-			else if(aclid_is_float(c_id))
+			else if(aclid_is_float(ID))
 				return SpvOpFMod;
 			else return 0;
 
 		case UTIL_OPBIN2_SUB:
-			if(aclid_is_signed(c_id))
+			if(aclid_is_signed(ID))
 				return SpvOpISub;
-			else if (aclid_is_unsigned(c_id))
+			else if (aclid_is_unsigned(ID))
 				return SpvOpISub;
-			else if(aclid_is_float(c_id))
+			else if(aclid_is_float(ID))
 				return SpvOpFSub;
 			else return 0;
 	}

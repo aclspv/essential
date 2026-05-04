@@ -392,7 +392,8 @@ enum EMIT_EXPR_ aclexpr_arithmetic_cast_non_literal(
 			, r_newid
 			, c_new_type
 			, h_ctx
-			, 0);
+			, 0
+			);
 
 	dbg_prefix(;);
 	dbg_call((void), fprintf(stderr, "cast_non_literal %u %u\n", c_old_type, c_new_type));

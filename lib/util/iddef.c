@@ -233,6 +233,22 @@ ae2f_ccconst B_id_default_t aclid_decide_cast(const e_id_default c_id0, const e_
 	unless(aclid_is_arithmetic(c_id0, h_ctx) & aclid_is_arithmetic(c_id1, h_ctx))
 		return 0;
 
+	if(aclutil_cxtp_get_veccfg(c_id0, h_ctx).m_num ^ aclutil_cxtp_get_veccfg(c_id1, h_ctx).m_num) {
+		unless(aclutil_cxtp_get_veccfg(c_id0, h_ctx).m_num >> 1) {
+			return c_id1;
+		} else unless(aclutil_cxtp_get_veccfg(c_id1, h_ctx).m_num >> 1) {
+			return c_id0;
+		} return 0;
+	}
+
+	unless(aclid_is_vectorisable(c_id0)) {
+		return ae2f_bll_sel_bool1(B_id_default_t, aclid_decide_cast(
+					aclutil_cxtp_get_veccfg(c_id0, h_ctx).m_ty_elm
+					, aclutil_cxtp_get_veccfg(c_id1, h_ctx).m_ty_elm
+					, h_ctx
+					), c_id0, c_id1);
+	}
+
 	unless(aclid_is_number(c_id0) & aclid_is_number(c_id1))
 		return 0;
 

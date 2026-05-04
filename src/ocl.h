@@ -22,7 +22,7 @@ typedef	u64 uptr;typedef i64 iptr;
 typedef	u32 uptr;typedef i32 iptr;
 #endif
 #define	aclattr(a)	__attribute__((annotate(a)))
-#define	vector(a)	aclattr("aclspv_vec")
+#define	vector(a)	aclattr("aclspv_vecdecl (" #a " )")
 #define	kernel_raw(a)	aclattr("aclspv_execmodel( " #a " )")
 #define	kernel	kernel_raw(5)			kernel
 #define	__kernel	kernel

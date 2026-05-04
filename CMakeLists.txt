@@ -32,6 +32,7 @@ ae2f_CoreLibFetchX(ae2f Pat	master)
 
 ae2f_CoreLibFetchX_DNS(KhronosGroup KhronosGroup SPIRV-Headers main https://github.com/)
 
+
 if(${ACLSPV_FETCH_CLANG_ALWAYS})
 else()
 	find_package(Clang)
@@ -100,7 +101,7 @@ add_library(
 	)
 
 target_link_libraries(ae3f-aclspvCore 
-	INTERFACE SPIRV-Headers::SPIRV-Headers
+	INTERFACE $<BUILD_INTERFACE:SPIRV-Headers::SPIRV-Headers>
 	INTERFACE ae2f::Pat
 	)
 
@@ -116,24 +117,17 @@ ae2f_CoreLibTentConfigCustom(
 	${aclspv-src-build}
 	)
 
-target_link_libraries(${ae3f__aclspvABI__TENT} PUBLIC ae3f::aclspvCore)
+target_link_libraries(${ae3f__aclspvABI__TENT} PRIVATE ae3f::aclspvCore)
 target_include_directories(ae3f-aclspvCore INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/lib>)
 
 target_include_directories(${ae3f__aclspvABI__TENT}
 	PRIVATE lib ${CLANG_INCLUDE_DIRS}
 	)
 
-target_link_libraries(${ae3f__aclspvABI__TENT} PUBLIC libclang)
+target_link_libraries(${ae3f__aclspvABI__TENT} PUBLIC libclang ae2f::Pat)
 
 ae2f_CoreTestTentVerbose(${ae3f__aclspvABI__TENT} ./test/lifespan)
 ae2f_CoreTestTentVerbose(${ae3f__aclspvABI__TENT} ./test/util)
+target_link_libraries(Test-c-ae3f-aclspvABI-scale PRIVATE ae3f::aclspvCore)
 
 ae2f_UltraErrWERROR(${ae3f__aclspvABI__TENT} PRIVATE)
-
-
-find_package(SPIRV-Headers QUIET)
-message(STATUS "SPIRV-Headers_FOUND: ${SPIRV-Headers_FOUND}")
-if(${SPIRV-Headers_FOUND})
-else()
-	install(TARGETS SPIRV-Headers EXPORT ae3f-aclspvCoreTargets)
-endif()
