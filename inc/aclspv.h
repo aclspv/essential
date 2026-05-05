@@ -9,7 +9,6 @@
 #include <ae2f/Keys.h>
 #include <ae2f/cc.h>
 #include <ae2f/.Call.h>
-#include <stdint.h>
 
 /**
  * @def ACLSPV_ABI_IMPL	

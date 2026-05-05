@@ -101,25 +101,40 @@ file(GLOB_RECURSE aclspv-src ${PROJECT_SOURCE_DIR}/lib/*)
 file(GLOB aclspv-src-build ${PROJECT_SOURCE_DIR}/lib/build/*.tar.c)
 
 ae2f_CoreLibTentConfigCustom(
-	aclspvABI ${ae2f_LIBPREFIX}
+	aclspv-common	INTERFACE
 	inc ae3f
-	${PROJECT_SOURCE_DIR}/cfg/aclspvABI.cmake.in
+	${PROJECT_SOURCE_DIR}/cfg/aclspv-common.cmake.in
+	inc/aclspv.h
+	inc/aclspv.hh
+	)
+
+ae2f_CoreLibTentConfigCustom(
+	aclspv ${ae2f_LIBPREFIX}
+	inc ae3f
+	${PROJECT_SOURCE_DIR}/cfg/aclspv.cmake.in
 	${aclspv-src} ${aclspv-inc} 
 	${aclspv-src-pass}
 	${aclspv-src-build}
 	)
 
-target_link_libraries(${ae3f__aclspvABI__TENT} PRIVATE ae3f::aclspvCore)
+add_library(aclspv		ALIAS ae3f-aclspv)
+add_library(aclspv::aclspv	ALIAS ae3f-aclspv)
+
+target_link_libraries(ae3f-aclspv-common	INTERFACE	libclang ae2f::Core)
+
+target_link_libraries(ae3f-aclspvCore		INTERFACE	ae3f-aclspv-common ae2f::Pat libclang ae2f::Core)
+
+target_link_libraries(ae3f-aclspv		PRIVATE		ae3f::aclspvCore)
+target_link_libraries(ae3f-aclspv		PUBLIC		ae3f::aclspv-common)
+
 target_include_directories(ae3f-aclspvCore INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/lib>)
 
-target_link_libraries(${ae3f__aclspvABI__TENT} PUBLIC libclang ae2f::Pat)
-
-ae2f_CoreTestTentVerbose(${ae3f__aclspvABI__TENT} ./test/lifespan)
-ae2f_CoreTestTentVerbose(${ae3f__aclspvABI__TENT} ./test/util)
-target_link_libraries(Test-c-ae3f-aclspvABI-scale PRIVATE ae3f::aclspvCore)
+ae2f_CoreTestTentVerbose(ae3f-aclspv ./test/lifespan)
+ae2f_CoreTestTentVerbose(ae3f-aclspv ./test/util)
+target_link_libraries(Test-c-ae3f-aclspv-scale PRIVATE ae3f::aclspvCore)
 
 if(Clang_FOUND)
-	target_include_directories(ae3f-aclspvCore INTERFACE $<BUILD_INTERFACE:${Clang_INCLUDE_DIRS}>)
+	target_include_directories(ae3f-aclspvCore INTERFACE $<BUILD_INTERFACE:${CLANG_INCLUDE_DIRS}>)
 else()
 	find_library(libclang_FOUND libclang)
 
@@ -134,4 +149,4 @@ else()
 	target_include_directories(ae3f-aclspvCore INTERFACE $<BUILD_INTERFACE:${ae2f_CoreScript_Wh}/llvm/clang/include>)
 endif()
 
-ae2f_UltraErrWERROR(${ae3f__aclspvABI__TENT} PRIVATE)
+ae2f_UltraErrWERROR(ae3f-aclspv PRIVATE)

@@ -1,8 +1,9 @@
 #ifndef	aclutil_mkname_c
 #define aclutil_mkname_c
 
-#include "ae2f/pat/dbg.h"
 #include <.aclspv/util/u32_to_hex8.h>
+
+#include "ae2f/pat/dbg.h"
 #include <ae2f/pat/macrofunc.h>
 #include <ae2f/cgoto.h>
 
