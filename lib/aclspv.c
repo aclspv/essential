@@ -38,7 +38,14 @@ ACLSPV_ABI_IMPL e_aclspv_compile_t  aclspv_compile(
 				, 0x10000
 				)) return CTX.m_err;
 
-	ae2f_ifneznrm(aclspv_ctx_compile3(&CTX, rdwr_unsaved, c_unsaved_count, rd_argv_opt, c_argc, rwr_cxerr_opt))
+	ae2f_ifeznrm(aclspv_ctx_compile3(
+				&CTX
+				, rdwr_unsaved
+				, c_unsaved_count
+				, rd_argv_opt
+				, c_argc
+				, rwr_cxerr_opt
+				))
 		STATE_VAL = aclspv_dump_ctx_output(
 				&CTX
 				, rwr_output_count_opt
