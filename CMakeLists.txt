@@ -134,7 +134,7 @@ ae2f_CoreTestTentVerbose(ae3f-aclspv ./test/util)
 target_link_libraries(Test-c-ae3f-aclspv-scale PRIVATE ae3f::aclspvCore)
 
 if(Clang_FOUND)
-	target_include_directories(ae3f-aclspvCore INTERFACE $<BUILD_INTERFACE:${CLANG_INCLUDE_DIRS}>)
+	target_include_directories(ae3f-aclspv-common INTERFACE $<BUILD_INTERFACE:${CLANG_INCLUDE_DIRS}>)
 else()
 	find_library(libclang_FOUND libclang)
 
@@ -146,7 +146,7 @@ else()
 			)
 	endif()
 
-	target_include_directories(ae3f-aclspvCore INTERFACE $<BUILD_INTERFACE:${ae2f_CoreScript_Wh}/llvm/clang/include>)
+	target_include_directories(ae3f-aclspv-common INTERFACE $<BUILD_INTERFACE:${ae2f_CoreScript_Wh}/llvm/clang/include>)
 endif()
 
 ae2f_UltraErrWERROR(ae3f-aclspv PRIVATE)
