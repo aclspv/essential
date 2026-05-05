@@ -78,7 +78,7 @@ enum CXChildVisitResult aclexpr_visit(
 	dbg_call(ae2f_NONE, (fprintf(stderr, "Operand Counter: %u/%u[%lu]\n"
 					, GETLASTEL_CMDCOUNTERSTCK().m_count_oprnd
 					, LST_SCALE_BUF[0]
-					, LST_SCALE->m_id
+					, (unsigned long)LST_SCALE->m_id
 				    )));
 #endif
 	ID_REQ = CTX->m_id++;
@@ -202,9 +202,9 @@ enum CXChildVisitResult aclexpr_visit(
 				dbg_call((void), (fprintf(
 								stderr
 								, "Last scale ID[%lu]: [%p]%lu\n"
-								, *((size_t*)CMDSTCK_SCALE.m_p)
+								, (unsigned long)*((size_t*)CMDSTCK_SCALE.m_p)
 								, (void*)&LST_SCALE->m_id
-								, LST_SCALE->m_id
+								, (unsigned long)LST_SCALE->m_id
 							 )));
 				dbg_prefix(a);
 				dbg_call((void), (fprintf(

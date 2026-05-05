@@ -465,12 +465,12 @@ enum EMIT_EXPR_ aclexpr_arithmetic_cast_literal(
 		}
 
 		dbg_prefix();
-		dbg_call(fprintf, (stderr, "Result literal(intmax): %ld\n", RESULT.m_api_intmax));
+		dbg_call(fprintf, (stderr, "Result literal(intmax): %ld\n", (long)RESULT.m_api_intmax));
 	}
 
 	else if(aclid_is_int(c_old_type) && aclid_is_float(c_new_type)) {
 		dbg_prefix(a);
-		dbg_call((void), (fprintf(stderr, "Cast (int -> float): %ld\n", c_old_literal.m_api_intmax)));
+		dbg_call((void), (fprintf(stderr, "Cast (int -> float): %ld\n", (long)c_old_literal.m_api_intmax)));
 		switch(aclid_get_bit_width(c_new_type)) {
 			case 64:
 				RESULT.m_dbl = (double)c_old_literal.m_api_intmax;

@@ -58,7 +58,7 @@ ae2f_inline static enum EMIT_EXPR_ s_simple(
 						dbg_prefix(i);
 						dbg_call(fprintf, (stderr
 									, "Value fetched: %lu\n"
-									, EVRES.m_api_uintmax
+									, (unsigned long)EVRES.m_api_uintmax
 								  )
 							);
 

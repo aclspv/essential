@@ -32,12 +32,7 @@ ae2f_CoreLibFetchX(ae2f Pat	master)
 
 ae2f_CoreLibFetchX_DNS(KhronosGroup KhronosGroup SPIRV-Headers main https://github.com/)
 
-
-if(${ACLSPV_FETCH_CLANG_ALWAYS})
-else()
-	find_package(Clang)
-endif()
-
+find_package(Clang)
 message(STATUS ${Clang_FOUND})
 
 if(Clang_FOUND)
@@ -62,10 +57,7 @@ else()
 	set(LLVM_INCLUDE_EXAMPLES OFF)
 	set(LLVM_INCLUDE_BENCHMARKS OFF)
 	set(LLVM_INSTALL_UTILS OFF)
-	add_subdirectory(
-		${ae2f_CoreScript_Wh}/llvm/llvm 
-		${ae2f_BinRoot}/${ae2f_submod}/llvm
-		)
+
 endif()
 
 file(GLOB aclspv-inc ${PROJECT_SOURCE_DIR}/inc/*)
@@ -129,5 +121,20 @@ target_link_libraries(${ae3f__aclspvABI__TENT} PUBLIC libclang ae2f::Pat)
 ae2f_CoreTestTentVerbose(${ae3f__aclspvABI__TENT} ./test/lifespan)
 ae2f_CoreTestTentVerbose(${ae3f__aclspvABI__TENT} ./test/util)
 target_link_libraries(Test-c-ae3f-aclspvABI-scale PRIVATE ae3f::aclspvCore)
+
+if(Clang_FOUND)
+else()
+	find_library(libclang_FOUND libclang)
+
+	if(libclang_FOUND)
+	else()
+		add_subdirectory(
+			${ae2f_CoreScript_Wh}/llvm/llvm 
+			${ae2f_BinRoot}/${ae2f_submod}/llvm
+			)
+	endif()
+
+	target_include_directories(ae3f-aclspvABI PUBLIC $<BUILD_INTERFACE:${ae2f_CoreScript_Wh}/llvm/clang/include>)
+endif()
 
 ae2f_UltraErrWERROR(${ae3f__aclspvABI__TENT} PRIVATE)
