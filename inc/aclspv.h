@@ -9,6 +9,7 @@
 #include <ae2f/Keys.h>
 #include <ae2f/cc.h>
 #include <ae2f/.Call.h>
+#include <stdint.h>
 
 /**
  * @def ACLSPV_ABI_IMPL	
@@ -35,16 +36,23 @@
  * 		could be defined with `#define`
  * */
 #ifndef	aclspv_wrd_t
-#define	aclspv_wrd_t	aclspv_wrd_t
-typedef uint_least32_t	aclspv_wrd_t;
+#define	aclspv_wrd_t	uint_least32_t
 #endif
 
 /**
  * @typedef	aclspv_wrdcount_t
  * @brief	the integer type represents the number of word.
  * */
-typedef	aclspv_wrd_t	aclspv_wrdcount_t, aclspv_id_t;
-extern int ACLSPV_WRD_CHECK[sizeof(aclspv_wrd_t) >= 4 ? 1 : -1];
+typedef	aclspv_wrd_t	aclspv_wrdcount_t;
+
+/**
+ * @typedef	aclpsv_id_t
+ * @brief	represents id in spir-v
+ * */
+typedef	aclspv_wrd_t	aclspv_id_t;
+typedef aclspv_wrd_t	aclspv_bool_t;
+
+typedef int ACLSPV_WRD_CHECK[sizeof(aclspv_wrd_t) >= 4 ? 1 : -1];
 
 #include <clang-c/Index.h>
 
@@ -64,7 +72,8 @@ typedef enum ACLSPV_COMPILE_ {
 	ACLSPV_COMPILE_MET_INVAL,
 
 	ACLSPV_COMPILE_ERR_CLANG,
-	ACLSPV_COMPILE_ERR_CLANGIDX,
+	ACLSPV_COMPILE_ERR_CXIDX,
+	ACLSPV_COMPILE_ERR_CXTU,
 
 	ACLSPV_COMPILE_TOO_BIG,
 	ACLSPV_COMPILE_NO_IMPL,
@@ -74,6 +83,7 @@ typedef enum ACLSPV_COMPILE_ {
 	ACLSPV_COMPILE_BTCAST_NON_NUMBER,
 	ACLSPV_COMPILE_CURSOR_NOT_FOUND,
 	ACLSPV_COMPILE_IF_COND_INVAL,
+	ACLSPV_COMPILE_INSUFFICIENT_BUFFER_LENGTH,
 
 	ACLSPV_COMPILE_WHILE_LACK_COMPONENTS,
 	ACLSPV_COMPILE_INFINITE_LOOP_FOUND,
@@ -88,7 +98,10 @@ typedef enum ACLSPV_COMPILE_ {
 	ACLSPV_COMPILE_UNHANDLED,
 	ACLSPV_COMPILE_UNHANDLED_BODY,
 	ACLSPV_COMPILE_UNHANDLED_WHILE,
-	ACLSPV_COMPILE_UNHANDLED_VISIT_SIMPLE
+	ACLSPV_COMPILE_UNHANDLED_VISIT_SIMPLE,
+
+	ACLSPV_COMPILE_DIAG_FTAL,
+	ACLSPV_COMPILE_DIAG_ERR
 } e_aclspv_compile_t;
 
 typedef struct {
@@ -112,11 +125,13 @@ aclspv_compile(
 		enum CXErrorCode* ae2f_restrict				rwr_cxerr_opt
 	      );
 
-#define	__ENUM()	\
-	__X(SYMBOL),	\
-	__X(BUF64),	\
-	__X(OGL),	\
-	__X(LOGICAL)
+#define	__ENUM()			\
+	__X(SYMBOL),			\
+	__X(BUF64),			\
+	__X(OGL),			\
+	__X(LOGICAL),			\
+	__X(DUMP_DIAGNOSTICS),		\
+	__X(KILL_ON_DIAGNOSTICS)	
 
 #define	__X(A)	ACLSPV_CTX_FLAGPAD0_##A
 
@@ -318,6 +333,30 @@ ae2f_extern ACLSPV_ABI_DECL enum ACLSPV_COMPILE_ aclspv_ctx_compile(
 		CXCursor		c_cur_root
 		);
 
+ae2f_extern ACLSPV_ABI_DECL enum ACLSPV_COMPILE_ aclspv_ctx_compile1(
+		const h_aclspv_ctx_t	h_ctx,
+		CXTranslationUnit	h_tu
+		);
+
+ae2f_extern ACLSPV_ABI_DECL enum ACLSPV_COMPILE_ aclspv_ctx_compile2(
+		const h_aclspv_ctx_t	h_ctx,
+		struct CXUnsavedFile* ae2f_restrict const 	rdwr_unsaved,
+		const unsigned					c_unsaved_count,
+		const char* ae2f_restrict const * ae2f_restrict const	rd_argv_opt,
+		const int						c_argc,
+		enum CXErrorCode* ae2f_restrict				rwr_cxerr_opt,
+		CXIndex							h_cxidx
+		);
+
+ae2f_extern ACLSPV_ABI_DECL enum ACLSPV_COMPILE_ aclspv_ctx_compile3(
+		const h_aclspv_ctx_t	h_ctx,
+		struct CXUnsavedFile* ae2f_restrict const 	rdwr_unsaved,
+		const unsigned					c_unsaved_count,
+		const char* ae2f_restrict const * ae2f_restrict const	rd_argv_opt,
+		const int						c_argc,
+		enum CXErrorCode* ae2f_restrict				rwr_cxerr_opt
+		);
+
 ae2f_extern ACLSPV_ABI_DECL void aclspv_fini_ctx(
 		const h_aclspv_ctx_t	d_ctx
 		);
@@ -328,7 +367,11 @@ ae2f_extern enum ACLSPV_COMPILE_ aclspv_dump_ctx_output(
 		aclspv_wrd_t* ae2f_restrict* ae2f_restrict	r_output_opt
 		);
 
-
+ACLSPV_ABI_IMPL enum ACLSPV_COMPILE_ aclspv_dump_ctx_output1(
+		const x_aclspv_ctx* ae2f_restrict		h_ctx,
+		aclspv_wrd_t* ae2f_restrict const	rdwr_count_ret,
+		aclspv_wrd_t* ae2f_restrict const	ret
+		);
 
 
 #endif
