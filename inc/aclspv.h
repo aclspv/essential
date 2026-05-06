@@ -69,6 +69,8 @@ typedef enum ACLSPV_COMPILE_ {
 	ACLSPV_COMPILE_ALLOC_FAILED_ASM,
 
 	ACLSPV_COMPILE_MET_INVAL,
+	ACLSPV_COMPILE_MET_INVAL_BRK,
+	ACLSPV_COMPILE_MET_INVAL_CONTINUE,
 
 	ACLSPV_COMPILE_ERR_CLANG,
 	ACLSPV_COMPILE_ERR_CXIDX,
@@ -176,7 +178,6 @@ typedef struct a_aclspv_ctx {
 	e_aclspv_compile_t	m_err;
 
 	aclspv_wrd_t		m_spirv_ver;
-
 	/** 
 	 * @brief
 	 * number of `m_cursors`.	\n

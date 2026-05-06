@@ -45,6 +45,7 @@ typedef union {
 		util_bind_unified	m_unified;
 		/** as word count */
 		aclspv_wrd_t		m_size;
+
 		/** as word count */
 		aclspv_wrd_t		m_pad;
 	}	

@@ -44,6 +44,7 @@ storage_class(3) const uint* u32out
 	while(a2 -= 1) {
 		bratio(0, 0) int AAA;
 		a1 += a2;
+		break;
 	}
 
 	a2 += 8;

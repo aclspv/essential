@@ -69,7 +69,7 @@ int main(void) {
 		fwrite(spirv0, sizeof(aclspv_wrd_t), (size_t)spirv_count, fp);
 
 	FPOPEN_FAILED:
-		fclose(fp);
+		if(fp) fclose(fp);
 	}
 
 	puts("freeing spirv");

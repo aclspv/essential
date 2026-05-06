@@ -44,6 +44,7 @@ typedef struct {
 
 	aclspv_id_t		m_retid;		/** return type id */
 	aclspv_wrdcount_t	m_lbl_snapshot;		/** last label destination */
+	aclspv_wrdcount_t	m_name_snapshot;	/** last name destination */
 	aclspv_wrdcount_t	m_break_loop;		/** break destination */
 	aclspv_wrdcount_t	m_continue_loop;	/** continue destination */
 } aclutil_fnctx;
