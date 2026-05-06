@@ -63,16 +63,6 @@ endif()
 file(GLOB aclspv-inc ${PROJECT_SOURCE_DIR}/inc/*)
 
 ae2f_Macro_init(1 30 30)
-
-ae2f_Macro_Lib_V2_REL(
-	ae3f aclspvCore INTERFACE
-	${PROJECT_SOURCE_DIR}/src/ "__NOTHING"
-	${PROJECT_SOURCE_DIR}/src/ "*.c*"
-	inc/.aclspv ".h"
-	${PROJECT_SOURCE_DIR}/cfg/aclspvCore.cmake.in
-	inc ON
-	)
-
 ae2f_FileRaw_init(1 100)
 ae2f_FileRaw_Run_One2(
 	${PROJECT_SOURCE_DIR}/src/source.cl 
@@ -92,13 +82,9 @@ add_library(
 	${PROJECT_SOURCE_DIR}/test/lifespan/ocl.auto.h
 	)
 
-target_link_libraries(ae3f-aclspvCore 
-	INTERFACE $<BUILD_INTERFACE:SPIRV-Headers::SPIRV-Headers>
-	INTERFACE ae2f::Pat
-	)
+
 
 file(GLOB_RECURSE aclspv-src ${PROJECT_SOURCE_DIR}/lib/*)
-file(GLOB aclspv-src-build ${PROJECT_SOURCE_DIR}/lib/build/*.tar.c)
 
 ae2f_CoreLibTentConfigCustom(
 	aclspv-common	INTERFACE
@@ -113,21 +99,18 @@ ae2f_CoreLibTentConfigCustom(
 	inc ae3f
 	${PROJECT_SOURCE_DIR}/cfg/aclspv.cmake.in
 	${aclspv-src} ${aclspv-inc} 
-	${aclspv-src-pass}
-	${aclspv-src-build}
 	)
+
+add_subdirectory(src)
 
 add_library(aclspv		ALIAS ae3f-aclspv)
 add_library(aclspv::aclspv	ALIAS ae3f-aclspv)
 
 target_link_libraries(ae3f-aclspv-common	INTERFACE	libclang ae2f::Core)
 
-target_link_libraries(ae3f-aclspvCore		INTERFACE	ae3f-aclspv-common ae2f::Pat libclang ae2f::Core)
-
 target_link_libraries(ae3f-aclspv		PRIVATE		ae3f::aclspvCore)
 target_link_libraries(ae3f-aclspv		PUBLIC		ae3f::aclspv-common)
 
-target_include_directories(ae3f-aclspvCore INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/lib>)
 
 ae2f_CoreTestTentVerbose(ae3f-aclspv ./test/lifespan)
 ae2f_CoreTestTentVerbose(ae3f-aclspv ./test/util)

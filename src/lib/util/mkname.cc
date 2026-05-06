@@ -3,7 +3,6 @@
 
 #include <.aclspv/util/u32_to_hex8.h>
 
-#include "ae2f/pat/dbg.h"
 #include <ae2f/pat/macrofunc.h>
 #include <ae2f/cgoto.h>
 
