@@ -1,59 +1,34 @@
 #include "./count_fn.h"
-
+#include "aclspv.h"
 
 #include <attr/storage_class.h>
 #include <attr/execmodel.h>
+#include <attr/wrkgroup.h>
 
 #include <assert.h>
 
+#include <clang-c/Index.h>
 #include <util/ctx.h>
 #include <util/emitx.h>
 #include <util/is_kernel.h>
 #include <util/fn.h>
 #include <util/entp.h>
+#include <util/constant.h>
+#include <util/iddef.h>
+#include <util/log.h>
 
 #include <spirv/unified1/spirv.h>
 
-static enum CXChildVisitResult s_attr_workgroup(CXCursor h_cur, CXCursor h_parent, CXClientData wr_data) {
-	CXString	ATTR_KIND;
-	const char* NIDDLE;
-
-	ATTR_KIND = clang_getCursorSpelling(h_cur);
-	if((NIDDLE = strstr(ATTR_KIND.data, "reqd_work_group_size"))) {
-		sscanf(NIDDLE, "reqd_work_group_size ( %u , %u , %u )"
-				, ((unsigned* ae2f_restrict)wr_data)
-				, ((unsigned* ae2f_restrict)wr_data) + 1
-				, ((unsigned* ae2f_restrict)wr_data) + 2
-		      );
-
-		clang_disposeString(ATTR_KIND);
-		return CXChildVisit_Break;
-	} else if ((NIDDLE = strstr(ATTR_KIND.data, "aclspv_wrkgroup_size"))) {
-		sscanf(NIDDLE, "aclspv_wrkgroup_size ( %u , %u , %u )"
-				, ((unsigned* ae2f_restrict)wr_data)
-				, ((unsigned* ae2f_restrict)wr_data) + 1
-				, ((unsigned* ae2f_restrict)wr_data) + 2
-		      );
-
-		clang_disposeString(ATTR_KIND);
-		return CXChildVisit_Break;
-	}
-
-	clang_disposeString(ATTR_KIND);
-	return CXChildVisit_Continue;
-	(void)h_parent;
-}
-
-
-
 ACLSPV_ABI_IMPL enum CXChildVisitResult aclemit_iter_entry_point(CXCursor h_cur, CXCursor h_parent, CXClientData CTX) {
 #define CTX	((x_aclspv_ctx* ae2f_restrict)CTX)
+	ae2f_ifnezerr(CTX->m_err) return CXChildVisit_Break;
+
 	unless(h_cur.kind == CXCursor_CompoundStmt && h_parent.kind == CXCursor_FunctionDecl)
 		return CXChildVisit_Recurse;
 
 	if(util_is_kernel(h_parent)) {
 		const CXString NAME = clang_getCursorSpelling(h_parent);
-		unsigned	XYZ[3] = { 1, 1, 1 };
+		struct	aclattr_wrkgroup_prm	XYZ;
 		enum SpvExecutionModel_	EXEC_MODEL = SpvExecutionModelMax;
 
 		aclspv_wrdcount_t	POS = CTX->m_count.m_entp;
@@ -65,8 +40,50 @@ ACLSPV_ABI_IMPL enum CXChildVisitResult aclemit_iter_entry_point(CXCursor h_cur,
 		if(EXEC_MODEL == SpvExecutionModelMax)
 			EXEC_MODEL = SpvExecutionModelGLCompute;	/** fallback */
 
-		if(EXEC_MODEL == SpvExecutionModelGLCompute || EXEC_MODEL == SpvExecutionModelKernel)
-			clang_visitChildren(h_parent, s_attr_workgroup, XYZ);
+		if(EXEC_MODEL == SpvExecutionModelGLCompute || EXEC_MODEL == SpvExecutionModelKernel) {
+			XYZ.m_0  = 1;
+			XYZ.m_1  = 1;
+			XYZ.m_2  = 1;
+			XYZ.m_flag_specid  = 0;
+			clang_visitChildren(h_parent, aclattr_wrkgroup, &XYZ);
+
+#define	S_GETSPECID(K_idx)										\
+			if(XYZ.m_flag_specid & (1 << K_idx)) {						\
+				util_constant* nd = aclutil_mk_constant_node(XYZ.m_##K_idx, CTX);	\
+				ae2f_ifezerr(nd) goto LBL_ABRT;						\
+				if(nd->m_const_spec_id) {						\
+					ae2f_ifezerr_strict(aclid_is_int(nd->m_const_spec_type)) {	\
+						CTX->m_err = ACLSPV_COMPILE_WORKGROUP_SIZE_NO_INT;	\
+						goto LBL_ABRT;						\
+					}								\
+					XYZ.m_##K_idx	= nd->m_const_spec_id;				\
+				} else {								\
+					ae2f_ifezerr(XYZ.m_##K_idx = aclutil_mk_constant_spec_id(	\
+								XYZ.m_##K_idx, 1, CTX)) {		\
+						CTX->m_err = ACLSPV_COMPILE_ALLOC_FAILED;		\
+						goto LBL_ABRT;						\
+					}								\
+				}									\
+			} else ae2f_ifezerr(aclutil_mk_constant_val_id(	\
+						(uint_least64_t)XYZ.m_0	\
+						, CTX)) {	\
+				CTX->m_err = ACLSPV_COMPILE_ALLOC_FAILED;	\
+				goto LBL_ABRT;	\
+			}
+
+			if(XYZ.m_flag_specid) {
+				ae2f_ifnezerr(CTX->m_spirv_ver < aclspv_ver_spv(1, 2)) {
+					CTX->m_err = ACLSPV_COMPILE_V_WRKGROUP_SIZE;
+					err_puts("workgroup size id is for spirv 1.2");
+					goto LBL_ABRT;
+				}
+					
+				S_GETSPECID(0);
+				S_GETSPECID(1);
+				S_GETSPECID(2);
+			}
+#undef	S_GETSPECID
+		}
 
 		{
 			int ARGI	= clang_Cursor_getNumArguments(h_parent);
@@ -136,10 +153,10 @@ ACLSPV_ABI_IMPL enum CXChildVisitResult aclemit_iter_entry_point(CXCursor h_cur,
 			ae2f_expected_but_else(CTX->m_count.m_execmode = util_emitx_6(
 						&CTX->m_section.m_execmode
 						, CTX->m_count.m_execmode
-						, SpvOpExecutionMode
+						, XYZ.m_flag_specid ? SpvOpExecutionModeId : SpvOpExecutionMode
 						, THIS_ENTRY_POINT.m_id
 						, SpvExecutionModeLocalSize
-						, XYZ[0], XYZ[1], XYZ[2]
+						, XYZ.m_0, XYZ.m_1, XYZ.m_2
 						)) goto LBL_ABRT;
 
 

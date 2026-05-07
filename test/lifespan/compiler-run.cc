@@ -6,6 +6,7 @@
 #include <string.h>
 #include "./source.auto.h"
 #include "./ocl.auto.h"
+#include "aclspv.h"
 char maincontent[sizeof(A_0) + sizeof(A_1) - 1 + sizeof(A_2) - 1
 #if 0
 	+ sizeof(A_3) - 1
@@ -21,11 +22,13 @@ int main(void) {
 	struct CXUnsavedFile files[2];
 	const char *ARG[] = {"main.cl"};
 	enum ACLSPV_COMPILE_ RET;
-	aclspv::ctx CTX(10,
-			ACLSPV_CTX_FLAG0_SYMBOL | ACLSPV_CTX_FLAG0_OGL |
-			    ACLSPV_CTX_FLAG0_LOGICAL |
-			    ACLSPV_CTX_FLAG0_DUMP_DIAGNOSTICS,
-			0x10000 /** spir-v 1.0 */
+	aclspv::ctx CTX(10,	
+			    aclspv::ctx_flag0(
+				    ACLSPV_CTX_FLAG0_SYMBOL
+				    , ACLSPV_CTX_FLAG0_OGL
+				    , ACLSPV_CTX_FLAG0_LOGICAL
+				    , ACLSPV_CTX_FLAG0_DUMP_DIAGNOSTICS)
+			, aclspv::ver_spv(1, 0) /** spir-v 1.2 */
 	);
 
 	aclspv_wrd_t *spirv0;

@@ -6,39 +6,31 @@
 #include <clang-c/Index.h>
 #include <ae2f/cc.h>
 #include <stdio.h>
-#include <string.h>
 #include <spirv/unified1/spirv.h>
+
+#include <.aclspv/attr/rdattr.h>
 
 /** 
  * @fn static enum CXChildVisitResult attr_execmodel(CXCursor h_cur, CXCursor h_parent, enum SpvExecutionModel_* ae2f_restrict wr_data)
  * */
-static enum CXChildVisitResult s_attr_execmodel(CXCursor h_cur, CXCursor h_parent, CXClientData ae2f_restrict wr_data) {
-	CXString	ATTR_KIND;
-	const char*	NIDDLE;
+static enum CXChildVisitResult s_attr_execmodel(CXCursor h_cur, ae2f_unused CXCursor h_parent, CXClientData ae2f_restrict wr_data) {
+	enum CXChildVisitResult	R;
+	unsigned		EXECMDL;
 
 	if(*((enum SpvExecutionModel_* ae2f_restrict)wr_data) != SpvExecutionModelMax) {
 		return CXChildVisit_Break;
 	}
 
-	ATTR_KIND = clang_getCursorSpelling(h_cur);
+	_aclattr_rdattr(L, NDL, h_cur, "aclspv_execmodel", R
+			, CXChildVisit_Break, CXChildVisit_Recurse
+			, sscanf(NDL, "aclspv_execmodel ( %u )", &EXECMDL)
+			);
 
-	if((NIDDLE = strstr(ATTR_KIND.data, "aclspv_execmodel"))) {
-		unsigned DATA;
-
-		sscanf(NIDDLE
-				, "aclspv_execmodel ( %u )"
-				, &DATA
-		      );
-
-		*((enum SpvExecutionModel_* ae2f_restrict)wr_data) = (enum SpvExecutionModel_)DATA;
-
-		clang_disposeString(ATTR_KIND);
-		return CXChildVisit_Break;
+	if(R == CXChildVisit_Break) {
+		*((enum SpvExecutionModel_* ae2f_restrict)wr_data) = (enum SpvExecutionModel_)EXECMDL;
 	}
 
-	clang_disposeString(ATTR_KIND);
 	return CXChildVisit_Recurse;
-	(void)h_parent;
 }
 
 #endif

@@ -70,6 +70,9 @@ static enum CXChildVisitResult emit_decl_glob_obj_visit_fetch(CXCursor h_cur, CX
 #define	INTERFACES		((util_bind* ae2f_restrict)get_buf_from_scale(&CTX->m_scale_vars, INTERFACES_MGR[0]))
 #define	INFO			(((INTERFACES + ARG_IDX)))
 
+
+	ae2f_ifnezerr(CTX->m_err) return CXChildVisit_Break;
+
 	unless(h_cur.kind == CXCursor_ParmDecl) {
 		return CXChildVisit_Continue;
 	}
@@ -417,6 +420,7 @@ LBL_ABRT_NALLOC:
 			clang_visitChildren(h_cur, s_attr_location, &INFO->m_io.m_location);
 			if(INFO->m_io.m_location == 0xFFFFFFFF)
 				INFO->m_io.m_location = 0;
+
 #define		THIS_ENTP	((util_entp_t* ae2f_restrict)CTX->m_fnlist.m_entp.m_p)[CTX->m_tmp.m_w0]
 
 			/** TODO: this will now uintvec4. make this flexible some day */

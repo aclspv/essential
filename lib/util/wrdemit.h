@@ -8,8 +8,6 @@
 #include <stddef.h>
 #include "./wrd.h"
 
-#include <ae2f/c90/StdInt.h>
-#include <ae2f/Keys.h>
 
 #include <assert.h>
 #include <string.h>

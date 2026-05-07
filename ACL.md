@@ -83,6 +83,10 @@ aclspv_wrkgroup_size(x, y, z)
 - `x`, `y`, `z` must be a 32-bit integer as decimal literal.
 - This attribute could be ignored when its execution model is not either `Kernel` or `GLCompute`.
 
+aclspv_wrkgroup_size_id(#x, #y, #z)  
+> Specifies the entry point's workgroup size.  
+- This 
+
 aclspv_execmodel(model)  
 > Specifies the execution model of the entry point.  
 > Solution for other than `GLCompute`, `Fragment`, `Vertex` will not implicitly be developed.  
@@ -111,6 +115,12 @@ aclspv_vecdecl(vec_elm_num)
 > declare a type as a vector
 
 aclspv_bratio(weight_true_branch, weight_false_branch)  
+> declare a branch ratio of possibility that whether branch would be true or not.  
+> this attribute is a performance hint which affects the logic-based control statement has two cases
+
+- while
+- if
+- three-operand expression (c ? t: f)
 
 # Restriction
 > Some statements / extensions may not be planned to be supported for now.

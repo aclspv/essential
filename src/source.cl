@@ -20,8 +20,8 @@ L0:
 	return;
 }
 
-__attribute__((annotate("reqd_work_group_size(2, 2, 2)"))) /** work group size should be specified on constant time. */
-kernel_raw(0) void N_KERNEL_0(
+__attribute__((annotate("reqd_work_group_size(3, 4, 2)"))) /** work group size should be specified on constant time. */
+kernel_raw(5) void N_KERNEL_0(
 __constant uintptr_t* consti32, 
 storage_class(3) const uint* u32out
 

@@ -106,7 +106,10 @@ add_subdirectory(src)
 add_library(aclspv		ALIAS ae3f-aclspv)
 add_library(aclspv::aclspv	ALIAS ae3f-aclspv)
 
-target_link_libraries(ae3f-aclspv-common	INTERFACE	libclang ae2f::Core)
+target_link_libraries(ae3f-aclspv-common	
+	INTERFACE	libclang
+	INTERFACE	ae2f::Core
+	)
 
 target_link_libraries(ae3f-aclspv		PRIVATE		ae3f::aclspvCore)
 target_link_libraries(ae3f-aclspv		PUBLIC		ae3f::aclspv-common)

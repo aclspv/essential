@@ -38,6 +38,10 @@
 #define	aclspv_wrd_t	uint_least32_t
 #endif
 
+#define	aclspv_ver_spv(c_mjr, c_mnr)	\
+	((ae2f_static_cast(aclspv_wrd_t, c_mjr) << ae2f_static_cast(aclspv_wrd_t, 16))	|	\
+	(ae2f_static_cast(aclspv_wrd_t, c_mnr) << ae2f_static_cast(aclspv_wrd_t, 8)))
+
 /**
  * @typedef	aclspv_wrdcount_t
  * @brief	the integer type represents the number of word.
@@ -59,6 +63,9 @@ typedef enum ACLSPV_COMPILE_ {
 	ACLSPV_COMPILE_OK,
 	ACLSPV_COMPILE_PRM_INVAL_NIL,
 
+	ACLSPV_COMPILE_V,
+	ACLSPV_COMPILE_V_WRKGROUP_SIZE,
+
 	ACLSPV_COMPILE_ALLOC_FAILED,
 	ACLSPV_COMPILE_ALLOC_FAILED_CURSOR,
 	ACLSPV_COMPILE_ALLOC_FAILED_CFG,
@@ -79,6 +86,7 @@ typedef enum ACLSPV_COMPILE_ {
 	ACLSPV_COMPILE_TOO_BIG,
 	ACLSPV_COMPILE_NO_IMPL,
 	ACLSPV_COMPILE_WORKGROUP_MUST_BE_CONSTANT_ARRAY,
+	ACLSPV_COMPILE_WORKGROUP_SIZE_NO_INT,
 	ACLSPV_COMPILE_CXTP_ZERO,
 	ACLSPV_COMPILE_STORAGE_CLASS_UNDEFINED,
 	ACLSPV_COMPILE_BTCAST_NON_NUMBER,
