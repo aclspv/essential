@@ -34,7 +34,7 @@ ae2f_MAC((L, k_oper, )) aclutil_vcopr(
 		aclspv_wrd_t* const ae2f_restrict r,
 		const aclspv_wrd_t* const ae2f_restrict rd,
 		aclspv_wrd_t c) {
-
+	;
 	_ae2f_gnuc(N_ae2f_clang(_Pragma("GCC diagnostic push")));
 	_ae2f_gnuc(N_ae2f_clang(_Pragma("GCC diagnostic ignored \"-Wanalyzer-use-of-uninitialized-value\"")));
 	_ae2f_gnuc(N_ae2f_clang(_Pragma("GCC diagnostic ignored \"-Wmaybe-uninitialized\"")));
@@ -60,6 +60,7 @@ ae2f_MAC((L, k_oper, )) aclutil_vcopr(
 		}
 	}
 
+	;
 	_ae2f_gnuc(N_ae2f_clang(_Pragma("GCC diagnostic pop")));
 }
 
