@@ -1,7 +1,6 @@
 #ifndef	aclattr_wrkgroup_h
 #define	aclattr_wrkgroup_h
 
-
 struct aclattr_wrkgroup_prm {
 	unsigned	m_0, m_1, m_2, m_flag_specid;
 };
@@ -23,8 +22,7 @@ static enum CXChildVisitResult aclattr_wrkgroup(CXCursor h_cur, ae2f_unused CXCu
 
 	ATTR_KIND = clang_getCursorSpelling(h_cur);
 	if ((NIDDLE = strstr(ATTR_KIND.data, "aclspv_wrkgroup_size_id"))) {
-		char		F0, F1, F2;
-
+		char F0 = '\0', F1 = '\0', F2 = '\0';
 		sscanf(NIDDLE, "aclspv_wrkgroup_size_id ( %c%u , %c%u , %c%u )"
 				, &F0, &RETDATA->m_0
 				, &F1, &RETDATA->m_1
