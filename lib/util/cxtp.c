@@ -47,10 +47,10 @@ ae2f_inline static aclspv_bool_t s_ndeq(const aclutil_cxtp* const ae2f_restrict 
 
 ae2f_inline static aclspv_wrdcount_t __find_node(const aclutil_cxtp* const ae2f_restrict rd_tar, const h_util_ctx_t h_ctx) {
 	aclspv_wrdcount_t IDX = (h_ctx)->m_num_type_uniques;
-	unless(h_ctx->m_type_uniques.m_p)
+	ae2f_ifezerr(h_ctx->m_type_uniques.m_p)
 		return 0xFFFFFFFF;
 
-	if((h_ctx)->m_num_type_uniques * sizeof(aclutil_cxtp) > h_ctx->m_type_uniques.m_sz)
+	ae2f_ifnezerr((h_ctx)->m_num_type_uniques > (aclspv_wrd_t)(h_ctx->m_type_uniques.m_sz / sizeof(aclutil_cxtp)))
 		return 0xFFFFFFFF;
 
 	while(IDX-- 
@@ -69,26 +69,32 @@ ae2f_inline static struct __ret {
 	aclspv_bool_t	m_isfirst; 
 } s_ret(const h_aclspv_ctx_t h_ctx, const aclutil_cxtp* ae2f_restrict rd_cxtp)
 {
-	aclspv_wrdcount_t	IDX;
+	aclspv_wrdcount_t	IDX = __find_node(rd_cxtp, h_ctx);;
 	struct	__ret		RET;
 
 #define	_return(c_id, c_is_first)	{ RET.m_id = c_id; RET.m_isfirst = c_is_first; return RET; }
 
-	IDX = __find_node(rd_cxtp, h_ctx);
-	if(~IDX)
+	ae2f_ifezerr_strict(IDX == 0xFFFFFFFF)
 		_return(__get_type_uniques(h_ctx)[IDX].m_type_id, 0);
 
 	IDX = h_ctx->m_num_type_uniques;
-	if(sizeof(aclutil_cxtp) * (IDX + 1) > h_ctx->m_type_uniques.m_sz) {
-		const size_t	NEWSIZE = (h_ctx->m_type_uniques.m_sz << 1) + 1;
-		_aclspv_grow_vec_with_copy(_aclspv_malloc, _aclspv_free, memcpy
+	while((IDX) >= (aclspv_wrd_t)(h_ctx->m_type_uniques.m_sz / sizeof(aclutil_cxtp))) {
+		const size_t	NEWSIZE 
+			= h_ctx->m_type_uniques.m_sz 
+			? (h_ctx->m_type_uniques.m_sz << 1)
+			: (size_t)(IDX + 1) * sizeof(aclutil_cxtp);
+
+		_aclspv_grow_vec_with_copy(_aclspv_malloc, _aclspv_free, _aclspv_memcpy
 				, L_new, h_ctx->m_type_uniques, NEWSIZE);
+
+		ae2f_ifezerr(h_ctx->m_type_uniques.m_p) {
+			h_ctx->m_err = ACLSPV_COMPILE_ALLOC_FAILED_CXTP;
+			err_puts("[cxtp::s_ret] allocation has failed.");
+			_return(0, 1);
+		}
 	}
 
-	ae2f_expected_but_else(h_ctx->m_type_uniques.m_p)
-		_return(0, 1);
-
-	++h_ctx->m_num_type_uniques;
+	(void)++h_ctx->m_num_type_uniques;
 
 	{
 		const aclspv_id_t	ID = h_ctx->m_id++;

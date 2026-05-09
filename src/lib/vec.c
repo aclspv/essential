@@ -20,7 +20,7 @@ void*	f_memcpy(void*, const void*, size_t);
 
 #define _aclspv_free(a, b)	free(a)
 #define _aclspv_malloc(a)	calloc(1, ae2f_static_cast(size_t, a))
-#define _aclspv_memcpy(a, b, c)	memcpy(a, b, ae2f_static_cast(size_t, c))
+#define _aclspv_memcpy(a, b, c)	memmove(a, b, ae2f_static_cast(size_t, c))
 
 
 ae2f_MAC() aclspv_init_vec(x_aclspv_vec	i_vec) {
@@ -52,8 +52,12 @@ ae2f_MAC((f_malloc, f_free, f_memcpy, L_new, ))
 
 			ae2f_ifneznrm(L_new) {
 				if((rc_vec).m_p) {
-					f_memcpy(L_new, (rc_vec).m_p, (rc_vec).m_sz);
+					if((rc_vec).m_sz && (rc_vec).m_p != L_new) f_memcpy(L_new, (rc_vec).m_p, (rc_vec).m_sz);
 					f_free((rc_vec).m_p, (rc_vec).m_sz);
+				} else {
+					f_free((rc_vec).m_p, (rc_vec).m_sz);
+					(rc_vec).m_p = ae2f_NIL;
+					(rc_vec).m_sz = 0ul;
 				}
 				(rc_vec).m_p = L_new;
 				(rc_vec).m_sz = (c_new_sz);

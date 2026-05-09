@@ -2,7 +2,6 @@
 #define aclspv_hh
 
 #include "./aclspv.h"
-#include "ae2f/cc.h"
 #include <ae2f/bll.h>
 #include <ae2f/c90/StdInt/enum.h>
 #include <clang-c/Index.h>
@@ -17,6 +16,10 @@ namespace aclspv {
 
 	struct ctx_base : protected a_aclspv_ctx {
 		public:
+			ae2f_always_inline const a_aclspv_ctx& ae2f_ccconst me() const {
+				return *this;
+			}
+
 			ae2f_always_inline enum ACLSPV_COMPILE_
 				dump_output1(wrd_t &ae2f_restrict r_output_count,
 						wrd_t *ae2f_restrict const r_output) const {
@@ -64,20 +67,23 @@ namespace aclspv {
 						rd_argv_opt, c_argc, rwr_cxerr_opt);
 			}
 
+			ae2f_always_inline ae2f_ccpure aclspv_bool_t	chck_capability(
+					const enum SpvCapability_		c_cap
+					) const {
+				return aclspv_chck_capability_from_ctx(this, c_cap);
+			}
+
+			ae2f_always_inline aclspv_bool_t	add_capability(
+					const enum SpvCapability_		c_cap
+					) {
+				return aclspv_add_capability_from_ctx(this, c_cap);
+			}
+
 		protected:
 			ae2f_always_inline ctx_base() {}
 	};
 
 	typedef enum ACLSPV_CTX_FLAG0_ CTX_FLAG0_;
-
-	ae2f_constexprfun static aclspv_wrd_t	ctx_flag0(void) { return 0; }
-	ae2f_constexprfun static aclspv_wrd_t	ctx_flag0(const CTX_FLAG0_ A) {
-		return static_cast<wrd_t>(A); 
-	}
-
-	ae2f_constexprfun static aclspv_wrd_t	ctx_flag0(const CTX_FLAG0_ A, const CTX_FLAG0_ R...) {
-		return static_cast<wrd_t>(A) | ctx_flag0(R); 
-	}
 
 	struct ctx : public ctx_base {
 		public:
@@ -92,6 +98,6 @@ namespace aclspv {
 
 			~ctx() { aclspv_fini_ctx(this); }
 	};
-} // namespace aclspv
+}
 
 #endif

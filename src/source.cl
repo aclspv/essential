@@ -27,15 +27,9 @@ storage_class(3) const uint* u32out
 
 ) {
 	btcast float a0 = 1078774989;
-	char a1 
-#if 0
-		= 1
-#else
-		specid(0)
-#endif
-			;
+	char a1 specid(0);
 	int a2 = a0 + (a0 += a1);
-#if 1
+#if 0
 	btcast long a = (double)(int)(float)(a0 + a1 + a2);
 
 	if(0) { int B = 3; a2 += (B -= 2); } 

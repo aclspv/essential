@@ -15,7 +15,7 @@
 /** 
  * binary expression with 1 operators.
  * */
-ae2f_inline static enum EMIT_EXPR_ s_simple(
+ae2f_inline_f static enum EMIT_EXPR_ s_simple(
 		const CXCursor			c_cur,
 		const h_util_ctx_t		h_ctx,
 		aclspv_id_t* ae2f_restrict const	wr_newid,
@@ -108,13 +108,19 @@ ae2f_inline static enum EMIT_EXPR_ s_simple(
 
 					case CXEval_Float:
 						dbg_puts(("Literal: double (float casted)"));
-						EVRES.m_flt = (float)clang_EvalResult_getAsDouble(EVAL);
 						dbg_prefix(a);
-						dbg_call(fprintf, (stderr, "Literal fetched: %f\n", EVRES.m_flt));
+
+						if(aclspv_chck_capability_from_ctx(h_ctx, SpvCapabilityFloat64)) {
+							EVRES.m_flt = (float)clang_EvalResult_getAsDouble(EVAL);
+							*wr_type_fetched = ID_DEFAULT_F32;
+							dbg_call(fprintf, (stderr, "Literal fetched: %f\n", (float)EVRES.m_flt));
+						} else {
+							EVRES.m_dbl = clang_EvalResult_getAsDouble(EVAL);
+							*wr_type_fetched = ID_DEFAULT_F64;
+							dbg_call(fprintf, (stderr, "Literal fetched: %f\n", (float)EVRES.m_dbl));
+						}
 
 						clang_EvalResult_dispose(EVAL);
-
-						*wr_type_fetched = ID_DEFAULT_F32;
 
 						ae2fpat_assertassume_strict(*wr_type_fetched);
 
@@ -154,7 +160,7 @@ ae2f_inline static enum EMIT_EXPR_ s_simple(
 					err_call((void), (fprintf(stderr
 									, "Type(%u) is no arithmetic [NOIMPL]\n"
 									, DECL_INFO.m_data.m_vardecl.m_type_id))
-							);
+						);
 					return EMIT_EXPR_FAILURE;
 				}
 
@@ -165,17 +171,17 @@ ae2f_inline static enum EMIT_EXPR_ s_simple(
 							, 0, 0
 							, rwr_literal_opt)) 
 					switch(DECL_INFO.m_data.m_vardecl.m_mask & ACLUTIL_CURSOR_VAR_LITERAL) {
-					case UTIL_LITERAL_MASK_LITERAL:
-					case UTIL_LITERAL_LITERAL:
+						case UTIL_LITERAL_MASK_LITERAL:
+						case UTIL_LITERAL_LITERAL:
 
-						return EMIT_EXPR_SUCCESS_LITERAL;
+							return EMIT_EXPR_SUCCESS_LITERAL;
 
-					case UTIL_LITERAL_CONSTANT:
-						return EMIT_EXPR_SUCCESS_CONSTANT;
+						case UTIL_LITERAL_CONSTANT:
+							return EMIT_EXPR_SUCCESS_CONSTANT;
 
-					default:
-						return EMIT_EXPR_SUCCESS;
-				}
+						default:
+							return EMIT_EXPR_SUCCESS;
+					}
 
 
 				return EMIT_EXPR_FAILURE;

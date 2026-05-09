@@ -17,6 +17,7 @@ char maincontent[sizeof(A_0) + sizeof(A_1) - 1 + sizeof(A_2) - 1
 
 char oclhead[sizeof(B_0) + sizeof(B_1) - 1 + sizeof(B_2) - 1];
 #if 1
+int main(void);
 int main(void) {
 	struct CXUnsavedFile files[2];
 	const char *ARG[] = {"main.cl"};

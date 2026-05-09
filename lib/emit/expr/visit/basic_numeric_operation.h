@@ -11,12 +11,11 @@
 #include <util/scale.h>
 #include <util/op.h>
 #include <util/emitx.h>
+#include <util/log.h>
 
 #include "../../expr.h"
-#include "ae2f/cc.h"
-#include "util/log.h"
 
-ae2f_inline static enum EMIT_EXPR_ s_basic_numeric_operation(
+ae2f_inline_f static enum EMIT_EXPR_ s_basic_numeric_operation(
 		const CXCursor				c_cur,
 		const h_util_ctx_t			h_ctx, 
 		x_aclspv_vec* ae2f_restrict const	h_cmdscale
@@ -26,7 +25,6 @@ ae2f_inline static enum EMIT_EXPR_ s_basic_numeric_operation(
 	aclspv_bool_t		IS_ASSIGN = 0;
 
 	ae2f_expected_but_else(h_ctx) {
-		assert(0 && "emit_expr_bin_2::h_ctx is null");
 		return EMIT_EXPR_FAILURE;
 	}
 

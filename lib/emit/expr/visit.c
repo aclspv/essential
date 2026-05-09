@@ -10,11 +10,9 @@
 #include "aclspv.h"
 #include "util/log.h"
 
-#if	1
 #include "./visit/simple.h"
 #include "./visit/cast_numeric.h"
 #include "./visit/basic_numeric_operation.h"
-#endif
 
 enum CXChildVisitResult aclexpr_visit(
 		CXCursor h_cur,
@@ -22,12 +20,14 @@ enum CXChildVisitResult aclexpr_visit(
 		CXClientData rdwr_data
 		)
 {
-#define	CTX			((h_util_ctx_t)(((uptr* ae2f_restrict)rdwr_data)[0]))
-#define EXPRSTCK_COUNT		(((uptr* ae2f_restrict)(rdwr_data))[1])
-#define ID_REQ			(*((aclspv_wrd_t* ae2f_restrict)&(((uptr* ae2f_restrict)(rdwr_data))[2])))
-#define	IS_NOT_CONSTANT		((uptr* ae2f_restrict)(rdwr_data))[3]
-#define	TYPE_CAST_CURRENT	(*((aclspv_wrd_t*)&(((uptr* ae2f_restrict)(rdwr_data))[4])))
-#define	NUM_CMDCOUNTERSTCK	(((uptr* ae2f_restrict)(rdwr_data))[5])
+#define	BASE			((struct aclexpr_visit_data* ae2f_restrict)(rdwr_data))
+#define	CTX			BASE->m_ctx
+#define EXPRSTCK_COUNT		BASE->m_exprcount 
+#define ID_REQ			BASE->m_id_ret 
+#define	IS_NOT_CONSTANT		BASE->m_literal_flag 
+#define	TYPE_CAST_CURRENT	BASE->m_tyid_current 
+#define	NUM_CMDCOUNTERSTCK	BASE->m_num_cmdcounter
+#define	LITERAL			BASE->m_ret_literal
 
 	/** for stack tmp.m_v0 will be used. */
 #define	EXPRSTCK	CTX->m_tmp.m_v0
@@ -53,17 +53,22 @@ enum CXChildVisitResult aclexpr_visit(
 
 	h_scale_t LST_SCALE				= get_last_scale_from_vec(&CMDSTCK_SCALE);
 	aclspv_wrd_t* ae2f_restrict LST_SCALE_BUF	= get_buf_from_scale2(aclspv_wrd_t, &CMDSTCK_SCALE, *LST_SCALE);
-	util_literal* ae2f_restrict RET_LITERAL
-		= (void*)(((uptr* ae2f_restrict)(rdwr_data)) + 6);
+	util_literal* ae2f_restrict RET_LITERAL		= &LITERAL;
 
 	util_opbincfg_extra* ae2f_restrict	LST_EXTRA;
+
+	ae2f_ifnezerr(CTX->m_err) return CXChildVisit_Break;
 
 	if(EXPRSTCK_COUNT) {
 		ae2f_expected_but_else(EXPRSTCK.m_p) {
 			CTX->m_err = ACLSPV_COMPILE_ALLOC_FAILED_EXPR;
-			assert(0 && "stack is acting funny");
 			return CXChildVisit_Break;
 		}
+	}
+
+	ae2f_ifezerr(NUM_CMDCOUNTERSTCK) {
+		CTX->m_err = ACLSPV_COMPILE_TOO_BIG_EXPRVISIT;
+		return CXChildVisit_Break;
 	}
 
 	ae2f_expected_but_else(LST_SCALE_BUF) {
@@ -73,14 +78,12 @@ enum CXChildVisitResult aclexpr_visit(
 
 	LST_EXTRA = (void* ae2f_restrict)(&LST_SCALE_BUF[(UTIL_OPBINCFG_END + LST_SCALE_BUF[0])]);
 
-#if 1
 	dbg_prefix(i);
 	dbg_call(ae2f_NONE, (fprintf(stderr, "Operand Counter: %u/%u[%lu]\n"
-					, GETLASTEL_CMDCOUNTERSTCK().m_count_oprnd
-					, LST_SCALE_BUF[0]
+					, (unsigned)GETLASTEL_CMDCOUNTERSTCK().m_count_oprnd
+					, (unsigned)LST_SCALE_BUF[0]
 					, (unsigned long)LST_SCALE->m_id
 				    )));
-#endif
 	ID_REQ = CTX->m_id++;
 	LST_EXTRA[GETLASTEL_CMDCOUNTERSTCK(a).m_count_oprnd].m_mask_literal = UTIL_LITERAL_MASK_LITERAL;
 
@@ -108,27 +111,31 @@ enum CXChildVisitResult aclexpr_visit(
 		case EMIT_EXPR_SUCCESS:
 		case EMIT_EXPR_SUCCESS_CONSTANT:
 		case EMIT_EXPR_SUCCESS_LITERAL:
-			_aclspv_grow_vec_with_copy(
-					_aclspv_malloc,  _aclspv_free, memcpy
-					, dest, EXPRSTCK, (size_t)(sizeof(exprstck) * (EXPRSTCK_COUNT + 2))
-					);
+			while((size_t)(EXPRSTCK_COUNT + 2) > EXPRSTCK.m_sz / sizeof(exprstck)) {
+				_aclspv_grow_vec_with_copy(
+						_aclspv_malloc,  _aclspv_free, _aclspv_memcpy
+						, dest, EXPRSTCK, EXPRSTCK.m_sz << 1
+						);
 
-			ae2f_expected_but_else(EXPRSTCK.m_p) {
-				CTX->m_err = ACLSPV_COMPILE_ALLOC_FAILED_EXPR;
-				return CXChildVisit_Break;
+				ae2f_expected_but_else(EXPRSTCK.m_p) {
+					CTX->m_err = ACLSPV_COMPILE_ALLOC_FAILED_EXPR;
+					return CXChildVisit_Break;
+				}
 			}
 
 			EXPRSTCK_COUNT += 2;
 
-			_aclspv_grow_vec_with_copy(
-					_aclspv_malloc,  _aclspv_free, memcpy
-					, dest, CMDCOUNTERSTCK
-					, (size_t)(sizeof(cmdcounterstckelm) * (NUM_CMDCOUNTERSTCK + 1))
-					);
+			while((size_t)NUM_CMDCOUNTERSTCK >= CMDCOUNTERSTCK.m_sz / sizeof(cmdcounterstckelm)) {
+				_aclspv_grow_vec_with_copy(
+						_aclspv_malloc,  _aclspv_free, _aclspv_memcpy
+						, dest, CMDCOUNTERSTCK
+						, CMDCOUNTERSTCK.m_sz << 1
+						);
 
-			ae2f_expected_but_else(CMDCOUNTERSTCK.m_p) {
-				CTX->m_err = ACLSPV_COMPILE_ALLOC_FAILED_EXPR;
-				return CXChildVisit_Break;
+				ae2f_expected_but_else(CMDCOUNTERSTCK.m_p) {
+					CTX->m_err = ACLSPV_COMPILE_ALLOC_FAILED_EXPR;
+					return CXChildVisit_Break;
+				}
 			}
 
 			++NUM_CMDCOUNTERSTCK;

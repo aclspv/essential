@@ -6,13 +6,14 @@
 #include <emit/expr.h>
 
 aclspv_bool_t aclexpr_carve(
-		uintptr_t* const ae2f_restrict	rdwr_data,
+		struct aclexpr_visit_data* const ae2f_restrict	rdwr_data,
 		aclspv_wrd_t* const ae2f_restrict rdwr_prv_idval,
 		util_opbincfg_extra* const ae2f_restrict rdwr_prv_extra
 		) {
-#define CTX			((h_util_ctx_t)((rdwr_data))[0])
-#define EXPRSTCK_COUNT		(((rdwr_data))[1])
-#define	NUM_CMDCOUNTERSTCK	(((rdwr_data))[5])
+#define CTX			rdwr_data->m_ctx
+#define EXPRSTCK_COUNT		rdwr_data->m_exprcount
+#define	NUM_CMDCOUNTERSTCK	rdwr_data->m_num_cmdcounter
+#define	RET_LITERAL_REF		rdwr_data->m_ret_literal
 
 #define	EXPRSTCK	CTX->m_tmp.m_v0
 #define	CMDSTCK_SCALE	CTX->m_tmp.m_v1
@@ -20,7 +21,7 @@ aclspv_bool_t aclexpr_carve(
 	h_scale_t LST_SCALE				= get_last_scale_from_vec(&CMDSTCK_SCALE);
 	aclspv_wrd_t* ae2f_restrict LST_SCALE_BUF	= get_buf_from_scale2(aclspv_wrd_t, &CMDSTCK_SCALE, *LST_SCALE);
 	util_literal* ae2f_restrict RET_LITERAL
-		= (void*)(((uptr* ae2f_restrict)(rdwr_data)) + 6);
+		= &RET_LITERAL_REF;
 
 	aclspv_wrd_t	NUM_OPRND;
 

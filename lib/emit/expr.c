@@ -16,21 +16,19 @@ enum EMIT_EXPR_ aclspv_get_expr2(
 		, aclspv_id_t* ae2f_restrict const	r_type_opt
 		, const CXCursor			c_cur
 		, util_literal* ae2f_restrict		wr_literal_opt
-		, h_util_ctx_t				h_ctx
+		, h_aclspv_ctx_t			h_ctx
 		) {
-	uptr BUF[6 + (((sizeof(util_literal) + sizeof(uptr) - 1) / sizeof(uptr)))];
 	aclspv_wrd_t* ae2f_restrict SCALE_BOOT;
+	struct aclexpr_visit_data	DATA;
 
-	BUF[0]		= (uptr)h_ctx;			/* context. must be pointer to context. */
-	BUF[1]		= 0;				/* stack count. must be 0. */
-	BUF[2]		= 0;				/* result value id */
-	BUF[3]		= UTIL_LITERAL_MASK_LITERAL;	/* see enum UTIL_LITERAL_MASK_ */
-	BUF[4]		= 0;				/* type casted */
-	BUF[5]		= 0;				/* count for operand */
+	ae2f_ifezerr(h_ctx)	return EMIT_EXPR_FAILURE;
 
-	_aclspv_grow_vec(_aclspv_malloc, _aclspv_free, h_ctx->m_tmp.m_v0, 1 << 10);
-	_aclspv_grow_vec(_aclspv_malloc, _aclspv_free, h_ctx->m_tmp.m_v1, 1 << 10);
-	_aclspv_grow_vec(_aclspv_malloc, _aclspv_free, h_ctx->m_tmp.m_v2, 1 << 10);
+	DATA.m_ctx		= h_ctx;			/* context. must be pointer to context. */
+	DATA.m_exprcount	= 0;				/* stack count. must be 0. */
+	DATA.m_id_ret		= 0;				/* result value id */
+	DATA.m_literal_flag	= UTIL_LITERAL_MASK_LITERAL;	/* see enum UTIL_LITERAL_MASK_ */
+	DATA.m_tyid_current	= 0;				/* type casted */
+	DATA.m_num_cmdcounter	= 1;				/* count for operand */
 
 	ae2f_expected_but_else(h_ctx->m_tmp.m_v0.m_p)
 		return EMIT_EXPR_FAILURE;
@@ -67,29 +65,20 @@ enum EMIT_EXPR_ aclspv_get_expr2(
 				, SCALE_BOOT[1], (void*)(SCALE_BOOT + 1))
 		);
 
-	(void)aclutil_visitfromroot(c_cur, aclexpr_visit, BUF);
+	(void)aclutil_visitfromroot(c_cur, aclexpr_visit, &DATA);
 	ae2f_ifnezerr(h_ctx->m_err) return EMIT_EXPR_FAILURE;
 
-	dbg_prefix(a);
-	dbg_call(fprintf, (stderr, "BUF[3]: %u\n", (unsigned)BUF[UTIL_OPBINCFG_RESTYID]));
-
-	dbg_prefix(a);
-	dbg_call(fprintf, (stderr, "Type returned (BUF[4]): %u\n", (unsigned)BUF[UTIL_OPBINCFG_RESID]));
-
-	dbg_prefix(a);
-	dbg_call(fprintf, (stderr, "ID Required(aka BUF[2]): %u\n", (unsigned)BUF[2]));
-
-	if(wr_literal_opt) 
+	if(wr_literal_opt)
 		*wr_literal_opt = INIT_EXTRA->m_literal;
 
 	if(r_type_opt)
-		*r_type_opt = (aclspv_id_t)BUF[2];
+		*r_type_opt = DATA.m_tyid_current;
 
 	ae2fpat_assertassume_strict(ret_id);
-	*ret_id = (aclspv_wrdcount_t)BUF[2];
+	*ret_id = DATA.m_id_ret;
 
-	return		BUF[3] & UTIL_LITERAL_LITERAL ? EMIT_EXPR_SUCCESS_LITERAL
-		: 	BUF[3] & UTIL_LITERAL_CONSTANT ? EMIT_EXPR_SUCCESS_CONSTANT
+	return		DATA.m_literal_flag & UTIL_LITERAL_LITERAL ? EMIT_EXPR_SUCCESS_LITERAL
+		: 	DATA.m_literal_flag & UTIL_LITERAL_CONSTANT ? EMIT_EXPR_SUCCESS_CONSTANT
 		: 	EMIT_EXPR_SUCCESS;
 
 #undef	INIT_EXTRA
@@ -103,19 +92,17 @@ enum EMIT_EXPR_ aclspv_get_expr_btcast(
 		, h_util_ctx_t h_ctx
 		) 
 {
-	uptr BUF[6 + (((sizeof(util_literal) + sizeof(uptr) - 1) / sizeof(uptr)))];
 	aclspv_wrd_t* ae2f_restrict SCALE_BOOT;
+	struct aclexpr_visit_data	DATA;
 
-	BUF[0]		= (uptr)h_ctx;			/* context. must be pointer to context. */
-	BUF[1]		= 0;				/* stack count. must be 0. */
-	BUF[2]		= 0;				/* result value id */
-	BUF[3]		= UTIL_LITERAL_MASK_LITERAL;	/* see enum UTIL_LITERAL_MASK_ */
-	BUF[4]		= 0;				/* type casted */
-	BUF[5]		= 0;				/* count for operand */
+	ae2f_ifezerr(h_ctx)	return EMIT_EXPR_FAILURE;
 
-	_aclspv_grow_vec(_aclspv_malloc, _aclspv_free, h_ctx->m_tmp.m_v0, 1 << 10);
-	_aclspv_grow_vec(_aclspv_malloc, _aclspv_free, h_ctx->m_tmp.m_v1, 1 << 10);
-	_aclspv_grow_vec(_aclspv_malloc, _aclspv_free, h_ctx->m_tmp.m_v2, 1 << 10);
+	DATA.m_ctx		= h_ctx;			/* context. must be pointer to context. */
+	DATA.m_exprcount	= 0;				/* stack count. must be 0. */
+	DATA.m_id_ret		= 0;				/* result value id */
+	DATA.m_literal_flag	= UTIL_LITERAL_MASK_LITERAL;	/* see enum UTIL_LITERAL_MASK_ */
+	DATA.m_tyid_current	= 0;				/* type casted */
+	DATA.m_num_cmdcounter	= 1;				/* count for operand */
 
 	ae2f_expected_but_else(h_ctx->m_tmp.m_v0.m_p)
 		return EMIT_EXPR_FAILURE;
@@ -156,58 +143,33 @@ enum EMIT_EXPR_ aclspv_get_expr_btcast(
 				, (void*)(SCALE_BOOT + 1))
 		);
 
-	if(aclexpr_visit(c_cur, c_cur, BUF) == CXChildVisit_Break)
-		return EMIT_EXPR_FAILURE;
-
-	ae2f_expected_but_else(h_ctx->m_tmp.m_v0.m_p)
-		return EMIT_EXPR_FAILURE;
-
-	ae2f_expected_but_else(h_ctx->m_tmp.m_v1.m_p)
-		return EMIT_EXPR_FAILURE;
-
-	dbg_puts("BTCASST");
-
-	dbg_prefix(a);
-	dbg_call(fprintf, (stderr
-				, "Constant flag after first emit_expr %u[%p]\n"
-				, SCALE_BOOT[1], (void*)(SCALE_BOOT + 1))
-		);
-
-	clang_visitChildren(c_cur, aclexpr_visit, BUF);
-
-	dbg_prefix(a);
-	dbg_call(fprintf, (stderr, "BUF[3]: %u\n", (unsigned)BUF[3]));
-
-	dbg_prefix(a);
-	dbg_call(fprintf, (stderr, "Type returned (BUF[4]): %u\n", (unsigned)BUF[4]));
-
-	dbg_prefix(a);
-	dbg_call(fprintf, (stderr, "ID Required(aka BUF[2]): %u\n", (unsigned)BUF[2]));
+	(void)aclutil_visitfromroot(c_cur, aclexpr_visit, &DATA);
+	ae2f_ifnezerr(h_ctx->m_err) return EMIT_EXPR_FAILURE;
 
 	/** bitcast is not required when two types are exactly same */
-	unless(BUF[4] != c_type_req)
+	unless(DATA.m_tyid_current != c_type_req)
 		return	aclexpr_arithmetic_cast(
-				(aclspv_wrdcount_t)BUF[2]
-				, (aclspv_wrd_t)BUF[4]
-				, (aclspv_wrd_t)BUF[3]
-				, *(util_literal* ae2f_restrict)(void* ae2f_restrict)(BUF + 6)
+				DATA.m_id_ret
+				, DATA.m_tyid_current
+				, DATA.m_id_ret
+				, DATA.m_ret_literal 
 				, ret_id
 				, c_type_req
 				, wr_literal_opt
 				, h_ctx);
 
 	ae2f_expected_but_else(aclid_is_number(c_type_req) 
-			&& aclid_is_number((aclspv_wrd_t)BUF[4])) {
+			&& aclid_is_number(DATA.m_tyid_current)) {
 		return EMIT_EXPR_NOT_THE_CASE;
 	}
 
-	if(BUF[3] & UTIL_LITERAL_LITERAL) {
+	if(DATA.m_literal_flag & UTIL_LITERAL_LITERAL) {
 		if(wr_literal_opt)
-			*wr_literal_opt = *(util_literal* ae2f_restrict)(void* ae2f_restrict)(BUF + 6);
+			*wr_literal_opt = DATA.m_ret_literal;
 
 		return aclexpr_arithmetic_cast_literal(
 				c_type_req
-				, *(util_literal* ae2f_restrict)(void*)(&BUF[6])
+				, DATA.m_ret_literal
 				, ret_id
 				, c_type_req
 				, wr_literal_opt
@@ -218,7 +180,7 @@ enum EMIT_EXPR_ aclspv_get_expr_btcast(
 	/** NON-LITERAL */
 	{
 		const aclspv_id_t	TYPE_SRC = aclid_getty_unsigned(
-				aclid_get_bit_width((aclspv_id_t)BUF[4])
+				aclid_get_bit_width(DATA.m_tyid_current)
 				);
 
 		const aclspv_id_t	TYPE_DST = aclid_getty_unsigned(aclid_get_bit_width(c_type_req));
@@ -234,7 +196,7 @@ enum EMIT_EXPR_ aclspv_get_expr_btcast(
 			return EMIT_EXPR_FAILURE;
 		}
 
-		unless(aclid_is_int((aclspv_id_t)BUF[4])) {
+		unless(aclid_is_int(DATA.m_tyid_current)) {
 			++h_ctx->m_id;
 			ae2f_expected_but_else(h_ctx->m_count.m_fnimpl = util_emitx_4(
 						&h_ctx->m_section.m_fnimpl
@@ -242,7 +204,7 @@ enum EMIT_EXPR_ aclspv_get_expr_btcast(
 						, SpvOpBitcast
 						, TYPE_SRC
 						, VAL_SRC
-						, (aclspv_wrd_t)BUF[2]
+						, DATA.m_id_ret 
 						)) {
 				return EMIT_EXPR_FAILURE;
 			}
@@ -250,8 +212,8 @@ enum EMIT_EXPR_ aclspv_get_expr_btcast(
 			VAL_SRC_PTR = &VAL_SRC;
 			TYPE_SRC_PTR = &TYPE_SRC;
 		} else {
-			VAL_SRC_PTR = (const void*)&BUF[2];
-			TYPE_SRC_PTR = (const void*)&BUF[4];
+			VAL_SRC_PTR = &DATA.m_id_ret;
+			TYPE_SRC_PTR = &DATA.m_tyid_current;
 		}
 
 		ae2fpat_assertassume(aclid_is_int(*TYPE_SRC_PTR));
@@ -312,19 +274,15 @@ enum EMIT_EXPR_ aclspv_get_expr(
 		, util_literal* ae2f_restrict	wr_literal_opt
 		, h_util_ctx_t h_ctx
 		) {
-	uptr BUF[6 + (((sizeof(util_literal) + sizeof(uptr) - 1) / sizeof(uptr)))];
 	aclspv_wrd_t* ae2f_restrict SCALE_BOOT;
+	struct aclexpr_visit_data	DATA;
 
-	BUF[0]		= (uptr)h_ctx;			/* context. must be pointer to context. */
-	BUF[1]		= 0;				/* stack count. must be 0. */
-	BUF[2]		= 0;				/* result value id */
-	BUF[3]		= UTIL_LITERAL_MASK_LITERAL;	/* see enum UTIL_LITERAL_MASK_ */
-	BUF[4]		= 0;				/* type casted */
-	BUF[5]		= 0;				/* count for operand */
-
-	_aclspv_grow_vec(_aclspv_malloc, _aclspv_free, h_ctx->m_tmp.m_v0, 1 << 10);
-	_aclspv_grow_vec(_aclspv_malloc, _aclspv_free, h_ctx->m_tmp.m_v1, 1 << 10);
-	_aclspv_grow_vec(_aclspv_malloc, _aclspv_free, h_ctx->m_tmp.m_v2, 1 << 10);
+	DATA.m_ctx		= h_ctx;			/* context. must be pointer to context. */
+	DATA.m_exprcount	= 0;				/* stack count. must be 0. */
+	DATA.m_id_ret		= 0;				/* result value id */
+	DATA.m_literal_flag	= UTIL_LITERAL_MASK_LITERAL;	/* see enum UTIL_LITERAL_MASK_ */
+	DATA.m_tyid_current	= 0;				/* type casted */
+	DATA.m_num_cmdcounter	= 1;				/* count for operand */
 
 	ae2f_expected_but_else(h_ctx->m_tmp.m_v0.m_p)
 		return EMIT_EXPR_FAILURE;
@@ -365,28 +323,18 @@ enum EMIT_EXPR_ aclspv_get_expr(
 				, (void*)(SCALE_BOOT + 1))
 		);
 
-	(void)aclutil_visitfromroot(c_cur, aclexpr_visit, BUF);
+	(void)aclutil_visitfromroot(c_cur, aclexpr_visit, &DATA);
 	ae2f_ifnezerr(h_ctx->m_err) return EMIT_EXPR_FAILURE;
 
-	dbg_prefix(a);
-	dbg_call(fprintf, (stderr, "BUF[3]: %u\n", (unsigned)BUF[3]));
-
-	dbg_prefix(a);
-	dbg_call(fprintf, (stderr, "Type returned (BUF[4]): %u\n", (unsigned)BUF[4]));
-
-	dbg_prefix(a);
-	dbg_call(fprintf, (stderr, "ID Required(aka BUF[2]): %u\n", (unsigned)BUF[2]));
-	dbg_puts("ARITHMETIC_CAST: GETEXPR");
-
 	unless(c_type_req)
-		return ae2f_bll_sel_bool1(uint_fastenum_t, BUF[3] & 2, EMIT_EXPR_SUCCESS_LITERAL, 0u)
-		| ae2f_bll_sel_bool1(uint_fastenum_t, BUF[3] & 1, EMIT_EXPR_SUCCESS_CONSTANT, EMIT_EXPR_SUCCESS);
+		return ae2f_bll_sel_bool1(uint_fastenum_t, DATA.m_literal_flag & 2, EMIT_EXPR_SUCCESS_LITERAL, 0u)
+		| ae2f_bll_sel_bool1(uint_fastenum_t, DATA.m_literal_flag & 1, EMIT_EXPR_SUCCESS_CONSTANT, EMIT_EXPR_SUCCESS);
 
 	return	aclexpr_arithmetic_cast(
-			(aclspv_wrdcount_t)BUF[2]
-			, (aclspv_wrd_t)BUF[4]
-			, (aclspv_wrd_t)BUF[3]
-			, *(util_literal* ae2f_restrict)(void* ae2f_restrict)(BUF + 6)
+			DATA.m_id_ret
+			, DATA.m_tyid_current 
+			, DATA.m_literal_flag 
+			, DATA.m_ret_literal
 			, ret_id
 			, c_type_req
 			, wr_literal_opt

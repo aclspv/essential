@@ -9,9 +9,9 @@
 #include <util/ctx.h>
 #include <util/emitx.h>
 #include <util/id.h>
+#include <util/capability.h>
 
 #include <aclspv.h>
-#include <spirv/unified1/spirv.h>
 
 #define	wrd_caps	h_ctx->m_section.m_capability 
 #define wrd_caps_count	h_ctx->m_count.m_capability
@@ -26,42 +26,18 @@ ae2f_always_inline static e_aclspv_compile_t impl_conf(
 	aclspv_wrd_t	POS = 0;
 
 	assert(h_ctx);
-	h_ctx->m_id = ID_DEFAULT_END;
-	
-	h_ctx->m_count.m_capability	= 0;
-	h_ctx->m_count.m_ext		= 0;
-	h_ctx->m_count.m_memmodel	= 0;
-	h_ctx->m_count.m_entp		= 0;
-	h_ctx->m_count.m_execmode	= 0;
-	h_ctx->m_count.m_name		= 0;
-	h_ctx->m_count.m_decorate	= 0;
-	h_ctx->m_count.m_types		= 0;
-	h_ctx->m_count.m_vars		= 0;
-	h_ctx->m_count.m_fndef		= 0;
 
 	/*** Shader Capability **/
-	ae2f_expected_but_else(wrd_caps_count = util_emitx_2(
-				&wrd_caps
-				, wrd_caps_count
-				, SpvOpCapability
-				, SpvCapabilityShader))
+	ae2f_expected_but_else(aclutil_addcapabilitybyflag(h_ctx, SpvCapabilityShader))
 		return ACLSPV_COMPILE_ALLOC_FAILED_CFG;
 
 	unless(h_ctx->m_flag0 & ACLSPV_CTX_FLAG0_LOGICAL) {
-		ae2f_expected_but_else(wrd_caps_count = util_emitx_2(
-					&wrd_caps
-					, wrd_caps_count
-					, SpvOpCapability
-					, SpvCapabilityAddresses))
+		ae2f_expected_but_else(aclutil_addcapabilitybyflag(h_ctx, SpvCapabilityAddresses))
 			return ACLSPV_COMPILE_ALLOC_FAILED_CFG;
 	}
 
 	unless(h_ctx->m_flag0 & ACLSPV_CTX_FLAG0_OGL) {
-		ae2f_expected_but_else(wrd_caps_count = util_emitx_2(
-					&wrd_caps
-					, wrd_caps_count
-					, SpvOpCapability
-					, SpvCapabilityVulkanMemoryModel))
+		ae2f_expected_but_else(aclutil_addcapabilitybyflag(h_ctx, SpvCapabilityVulkanMemoryModel))
 			return ACLSPV_COMPILE_ALLOC_FAILED_CFG;
 
 		POS = wrd_ext_count;

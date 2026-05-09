@@ -84,6 +84,16 @@ enum EMIT_EXPR_ aclspv_get_expr2(
 		, h_util_ctx_t h_ctx
 		);
 
+struct aclexpr_visit_data {
+	h_aclspv_ctx_t		m_ctx;
+	aclspv_wrdcount_t	m_exprcount;
+	aclspv_id_t		m_id_ret;
+	aclspv_wrd_t		m_literal_flag;
+	aclspv_id_t		m_tyid_current;
+	aclspv_id_t		m_num_cmdcounter;
+	util_literal		m_ret_literal;
+};
+
 enum CXChildVisitResult aclexpr_visit(
 		CXCursor h_cur,
 		ae2f_unused CXCursor h_parent,

@@ -46,12 +46,14 @@ ACLSPV_ABI_IMPL enum ACLSPV_COMPILE_ aclspv_init_ctx(
 		return ACLSPV_COMPILE_PRM_INVAL_NIL;
 
 	memset(i_ctx, 0, sizeof(x_aclspv_ctx));
+	i_ctx->m_id		= ID_DEFAULT_END;
 	i_ctx->m_flag0		|= c_init_flag0;
 	i_ctx->m_spirv_ver	|= c_spirv_ver;
 
 #define	ISZEXP2	ae2f_bll_sel_bool_naive1(size_t, c_init_size_exp, c_init_size_exp, 10)
 #define	INITSZ	((size_t)(1 << ISZEXP2))
 
+	_aclspv_grow_vec(_aclspv_malloc, _aclspv_free, i_ctx->m_constant_cache		, INITSZ);
 	_aclspv_grow_vec(_aclspv_malloc, _aclspv_free, i_ctx->m_type_uniques		, INITSZ);
 	_aclspv_grow_vec(_aclspv_malloc, _aclspv_free, i_ctx->m_scale_vars		, INITSZ);
 	_aclspv_grow_vec(_aclspv_malloc, _aclspv_free, i_ctx->m_cursors			, INITSZ);
@@ -79,5 +81,5 @@ ACLSPV_ABI_IMPL enum ACLSPV_COMPILE_ aclspv_init_ctx(
 
 	return ae2f_unexpected(i_ctx->m_err)
 		? i_ctx->m_err
-		: ae2f_unexpected(i_ctx->m_err = impl_conf(i_ctx));
+		: (i_ctx->m_err = impl_conf(i_ctx));
 }

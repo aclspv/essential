@@ -2,6 +2,7 @@
 
 
 #include "./decl_glob_obj.h"
+#include "aclspv.h"
 
 #include <assert.h>
 #include <string.h>
@@ -54,24 +55,49 @@ LBL_FINI:
 	(void)h_parent;
 }
 
+struct	emit_decl_glob_obj_visit_fetch_data {
+	/** @brief push constant size */
+	aclspv_wrdcount_t	m_push_size;
+
+	/** @brief bind index */ 
+	aclspv_wrdcount_t	m_idx_bind;
+
+	/** @brief argument index */
+	aclspv_wrdcount_t	m_idx_arg;
+
+	/** @brief io argument index */
+	aclspv_wrdcount_t	m_idx_ioarg;
+
+	/** @brief interface count */
+	aclspv_wrdcount_t	m_num_interface;
+
+	/** @brief push constant id when push constant size is no 0 */
+	aclspv_id_t		m_id_push_constant;
+
+	/** @brief context */
+	h_aclspv_ctx_t		m_ctx;
+};
+
 static enum CXChildVisitResult emit_decl_glob_obj_visit_fetch(CXCursor h_cur, CXCursor h_parent, CXClientData h_data) {
 	ae2f_unused aclspv_wrdcount_t	POS_FOR_LOCAL = 0xFFFFFFFF;
 	CXString	PARAM_TY_NAME;
 	CXType		PARAM_TY;
 
-#define	PUSH_SIZE	((uintptr_t* ae2f_restrict)h_data)[0]
-#define BIND_IDX	((uintptr_t* ae2f_restrict)h_data)[1]
-#define CTX		((h_aclspv_ctx_t)((uintptr_t* ae2f_restrict)h_data)[2])
-#define	ARG_IDX		((uintptr_t* ae2f_restrict)h_data)[3]
-#define	INTERFACE_COUNT	((uintptr_t* ae2f_restrict)h_data)[4]
-#define	IO_ARG_IDX	((uintptr_t* ae2f_restrict)h_data)[5]
-#define	PSH_CONSTANT_ID	((uintptr_t* ae2f_restrict)h_data)[6]
+#define	DATABASE	((struct emit_decl_glob_obj_visit_fetch_data* ae2f_restrict)(h_data))
+#define	PUSH_SIZE	DATABASE->m_push_size
+#define BIND_IDX	DATABASE->m_idx_bind
+#define CTX		DATABASE->m_ctx 
+#define	ARG_IDX		DATABASE->m_idx_arg 
+#define	INTERFACE_COUNT	DATABASE->m_num_interface
+#define	IO_ARG_IDX	DATABASE->m_idx_ioarg
+#define	PSH_CONSTANT_ID	DATABASE->m_id_push_constant
+
 #define INTERFACES_MGR		get_last_scale_from_vec(&CTX->m_scale_vars)
 #define	INTERFACES		((util_bind* ae2f_restrict)get_buf_from_scale(&CTX->m_scale_vars, INTERFACES_MGR[0]))
 #define	INFO			(((INTERFACES + ARG_IDX)))
 
-
-	ae2f_ifnezerr(CTX->m_err) return CXChildVisit_Break;
+	ae2f_ifezerr(CTX)		return CXChildVisit_Break;
+	ae2f_ifnezerr(CTX->m_err) 	return CXChildVisit_Break;
 
 	unless(h_cur.kind == CXCursor_ParmDecl) {
 		return CXChildVisit_Continue;
@@ -469,7 +495,7 @@ LBL_ABRT_NALLOC:
 #undef	INTERFACES_MGR
 #undef	INTERFACES
 #undef	INFO
-
+#undef	DATABASE
 	ae2f_unreachable();
 	(void)h_parent;
 }
@@ -482,18 +508,14 @@ ACLSPV_ABI_IMPL enum CXChildVisitResult aclemit_decl_glob_obj(CXCursor h_cur, CX
 		return CXChildVisit_Recurse;
 
 	if(util_is_kernel(h_cur_parent)) {
-		uintptr_t BUFF[7] = {
-			0 /* push constant size */ , 
-			0 /* bind index */, 
-			0 /* ctx */,
-			0 /* argument index */,
-			0 /* interface count */,
-			0 /* io argument count */,
-			0 /* push constant id when push constant size is not 0 */
+		struct emit_decl_glob_obj_visit_fetch_data DATA = {
+			0, 0, 0, 0,
+			0, 0, 0
 		};
 
 		const int NPARAMS = clang_Cursor_getNumArguments(h_cur_parent);
 
+		DATA.m_ctx = h_ctx;
 		if(NPARAMS < 0) {
 			CTX->m_err = ACLSPV_COMPILE_MET_INVAL;
 			return CXChildVisit_Break;
@@ -503,38 +525,26 @@ ACLSPV_ABI_IMPL enum CXChildVisitResult aclemit_decl_glob_obj(CXCursor h_cur, CX
 			goto LBL_HOLLOW_ENTP; 
 		}
 
-		BUFF[2] = (uintptr_t)CTX;
-
 		_aclspv_grow_vec(_aclspv_malloc, _aclspv_free, CTX->m_tmp.m_v0, (size_t)((unsigned)NPARAMS * sizeof(CXType)));
 		ae2f_expected_but_else(CTX->m_tmp.m_v0.m_p) {
 			CTX->m_err = ACLSPV_COMPILE_ALLOC_FAILED_DECLGLOBOBJ;
 			return CXChildVisit_Break;
 		}
 
-		clang_visitChildren(h_cur_parent, emit_decl_glob_obj_visit_fetch, BUFF);
+		clang_visitChildren(h_cur_parent, emit_decl_glob_obj_visit_fetch, &DATA);
 		ae2f_unexpected_but_if(CTX->m_err) return CXChildVisit_Break;
-		ae2f_unexpected_but_if(BUFF[0] > UINT32_MAX) {
-			CTX->m_err = ACLSPV_COMPILE_TOO_BIG;
-			return CXChildVisit_Break;
+
+
+		if(CTX->m_tmp.m_w2 < DATA.m_push_size) {
+			CTX->m_tmp.m_w2 = DATA.m_push_size;
 		}
 
-
-		if(CTX->m_tmp.m_w2 < BUFF[0]) {
-			CTX->m_tmp.m_w2 = (aclspv_wrd_t)BUFF[0];
-		}
-
-		if(BUFF[0]) {
-			const aclspv_id_t PSH_PTR_ID 	= aclutil_mk_constant_ptr_psh_id((aclspv_wrd_t)BUFF[0], CTX);
-			const aclspv_id_t PSH_VAR_ID	= (aclspv_wrd_t)BUFF[6];
-
-#if	!defined(NDEBUG) || !NDEBUG
-			const aclspv_wrdcount_t	POS = CTX->m_count.m_name;
-			CXString		NAME_STR = clang_getCursorSpelling(h_cur_parent);
-			char* ae2f_restrict	NAME = NAME_STR.data ? malloc(strlen(NAME_STR.data) + (size_t)sizeof(":::push")) : 0;
-#endif
+		if(DATA.m_push_size) {
+			const aclspv_id_t PSH_PTR_ID 	= aclutil_mk_constant_ptr_psh_id(DATA.m_push_size, CTX);
+			const aclspv_id_t PSH_VAR_ID	= DATA.m_id_push_constant;
 
 			ae2f_expected_but_else(PSH_PTR_ID) {
-				goto LBL_DBG_STR_DISPOSE_FAIL;
+				return CXChildVisit_Break;
 			}
 
 			ae2f_expected_but_else(CTX->m_count.m_vars = util_emitx_4(
@@ -544,55 +554,57 @@ ACLSPV_ABI_IMPL enum CXChildVisitResult aclemit_decl_glob_obj(CXCursor h_cur, CX
 						, PSH_PTR_ID
 						, PSH_VAR_ID
 						, SpvStorageClassPushConstant
-						)) goto LBL_DBG_STR_DISPOSE_FAIL;
+						)) return CXChildVisit_Break;
 
+			if(CTX->m_flag0 & ACLSPV_CTX_FLAG0_SYMBOL) {
+				const aclspv_wrdcount_t	POS = CTX->m_count.m_name;
+				CXString		NAME_STR = clang_getCursorSpelling(h_cur_parent);
+				char* ae2f_restrict	NAME = NAME_STR.data ? malloc(
+						strlen(NAME_STR.data) 
+						+ (size_t)sizeof(":::push")
+						) : 0;
 
-#if	!defined(NDEBUG) || !NDEBUG
 #define EMIT_POS	CTX->m_count.m_name
-			ae2f_expected_but_else(NAME) 
-				goto LBL_DBG_STR_DISPOSE_FAIL;
+				ae2f_expected_but_else(NAME) 
+					goto LBL_DBG_STR_DISPOSE_FAIL;
 
-			strcpy(NAME, NAME_STR.data);
-			strcat(NAME, ":::push");
+				strcpy(NAME, NAME_STR.data);
+				strcat(NAME, ":::push");
 
 
-			ae2f_expected_but_else((EMIT_POS = emit_opcode(
-							&CTX->m_section.m_name
-							, EMIT_POS, SpvOpName, 0))) 
-				goto LBL_DBG_STR_DISPOSE_FAIL;
-			ae2f_expected_but_else((EMIT_POS = util_emit_wrd(&CTX->m_section.m_name, EMIT_POS, PSH_VAR_ID)))
-				goto LBL_DBG_STR_DISPOSE_FAIL;
-			ae2f_expected_but_else((EMIT_POS = util_emit_str(&CTX->m_section.m_name, EMIT_POS, NAME))) 
-				goto LBL_DBG_STR_DISPOSE_FAIL;
-			set_oprnd_count_for_opcode(get_wrd_of_vec(&CTX->m_section.m_name)[POS], EMIT_POS - POS - 1);
-			clang_disposeString(NAME_STR);
-			free(NAME);
-
-			CTX->m_err = ACLSPV_COMPILE_OK;
-#undef	EMIT_POS
-			if(0) {
-				ae2f_unreachable();
-LBL_DBG_STR_DISPOSE_FAIL:
-				CTX->m_err = ACLSPV_COMPILE_ALLOC_FAILED_DECLGLOBOBJ;
+				ae2f_expected_but_else((EMIT_POS = emit_opcode(
+								&CTX->m_section.m_name
+								, EMIT_POS, SpvOpName, 0))) 
+					goto LBL_DBG_STR_DISPOSE_FAIL;
+				ae2f_expected_but_else((EMIT_POS = util_emit_wrd(&CTX->m_section.m_name, EMIT_POS, PSH_VAR_ID)))
+					goto LBL_DBG_STR_DISPOSE_FAIL;
+				ae2f_expected_but_else((EMIT_POS = util_emit_str(&CTX->m_section.m_name, EMIT_POS, NAME))) 
+					goto LBL_DBG_STR_DISPOSE_FAIL;
+				set_oprnd_count_for_opcode(get_wrd_of_vec(&CTX->m_section.m_name)[POS], EMIT_POS - POS - 1);
 				clang_disposeString(NAME_STR);
 				free(NAME);
-				return CXChildVisit_Break;
+
+				CTX->m_err = ACLSPV_COMPILE_OK;
+#undef	EMIT_POS
+				if(0) {
+					ae2f_unreachable();
+LBL_DBG_STR_DISPOSE_FAIL:
+					CTX->m_err = ACLSPV_COMPILE_ALLOC_FAILED_DECLGLOBOBJ;
+					clang_disposeString(NAME_STR);
+					free(NAME);
+					return CXChildVisit_Break;
+				}
 			}
-#endif
 
-
-
-#if 1 
 			((util_entp_t* ae2f_restrict)CTX->m_fnlist.m_entp.m_p)[CTX->m_tmp.m_w0].m_push_ids.m_push_ptr
 				= PSH_PTR_ID;
 			((util_entp_t* ae2f_restrict)CTX->m_fnlist.m_entp.m_p)[CTX->m_tmp.m_w0].m_push_ids.m_push_var
 				= PSH_VAR_ID;
 			((util_entp_t* ae2f_restrict)CTX->m_fnlist.m_entp.m_p)[CTX->m_tmp.m_w0].m_push_ids.m_push_struct
-				= aclutil_mk_constant_struct_id((aclspv_wrd_t)BUFF[0], CTX);
+				= aclutil_mk_constant_struct_id(DATA.m_push_size, CTX);
 
 
-			((util_entp_t* ae2f_restrict)CTX->m_fnlist.m_entp.m_p)[CTX->m_tmp.m_w0].m_nprm = (aclspv_wrd_t)BUFF[3];
-#endif
+			((util_entp_t* ae2f_restrict)CTX->m_fnlist.m_entp.m_p)[CTX->m_tmp.m_w0].m_nprm = DATA.m_num_interface;
 		}
 
 LBL_HOLLOW_ENTP:
@@ -608,7 +620,6 @@ LBL_HOLLOW_ENTP:
 
 #if	!defined(NDEBUG) || !NDEBUG
 #else
-LBL_DBG_STR_DISPOSE_FAIL:
 	return CXChildVisit_Break;
 #endif
 }

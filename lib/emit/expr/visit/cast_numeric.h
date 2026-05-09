@@ -14,7 +14,7 @@
 
 #include "../../expr.h"
 
-ae2f_inline static enum EMIT_EXPR_ s_cast_numeric(
+ae2f_inline_f static enum EMIT_EXPR_ s_cast_numeric(
 		const CXCursor				c_cur,
 		const h_util_ctx_t			h_ctx, 
 		x_aclspv_vec* ae2f_restrict const	h_cmdscale

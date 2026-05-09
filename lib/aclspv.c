@@ -33,7 +33,7 @@ ACLSPV_ABI_IMPL e_aclspv_compile_t  aclspv_compile(
 
 	ae2f_ifnezerr(aclspv_init_ctx(
 				&CTX
-				, 30
+				, 10
 				, ACLSPV_CTX_FLAG0_SYMBOL | ACLSPV_CTX_FLAG0_OGL | ACLSPV_CTX_FLAG0_LOGICAL | ACLSPV_CTX_FLAG0_DUMP_DIAGNOSTICS
 				, 0x10000
 				)) return CTX.m_err;
@@ -65,5 +65,3 @@ LBL_CLEANUP:
 	aclspv_fini_ctx(&CTX);
 	return CTX.m_err;
 }
-
-

@@ -18,16 +18,16 @@ char maincontent[sizeof(A_0) + sizeof(A_1) - 1 + sizeof(A_2) - 1
 
 char oclhead[sizeof(B_0) + sizeof(B_1) - 1 + sizeof(B_2) - 1];
 #if 1
+int main(void);
 int main(void) {
 	struct CXUnsavedFile files[2];
 	const char *ARG[] = {"main.cl"};
 	enum ACLSPV_COMPILE_ RET;
-	aclspv::ctx CTX(10,	
-			    aclspv::ctx_flag0(
+	aclspv::ctx CTX(2,
 				    ACLSPV_CTX_FLAG0_SYMBOL
-				    , ACLSPV_CTX_FLAG0_OGL
-				    , ACLSPV_CTX_FLAG0_LOGICAL
-				    , ACLSPV_CTX_FLAG0_DUMP_DIAGNOSTICS)
+				    | ACLSPV_CTX_FLAG0_OGL
+				    | ACLSPV_CTX_FLAG0_LOGICAL
+				    | ACLSPV_CTX_FLAG0_DUMP_DIAGNOSTICS
 			, aclspv::ver_spv(1, 0) /** spir-v 1.2 */
 	);
 
@@ -48,6 +48,8 @@ int main(void) {
 	strcat(oclhead, B_1);
 	strcat(oclhead, B_2);
 
+	printf("flag0: %u\n", static_cast<unsigned>(CTX.me().m_flag0));
+
 	files[0].Contents = maincontent;
 	files[0].Filename = "main.cl";
 	files[0].Length = sizeof(maincontent) - 1;
@@ -66,6 +68,7 @@ int main(void) {
 
 	RET = CTX.compile3(files, 2, ARG, 1, 0);
 	ae2f_ifnezerr(RET) printf("[err] aclspv_compile:	%d\n", RET);
+
 	RET = CTX.dump_output(spirv_count, spirv0);
 	ae2f_ifnezerr(RET) printf("[err] dump_output:	%d\n", RET);
 

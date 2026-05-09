@@ -6,16 +6,19 @@
 #include <string.h>
 #include <ae2f/pat/dbg.h>
 
+#include <stdio.h>
+
 
 util_constant* aclutil_mk_constant_node(
 		const u64_least	c_key,
 		h_util_ctx_t	h_ctx
 		)
 {
-	const aclspv_wrdcount_t	COUNT = (aclspv_wrdcount_t)(h_ctx->m_constant_cache.m_sz / (size_t)sizeof(util_constant));
-	aclspv_wrdcount_t	LR[2];
+	const aclspv_wrdcount_t	COUNT = h_ctx 
+		? (aclspv_wrd_t)(h_ctx->m_num_constant_cache)
+		: (aclspv_wrd_t)0;
 
-	size_t			NSIZE;
+	aclspv_wrdcount_t	LR[2];
 
 	ae2fpat_assertassume_strict(h_ctx);
 	
@@ -57,21 +60,27 @@ util_constant* aclutil_mk_constant_node(
 	}
 
 
-	NSIZE = (size_t)(h_ctx->m_constant_cache.m_sz + (size_t)sizeof(util_constant));
-
-	_aclspv_grow_vec_with_copy(
-			_aclspv_malloc, _aclspv_free
-			, _aclspv_memcpy
-			, L_new, h_ctx->m_constant_cache
-			, NSIZE
-			);
+	while((size_t)(COUNT) >= (h_ctx->m_constant_cache.m_sz) / sizeof(util_constant)) {
+		_aclspv_grow_vec_with_copy(
+				_aclspv_malloc, _aclspv_free
+				, _aclspv_memcpy
+				, L_new, h_ctx->m_constant_cache
+				, h_ctx->m_constant_cache.m_sz 
+				? h_ctx->m_constant_cache.m_sz << 1 
+				: (size_t)COUNT * sizeof(util_constant)
+				);
+	}
 	ae2f_expected_but_else(h_ctx->m_constant_cache.m_p) return ae2f_NIL;
+	if(COUNT > LEFT) {
+		aclspv_wrd_t		C = COUNT - LEFT;
+		p_util_constant_t	BASE = &((p_util_constant_t)(h_ctx->m_constant_cache.m_p))[COUNT];
 
-	memmove(
-			&((p_util_constant_t)(h_ctx->m_constant_cache.m_p))[LEFT + 1]
-			, &((p_util_constant_t)(h_ctx->m_constant_cache.m_p))[LEFT]
-			, (size_t)((COUNT - LEFT) * (sizeof(util_constant)))
-	       );
+		while(C--) {
+			BASE[1] = BASE[0];
+			--BASE;
+		}
+
+	}	/** memmove */
 
 	/** sanity check for future possibility of having more elements */
 	memset(&((p_util_constant_t)(h_ctx->m_constant_cache.m_p))[LEFT], 0, sizeof(util_constant));
@@ -80,13 +89,14 @@ util_constant* aclutil_mk_constant_node(
 	((p_util_constant_t)(h_ctx->m_constant_cache.m_p))[LEFT].m_key_1 
 		= (u32_least)(c_key >> 32) & 0xFFFFFFFF;
 
+	++h_ctx->m_num_constant_cache;
+
 	return &((p_util_constant_t)(h_ctx->m_constant_cache.m_p))[LEFT];
 
 #undef	LEFT
 #undef	RIGHT
 }
 
-#include <spirv/unified1/spirv.h>
 #include <ae2f/bll.h>
 
 aclspv_id_t aclutil_mk_constant_bool_id(
@@ -101,12 +111,12 @@ aclspv_id_t aclutil_mk_constant_bool_id(
 		return 0;
 
 	ae2f_expected_but_else(h_ctx->m_count.m_types = util_emitx_3(
-			&h_ctx->m_section.m_types
-			, h_ctx->m_count.m_types
-			, ae2f_bll_sel_bool1(aclspv_wrd_t, c_val, SpvOpConstantTrue, SpvOpConstantFalse)
-			, ID_DEFAULT_BOOL
-			, h_ctx->m_id
-		    )) return 0;
+				&h_ctx->m_section.m_types
+				, h_ctx->m_count.m_types
+				, ae2f_bll_sel_bool1(aclspv_wrd_t, c_val, SpvOpConstantTrue, SpvOpConstantFalse)
+				, ID_DEFAULT_BOOL
+				, h_ctx->m_id
+				)) return 0;
 
 	return C->m_const_val_bool = h_ctx->m_id++;
 }
@@ -126,7 +136,7 @@ aclspv_id_t aclutil_mk_constant_val_id1(
 	util_constant* ae2f_restrict const C = aclutil_mk_constant_node(c_val, h_ctx);
 	ae2f_expected_but_else(C)	return 0;
 	ae2f_expected_but_else(aclid_mk_default_id(MAP[c_idx_ty][c_idx_nbyte], h_ctx))
-					return 0;
+		return 0;
 	if(C->m_const_ids[c_idx_nbyte][c_idx_ty]) return C->m_const_ids[c_idx_nbyte][c_idx_ty];
 
 	if(c_idx_nbyte == UTIL_CV_NBYTE_8) {

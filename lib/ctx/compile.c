@@ -282,7 +282,7 @@ ae2f_extern ACLSPV_ABI_DECL enum ACLSPV_COMPILE_ aclspv_ctx_compile2(
 				, CXTranslationUnit_None, &CXTU
 				);
 
-		ae2f_ifneznrm(rwr_cxerr_opt)	*rwr_cxerr_opt = CXERR;
+		if(rwr_cxerr_opt)	*rwr_cxerr_opt = CXERR;
 	}
 
 	ae2f_ifezerr(CXTU)		return h_ctx->m_err = ACLSPV_COMPILE_ERR_CXTU;

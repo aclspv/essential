@@ -347,7 +347,7 @@ ae2f_MAC((L, )) aclemit_body_vardecl(CXCursor h_cur, aclutil_fnctx* ae2f_restric
 						, L$$CTX))
 			{
 				case EMIT_EXPR_NOT_THE_CASE:
-					L$$CTX->m_err = ACLSPV_COMPILE_NO_IMPL;
+					L$$CTX->m_err = ACLSPV_COMPILE_NOIMPL;
 					break;
 
 				default:

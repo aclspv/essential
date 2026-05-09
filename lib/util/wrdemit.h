@@ -55,12 +55,16 @@ static ae2f_inline spvsz_t util_emit_wrd(
 	uptr		CND;
  
 
-	if(count_to_sz(c_wrdcount + 1) > (spvsz_t)h_wrds->m_sz)
+	while(c_wrdcount + 1 && c_wrdcount >= sz_to_count(h_wrds->m_sz)) {
+		const size_t	NEWSIZE = h_wrds->m_sz ? (h_wrds->m_sz) << 1 : (size_t)count_to_sz(c_wrdcount + 1);
 		_aclspv_grow_vec_with_copy(
 				_aclspv_malloc, _aclspv_free, _aclspv_memcpy 
 				, L_new, *h_wrds
-				, ((size_t)count_to_sz((c_wrdcount + 1) << 1))
+				, NEWSIZE
 				);
+
+		ae2f_ifezerr(h_wrds->m_p) return 0;
+	}
 
 	CND = ae2f_bll_from_bool1(uptr, ae2f_expected(h_wrds->m_p && (sz_to_count(h_wrds->m_sz) <= UINT_MAX)));
 

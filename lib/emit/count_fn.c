@@ -73,7 +73,7 @@ ACLSPV_ABI_IMPL enum CXChildVisitResult aclemit_iter_entry_point(CXCursor h_cur,
 
 			if(XYZ.m_flag_specid) {
 				ae2f_ifnezerr(CTX->m_spirv_ver < aclspv_ver_spv(1, 2)) {
-					CTX->m_err = ACLSPV_COMPILE_V_WRKGROUP_SIZE;
+					CTX->m_err = ACLSPV_COMPILE_NOIMPL_V_WRKGROUP_SIZE;
 					err_puts("workgroup size id is for spirv 1.2");
 					goto LBL_ABRT;
 				}

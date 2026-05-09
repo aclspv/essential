@@ -9,6 +9,7 @@
 #include <ae2f/Keys.h>
 #include <ae2f/cc.h>
 #include <ae2f/.Call.h>
+#include <spirv/unified1/spirv.h>
 
 /**
  * @def ACLSPV_ABI_IMPL	
@@ -63,8 +64,9 @@ typedef enum ACLSPV_COMPILE_ {
 	ACLSPV_COMPILE_OK,
 	ACLSPV_COMPILE_PRM_INVAL_NIL,
 
-	ACLSPV_COMPILE_V,
-	ACLSPV_COMPILE_V_WRKGROUP_SIZE,
+	ACLSPV_COMPILE_NOIMPL,
+	ACLSPV_COMPILE_NOIMPL_V_WRKGROUP_SIZE,
+	ACLSPV_COMPILE_NOIMPL_CAPABILITY,
 
 	ACLSPV_COMPILE_ALLOC_FAILED,
 	ACLSPV_COMPILE_ALLOC_FAILED_CURSOR,
@@ -74,6 +76,8 @@ typedef enum ACLSPV_COMPILE_ {
 	ACLSPV_COMPILE_ALLOC_FAILED_VEC,
 	ACLSPV_COMPILE_ALLOC_FAILED_ID,
 	ACLSPV_COMPILE_ALLOC_FAILED_ASM,
+	ACLSPV_COMPILE_ALLOC_FAILED_CAPABILITY,
+	ACLSPV_COMPILE_ALLOC_FAILED_CXTP,
 
 	ACLSPV_COMPILE_MET_INVAL,
 	ACLSPV_COMPILE_MET_INVAL_BRK,
@@ -84,7 +88,8 @@ typedef enum ACLSPV_COMPILE_ {
 	ACLSPV_COMPILE_ERR_CXTU,
 
 	ACLSPV_COMPILE_TOO_BIG,
-	ACLSPV_COMPILE_NO_IMPL,
+	ACLSPV_COMPILE_TOO_BIG_EXPRVISIT,
+
 	ACLSPV_COMPILE_WORKGROUP_MUST_BE_CONSTANT_ARRAY,
 	ACLSPV_COMPILE_WORKGROUP_SIZE_NO_INT,
 	ACLSPV_COMPILE_CXTP_ZERO,
@@ -118,29 +123,14 @@ typedef struct {
 	size_t	m_sz;
 } x_aclspv_vec;
 
-/**
- * @fn	aclspv_compile
- * @brief	compile files and generate spir-v for vulkan
- * @returns	<INIT:aclspv_free_obj>
- * */
-ae2f_extern ACLSPV_ABI_DECL e_aclspv_compile_t 
-aclspv_compile(
-		struct CXUnsavedFile* ae2f_restrict const 	rdwr_unsaved,
-		const unsigned					c_unsaved_count,
-		const char* ae2f_restrict const * ae2f_restrict const	rd_argv_opt,
-		const int						c_argc,
-		aclspv_wrdcount_t* ae2f_restrict			rwr_output_count_opt,
-		aclspv_wrd_t* ae2f_restrict* ae2f_restrict		rwr_output,
-		enum CXErrorCode* ae2f_restrict				rwr_cxerr_opt
-	      );
-
 #define	__ENUM()			\
 	__X(SYMBOL),			\
 	__X(BUF64),			\
 	__X(OGL),			\
 	__X(LOGICAL),			\
 	__X(DUMP_DIAGNOSTICS),		\
-	__X(KILL_ON_DIAGNOSTICS)	
+	__X(KILL_ON_DIAGNOSTICS),	\
+	__X(EXPLICIT_CAPABILITY)
 
 #define	__X(A)	ACLSPV_CTX_FLAGPAD0_##A
 
@@ -185,7 +175,13 @@ typedef struct a_aclspv_ctx {
 
 	e_aclspv_compile_t	m_err;
 
+	/**
+	 * @brief
+	 * A output bitcode(spir-v)'s version.
+	 * Use `aclspv_ver_spv` to specify it
+	 * */
 	aclspv_wrd_t		m_spirv_ver;
+
 	/** 
 	 * @brief
 	 * number of `m_cursors`.	\n
@@ -198,6 +194,7 @@ typedef struct a_aclspv_ctx {
 
 	/** @see `m_type_uniques` */
 	aclspv_wrdcount_t	m_num_type_uniques;
+	aclspv_wrdcount_t	m_num_constant_cache;
 
 	/**
 	 * @var		m_id
@@ -256,6 +253,7 @@ typedef struct a_aclspv_ctx {
 		x_aclspv_vec	m_v2;
 	}	m_tmp;
 
+
 	struct {
 		aclspv_wrdcount_t
 			m_capability,
@@ -269,7 +267,11 @@ typedef struct a_aclspv_ctx {
 			m_vars,
 			m_fndef,
 			m_fnimpl;
-	}			m_count;
+	}			
+	/** 
+	 * @brief	DO NOT EDIT THIS OUTSIDE THIS LIBRARY IF YOU DO NOT HAVE ENOUGH CONTEXT 
+	 * */
+	m_count;
 
 	struct {
 		aclspv_wrdcount_t
@@ -314,9 +316,10 @@ typedef struct a_aclspv_ctx {
 } x_aclspv_ctx;
 
 /**
- * @fn	aclspv_compile
- * @brief	compile files and generate spir-v for vulkan
- * @returns	<INIT:aclspv_free_obj>
+ * @fn		aclspv_compile
+ *
+ * @brief	compile files and generate spir-v for vulkan.	\n
+ * 		value of `rwr_output` must be manually freed by `free`.
  * */
 ae2f_extern ACLSPV_ABI_DECL enum ACLSPV_COMPILE_ 
 aclspv_compile(
@@ -329,6 +332,10 @@ aclspv_compile(
 		enum CXErrorCode* ae2f_restrict				rwr_cxerr_opt
 	      );
 
+/**
+ * @brief	initialisse `i_ctx` with `c_init_flag0` and `c_spirv_version`.
+ *		`i_ctx` must be released by `aclspv_fini_ctx`.
+ * */
 ae2f_extern ACLSPV_ABI_DECL enum ACLSPV_COMPILE_ aclspv_init_ctx(
 		const h_aclspv_ctx_t	i_ctx,
 		const aclspv_wrd_t	c_init_size_exp,
@@ -336,11 +343,17 @@ ae2f_extern ACLSPV_ABI_DECL enum ACLSPV_COMPILE_ aclspv_init_ctx(
 		const aclspv_wrd_t	c_spirv_version
 		);
 
+/** 
+ * @brief	reads `c_cur_root` and merge it to `h_ctx`
+ * */
 ae2f_extern ACLSPV_ABI_DECL enum ACLSPV_COMPILE_ aclspv_ctx_compile(
 		const h_aclspv_ctx_t	h_ctx,
 		CXCursor		c_cur_root
 		);
 
+/** 
+ * @brief	reads `h_tu` and merge it to `h_ctx`.
+ * */
 ae2f_extern ACLSPV_ABI_DECL enum ACLSPV_COMPILE_ aclspv_ctx_compile1(
 		const h_aclspv_ctx_t	h_ctx,
 		CXTranslationUnit	h_tu
@@ -365,21 +378,49 @@ ae2f_extern ACLSPV_ABI_DECL enum ACLSPV_COMPILE_ aclspv_ctx_compile3(
 		enum CXErrorCode* ae2f_restrict				rwr_cxerr_opt
 		);
 
+/** 
+ * @brief	free the resources of `d_ctx`.
+ * */
 ae2f_extern ACLSPV_ABI_DECL void aclspv_fini_ctx(
 		const h_aclspv_ctx_t	d_ctx
 		);
 
-ae2f_extern enum ACLSPV_COMPILE_ aclspv_dump_ctx_output(
+/**
+ * @brief	dump the spir-v output from `h_ctx` to `ir_output_opt`, with length to `r_output_count_opt`.
+ * 		value of `ir_output_opt` must be manually freed by `free`.
+ * */
+ae2f_extern ACLSPV_ABI_DECL enum ACLSPV_COMPILE_ aclspv_dump_ctx_output(
 		const x_aclspv_ctx* ae2f_restrict		h_ctx,
 		aclspv_wrdcount_t* ae2f_restrict const		r_output_count_opt,
-		aclspv_wrd_t* ae2f_restrict* ae2f_restrict	r_output_opt
+		aclspv_wrd_t* ae2f_restrict* ae2f_restrict	ir_output_opt
 		);
 
-ACLSPV_ABI_IMPL enum ACLSPV_COMPILE_ aclspv_dump_ctx_output1(
+/**
+ * @brief	dump the spir-v output from `h_ctx` to `ret`.
+ * @details	word count of `ret` is considered as a value of `rdwr_count_ret`.
+ * 		when word count is not sufficient, value of `rdwr_count_ret` will be changed to 
+ * 			actual required word count of `ret`.
+ * */
+ae2f_extern ACLSPV_ABI_DECL enum ACLSPV_COMPILE_ aclspv_dump_ctx_output1(
 		const x_aclspv_ctx* ae2f_restrict		h_ctx,
 		aclspv_wrd_t* ae2f_restrict const	rdwr_count_ret,
 		aclspv_wrd_t* ae2f_restrict const	ret
 		);
 
+/**
+ * @brief	check if capacity `c_cap` is included in `rd_ctx`.
+ * */
+ae2f_extern ACLSPV_ABI_DECL ae2f_ccpure aclspv_bool_t aclspv_chck_capability_from_ctx(
+		const x_aclspv_ctx* const ae2f_restrict	rd_ctx,
+		const enum SpvCapability_		c_cap
+		);
+
+/**
+ * @brief	add a capacity `c_cap` to `h_ctx`
+ * */
+ae2f_extern ACLSPV_ABI_DECL aclspv_bool_t aclspv_add_capability_from_ctx(
+		h_aclspv_ctx_t				h_ctx,
+		const enum SpvCapability_		c_cap
+		);
 
 #endif
