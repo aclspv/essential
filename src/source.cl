@@ -8,24 +8,37 @@
 #define	double float
 
 typedef vector(4) float float4;
+typedef vector(4) int int4;
 
 kernel_raw(0) void KERNEL() {
-	float4 a; 
-	float4 b;
-	a += b;
-	goto L0;
-
+	{
+		float4 a; 
+		float4 b;
+		a += b;
+		goto L0; 
 L0:
-	a += b;
+		a += b;
+	}
+
+	{
+		float4	a;
+		int4	b;
+
+		a += b;
+		goto L0; 
+L0:
+
+		a += b;
+	}
 	return;
 }
 
 __attribute__((annotate("reqd_work_group_size(3, 4, 2)"))) /** work group size should be specified on constant time. */
 kernel_raw(5) void N_KERNEL_0(
-__constant uintptr_t* consti32, 
-storage_class(3) const uint* u32out
+		__constant uintptr_t* consti32, 
+		storage_class(3) const uint* u32out
 
-) {
+		) {
 	btcast float a0 = 1078774989;
 	char a1 specid(0);
 	int a2 = a0 + (a0 += a1);

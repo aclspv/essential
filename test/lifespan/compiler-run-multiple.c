@@ -4,18 +4,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "./ocl.auto.h"
-#include "./source.auto.h"
-char maincontent[sizeof(A_0) + sizeof(A_1) - 1 + sizeof(A_2) - 1
-#if 0
-	+ sizeof(A_3) - 1
-	+ sizeof(A_4) - 1
-	+ sizeof(A_5) - 1
-	+ sizeof(A_6) - 1
-#endif
-];
+#include <acltest/onefile.h>
 
-char oclhead[sizeof(B_0) + sizeof(B_1) - 1 + sizeof(B_2) - 1];
 #if 1
 int main_c(void);
 int main(void);
@@ -35,31 +25,19 @@ int main_c(void) {
 	aclspv_wrd_t *spirv0;
 	aclspv_wrdcount_t spirv_count;
 
-	strcpy(maincontent, A_0);
-	strcat(maincontent, A_1);
-	strcat(maincontent, A_2);
-#if 0
-		strcat(maincontent, A_3);
-		strcat(maincontent, A_4);
-		strcat(maincontent, A_5);
-		strcat(maincontent, A_6);
-#endif
+	acltestcfg();
 
-	strcpy(oclhead, B_0);
-	strcat(oclhead, B_1);
-	strcat(oclhead, B_2);
-
-	files[0].Contents = maincontent;
+	files[0].Contents = s_src0;
 	files[0].Filename = "main.cl";
-	files[0].Length = sizeof(maincontent) - 1;
+	files[0].Length = sizeof(s_src0) - 1;
 
 	puts("main.cl::::::::::::::::::");
 	puts(files[0].Contents);
 	puts("main.cl::::::::::::::::::");
 
-	files[1].Contents = oclhead;
+	files[1].Contents = s_oclbase;
 	files[1].Filename = "./opencl-c-base.h";
-	files[1].Length = sizeof(oclhead) - 1;
+	files[1].Length = sizeof(s_oclbase) - 1;
 
 	puts("opencl-c-base.h::::::::::::::::::");
 	puts(files[1].Contents);

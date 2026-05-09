@@ -63,26 +63,6 @@ endif()
 file(GLOB aclspv-inc ${PROJECT_SOURCE_DIR}/inc/*)
 
 ae2f_Macro_init(1 30 30)
-ae2f_FileRaw_init(1 100)
-ae2f_FileRaw_Run_One2(
-	${PROJECT_SOURCE_DIR}/src/source.cl 
-	${PROJECT_SOURCE_DIR}/test/lifespan/source.auto.h
-	"A"
-	)
-
-ae2f_FileRaw_Run_One2(
-	${PROJECT_SOURCE_DIR}/src/ocl.h
-	${PROJECT_SOURCE_DIR}/test/lifespan/ocl.auto.h
-	"B"
-	)
-
-add_library(
-	ae3f-aclspv-auto	INTERFACE
-	${PROJECT_SOURCE_DIR}/test/lifespan/source.auto.h
-	${PROJECT_SOURCE_DIR}/test/lifespan/ocl.auto.h
-	)
-
-
 
 file(GLOB_RECURSE aclspv-src ${PROJECT_SOURCE_DIR}/lib/*)
 
@@ -115,9 +95,37 @@ target_link_libraries(ae3f-aclspv		PRIVATE		ae3f::aclspvCore)
 target_link_libraries(ae3f-aclspv		PUBLIC		ae3f::aclspv-common)
 
 
-ae2f_CoreTestTentVerbose(ae3f-aclspv ./test/lifespan)
-ae2f_CoreTestTentVerbose(ae3f-aclspv ./test/util)
-target_link_libraries(Test-c-ae3f-aclspv-scale PRIVATE ae3f::aclspvCore)
+ae2f_FileRaw_init(1 100)
+ae2f_FileRaw_Run_One2(
+	${PROJECT_SOURCE_DIR}/src/source.cl 
+	${PROJECT_BINARY_DIR}/testinc/.acltest/source.h
+	"SRC0"
+	)
+
+ae2f_FileRaw_Run_One2(
+	${PROJECT_SOURCE_DIR}/src/ocl.h
+	${PROJECT_BINARY_DIR}/testinc/.acltest/ocl.h
+	"OCLBASE"
+	)
+add_library(
+	ae3f-aclspv-test	INTERFACE
+	${PROJECT_BINARY_DIR}/testinc/.acltest/source.h
+	${PROJECT_BINARY_DIR}/testinc/.acltest/ocl.h
+	./test/inc/acltest/onefile.h
+	)
+
+target_link_libraries(ae3f-aclspv-test 
+	INTERFACE ae3f-aclspv
+	)
+
+target_include_directories(ae3f-aclspv-test 
+	INTERFACE $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/testinc/>
+	INTERFACE $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/test/inc/>
+	)
+
+ae2f_CoreTestTentVerbose(ae3f-aclspv-test ./test/lifespan)
+ae2f_CoreTestTentVerbose(ae3f-aclspv-test ./test/util)
+target_link_libraries(Test-c-ae3f-aclspv-test-scale PRIVATE ae3f::aclspvCore)
 
 if(Clang_FOUND)
 	target_include_directories(ae3f-aclspv-common INTERFACE $<BUILD_INTERFACE:${CLANG_INCLUDE_DIRS}>)
