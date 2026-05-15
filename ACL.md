@@ -52,6 +52,27 @@ __constant
 - Maps to constant literals in other use cases.
 
 # Attributes
+__attribute__((ext_vector_type(a)))
+> make a vector type.  
+> a vector type is a simd type, where many operations maps to simd.  
+
+```c
+typedef int i32;
+typedef i32 __attribute__((ext_vector_type(4))) v4i32;
+
+_Bool band128(const v4i32 A, const v4i32 B) {
+    v4i32 Z;
+    Z[0] = 0; Z[1] = 0;
+    Z[3] = 0; Z[4] = 0;
+
+    return A & B != Z;  
+}
+
+
+```
+
+
+# AnnotationAttributes
 > Some compiler attributes are available for vulkan-specific behaviours.  
 > Many will be annotation attribute so seem as `__attribute__((annotate("<here>")))`
 
@@ -110,9 +131,6 @@ aclspv_btcast
 aclspv_glcmagic    
 > Specifies that user wants the input automatically on GLCompute.
 - Provided aclspv_execmodel is not GLCompute(5), this attribute will be ignored.
-
-aclspv_vecdecl(vec_elm_num)  
-> declare a type as a vector
 
 aclspv_bratio(weight_true_branch, weight_false_branch)  
 > declare a branch ratio of possibility that whether branch would be true or not.  
