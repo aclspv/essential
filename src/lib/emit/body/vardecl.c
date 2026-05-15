@@ -30,11 +30,15 @@ ae2f_MAC((L, )) aclemit_body_vardecl(CXCursor h_cur, aclutil_fnctx* ae2f_restric
 	aclspv_wrdcount_t	L$$ORIGIN_CURSORS_NUM = L$$CTX->m_num_cursor;
 
 	const CXType	L$$TYPE = clang_getCanonicalType(clang_getCursorType(h_cur));
-	util_cursor* L$$PCURSOR = &((util_cursor* ae2f_restrict)L$$CTX->m_cursors.m_p)[L$$IDX];
+	util_cursor* L$$PCURSOR = L$$CTX->m_cursors.m_p ? &((util_cursor* ae2f_restrict)L$$CTX->m_cursors.m_p)[L$$IDX] : 0;
+
+	ae2f_ifezerr(L$$PCURSOR) {
+		L$$CTX->m_err = ACLSPV_COMPILE_UNHANDLED_BODY;
+		goto L$$LBL_END; 
+	}
 
 	ae2f_unexpected_but_if(L$$IDX == L$$CTX->m_num_cursor + 1)
 		goto L$$LBL_END;
-
 	L$$CTX->m_num_cursor += L$$IDX == L$$CTX->m_num_cursor;
 
 	if((L$$PCURSOR->m_data.m_vardecl.m_type_id = aclutil_mk_cxtp_by_cursor2(h_cur, L$$CTX))) {
@@ -139,6 +143,9 @@ ae2f_MAC((L, )) aclemit_body_vardecl(CXCursor h_cur, aclutil_fnctx* ae2f_restric
 		L$$PCURSOR->m_data.m_vardecl.m_mask |= ACLUTIL_CURSOR_VAR_OCCUPIED;
 	}
 
+	L$$PCURSOR->m_data.m_vardecl.m_mask &= ~(aclspv_wrd_t)ACLUTIL_CURSOR_VAR_PREDICTABLE;
+	L$$PCURSOR->m_data.m_vardecl.m_init_val = 0;
+
 	if(aclid_is_vectorisable(L$$PCURSOR->m_data.m_vardecl.m_type_id))
 	{
 		aclspv_id_t	L$$SPECID = 0xFFFFFFFF;
@@ -203,7 +210,10 @@ ae2f_MAC((L, )) aclemit_body_vardecl(CXCursor h_cur, aclutil_fnctx* ae2f_restric
 
 	{
 		CXCursor	L$$VAR_INIT = clang_Cursor_getVarDeclInitializer(h_cur);
-		unless(clang_Cursor_isNull(L$$VAR_INIT)) {
+		if(clang_Cursor_isNull(L$$VAR_INIT)) {
+			L$$PCURSOR->m_data.m_vardecl.m_mask &= ~(aclspv_wrd_t)ACLUTIL_CURSOR_VAR_PREDICTABLE;
+			L$$PCURSOR->m_data.m_vardecl.m_init_val = 0;
+		} else {
 			fn_aclspv_get_expr_t*	L$$FN_GETEXPR = aclspv_get_expr;
 
 			{

@@ -12,14 +12,13 @@ typedef vector(4) int int4;
 
 #if 1
 kernel_raw(0) void KERNEL(void) {
-K:
+	goto K;
 	double4	c, c1, c2;
 	float4	d = c + c;
 	float4	a = d + d;
+K:
 	c += a;
 	c2 += c;
-	goto K;
-
 	float4 c3 = c2;
 }
 #endif
