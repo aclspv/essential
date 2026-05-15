@@ -72,10 +72,21 @@ typedef struct {
 	} m_info;	/** must be plain old buffer (pob) */
 } aclutil_cxtp;
 
+ae2f_ccconst aclspv_id_t aclutil_mk_cxtp_by_type(const CXType c_ty);
+aclspv_id_t aclutil_mk_cxtp_by_type2(
+		const CXType		c_type,
+		const h_aclspv_ctx_t	h_ctx
+		);
+
 /** Returns the type id of type */
 aclspv_id_t aclutil_mk_cxtp_by_cursor(
 		const CXCursor		c_cursor,
 		const CXType		c_type,
+		const h_aclspv_ctx_t	h_ctx
+		);
+
+aclspv_id_t aclutil_mk_cxtp_by_cursor2(
+		const CXCursor		c_cursor,
 		const h_aclspv_ctx_t	h_ctx
 		);
 

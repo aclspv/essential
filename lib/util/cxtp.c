@@ -12,11 +12,8 @@
 #if	1
 #include <attr/storage_class.h>
 #include <attr/specid.h>
-#include <attr/vecdecl.h>
 #endif
 
-#include <complex.h>
-#include <spirv/unified1/spirv.h>
 
 ae2f_inline static aclspv_bool_t s_ndeq(const aclutil_cxtp* const ae2f_restrict A, const aclutil_cxtp* const ae2f_restrict B)
 {
@@ -136,6 +133,8 @@ aclspv_id_t aclutil_mk_cxtp_arr2(
 	TAR.m_info.m_arr.m_num_id = c_num_arr;
 	TAR.m_info.m_arr.m_type = c_type_elm;
 
+	(void)(aclid_mk_default_id(c_type_elm, h_ctx));
+
 	{
 		const struct __ret ID = s_ret(h_ctx, &TAR);
 		ae2f_expected_but_else(ID.m_id) return 0;
@@ -180,6 +179,8 @@ aclspv_id_t aclutil_mk_cxtp_struct_single(
 	TAR.m_info.m_struct_single.m_mem_id			= c_type_member;
 	TAR.m_info.m_struct_single.m_decoration.m_field0	= c_decorate_field0;
 	TAR.m_info.m_struct_single.m_mem_decoration.m_offset	= c_memdecorate_offset;
+
+	(void)(aclid_mk_default_id(c_type_member, h_ctx));
 
 	{
 		const struct __ret ID = s_ret(h_ctx, &TAR);
@@ -238,6 +239,8 @@ aclspv_id_t aclutil_mk_cxtp_vec(
 		return c_type_elm;
 	}
 
+	(void)(aclid_mk_default_id(c_type_elm, h_ctx));
+
 	{
 		const struct __ret ID = s_ret(h_ctx, &TAR); 
 		ae2f_expected_but_else(ID.m_id) return 0;
@@ -275,6 +278,8 @@ aclspv_id_t aclutil_mk_cxtp_ptr(
 	TAR.m_info.m_ptr.m_type		= c_type_elm;
 	TAR.m_info.m_ptr.m_storage	= c_storage_class;
 
+	(void)(aclid_mk_default_id(c_type_elm, h_ctx));
+
 	{
 		const struct __ret ID = s_ret(h_ctx, &TAR); 
 		ae2f_expected_but_else(ID.m_id) return 0;
@@ -302,6 +307,8 @@ aclspv_id_t aclutil_mk_cxtp_fn_no_prm(
 	memset(&TAR, 0, sizeof(TAR));
 	TAR.m_class				= ACLUTIL_CXTYPE_FUNC_NOPRM;
 	TAR.m_info.m_fn_no_proto.m_ret_id	= c_ret_id;
+
+	(void)(aclid_mk_default_id(c_ret_id, h_ctx));
 
 	{
 		const struct __ret ID = s_ret(h_ctx, &TAR);
@@ -403,84 +410,108 @@ aclspv_id_t aclutil_mk_cxtp_fn_with_prm(
 	}
 }
 
-ae2f_inline ae2f_ccconst static aclspv_id_t s_cxtp_cursor_default(const CXType c_type) {
-	switch((uintmax_t)c_type.kind) {
-		default:
-			return 0;
 
-		case CXType_Void:
-			return ID_DEFAULT_VOID;
+ae2f_ccconst aclspv_id_t aclutil_mk_cxtp_by_type(const CXType c_ty) {
+	switch((uint_leastenum_t)c_ty.kind) {
+#define	VECCASE(c_case, c_ret)	\
+		case c_case: return c_ret
+
 		case CXType_SChar:
-		case CXType_Char_S:
-			return ID_DEFAULT_I8;
-		case CXType_Short:
-			return ID_DEFAULT_I16;
-		case CXType_Int:
-			return ID_DEFAULT_I32;
-		case CXType_LongLong:
-		case CXType_Long:
-			return ID_DEFAULT_I64;
-		case CXType_UInt:
-			return ID_DEFAULT_U32;
-		case CXType_UChar:
-		case CXType_Char_U:
-			return ID_DEFAULT_U8;
-		case CXType_UShort:
-			return ID_DEFAULT_U16;
-		case CXType_ULongLong:
-		case CXType_ULong:
-			return ID_DEFAULT_U64;
+		VECCASE(CXType_Char_S		, ID_DEFAULT_I8);
 
-		case CXType_Half:
-			return ID_DEFAULT_F16;
-		case CXType_Float:
-			return ID_DEFAULT_F32;
-		case CXType_Double:
-			return ID_DEFAULT_F64;
+		case CXType_UChar:
+		VECCASE(CXType_Char_U		, ID_DEFAULT_U8);
+
+		case CXType_Char16:
+		VECCASE(CXType_Short		, ID_DEFAULT_I16);
+		VECCASE(CXType_UShort		, ID_DEFAULT_U16);
+
+		case CXType_Char32:
+		VECCASE(CXType_Int		, ID_DEFAULT_I32);
+		VECCASE(CXType_UInt		, ID_DEFAULT_U32);
+
+		case CXType_LongLong:
+		VECCASE(CXType_Long		, ID_DEFAULT_I64);
+
+		case CXType_ULongLong:
+		VECCASE(CXType_ULong		, ID_DEFAULT_U64);
+
+		case CXType_BFloat16:
+		case CXType_Float16:
+		VECCASE(CXType_Half		, ID_DEFAULT_F16);
+		VECCASE(CXType_Float		, ID_DEFAULT_F32);
+		VECCASE(CXType_Double		, ID_DEFAULT_F64);
+
+#undef		VECCASE
+
+		default: return 0;
 	}
 }
 
-#if	1
+#include "./iddef.h"
 
-ae2f_extern aclspv_id_t aclutil_mk_cxtp_by_cursor(
-		const CXCursor		c_cursor,
-		const CXType		TYPE,
+aclspv_id_t aclutil_mk_cxtp_by_type2(
+		const CXType		c_type,
 		const h_aclspv_ctx_t	h_ctx
-		)
-{
-	const CXCursor	TYPEDEF	= clang_getTypeDeclaration(TYPE);
+		) {
+	const CXType TYPE = clang_getCanonicalType(c_type);
 
 	{
-		const aclspv_id_t R = s_cxtp_cursor_default(TYPE);
-		const aclspv_id_t RR = aclid_mk_default_id(R, h_ctx);
-		if(RR) {
-			const aclspv_wrd_t NUM0 = aclattr_vecdecl(0, TYPEDEF);
-			const aclspv_wrd_t NUM1 = NUM0 ? NUM0 : aclattr_vecdecl(1, TYPEDEF);
-			return aclutil_mk_cxtp_vec(RR, NUM1, h_ctx);
+		const aclspv_id_t D = aclutil_mk_cxtp_by_type(TYPE);
+		if(D) {
+			return aclid_mk_default_id(D, h_ctx);
 		}
 	}
 
-	switch((uintmax_t)TYPE.kind) {
-		case CXType_Void:
-		case CXType_SChar:
-		case CXType_Short:
-		case CXType_Int:
-		case CXType_LongLong:
-		case CXType_Long:
-		case CXType_UInt:
-		case CXType_UChar:
-		case CXType_UShort:
-		case CXType_ULongLong:
-		case CXType_ULong:
-		case CXType_Half:
-		case CXType_Float:
-		case CXType_Double:
-			ae2fpat_assertassume_strict(0);
-			ae2f_unreachable();
+	dbg_prefix();
+	dbg_call((void), fprintf(stderr, "cxtp_by_type2 tykind %u\n", (unsigned)TYPE.kind));
+
+	switch((uint_leastenum_t)TYPE.kind) {
+		case CXType_Vector: case CXType_ExtVector:
+			{
+				const CXType ELM		= clang_getElementType(TYPE);
+				const intmax_t _ELMCOUNT	= clang_getNumElements(TYPE);
+				const aclspv_wrd_t ELMCOUNT	= 
+					ae2f_bll_sel_bool_naive1(
+							aclspv_wrd_t
+							, (umax)(_ELMCOUNT) & ~(umax)ACLSPV_MASK_WRD
+							, 1 
+							,(aclspv_wrd_t)_ELMCOUNT
+							);
+
+				const aclspv_id_t	ELMID = aclutil_mk_cxtp_by_type(ELM);
+
+				return aclutil_mk_cxtp_vec(
+						ELMID
+						, ELMCOUNT
+						, h_ctx);
+			}
 
 		default:
 			return 0;
+	}
 
+	ae2f_unreachable();
+}
+
+ae2f_extern aclspv_id_t aclutil_mk_cxtp_by_cursor2(
+		const CXCursor		c_cursor,
+		const h_aclspv_ctx_t	h_ctx
+		) {
+	const CXCursor	TYPEDEF	= clang_getTypeDeclaration(clang_getCursorType(c_cursor));
+	const CXType	TYPE = clang_getCanonicalType((clang_getCursorType(c_cursor)));
+
+	{
+		const aclspv_id_t D = aclutil_mk_cxtp_by_type2(TYPE, h_ctx);
+		if(D) {
+			return D;
+		}
+	}
+
+	dbg_prefix();
+	dbg_call((void), fprintf(stderr, "cxtp_by_cursor2 tykind %u\n", (unsigned)TYPE.kind));
+
+	switch((uint_leastenum_t)TYPE.kind) {
 		case CXType_FunctionProto:
 			{
 				const CXType CANONICAL	= clang_getCanonicalType(TYPE);
@@ -489,7 +520,6 @@ ae2f_extern aclspv_id_t aclutil_mk_cxtp_by_cursor(
 						, CANONICAL
 						, h_ctx);
 			}
-
 		case CXType_FunctionNoProto:
 			{
 				const CXType RET	= clang_getResultType(TYPE);
@@ -517,7 +547,7 @@ ae2f_extern aclspv_id_t aclutil_mk_cxtp_by_cursor(
 				return aclutil_mk_cxtp_ptr(ELMID, SCLASS, h_ctx);
 			}
 
-		case CXType_ConstantArray:	/** array or vector */
+		case CXType_ConstantArray:	/** array or */
 			{
 				enum ACLUTIL_CXTYPE_ E		= ACLUTIL_CXTYPE_ARRAY;
 				const CXType ELM		= clang_getArrayElementType(TYPE);
@@ -564,7 +594,23 @@ ae2f_extern aclspv_id_t aclutil_mk_cxtp_by_cursor(
 
 				return aclutil_mk_cxtp_arr(ELMID, ELMCOUNT, h_ctx);
 			}
+
+		default:
+			return 0;
 	}
+
+	ae2f_unreachable();
 }
 
-#endif
+ae2f_extern aclspv_id_t aclutil_mk_cxtp_by_cursor(
+		const CXCursor		c_cursor,
+		const CXType		c_ty,
+		const h_aclspv_ctx_t	h_ctx
+		)
+{
+	const aclspv_id_t R0	= aclutil_mk_cxtp_by_cursor2(c_cursor, h_ctx);
+	const aclspv_id_t R1	= R0 ? R0 : aclutil_mk_cxtp_by_cursor2(clang_getCanonicalCursor(c_cursor), h_ctx);
+	const aclspv_id_t R	= R1 ? R1 : aclutil_mk_cxtp_by_cursor2(clang_getTypeDeclaration(c_ty), h_ctx);
+	return R;
+}
+

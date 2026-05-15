@@ -67,6 +67,7 @@ typedef enum ACLSPV_COMPILE_ {
 	ACLSPV_COMPILE_NOIMPL,
 	ACLSPV_COMPILE_NOIMPL_V_WRKGROUP_SIZE,
 	ACLSPV_COMPILE_NOIMPL_CAPABILITY,
+	ACLSPV_COMPILE_NOIMPL_EXTENSION,
 
 	ACLSPV_COMPILE_ALLOC_FAILED,
 	ACLSPV_COMPILE_ALLOC_FAILED_CURSOR,
@@ -82,6 +83,7 @@ typedef enum ACLSPV_COMPILE_ {
 	ACLSPV_COMPILE_MET_INVAL,
 	ACLSPV_COMPILE_MET_INVAL_BRK,
 	ACLSPV_COMPILE_MET_INVAL_CONTINUE,
+	ACLSPV_COMPILE_MET_INVAL_UNREACHABLE,
 
 	ACLSPV_COMPILE_ERR_CLANG,
 	ACLSPV_COMPILE_ERR_CXIDX,
@@ -130,7 +132,8 @@ typedef struct {
 	__X(LOGICAL),			\
 	__X(DUMP_DIAGNOSTICS),		\
 	__X(KILL_ON_DIAGNOSTICS),	\
-	__X(EXPLICIT_CAPABILITY)
+	__X(EXPLICIT_CAPABILITY),	\
+	__X(EXPLICIT_EXTENSION)
 
 #define	__X(A)	ACLSPV_CTX_FLAGPAD0_##A
 
@@ -410,7 +413,7 @@ ae2f_extern ACLSPV_ABI_DECL enum ACLSPV_COMPILE_ aclspv_dump_ctx_output1(
 /**
  * @brief	check if capacity `c_cap` is included in `rd_ctx`.
  * */
-ae2f_extern ACLSPV_ABI_DECL ae2f_ccpure aclspv_bool_t aclspv_chck_capability_from_ctx(
+ae2f_extern ACLSPV_ABI_DECL ae2f_ccpure ae2f_noexcept aclspv_bool_t aclspv_chck_capability_from_ctx(
 		const x_aclspv_ctx* const ae2f_restrict	rd_ctx,
 		const enum SpvCapability_		c_cap
 		);
@@ -418,9 +421,19 @@ ae2f_extern ACLSPV_ABI_DECL ae2f_ccpure aclspv_bool_t aclspv_chck_capability_fro
 /**
  * @brief	add a capacity `c_cap` to `h_ctx`
  * */
-ae2f_extern ACLSPV_ABI_DECL aclspv_bool_t aclspv_add_capability_from_ctx(
+ae2f_extern ACLSPV_ABI_DECL ae2f_noexcept aclspv_bool_t aclspv_add_capability_from_ctx(
 		h_aclspv_ctx_t				h_ctx,
 		const enum SpvCapability_		c_cap
+		);
+
+ae2f_extern ACLSPV_ABI_DECL ae2f_ccpure ae2f_noexcept aclspv_bool_t aclspv_chck_extension_from_ctx(
+		const x_aclspv_ctx* const ae2f_restrict	rd_ctx,
+		const char* ae2f_restrict const		c_ext
+		);
+
+ae2f_extern ACLSPV_ABI_DECL ae2f_noexcept aclspv_bool_t aclspv_add_extension_from_ctx(
+		const h_aclspv_ctx_t			rd_ctx,
+		const char* ae2f_restrict const		c_ext
 		);
 
 #endif

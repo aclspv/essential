@@ -10,6 +10,7 @@
 #include <util/emitx.h>
 #include <util/id.h>
 #include <util/capability.h>
+#include <util/extension.h>
 
 #include <aclspv.h>
 
@@ -28,16 +29,16 @@ ae2f_always_inline static e_aclspv_compile_t impl_conf(
 	assert(h_ctx);
 
 	/*** Shader Capability **/
-	ae2f_expected_but_else(aclutil_addcapabilitybyflag(h_ctx, SpvCapabilityShader))
+	ae2f_expected_but_else(aclutil_add_capability_by_flag(h_ctx, SpvCapabilityShader))
 		return ACLSPV_COMPILE_ALLOC_FAILED_CFG;
 
 	unless(h_ctx->m_flag0 & ACLSPV_CTX_FLAG0_LOGICAL) {
-		ae2f_expected_but_else(aclutil_addcapabilitybyflag(h_ctx, SpvCapabilityAddresses))
+		ae2f_expected_but_else(aclutil_add_capability_by_flag(h_ctx, SpvCapabilityAddresses))
 			return ACLSPV_COMPILE_ALLOC_FAILED_CFG;
 	}
 
 	unless(h_ctx->m_flag0 & ACLSPV_CTX_FLAG0_OGL) {
-		ae2f_expected_but_else(aclutil_addcapabilitybyflag(h_ctx, SpvCapabilityVulkanMemoryModel))
+		ae2f_expected_but_else(aclutil_add_capability_by_flag(h_ctx, SpvCapabilityVulkanMemoryModel))
 			return ACLSPV_COMPILE_ALLOC_FAILED_CFG;
 
 		POS = wrd_ext_count;
@@ -50,12 +51,9 @@ ae2f_always_inline static e_aclspv_compile_t impl_conf(
 	}
 
 	/*** Extension Default **/
-	POS = wrd_ext_count;
-	unless(wrd_ext_count = emit_opcode(&wrd_ext, wrd_ext_count, SpvOpExtension, 0))
-		return ACLSPV_COMPILE_ALLOC_FAILED_CFG;
-	unless(wrd_ext_count = util_emit_str(&wrd_ext, wrd_ext_count, "SPV_KHR_storage_buffer_storage_class"))
-		return ACLSPV_COMPILE_ALLOC_FAILED_CFG;
-	set_oprnd_count_for_opcode(get_wrd_of_vec(&wrd_ext)[POS], (aclspv_wrd_t)(wrd_ext_count - POS - 1));
+	ae2f_ifezerr(aclutil_add_extension_by_flag(h_ctx, "SPV_KHR_storage_buffer_storage_class"))
+		return h_ctx->m_err ? h_ctx->m_err : ACLSPV_COMPILE_UNHANDLED;
+
 
 	/*** Memory Model **/
 	ae2f_expected_but_else(h_ctx->m_count.m_memmodel = util_emitx_3(

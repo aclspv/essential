@@ -25,15 +25,16 @@
 
 #if	!__ae2f_MACRO_GENERATED
 
-#define	k_oper	|=
+#define	k_oper		|=
+#define	k_oper_inc	++
 
 #endif
 
 /** @brief I'm already screwed, so I'll enjoy it. Let's all die. - DXDXFFG */
-ae2f_MAC((L, k_oper, )) aclutil_vcopr(
+ae2f_MAC((L, k_oper, k_oper_inc, )) aclutil_vcopr_v(
 		aclspv_wrd_t* const ae2f_restrict r,
 		const aclspv_wrd_t* const ae2f_restrict rd,
-		aclspv_wrd_t c) {
+		const aclspv_wrd_t c) {
 	;
 	_ae2f_gnuc(N_ae2f_clang(_Pragma("GCC diagnostic push")));
 	_ae2f_gnuc(N_ae2f_clang(_Pragma("GCC diagnostic ignored \"-Wanalyzer-use-of-uninitialized-value\"")));
@@ -48,20 +49,31 @@ ae2f_MAC((L, k_oper, )) aclutil_vcopr(
 			DEFAULT;
 
 			do {
-				CASE(L, 0): *L$$DST++ k_oper *L$$SRC++; FALLTHROUGH;
-				CASE(L, 7): *L$$DST++ k_oper *L$$SRC++; FALLTHROUGH;
-				CASE(L, 6): *L$$DST++ k_oper *L$$SRC++; FALLTHROUGH;
-				CASE(L, 5): *L$$DST++ k_oper *L$$SRC++; FALLTHROUGH;
-				CASE(L, 4): *L$$DST++ k_oper *L$$SRC++; FALLTHROUGH;
-				CASE(L, 3): *L$$DST++ k_oper *L$$SRC++; FALLTHROUGH;
-				CASE(L, 2): *L$$DST++ k_oper *L$$SRC++; FALLTHROUGH;
-				CASE(L, 1): *L$$DST++ k_oper *L$$SRC++;
+				CASE(L, 0): *L$$DST k_oper_inc k_oper *L$$SRC k_oper_inc; FALLTHROUGH;
+				CASE(L, 7): *L$$DST k_oper_inc k_oper *L$$SRC k_oper_inc; FALLTHROUGH;
+				CASE(L, 6): *L$$DST k_oper_inc k_oper *L$$SRC k_oper_inc; FALLTHROUGH;
+				CASE(L, 5): *L$$DST k_oper_inc k_oper *L$$SRC k_oper_inc; FALLTHROUGH;
+				CASE(L, 4): *L$$DST k_oper_inc k_oper *L$$SRC k_oper_inc; FALLTHROUGH;
+				CASE(L, 3): *L$$DST k_oper_inc k_oper *L$$SRC k_oper_inc; FALLTHROUGH;
+				CASE(L, 2): *L$$DST k_oper_inc k_oper *L$$SRC k_oper_inc; FALLTHROUGH;
+				CASE(L, 1): *L$$DST k_oper_inc k_oper *L$$SRC k_oper_inc;
 			} while(--L$$N8 > 0);
 		}
 	}
 
 	;
 	_ae2f_gnuc(N_ae2f_clang(_Pragma("GCC diagnostic pop")));
+}
+
+#if !__ae2f_MACRO_GENERATED
+#define	_aclutil_vcopr_v(L, k_oper, k_oper_inc, r, rd, c) aclutil_vcopr_v(r, rd, c)
+#endif
+
+ae2f_MAC((L, k_oper, ))	aclutil_vcopr(
+		aclspv_wrd_t* const ae2f_restrict r,
+		const aclspv_wrd_t* const ae2f_restrict rd,
+		const aclspv_wrd_t c) {
+	_aclutil_vcopr_v(L, k_oper, ++, r, rd, c);
 }
 
 #endif

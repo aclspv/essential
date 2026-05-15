@@ -8,8 +8,6 @@
 #include "./ctx.h"
 #include "./emitx.h"
 #include <.aclspv/util/u32_to_hex8.h>
-#include "aclspv.h"
-#include "util/log.h"
 
 
 aclspv_wrdcount_t aclutil_find_cursor(

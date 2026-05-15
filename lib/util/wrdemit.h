@@ -97,6 +97,8 @@ static ae2f_inline spvsz_t util_emit_wrd(
 #define set_oprnd_count_for_opcode(cr_wrd, c_num_opprm)	\
 	(cr_wrd) = opcode_to_wrd((cr_wrd & ACLSPV_MASK_OPCODE), ((aclspv_num_opprm_t)(c_num_opprm)))
 
+#include <.aclspv/util/vcopr.h>
+
 /**
  * @fn		emit_str
  * @brief	emit string with word size padded.
@@ -109,9 +111,9 @@ ae2f_inline static spvsz_t util_emit_str(
 		)
 {
 	/** string len: null included. */
-	const size_t	_len		= strlen(rd_str) + 1;
-	const spvsz_t	len		= (_len > (size_t)UINT32_MAX) ? 0 : (spvsz_t)_len;
-	const spvsz_t	pad_wrds	= (!!((len) & 3)) + ((len) >> 2);
+	const size_t	len_		= strlen(rd_str) + 1;
+	const spvsz_t	len		= (len_ > (size_t)0xFFFFFFFF) ? 0 : (spvsz_t)len_;
+	const spvsz_t	pad_wrds	= (len + 3) >> 2;
 
 	ae2f_expected_but_else(len)		return 0;
 

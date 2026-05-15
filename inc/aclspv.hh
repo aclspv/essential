@@ -16,38 +16,38 @@ namespace aclspv {
 
 	struct ctx_base : protected a_aclspv_ctx {
 		public:
-			ae2f_always_inline const a_aclspv_ctx& ae2f_ccconst me() const {
+			ae2f_inline_f const a_aclspv_ctx& ae2f_ccconst me() const {
 				return *this;
 			}
 
-			ae2f_always_inline enum ACLSPV_COMPILE_
+			ae2f_inline_f enum ACLSPV_COMPILE_
 				dump_output1(wrd_t &ae2f_restrict r_output_count,
 						wrd_t *ae2f_restrict const r_output) const {
 					return aclspv_dump_ctx_output1(this, &r_output_count, r_output);
 				}
 
-			ae2f_always_inline enum ACLSPV_COMPILE_
+			ae2f_inline_f enum ACLSPV_COMPILE_
 				dump_output(wrd_t &ae2f_restrict r_output_count) const {
 					return aclspv_dump_ctx_output(this, &r_output_count, 0);
 				}
 
-			ae2f_always_inline enum ACLSPV_COMPILE_
+			ae2f_inline_f enum ACLSPV_COMPILE_
 				dump_output(wrdcount_t &ae2f_restrict r_output_count,
 						wrd_t * ae2f_restrict & ae2f_restrict r_output) const {
 					return aclspv_dump_ctx_output(this, &r_output_count, &r_output);
 				}
 
-			ae2f_always_inline enum ACLSPV_COMPILE_
+			ae2f_inline_f enum ACLSPV_COMPILE_
 				compile(const CXCursor c_cursor) {
 					return aclspv_ctx_compile(this, c_cursor);
 				}
 
-			ae2f_always_inline enum ACLSPV_COMPILE_
+			ae2f_inline_f enum ACLSPV_COMPILE_
 				compile1(const CXTranslationUnit c_cxtu) {
 					return aclspv_ctx_compile1(this, c_cxtu);
 				}
 
-			ae2f_always_inline enum ACLSPV_COMPILE_ compile2(
+			ae2f_inline_f enum ACLSPV_COMPILE_ compile2(
 					struct CXUnsavedFile *ae2f_restrict const rdwr_unsaved,
 					const unsigned c_unsaved_count,
 					const char *ae2f_restrict const *ae2f_restrict const rd_argv_opt,
@@ -58,7 +58,7 @@ namespace aclspv {
 						h_cxidx);
 			}
 
-			ae2f_always_inline enum ACLSPV_COMPILE_ compile3(
+			ae2f_inline_f enum ACLSPV_COMPILE_ compile3(
 					struct CXUnsavedFile *ae2f_restrict const rdwr_unsaved,
 					const unsigned c_unsaved_count,
 					const char *ae2f_restrict const *ae2f_restrict const rd_argv_opt,
@@ -67,27 +67,39 @@ namespace aclspv {
 						rd_argv_opt, c_argc, rwr_cxerr_opt);
 			}
 
-			ae2f_always_inline ae2f_ccpure aclspv_bool_t	chck_capability(
+			ae2f_inline_f ae2f_ccpure aclspv_bool_t	chck_capability(
 					const enum SpvCapability_		c_cap
 					) const {
 				return aclspv_chck_capability_from_ctx(this, c_cap);
 			}
 
-			ae2f_always_inline aclspv_bool_t	add_capability(
+			ae2f_inline_f aclspv_bool_t	add_capability(
 					const enum SpvCapability_		c_cap
 					) {
 				return aclspv_add_capability_from_ctx(this, c_cap);
 			}
 
+			ae2f_inline_f ae2f_ccpure aclspv_bool_t	chck_extension(
+					const char* const	rd_ext
+					) const {
+				return aclspv_chck_extension_from_ctx(this, rd_ext);;
+			}
+
+			ae2f_inline_f aclspv_bool_t	add_extension(
+					const char* const	rd_ext
+					) {
+				return aclspv_add_extension_from_ctx(this, rd_ext);
+			}
+
 		protected:
-			ae2f_always_inline ctx_base() {}
+			ae2f_inline_f ctx_base() {}
 	};
 
 	typedef enum ACLSPV_CTX_FLAG0_ CTX_FLAG0_;
 
 	struct ctx : public ctx_base {
 		public:
-			ae2f_always_inline ctx(const wrd_t c_init_size_exp,
+			ae2f_inline_f ctx(const wrd_t c_init_size_exp,
 					const wrd_t c_init_flag0,
 					const wrd_t c_spirv_version) {
 				e_aclspv_compile_t A = aclspv_init_ctx(

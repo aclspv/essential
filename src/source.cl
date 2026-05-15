@@ -5,33 +5,24 @@
  * macros will be defined in opencl-base.h
  **/
 
-#define	double float
-
 typedef vector(4) float float4;
+typedef vector(4) double double4;
+typedef vector(4) long long4;
 typedef vector(4) int int4;
 
-kernel_raw(0) void KERNEL() {
-	{
-		float4 a; 
-		float4 b;
-		a += b;
-		goto L0; 
-L0:
-		a += b;
-	}
+#if 1
+kernel_raw(0) void KERNEL(void) {
+K:
+	double4	c, c1, c2;
+	float4	d = c + c;
+	float4	a = d + d;
+	c += a;
+	c2 += c;
+	goto K;
 
-	{
-		float4	a;
-		int4	b;
-
-		a += b;
-		goto L0; 
-L0:
-
-		a += b;
-	}
-	return;
+	float4 c3 = c2;
 }
+#endif
 
 __attribute__((annotate("reqd_work_group_size(3, 4, 2)"))) /** work group size should be specified on constant time. */
 kernel_raw(5) void N_KERNEL_0(
@@ -42,11 +33,14 @@ kernel_raw(5) void N_KERNEL_0(
 	btcast float a0 = 1078774989;
 	char a1 specid(0);
 	int a2 = a0 + (a0 += a1);
-#if 0
+#if 1
 	btcast long a = (double)(int)(float)(a0 + a1 + a2);
 
-	if(0) { int B = 3; a2 += (B -= 2); } 
-	else if(a) { bratio(3, 3) int B = 4; a2 += B; if(1) { int C = 3; a2 += C; } }  else {}
+	{
+		if(0) { int B = 3; a2 += (B -= 2); }
+		else if(a) { bratio(3, 3) int B = 4; a2 += B; if(1) { int C = 3; a2 += C; } }
+		else {}
+	}
 
 	while(a2 -= 1) {
 		bratio(0, 0) int AAA;

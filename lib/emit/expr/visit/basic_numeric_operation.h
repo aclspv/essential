@@ -6,8 +6,6 @@
 #ifndef	aclexpr_visit_basic_numeric_operation_h
 #define aclexpr_visit_basic_numeric_operation_h
 
-#include <clang-c/CXString.h>
-#include <clang-c/Index.h>
 #include <util/scale.h>
 #include <util/op.h>
 #include <util/emitx.h>

@@ -211,7 +211,7 @@ aclspv_bool_t	aclid_is_arithmetic(const aclspv_id_t c_id, const h_aclspv_ctx_t h
 {
 	ae2fpat_assertassume(h_ctx);
 
-	if(aclutil_cxtp_get_veccfg(c_id, h_ctx).m_num)
+	if(aclutil_cxtp_get_veccfg(c_id, h_ctx).m_num > 1)
 		return 1;
 
 	return aclid_is_vectorisable(c_id);
@@ -267,7 +267,7 @@ aclspv_id_t aclid_mk_default_id(
 		h_util_ctx_t	h_ctx
 		)
 {
-	ae2fpat_assertassume_strict(h_ctx);
+	ae2fpat_assertassume(h_ctx);
 	if(c_id_default == ID_DEFAULT_END)
 		return 0;
 
@@ -278,7 +278,6 @@ aclspv_id_t aclid_mk_default_id(
 #define	ret_count	h_ctx->m_count.m_types
 	switch(c_id_default) {
 		case ID_DEFAULT_END:
-			ae2f_unreachable();
 		default:
 			return 0;
 
@@ -316,7 +315,7 @@ aclspv_id_t aclid_mk_default_id(
 						, 64, 1))
 				return 0;
 
-			ae2f_expected_but_else(aclutil_addcapabilitybyflag(CTX, SpvCapabilityInt64)) 
+			ae2f_expected_but_else(aclutil_add_capability_by_flag(CTX, SpvCapabilityInt64)) 
 				return 0;
 			break;
 
@@ -330,7 +329,7 @@ aclspv_id_t aclid_mk_default_id(
 						, 64, 0))
 				return 0;
 
-			ae2f_expected_but_else(aclutil_addcapabilitybyflag(CTX, SpvCapabilityInt64)) 
+			ae2f_expected_but_else(aclutil_add_capability_by_flag(CTX, SpvCapabilityInt64)) 
 				return 0;
 			break;
 		case ID_DEFAULT_U32:
@@ -365,7 +364,7 @@ aclspv_id_t aclid_mk_default_id(
 						, 16, 0))
 				return 0;
 
-			ae2f_expected_but_else(aclutil_addcapabilitybyflag(CTX, SpvCapabilityInt16)) 
+			ae2f_expected_but_else(aclutil_add_capability_by_flag(CTX, SpvCapabilityInt16)) 
 				return 0;
 
 			break;
@@ -380,7 +379,7 @@ aclspv_id_t aclid_mk_default_id(
 						, 16, 1))
 				return 0;
 
-			ae2f_expected_but_else(aclutil_addcapabilitybyflag(CTX, SpvCapabilityInt16)) 
+			ae2f_expected_but_else(aclutil_add_capability_by_flag(CTX, SpvCapabilityInt16)) 
 				return 0;
 
 			break;
@@ -395,7 +394,7 @@ aclspv_id_t aclid_mk_default_id(
 						, 8, 0))
 				return 0;
 
-			ae2f_expected_but_else(aclutil_addcapabilitybyflag(CTX, SpvCapabilityInt8)) 
+			ae2f_expected_but_else(aclutil_add_capability_by_flag(CTX, SpvCapabilityInt8)) 
 				return 0;
 			break;
 
@@ -409,7 +408,7 @@ aclspv_id_t aclid_mk_default_id(
 						, 8, 1))
 				return 0;
 
-			ae2f_expected_but_else(aclutil_addcapabilitybyflag(CTX, SpvCapabilityInt8)) 
+			ae2f_expected_but_else(aclutil_add_capability_by_flag(CTX, SpvCapabilityInt8)) 
 				return 0;
 			break;
 
@@ -422,7 +421,7 @@ aclspv_id_t aclid_mk_default_id(
 						, 16
 						)) return 0;
 
-			ae2f_expected_but_else(aclutil_addcapabilitybyflag(CTX, SpvCapabilityFloat16)) 
+			ae2f_expected_but_else(aclutil_add_capability_by_flag(CTX, SpvCapabilityFloat16)) 
 				return 0;
 			break;
 
@@ -445,7 +444,7 @@ aclspv_id_t aclid_mk_default_id(
 						, 64
 						)) return 0;
 
-			ae2f_expected_but_else(aclutil_addcapabilitybyflag(CTX, SpvCapabilityFloat64)) 
+			ae2f_expected_but_else(aclutil_add_capability_by_flag(CTX, SpvCapabilityFloat64)) 
 				return 0;
 			break;
 	}

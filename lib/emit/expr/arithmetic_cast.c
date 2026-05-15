@@ -11,7 +11,7 @@
 #include <util/cxtp.h>
 
 #include "../expr.h"
-#include "util/log.h"
+#include "ae2f/cc.h"
 
 
 static enum EMIT_EXPR_ s_non_literal_novec(
@@ -282,7 +282,7 @@ static enum EMIT_EXPR_ s_non_literal_novec(
 
 	if(aclid_is_int(c_new_type)) {
 		*r_newid = h_ctx->m_id;
-		ae2f_expected_but_else(h_ctx->m_count.m_fnimpl
+		ae2f_ifezerr(h_ctx->m_count.m_fnimpl
 				= util_emitx_4(
 					&h_ctx->m_section.m_fnimpl
 					, h_ctx->m_count.m_fnimpl
@@ -312,14 +312,17 @@ static enum EMIT_EXPR_ s_non_literal_vec(
 	struct aclutil_cxtp_veccfg_t 
 		VCFG_OLD, VCFG_NEW;
 
-	unless(aclid_is_arithmetic(c_old_type, h_ctx) && aclid_is_arithmetic(c_new_type, h_ctx))
+	unless(aclid_is_arithmetic(c_old_type, h_ctx) && aclid_is_arithmetic(c_new_type, h_ctx)) {
+		warn_puts("[s_non_literal_vec::no_arithmetic]");
 		return EMIT_EXPR_NOT_THE_CASE;
+	}
 
 	/** old and new */
 	VCFG_OLD = aclutil_cxtp_get_veccfg(c_old_type, h_ctx);
 	VCFG_NEW = aclutil_cxtp_get_veccfg(c_new_type, h_ctx);
 
-	if(VCFG_OLD.m_num == VCFG_NEW.m_num) {
+	unless(VCFG_OLD.m_num ^ VCFG_NEW.m_num) {
+		dbg_puts("[s_non_literal_vec::s_non_literal_novec]");
 		return s_non_literal_novec(
 				c_old_id
 				, VCFG_OLD.m_ty_elm
@@ -329,7 +332,7 @@ static enum EMIT_EXPR_ s_non_literal_vec(
 				, h_ctx
 				, c_new_type
 				);
-	} else if(VCFG_NEW.m_num && !VCFG_OLD.m_num) {
+	} else if(VCFG_NEW.m_num ^ 1 && !(VCFG_OLD.m_num ^ 1)) {
 		aclspv_wrd_t	IDXV = VCFG_NEW.m_num;
 		aclspv_id_t	VID;
 
@@ -337,14 +340,13 @@ static enum EMIT_EXPR_ s_non_literal_vec(
 				_aclspv_malloc
 				, _aclspv_free
 				, h_ctx->m_tmp.m_v0
-				, count_to_sz(IDXV));
+				, count_to_sz(IDXV)
+				);
 
 		ae2f_ifezerr(h_ctx->m_tmp.m_v0.m_p) {
 			h_ctx->m_err = ACLSPV_COMPILE_ALLOC_FAILED;
 			return EMIT_EXPR_FAILURE;
 		}
-
-		ae2fpat_assertassume(IDXV <= h_ctx->m_tmp.m_v0.m_sz);
 
 		while(IDXV-- && ae2f_expected_strict(IDXV < VCFG_NEW.m_num)) {
 			get_wrd_of_vec(&h_ctx->m_tmp.m_v0)[c_old_id]
@@ -370,11 +372,13 @@ static enum EMIT_EXPR_ s_non_literal_vec(
 				, h_ctx
 				, c_new_type
 				);
-	} else if(!VCFG_NEW.m_num && VCFG_OLD.m_num) {
-
+	} else ae2f_ifneznrm(1 == VCFG_NEW.m_num && 1 != VCFG_OLD.m_num) {
+		return EMIT_EXPR_NOT_THE_CASE;
+	} else ae2f_ifnezerr(1) {
+		return EMIT_EXPR_NOT_THE_CASE;
 	}
 
-	return EMIT_EXPR_NOT_THE_CASE;
+	ae2f_unreachable();
 }
 
 enum EMIT_EXPR_ aclexpr_arithmetic_cast_non_literal(
@@ -411,6 +415,8 @@ enum EMIT_EXPR_ aclexpr_arithmetic_cast_non_literal(
 			return R;
 	}
 
+	dbg_puts("[aclexpr_arithmetic_cast_non_literal::s_non_literal_vec]");
+
 	return s_non_literal_vec(
 			c_old_id
 			, c_old_type
@@ -438,7 +444,7 @@ enum EMIT_EXPR_ aclexpr_arithmetic_cast_literal(
 					, c_old_type, c_new_type
 				    )));
 
-	ae2f_expected_but_else(aclid_is_arithmetic(c_old_type, h_ctx) && aclid_is_arithmetic(c_new_type, h_ctx)) {
+	ae2f_expected_but_else(aclid_is_vectorisable(c_old_type) && aclid_is_vectorisable(c_new_type)) {
 		return EMIT_EXPR_NOT_THE_CASE;
 	}
 
@@ -632,13 +638,20 @@ enum EMIT_EXPR_ aclexpr_arithmetic_cast(
 	(void)aclid_mk_default_id(c_old_type, h_ctx);
 
 	if(c_flag_literal & UTIL_LITERAL_LITERAL) {
-		return aclexpr_arithmetic_cast_literal(
+		const enum EMIT_EXPR_ R = aclexpr_arithmetic_cast_literal(
 				c_old_type
 				, c_old_literal
 				, r_newid
 				, c_new_type
 				, wr_new_literal_opt
 				, h_ctx);
+
+		if(R == EMIT_EXPR_NOT_THE_CASE) aclexpr_arithmetic_cast_non_literal(
+			c_old_id
+			, c_old_type
+			, c_flag_literal, r_newid
+			, c_new_type, h_ctx
+			);
 	}
 
 	return aclexpr_arithmetic_cast_non_literal(

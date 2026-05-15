@@ -8,6 +8,7 @@
 #include "./visit.h"
 #include "./carve.h"
 #include "aclspv.h"
+#include "ae2f/cc.h"
 #include "util/log.h"
 
 #include "./visit/simple.h"
@@ -105,7 +106,7 @@ enum CXChildVisitResult aclexpr_visit(
 	{
 		default:
 		case EMIT_EXPR_FAILURE:
-			assert(0 && "FAILURE_expr_bin2");
+			CTX->m_err = CTX->m_err ? CTX->m_err : ACLSPV_COMPILE_UNHANDLED_BODY;
 			return CXChildVisit_Break;
 
 		case EMIT_EXPR_SUCCESS:
@@ -288,10 +289,12 @@ enum CXChildVisitResult aclexpr_visit(
 			return ae2f_bll_sel_bool_naive1(uint_leastenum_t, CTX->m_err, CXChildVisit_Break, CXChildVisit_Continue);
 
 		case EMIT_EXPR_NOT_THE_CASE:
-			dbg_puts("Operator 1: not the case");
+			dbg_puts("[nocase] s_simple");
 			break;
 		default:
-			ae2fpat_assertassume(0);
+			ae2f_unreachable();
+			CTX->m_err = ACLSPV_COMPILE_MET_INVAL_UNREACHABLE;
+			return CXChildVisit_Break;
 	}
 
 	switch(s_cast_numeric(
@@ -301,7 +304,7 @@ enum CXChildVisitResult aclexpr_visit(
 			     )) {
 		default:
 		case EMIT_EXPR_FAILURE:
-			assert(0 && "FAILURE_expr_bin1");
+			CTX->m_err = CTX->m_err ? CTX->m_err : ACLSPV_COMPILE_UNHANDLED_BODY;
 			return CXChildVisit_Break;
 
 		case EMIT_EXPR_SUCCESS:

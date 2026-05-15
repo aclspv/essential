@@ -8,8 +8,9 @@ static char s_src0[
 	sizeof(SRC0_0)
 	+ sizeof(SRC0_1) - 1
 	+ sizeof(SRC0_2) - 1
-	+ sizeof(SRC0_3) - 1
+
 #if 0
+	+ sizeof(SRC0_3) - 1
 	+ sizeof(SRC0_4) - 1
 	+ sizeof(SRC0_5) - 1
 	+ sizeof(SRC0_6) - 1

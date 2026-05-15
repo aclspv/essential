@@ -78,7 +78,7 @@ struct	emit_decl_glob_obj_visit_fetch_data {
 	h_aclspv_ctx_t		m_ctx;
 };
 
-static enum CXChildVisitResult emit_decl_glob_obj_visit_fetch(CXCursor h_cur, CXCursor h_parent, CXClientData h_data) {
+static enum CXChildVisitResult emit_decl_glob_obj_visit_fetch(CXCursor h_cur, CXCursor h_parent, CXClientData ae2f_restrict h_data) {
 	ae2f_unused aclspv_wrdcount_t	POS_FOR_LOCAL = 0xFFFFFFFF;
 	CXString	PARAM_TY_NAME;
 	CXType		PARAM_TY;

@@ -79,7 +79,7 @@ ACLSPV_ABI_IMPL aclspv_bool_t aclspv_add_capability_from_ctx(
 				&h_ctx->m_section.m_capability
 				, h_ctx->m_count.m_capability
 				, SpvOpCapability
-				, 0)) {
+				, KEY)) {
 		h_ctx->m_err = ACLSPV_COMPILE_ALLOC_FAILED_CAPABILITY;
 		return 0;
 	}
@@ -87,11 +87,10 @@ ACLSPV_ABI_IMPL aclspv_bool_t aclspv_add_capability_from_ctx(
 	BASE	= ((aclspv_wrd_t*)(h_ctx->m_section.m_capability.m_p));
 
 	if(COUNT > LEFT) {
-		aclspv_wrd_t		C = COUNT - LEFT;
+		aclspv_wrd_t		C = COUNT;
 
-		while(C--) {
+		while(C-- > LEFT) {
 			BASE[(C << 1) + 3] = BASE[(C << 1) + 1];
-			--BASE;
 		}
 
 	}	/** memmove */

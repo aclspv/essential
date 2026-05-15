@@ -1,5 +1,6 @@
 #include <util/cxtp.h>
 #include <util/log.h>
+#include <util/iddef.h>
 #include <ae2f/pat/dbg.h>
 
 struct aclutil_cxtp_veccfg_t	aclutil_cxtp_get_veccfg(
@@ -12,6 +13,14 @@ struct aclutil_cxtp_veccfg_t	aclutil_cxtp_get_veccfg(
 	ae2fpat_assertassume(h_ctx);
 	ae2fpat_assertassume(P);
 
+	if(aclid_is_vectorisable(c_ty_vec)) {
+		struct aclutil_cxtp_veccfg_t	R;
+		R.m_num		= 1;
+		R.m_ty_elm	= c_ty_vec;
+
+		return R;
+	}
+
 	while(IDX--
 			&& ((P[IDX].m_class != ACLUTIL_CXTYPE_VECTOR) || P[IDX].m_type_id != c_ty_vec)) 
 	{}
@@ -21,7 +30,7 @@ struct aclutil_cxtp_veccfg_t	aclutil_cxtp_get_veccfg(
 					, IDX, h_ctx->m_num_type_uniques
 					, c_ty_vec)));
 
-	if(IDX < h_ctx->m_num_type_uniques) {
+	ae2f_ifneznrm(IDX < h_ctx->m_num_type_uniques) {
 		struct aclutil_cxtp_veccfg_t	R;
 		R.m_num		= P[IDX].m_info.m_vec.m_num;
 		R.m_ty_elm	= P[IDX].m_info.m_vec.m_type;

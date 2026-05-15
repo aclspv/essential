@@ -1,5 +1,6 @@
 #include "./entp_body.h"
 #include "./expr.h"
+#include "util/log.h"
 
 #include <.aclspv/emit/body/if.h>
 #include <.aclspv/emit/body/while.h>
@@ -15,6 +16,7 @@
 
 #include <clang-c/CXString.h>
 
+#include <clang-c/Index.h>
 #include <util/constant.h>
 #include <util/scale.h>
 #include <util/literal.h>
@@ -134,9 +136,20 @@ enum CXChildVisitResult aclemit_entp_body(CXCursor h_cur, ae2f_unused CXCursor h
 			{
 				CXCursor LBL_STMT = clang_getCursorReferenced(h_cur);
 				aclspv_wrdcount_t IDX;
-				assert(LBL_STMT.kind == CXCursor_LabelStmt);
-				ae2f_expected_but_else(LBL_STMT.kind == CXCursor_LabelStmt)
+				ae2f_expected_but_else(LBL_STMT.kind == CXCursor_LabelStmt) {
+					CXString CURSORSPL = clang_getCursorDisplayName(h_cur);
+
+					err_prefix(a);
+					err_call((void), fprintf(stderr
+								, "goto ref not label. Kind: %u | %s\n"
+								, (unsigned)LBL_STMT.kind
+								, clang_getCString(CURSORSPL)
+								));
+
+					clang_disposeString(CURSORSPL);
+
 					jmpfail(ACLSPV_COMPILE_MET_INVAL);
+				}
 
 				IDX = aclutil_mk_cursor_base(
 						CTX->m_num_cursor

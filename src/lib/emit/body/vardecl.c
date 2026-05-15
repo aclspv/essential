@@ -9,7 +9,6 @@
 
 #include <attr/specid.h>
 #include <attr/btcast.h>
-#include <attr/vecdecl.h>
 
 #include <emit/expr.h>
 
@@ -26,172 +25,38 @@ ae2f_MAC((L, )) aclemit_body_vardecl(CXCursor h_cur, aclutil_fnctx* ae2f_restric
 			, &L$$CTX->m_cursors
 			, h_cur);
 
-	aclspv_id_t		L$$TYPE_PTR = 0, L$$TYPE_VEC = 0;
+	aclspv_id_t		L$$TYPE_PTR = 0;
 
 	aclspv_wrdcount_t	L$$ORIGIN_CURSORS_NUM = L$$CTX->m_num_cursor;
 
 	const CXType	L$$TYPE = clang_getCanonicalType(clang_getCursorType(h_cur));
 	util_cursor* L$$PCURSOR = &((util_cursor* ae2f_restrict)L$$CTX->m_cursors.m_p)[L$$IDX];
 
-	const aclspv_wrd_t	L$$VECNUM_	= aclattr_vecdecl(0, h_cur);
-	const aclspv_wrd_t	L$$VECNUM	= L$$VECNUM_ ? L$$VECNUM_ : aclattr_vecdecl(1
-			, clang_getTypeDeclaration(clang_getCursorType(h_cur)));
-
 	ae2f_unexpected_but_if(L$$IDX == L$$CTX->m_num_cursor + 1)
 		goto L$$LBL_END;
 
 	L$$CTX->m_num_cursor += L$$IDX == L$$CTX->m_num_cursor;
 
-	ae2f_ifnezerr(0) {	/** arithmetic */
-		ae2f_unreachable();
-		L$$ARITHMETIC_VEC:
+	if((L$$PCURSOR->m_data.m_vardecl.m_type_id = aclutil_mk_cxtp_by_cursor2(h_cur, L$$CTX))) {
 		L$$TYPE_PTR = aclutil_mk_cxtp_ptr(
-				L$$PCURSOR->m_data.m_vardecl.m_type_id = L$$TYPE_VEC
+				L$$PCURSOR->m_data.m_vardecl.m_type_id
 				, SpvStorageClassFunction
 				, L$$CTX
 				);
 
+		L$$PCURSOR->m_data.m_vardecl.m_etype_id = aclutil_cxtp_get_veccfg(L$$PCURSOR->m_data.m_vardecl.m_type_id, L$$CTX).m_ty_elm;
+
 		dbg_prefix(a);
 		dbg_call((void), (fprintf(stderr, "etype: %u type: %u\n"
-				, (unsigned)L$$PCURSOR->m_data.m_vardecl.m_etype_id
-				, (unsigned)L$$PCURSOR->m_data.m_vardecl.m_type_id
-			)));
+						, (unsigned)L$$PCURSOR->m_data.m_vardecl.m_etype_id
+						, (unsigned)L$$PCURSOR->m_data.m_vardecl.m_type_id
+					 )));
 
 		goto L$$VDECL_TY;
 	}
 
-	switch((uintmax_t)L$$TYPE.kind) {
-		case CXType_UInt:
-			ae2f_expected_but_else(aclid_mk_default_id(ID_DEFAULT_U32, L$$CTX))
-				goto L$$LBL_END;
-
-			L$$TYPE_VEC = aclutil_mk_cxtp_vec(
-					L$$PCURSOR->m_data.m_vardecl.m_etype_id = ID_DEFAULT_U32
-					, L$$VECNUM
-					, L$$CTX);
-
-			goto L$$ARITHMETIC_VEC;
-
-		case CXType_UShort:
-			ae2f_expected_but_else(aclid_mk_default_id(ID_DEFAULT_U16, L$$CTX))
-				goto L$$LBL_END;
-
-			L$$TYPE_VEC = aclutil_mk_cxtp_vec(
-					L$$PCURSOR->m_data.m_vardecl.m_etype_id = ID_DEFAULT_U16
-					, L$$VECNUM
-					, L$$CTX);
-
-
-			goto L$$ARITHMETIC_VEC;
-
-		case CXType_Char_U:
-		case CXType_UChar:
-			ae2f_expected_but_else(aclid_mk_default_id(ID_DEFAULT_U8, L$$CTX))
-				goto L$$LBL_END;
-
-			L$$TYPE_VEC = aclutil_mk_cxtp_vec(
-					L$$PCURSOR->m_data.m_vardecl.m_etype_id = ID_DEFAULT_U8
-					, L$$VECNUM
-					, L$$CTX);
-
-
-			goto L$$ARITHMETIC_VEC;
-
-		case CXType_Int:
-			ae2f_expected_but_else(aclid_mk_default_id(ID_DEFAULT_I32, L$$CTX))
-				goto L$$LBL_END;
-
-			L$$TYPE_VEC = aclutil_mk_cxtp_vec(
-					L$$PCURSOR->m_data.m_vardecl.m_etype_id = ID_DEFAULT_I32
-					, L$$VECNUM
-					, L$$CTX);
-
-			goto L$$ARITHMETIC_VEC;
-
-		case CXType_Short:
-			ae2f_expected_but_else(aclid_mk_default_id(ID_DEFAULT_I16, L$$CTX))
-				goto L$$LBL_END;
-
-			L$$TYPE_VEC = aclutil_mk_cxtp_vec(
-					L$$PCURSOR->m_data.m_vardecl.m_etype_id = ID_DEFAULT_I16
-					, L$$VECNUM
-					, L$$CTX);
-
-			goto L$$ARITHMETIC_VEC;
-
-		case CXType_SChar:
-		case CXType_Char_S:
-			ae2f_expected_but_else(aclid_mk_default_id(ID_DEFAULT_I8, L$$CTX))
-				goto L$$LBL_END;
-
-			L$$TYPE_VEC = aclutil_mk_cxtp_vec(
-					L$$PCURSOR->m_data.m_vardecl.m_etype_id = ID_DEFAULT_I8
-					, L$$VECNUM
-					, L$$CTX);
-
-			goto L$$ARITHMETIC_VEC;
-
-		case CXType_ULongLong:
-		case CXType_ULong:
-			ae2f_expected_but_else(aclid_mk_default_id(ID_DEFAULT_U64, L$$CTX))
-				goto L$$LBL_END;
-
-			L$$TYPE_VEC = aclutil_mk_cxtp_vec(
-					L$$PCURSOR->m_data.m_vardecl.m_etype_id = ID_DEFAULT_U64
-					, L$$VECNUM
-					, L$$CTX);
-
-
-			goto L$$ARITHMETIC_VEC;
-
-		case CXType_LongLong:
-		case CXType_Long:
-			ae2f_expected_but_else(aclid_mk_default_id(ID_DEFAULT_I64, L$$CTX))
-				goto L$$LBL_END;
-
-			L$$TYPE_VEC = aclutil_mk_cxtp_vec(
-					L$$PCURSOR->m_data.m_vardecl.m_etype_id = ID_DEFAULT_I64
-					, L$$VECNUM
-					, L$$CTX);
-
-
-			goto L$$ARITHMETIC_VEC;
-
-		case CXType_BFloat16:
-		case CXType_Float16:
-			ae2f_expected_but_else(aclid_mk_default_id(ID_DEFAULT_F16, L$$CTX))
-				goto L$$LBL_END;
-
-			L$$TYPE_VEC = aclutil_mk_cxtp_vec(
-					L$$PCURSOR->m_data.m_vardecl.m_etype_id = ID_DEFAULT_F16
-					, L$$VECNUM
-					, L$$CTX);
-
-			goto L$$ARITHMETIC_VEC;
-
-		case CXType_Float:
-			ae2f_expected_but_else(aclid_mk_default_id(ID_DEFAULT_F32, L$$CTX))
-				goto L$$LBL_END;
-
-			L$$TYPE_VEC = aclutil_mk_cxtp_vec(
-					L$$PCURSOR->m_data.m_vardecl.m_etype_id = ID_DEFAULT_F32
-					, L$$VECNUM
-					, L$$CTX);
-
-			goto L$$ARITHMETIC_VEC;
-
-		case CXType_Double:
-			ae2f_expected_but_else(aclid_mk_default_id(ID_DEFAULT_F64, L$$CTX))
-				goto L$$LBL_END;
-
-			L$$TYPE_VEC = aclutil_mk_cxtp_vec(
-					L$$PCURSOR->m_data.m_vardecl.m_etype_id = ID_DEFAULT_F64
-					, L$$VECNUM
-					, L$$CTX);
-
-			goto L$$ARITHMETIC_VEC;
-
-			/** complex types. we make it later. */
+	else switch((uint_leastenum_t)L$$TYPE.kind) {
+		/** complex types. we make it later. */
 
 		case CXType_Record:
 			{
@@ -223,18 +88,20 @@ ae2f_MAC((L, )) aclemit_body_vardecl(CXCursor h_cur, aclutil_fnctx* ae2f_restric
 						fprintf, (
 							stderr
 							, "Met the unknown type(%u): %s\n"
-							, L$$TYPE.kind
+							, (unsigned)L$$TYPE.kind
 							, (const char*)L$$NAME.data
 							);
-					)
-					clang_disposeString(L$$NAME);
+					);
+				L$$CTX->m_err = ACLSPV_COMPILE_MET_INVAL;
+				clang_disposeString(L$$NAME);
+				goto L$$LBL_END;
 			}
 			break;
 	}
 
 	L$$VDECL_TY:
 
-	ae2f_expected_but_else(L$$TYPE_PTR)
+		ae2f_expected_but_else(L$$TYPE_PTR)
 		goto L$$LBL_END;
 
 	L$$PCURSOR->m_data.m_vardecl.m_ptr_type_id = L$$TYPE_PTR;
@@ -243,16 +110,23 @@ ae2f_MAC((L, )) aclemit_body_vardecl(CXCursor h_cur, aclutil_fnctx* ae2f_restric
 	L$$PCURSOR->m_data.m_vardecl.m_mask = 0;
 	L$$PCURSOR->m_data.m_vardecl.m_stage_lvl = h_fnctx->m_var_stage;
 
-	if(aclid_is_arithmetic(L$$PCURSOR->m_data.m_vardecl.m_type_id, L$$CTX)) {
-		aclspv_wrdcount_t L$$STAGEDIDX = aclutil_from_cursor_find_stagedval(L$$ORIGIN_CURSORS_NUM
+	dbg_call((void), fprintf(stderr, "[vardecl] ptr %u ty %u ety %u\n"
+				, (unsigned)L$$PCURSOR->m_data.m_vardecl.m_ptr_type_id
+				, (unsigned)L$$PCURSOR->m_data.m_vardecl.m_type_id
+				, (unsigned)L$$PCURSOR->m_data.m_vardecl.m_etype_id
+				));
+
+	{
+		aclspv_wrdcount_t L$$STAGEDIDX = aclutil_from_cursor_find_stagedval(
+				L$$ORIGIN_CURSORS_NUM
 				, &h_fnctx->m_ctx->m_cursors
 				, L$$PCURSOR->m_data.m_vardecl.m_stage_lvl
-				, L$$TYPE_PTR);
+				, L$$TYPE_PTR
+				);
 
 		dbg_puts("we will find owner");
 
 		if(L$$STAGEDIDX < L$$ORIGIN_CURSORS_NUM) {
-			(void)L$$CTX->m_id;
 			L$$PCURSOR->m_data.m_vardecl.m_mask &= ~(aclspv_wrd_t)ACLUTIL_CURSOR_VAR_OWNER;
 			L$$PCURSOR->m_data.m_vardecl.m_id
 				= L$$PCURSOR[L$$STAGEDIDX - L$$IDX].m_data.m_vardecl.m_id;
@@ -265,9 +139,8 @@ ae2f_MAC((L, )) aclemit_body_vardecl(CXCursor h_cur, aclutil_fnctx* ae2f_restric
 		L$$PCURSOR->m_data.m_vardecl.m_mask |= ACLUTIL_CURSOR_VAR_OCCUPIED;
 	}
 
-	if(aclid_is_arithmetic(L$$PCURSOR->m_data.m_vardecl.m_type_id, L$$CTX))
+	if(aclid_is_vectorisable(L$$PCURSOR->m_data.m_vardecl.m_type_id))
 	{
-		CXCursor	L$$VAR_INIT = clang_Cursor_getVarDeclInitializer(h_cur);
 		aclspv_id_t	L$$SPECID = 0xFFFFFFFF;
 
 		clang_visitChildren(h_cur, s_attr_specid, &L$$SPECID);
@@ -324,10 +197,12 @@ ae2f_MAC((L, )) aclemit_body_vardecl(CXCursor h_cur, aclutil_fnctx* ae2f_restric
 				}
 			}
 
-
 			goto L$$LBL_END;
 		}
+	}
 
+	{
+		CXCursor	L$$VAR_INIT = clang_Cursor_getVarDeclInitializer(h_cur);
 		unless(clang_Cursor_isNull(L$$VAR_INIT)) {
 			fn_aclspv_get_expr_t*	L$$FN_GETEXPR = aclspv_get_expr;
 
