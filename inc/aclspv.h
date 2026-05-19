@@ -20,13 +20,22 @@
  * @brief Declaration as ABI
  * */
 
-#if ae2f_IS_SHARED
-#define ACLSPV_ABI_DECL ae2f_decl
-#define ACLSPV_ABI_IMPL	ae2f_impl
-#else
-#define ACLSPV_ABI_DECL
-#define ACLSPV_ABI_IMPL
+#ifndef	ACLSPVLIB
+#	define	ACLSPVLIB	0
 #endif
+
+#if	ae2f_IS_SHARED
+#	if ACLSPVLIB
+#		define ACLSPV_ABI_LINK	ae2f_impl
+#	else
+#		define ACLSPV_ABI_LINK	ae2f_decl
+#	endif
+#else
+#	define	ACLSPV_ABI_LINK
+#endif
+
+#define	ACLSPV_ABI_IMPL	ACLSPV_ABI_LINK
+#define	ACLSPV_ABI_DECL	ACLSPV_ABI_LINK
 
 #include <ae2f/c90/StdInt.h>
 #include <stddef.h>

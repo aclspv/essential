@@ -13,7 +13,7 @@ int main(void) {
 	struct CXUnsavedFile files[2];
 	const char *ARG[] = {"main.cl"};
 	enum ACLSPV_COMPILE_ RET;
-	aclspv::ctx CTX(2,
+	aclspv::ctx CTX(12,
 				    ACLSPV_CTX_FLAG0_SYMBOL
 				    | ACLSPV_CTX_FLAG0_OGL
 				    | ACLSPV_CTX_FLAG0_LOGICAL

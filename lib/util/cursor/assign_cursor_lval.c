@@ -112,7 +112,7 @@ aclspv_id_t aclutil_assign_cursor_lval(
 		return 0;
 	}
 
-	{
+	if(h_ctx->m_flag0 & ACLSPV_CTX_FLAG0_SYMBOL) {
 		CXString SPL = clang_getCursorSpelling((wr_cursor)->m_cursor);
 
 		if(SPL.data) {

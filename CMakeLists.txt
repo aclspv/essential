@@ -91,6 +91,8 @@ target_link_libraries(ae3f-aclspv-common
 	INTERFACE	ae2f::Core
 	)
 
+target_compile_definitions(ae3f-aclspv PRIVATE ACLSPVLIB=1)
+
 target_link_libraries(ae3f-aclspv		PRIVATE		ae3f::aclspvCore)
 target_link_libraries(ae3f-aclspv		PUBLIC		ae3f::aclspv-common)
 
@@ -107,6 +109,7 @@ ae2f_FileRaw_Run_One2(
 	${PROJECT_BINARY_DIR}/testinc/.acltest/ocl.h
 	"OCLBASE"
 	)
+
 add_library(
 	ae3f-aclspv-test	INTERFACE
 	${PROJECT_BINARY_DIR}/testinc/.acltest/source.h
