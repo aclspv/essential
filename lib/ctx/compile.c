@@ -1,3 +1,4 @@
+#include "ae2f/c90/StdInt/enum.h"
 #include <aclspv.h>
 
 #include <clang-c/CXErrorCode.h>
@@ -45,19 +46,19 @@ ACLSPV_ABI_IMPL enum ACLSPV_COMPILE_ aclspv_ctx_compile(h_aclspv_ctx_t h_ctx, CX
 				);
 
 		ae2f_expected_but_else(VOID) {
-			return h_ctx->m_err = ae2f_bll_sel_bool_naive1(
+			return h_ctx->m_err = (enum ACLSPV_COMPILE_)ae2f_bll_sel_bool_naive1(
 					uint_fastenum_t
-					, h_ctx->m_err
-					, h_ctx->m_err
+					, (uint_fastenum_t)h_ctx->m_err
+					, (uint_fastenum_t)h_ctx->m_err
 					, ACLSPV_COMPILE_ALLOC_FAILED_ID
 					);
 		}
 
 		ae2f_expected_but_else(ID_DEFAULT_FN_VOID) {
-			return h_ctx->m_err = ae2f_bll_sel_bool_naive1(
+			return h_ctx->m_err = (enum ACLSPV_COMPILE_)ae2f_bll_sel_bool_naive1(
 					uint_fastenum_t
-					, h_ctx->m_err
-					, h_ctx->m_err
+					, (uint_fastenum_t)h_ctx->m_err
+					, (uint_fastenum_t)h_ctx->m_err
 					, ACLSPV_COMPILE_ALLOC_FAILED_ID
 					);
 		}
