@@ -58,9 +58,6 @@ enum CXChildVisitResult aclemit_entp_body(CXCursor h_cur, ae2f_unused CXCursor h
 			}
 
 			FNCTX->m_state0 |= ACLUTIL_FNCTX_STATE0_FNRET;
-
-			FNCTX->m_lbl_snapshot = CTX->m_count.m_fnimpl;
-			FNCTX->m_name_snapshot = CTX->m_count.m_name;
 			FNCTX->m_state0 &= ~(uint_leastenum_t)(ACLUTIL_FNCTX_STATE0_LBL_DO_SOMETHING);
 
 			if(FNCTX->m_retid != ID_DEFAULT_VOID) {
@@ -106,6 +103,9 @@ enum CXChildVisitResult aclemit_entp_body(CXCursor h_cur, ae2f_unused CXCursor h
 						, CTX->m_count.m_fnimpl
 						, SpvOpReturn, 0
 						)) goto LBL_FAIL;
+
+			FNCTX->m_lbl_snapshot = CTX->m_count.m_fnimpl;
+			FNCTX->m_name_snapshot = CTX->m_count.m_name;
 
 			ae2f_ifezerr_strict(CTX->m_count.m_fnimpl = util_emitx_2(
 						&CTX->m_section.m_fnimpl

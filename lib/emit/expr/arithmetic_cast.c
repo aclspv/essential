@@ -326,15 +326,17 @@ static enum EMIT_EXPR_ s_non_literal_vec(
 		return s_non_literal_novec(
 				c_old_id
 				, VCFG_OLD.m_ty_elm
-				, c_flag_literal
+				, c_flag_literal & ~(aclspv_wrd_t)(UTIL_LITERAL_LITERAL)
 				, r_newid
 				, VCFG_NEW.m_ty_elm
 				, h_ctx
 				, c_new_type
 				);
-	} else if(VCFG_NEW.m_num ^ 1 && !(VCFG_OLD.m_num ^ 1)) {
+	} else if(VCFG_NEW.m_num > 1 && VCFG_OLD.m_num == 1) {
 		aclspv_wrd_t	IDXV = VCFG_NEW.m_num;
 		aclspv_id_t	VID;
+
+		dbg_puts("case: new type is vector whilst old type is scalar");
 
 		_aclspv_grow_vec(
 				_aclspv_malloc
@@ -348,8 +350,8 @@ static enum EMIT_EXPR_ s_non_literal_vec(
 			return EMIT_EXPR_FAILURE;
 		}
 
-		while(IDXV-- && ae2f_expected_strict(IDXV < VCFG_NEW.m_num)) {
-			get_wrd_of_vec(&h_ctx->m_tmp.m_v0)[c_old_id]
+		while(IDXV --> 0) {
+			get_wrd_of_vec(&h_ctx->m_tmp.m_v0)[IDXV]
 				= c_old_id;
 		}
 
@@ -358,25 +360,22 @@ static enum EMIT_EXPR_ s_non_literal_vec(
 				, VCFG_OLD.m_ty_elm
 				, h_ctx->m_tmp.m_v0.m_p
 				, c_flag_literal
-				, h_ctx);
+				, h_ctx
+				);
 
 		ae2f_ifnezerr(h_ctx->m_err)	return EMIT_EXPR_FAILURE;
 		ae2f_ifezerr(VID)		return EMIT_EXPR_FAILURE;
 
 		return s_non_literal_novec(
-				c_old_id
+				VID
 				, VCFG_OLD.m_ty_elm
-				, c_flag_literal
+				, c_flag_literal & ~(aclspv_wrd_t)(UTIL_LITERAL_LITERAL)
 				, r_newid
 				, VCFG_NEW.m_ty_elm
 				, h_ctx
 				, c_new_type
 				);
-	} else ae2f_ifneznrm(1 == VCFG_NEW.m_num && 1 != VCFG_OLD.m_num) {
-		return EMIT_EXPR_NOT_THE_CASE;
-	} else ae2f_ifnezerr(1) {
-		return EMIT_EXPR_NOT_THE_CASE;
-	}
+	} else return EMIT_EXPR_NOT_THE_CASE;
 
 	ae2f_unreachable();
 }

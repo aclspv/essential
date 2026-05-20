@@ -86,7 +86,6 @@ ACLSPV_ABI_IMPL enum ACLSPV_COMPILE_ aclspv_ctx_compile(h_aclspv_ctx_t h_ctx, CX
 			FNCTX.m_retid	= ID_DEFAULT_VOID;
 			FNCTX.m_var_stage	= 1;
 
-
 			(*h_ctx).m_count.m_fnimpl = 0;
 
 			ae2f_expected_but_else((*h_ctx).m_scale_vars.m_p && FNSCALE) {

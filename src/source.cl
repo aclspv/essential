@@ -14,12 +14,12 @@ typedef vector(4) int int4;
 kernel_raw(0) void KERNEL(void) {
 	goto K;
 	double4	c, c1, c2;
-	float4	d = c + c;
-	float4	a = d + d;
+	float	cc = 1;
+	float4	d = cc;
+	double4	a = d * cc;
 K:
 	c += a;
 	c2 += c;
-	float4 c3 = c2;
 }
 #endif
 
@@ -48,13 +48,13 @@ kernel_raw(5) void N_KERNEL_0(
 	}
 
 	a2 += 8;
-	a2 += 8;
+	a2 += 7.;
 #endif
 
 	goto GOTO;
 
-	a2 += 8;
-	a2 += 8;
+	a2 += 6;
+	a2 += 5;
 
 GOTO:
 	a2 += 3;
