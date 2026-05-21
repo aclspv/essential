@@ -65,8 +65,8 @@ ae2f_unused ae2f_inline static B_util_opbin2_t util_opbin2_to_spvop(
 		const h_aclspv_ctx_t	h_ctx
 		)
 {
-	aclspv_id_t	ID = aclid_is_vectorisable(c_id) ? c_id
-		: aclutil_cxtp_get_veccfg(c_id, h_ctx).m_ty_elm;
+	aclspv_id_t	ID = aclid_is_vectorisable((aclspv_id_t) c_id) ? (aclspv_id_t) c_id
+		: aclutil_cxtp_get_veccfg((aclspv_id_t) c_id, h_ctx).m_ty_elm;
 
 	switch(c_op2) {
 		case UTIL_OPBIN2_NONE:

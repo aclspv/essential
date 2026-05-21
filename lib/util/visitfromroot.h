@@ -13,7 +13,7 @@ ae2f_always_inline static enum CXChildVisitResult aclutil_visitfromroot(
 	enum CXChildVisitResult R = fn_visit(c_cursor, c_cursor, h_clientdata);
 
 	if(R == CXChildVisit_Recurse) {
-		R = clang_visitChildren(c_cursor, fn_visit, h_clientdata);
+		R = (enum CXChildVisitResult) clang_visitChildren(c_cursor, fn_visit, h_clientdata);
 	}
 
 	return R;

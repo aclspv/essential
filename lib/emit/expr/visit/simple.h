@@ -32,7 +32,7 @@ ae2f_inline_f static enum EMIT_EXPR_ s_simple(
 			dbg_prefix(a);
 			dbg_call((void), (fprintf(stderr
 							, "current cursor kind is not known by simple(1) %u\n"
-							, c_cur.kind
+							, (unsigned) c_cur.kind
 						 )));
 			return EMIT_EXPR_NOT_THE_CASE;
 

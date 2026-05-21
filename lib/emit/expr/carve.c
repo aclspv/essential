@@ -115,8 +115,8 @@ aclspv_bool_t aclexpr_carve(
 
 			unless(LST_SCALE_BUF[UTIL_OPBINCFG_RESTYID])
 				LST_SCALE_BUF[UTIL_OPBINCFG_RESTYID] = aclid_decide_cast(
-						LST_EXTRA[0].m_type_original
-						, LST_EXTRA[1].m_type_original
+						(e_id_default) LST_EXTRA[0].m_type_original
+						, (e_id_default) LST_EXTRA[1].m_type_original
 						, CTX
 						);	/** only when bin2 (arithmetic thing) */
 
@@ -193,8 +193,8 @@ aclspv_bool_t aclexpr_carve(
 			}
 
 			ae2f_expected_but_else(LST_SCALE_BUF[UTIL_OPBINCFG_OPCODE] = util_opbin2_to_spvop(
-						UTIL_OPBINCFG_RESTYID[LST_SCALE_BUF]
-						, UTIL_OPBINCFG_OPCODE[LST_SCALE_BUF]
+					(e_id_default)UTIL_OPBINCFG_RESTYID[LST_SCALE_BUF]
+						, (enum UTIL_OPBIN2_)UTIL_OPBINCFG_OPCODE[LST_SCALE_BUF]
 						, CTX
 						)) {
 				err_puts(("SpvOp went undefined"));

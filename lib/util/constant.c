@@ -135,7 +135,7 @@ aclspv_id_t aclutil_mk_constant_val_id1(
 
 	util_constant* ae2f_restrict const C = aclutil_mk_constant_node(c_val, h_ctx);
 	ae2f_expected_but_else(C)	return 0;
-	ae2f_expected_but_else(aclid_mk_default_id(MAP[c_idx_ty][c_idx_nbyte], h_ctx))
+	ae2f_expected_but_else(aclid_mk_default_id((B_id_default_t) MAP[c_idx_ty][c_idx_nbyte], h_ctx))
 		return 0;
 	if(C->m_const_ids[c_idx_nbyte][c_idx_ty]) return C->m_const_ids[c_idx_nbyte][c_idx_ty];
 
@@ -144,7 +144,7 @@ aclspv_id_t aclutil_mk_constant_val_id1(
 					&h_ctx->m_section.m_types
 					, h_ctx->m_count.m_types
 					, SpvOpConstant
-					, MAP[c_idx_ty][c_idx_nbyte]
+					, (aclspv_wrd_t) MAP[c_idx_ty][c_idx_nbyte]
 					, h_ctx->m_id
 					, (u32_least)(c_val & 0xFFFFFFFF)
 					, (u32_least)((c_val >> 32) & 0xFFFFFFFF)
@@ -154,7 +154,7 @@ aclspv_id_t aclutil_mk_constant_val_id1(
 					&h_ctx->m_section.m_types
 					, h_ctx->m_count.m_types
 					, SpvOpConstant
-					, MAP[c_idx_ty][c_idx_nbyte]
+					, (uint_least32_t) MAP[c_idx_ty][c_idx_nbyte]
 					, h_ctx->m_id
 					, (u32_least)(c_val & 0xFFFFFFFF)
 					)) return 0;

@@ -167,7 +167,7 @@ ae2f_MAC((L, )) aclemit_body_vardecl(CXCursor h_cur, aclutil_fnctx* ae2f_restric
 
 				switch(aclexpr_arithmetic_cast_non_literal(
 							L$$NODE->m_const_spec_id
-							, L$$NODE->m_const_spec_type
+							, (aclspv_id_t) L$$NODE->m_const_spec_type
 							, UTIL_LITERAL_CONSTANT
 							, &L$$PCURSOR->m_data.m_vardecl.m_init_val
 							, L$$PCURSOR->m_data.m_vardecl.m_type_id

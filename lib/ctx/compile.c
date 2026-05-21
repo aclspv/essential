@@ -130,10 +130,10 @@ ACLSPV_ABI_IMPL enum ACLSPV_COMPILE_ aclspv_ctx_compile(h_aclspv_ctx_t h_ctx, CX
 				assert(BUFFER);
 
 				ae2f_unexpected_but_if(CURSOR_IDX == (*h_ctx).m_num_cursor + 1) {
-					return h_ctx->m_err = ae2f_bll_sel_bool_naive1(
+					return h_ctx->m_err = (e_aclspv_compile_t) ae2f_bll_sel_bool_naive1(
 							uint_fastenum_t
 							, h_ctx->m_err
-							, h_ctx->m_err
+							, (uint_fastenum_t) h_ctx-> m_err
 							, ACLSPV_COMPILE_UNHANDLED
 							);
 				}
