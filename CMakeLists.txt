@@ -89,13 +89,15 @@ add_library(aclspv::aclspv	ALIAS ae3f-aclspv)
 target_link_libraries(ae3f-aclspv-common	
 	INTERFACE	libclang
 	INTERFACE	ae2f::Core
+	INTERFACE	$<BUILD_INTERFACE:SPIRV-Headers::SPIRV-Headers>
 	)
 
 target_compile_definitions(ae3f-aclspv PRIVATE ACLSPVLIB=1)
 
-target_link_libraries(ae3f-aclspv		PRIVATE		ae3f::aclspvCore)
-target_link_libraries(ae3f-aclspv		PUBLIC		ae3f::aclspv-common)
-
+target_link_libraries(ae3f-aclspv
+	PRIVATE		ae3f::aclspvCore
+	PUBLIC		ae3f::aclspv-common
+	)
 
 ae2f_FileRaw_init(1 100)
 ae2f_FileRaw_Run_One2(
