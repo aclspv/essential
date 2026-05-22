@@ -54,7 +54,7 @@ ACLSPV_ABI_IMPL e_aclspv_compile_t  aclspv_compile(
 	goto LBL_CLEANUP;
 
 LBL_ERRCLEANUP:
-	CTX.m_err = ae2f_bll_sel_bool_naive1(
+	CTX.m_err = (enum ACLSPV_COMPILE_)ae2f_bll_sel_bool_naive1(
 			uint_fastenum_t
 			, CTX.m_err
 			, CTX.m_err

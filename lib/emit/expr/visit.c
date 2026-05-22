@@ -5,6 +5,8 @@
 #include <util/scale.h>
 #include <util/op.h>
 
+#include <ae2f/cc/memset.h>
+
 #include "./visit.h"
 #include "./carve.h"
 #include "aclspv.h"
@@ -197,6 +199,8 @@ enum CXChildVisitResult aclexpr_visit(
 				aclspv_wrd_t	IDVAL_PRV;
 				aclspv_bool_t	IS_ASSIGN	= LST_EXTRA[0].m_is_assign;
 
+				ae2fcc_memset(&EXTRA_PRV, 0, sizeof(util_opbincfg_extra));
+
 				(void)--GETLASTEL_CMDCOUNTERSTCK().m_count_oprnd;
 
 				LST_SCALE		= get_last_scale_from_vec(&CMDSTCK_SCALE);
@@ -232,7 +236,8 @@ enum CXChildVisitResult aclexpr_visit(
 					aclspv_wrd_t IDX = aclutil_find_cursor(
 							CTX->m_num_cursor
 							, CTX->m_cursors.m_p
-							, clang_getCursorDefinition(CASSIGN));
+							, clang_getCanonicalCursor(clang_getCursorDefinition(CASSIGN)));
+
 
 					aclspv_wrd_t	CLVAL;
 
@@ -313,7 +318,7 @@ enum CXChildVisitResult aclexpr_visit(
 			_aclspv_grow_vec_with_copy(
 					_aclspv_malloc
 					, _aclspv_free
-					, memcpy
+					, _aclspv_memcpy
 					, dest
 					, EXPRSTCK
 					, (size_t)(sizeof(exprstck) * (EXPRSTCK_COUNT + 1))

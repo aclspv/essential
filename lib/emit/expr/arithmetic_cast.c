@@ -333,43 +333,27 @@ static enum EMIT_EXPR_ s_non_literal_vec(
 				, c_new_type
 				);
 	} else if(VCFG_NEW.m_num > 1 && VCFG_OLD.m_num == 1) {
-		aclspv_wrd_t	IDXV = VCFG_NEW.m_num;
-		aclspv_id_t	VID;
-
-		dbg_puts("case: new type is vector whilst old type is scalar");
-
-		_aclspv_grow_vec(
-				_aclspv_malloc
-				, _aclspv_free
-				, h_ctx->m_tmp.m_v0
-				, count_to_sz(IDXV)
+		aclspv_id_t	VECTYID = aclutil_mk_cxtp_vec(
+				VCFG_OLD.m_ty_elm
+				, VCFG_NEW.m_num
+				, h_ctx
 				);
 
-		ae2f_ifezerr(h_ctx->m_tmp.m_v0.m_p) {
+		struct aclutil_mk_constant_repvec_t	REPVEC = aclutil_mk_constant_repvec_id(
+				VECTYID, c_old_id, c_flag_literal, h_ctx
+				);
+
+		dbg_puts("\trepvec");
+
+		ae2f_ifezerr(REPVEC.m_id) {
 			h_ctx->m_err = ACLSPV_COMPILE_ALLOC_FAILED;
 			return EMIT_EXPR_FAILURE;
 		}
 
-		while(IDXV --> 0) {
-			get_wrd_of_vec(&h_ctx->m_tmp.m_v0)[IDXV]
-				= c_old_id;
-		}
-
-		VID = aclutil_mkvec(
-				VCFG_NEW.m_num
-				, VCFG_OLD.m_ty_elm
-				, h_ctx->m_tmp.m_v0.m_p
-				, c_flag_literal
-				, h_ctx
-				);
-
-		ae2f_ifnezerr(h_ctx->m_err)	return EMIT_EXPR_FAILURE;
-		ae2f_ifezerr(VID)		return EMIT_EXPR_FAILURE;
-
 		return s_non_literal_novec(
-				VID
+				REPVEC.m_id
 				, VCFG_OLD.m_ty_elm
-				, c_flag_literal & ~(aclspv_wrd_t)(UTIL_LITERAL_LITERAL)
+				, REPVEC.m_literal_mask
 				, r_newid
 				, VCFG_NEW.m_ty_elm
 				, h_ctx

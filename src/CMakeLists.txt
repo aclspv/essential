@@ -11,7 +11,6 @@ ae2f_Macro_Lib_V2_REL(
 	inc ON
 	)
 
-target_link_libraries(ae3f-aclspvCore		INTERFACE	ae3f::aclspv-common INTERFACE ae2f::Pat)
 target_link_libraries(ae3f-aclspvCore 
 	INTERFACE $<BUILD_INTERFACE:SPIRV-Headers::SPIRV-Headers>
 	INTERFACE ae2f::Pat

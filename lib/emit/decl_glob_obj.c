@@ -616,10 +616,5 @@ LBL_HOLLOW_ENTP:
 	return CXChildVisit_Continue;
 
 #undef	CTX
-	ae2f_unreachable();
-
-#if	!defined(NDEBUG) || !NDEBUG
-#else
 	return CXChildVisit_Break;
-#endif
 }

@@ -86,9 +86,10 @@ add_subdirectory(src)
 add_library(aclspv		ALIAS ae3f-aclspv)
 add_library(aclspv::aclspv	ALIAS ae3f-aclspv)
 
-target_link_libraries(ae3f-aclspv-common	
+target_link_libraries(ae3f-aclspv-common
 	INTERFACE	libclang
 	INTERFACE	ae2f::Core
+	INTERFACE	$<BUILD_INTERFACE:SPIRV-Headers::SPIRV-Headers>
 	)
 
 target_compile_definitions(ae3f-aclspv PRIVATE ACLSPVLIB=1)

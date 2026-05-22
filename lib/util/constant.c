@@ -2,9 +2,11 @@
 #include "./constant.h"
 #include "./emitx.h"
 #include "./iddef.h"
+#include "util/wrdemit.h"
 
 #include <string.h>
 #include <ae2f/pat/dbg.h>
+#include <ae2f/cc/memset.h>
 
 #include <stdio.h>
 
@@ -21,7 +23,15 @@ util_constant* aclutil_mk_constant_node(
 	aclspv_wrdcount_t	LR[2];
 
 	ae2fpat_assertassume_strict(h_ctx);
-	
+
+	_aclspv_grow_vec_with_copy(
+			_aclspv_malloc, _aclspv_free
+			, _aclspv_memcpy
+			, L_new, h_ctx->m_constant_cache
+			, (size_t)COUNT * sizeof(util_constant)
+			);
+
+	ae2f_expected_but_else(h_ctx->m_constant_cache.m_p) return ae2f_NIL;
 
 #define	LEFT	LR[1]
 #define	RIGHT	LR[0]
@@ -29,20 +39,20 @@ util_constant* aclutil_mk_constant_node(
 	LEFT	= 0;
 	RIGHT	= COUNT;
 
-	if(COUNT) {
+	if(COUNT && h_ctx->m_constant_cache.m_p) {
 #define	KEY_MADE_L \
-				((u64_least)(((p_util_constant_t)h_ctx->m_constant_cache.m_p)	\
-				[LEFT].m_key_0)							\
-				| ((u64_least)((p_util_constant_t)h_ctx->m_constant_cache.m_p)	\
+		((u64_least)(((p_util_constant_t)h_ctx->m_constant_cache.m_p)	\
+			[LEFT].m_key_0)							\
+			| ((u64_least)((p_util_constant_t)h_ctx->m_constant_cache.m_p)	\
 				[LEFT].m_key_1) << 32)
 
 		while(LEFT < RIGHT) {
 			const aclspv_wrdcount_t	MIDDLE	= LEFT + ((RIGHT - LEFT) >> 1);
 			const uint_least64_t	KEY_MADE = 
 				(u64_least)(((p_util_constant_t)h_ctx->m_constant_cache.m_p)
-				[MIDDLE].m_key_0)
+						[MIDDLE].m_key_0)
 				| ((u64_least)((p_util_constant_t)h_ctx->m_constant_cache.m_p)
-				[MIDDLE].m_key_1) << 32;
+						[MIDDLE].m_key_1) << 32;
 
 			if(KEY_MADE == c_key)
 				return &((p_util_constant_t)h_ctx->m_constant_cache.m_p)[MIDDLE];
@@ -56,34 +66,34 @@ util_constant* aclutil_mk_constant_node(
 			return &((p_util_constant_t)h_ctx->m_constant_cache.m_p)[LEFT];
 
 #undef	KEY_MADE_L
-
 	}
 
 
-	while((size_t)(COUNT) >= (h_ctx->m_constant_cache.m_sz) / sizeof(util_constant)) {
+	while((size_t)(COUNT + 1) >= (h_ctx->m_constant_cache.m_sz) / sizeof(util_constant)) {
 		_aclspv_grow_vec_with_copy(
 				_aclspv_malloc, _aclspv_free
 				, _aclspv_memcpy
 				, L_new, h_ctx->m_constant_cache
 				, h_ctx->m_constant_cache.m_sz 
 				? h_ctx->m_constant_cache.m_sz << 1 
-				: (size_t)COUNT * sizeof(util_constant)
+				: (size_t)(COUNT + 1) * sizeof(util_constant)
 				);
+
+		ae2f_expected_but_else(h_ctx->m_constant_cache.m_p) return ae2f_NIL;
 	}
-	ae2f_expected_but_else(h_ctx->m_constant_cache.m_p) return ae2f_NIL;
+
 	if(COUNT > LEFT) {
 		aclspv_wrd_t		C = COUNT - LEFT;
 		p_util_constant_t	BASE = &((p_util_constant_t)(h_ctx->m_constant_cache.m_p))[COUNT];
 
-		while(C--) {
+		while( C --> 0 ) {
 			BASE[1] = BASE[0];
 			--BASE;
 		}
-
-	}	/** memmove */
+	}
 
 	/** sanity check for future possibility of having more elements */
-	memset(&((p_util_constant_t)(h_ctx->m_constant_cache.m_p))[LEFT], 0, sizeof(util_constant));
+	ae2fcc_memset(&((p_util_constant_t)(h_ctx->m_constant_cache.m_p))[LEFT], 0, sizeof(util_constant));
 	((p_util_constant_t)(h_ctx->m_constant_cache.m_p))[LEFT].m_key_0 
 		= (u32_least)(c_key & 0xFFFFFFFF);
 	((p_util_constant_t)(h_ctx->m_constant_cache.m_p))[LEFT].m_key_1 
