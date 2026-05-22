@@ -116,7 +116,7 @@ ae2f_inline_f static enum EMIT_EXPR_ s_basic_numeric_operation(
 		VEC[2] = opcode_to_wrd(SpvOpSpecConstantOp, 5);
 		VEC[3] = 0;				/** return type */
 		VEC[4] = 0;				/** return id (not specified) */
-		VEC[5] = OPCODE;
+		VEC[5] = (aclspv_wrd_t) OPCODE;
 		VEC[6] = 0;
 		VEC[7] = 0;
 

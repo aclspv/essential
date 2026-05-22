@@ -34,7 +34,7 @@
 #	define	ACLSPV_ABI_LINK
 #endif
 
-#define	ACLSPV_ABI_IMPL	ACLSPV_ABI_LINK
+#define	ACLSPV_ABI_IMPL	
 #define	ACLSPV_ABI_DECL	ACLSPV_ABI_LINK
 
 #include <ae2f/c90/StdInt.h>

@@ -52,7 +52,7 @@ ACLSPV_ABI_IMPL enum CXChildVisitResult aclemit_iter_entry_point(CXCursor h_cur,
 				util_constant* nd = aclutil_mk_constant_node(XYZ.m_##K_idx, CTX);	\
 				ae2f_ifezerr(nd) goto LBL_ABRT;						\
 				if(nd->m_const_spec_id) {						\
-					ae2f_ifezerr_strict(aclid_is_int(nd->m_const_spec_type)) {	\
+					ae2f_ifezerr_strict(aclid_is_int((B_id_default_t) nd->m_const_spec_type)) {	\
 						CTX->m_err = ACLSPV_COMPILE_WORKGROUP_SIZE_NO_INT;	\
 						goto LBL_ABRT;						\
 					}								\
@@ -77,7 +77,7 @@ ACLSPV_ABI_IMPL enum CXChildVisitResult aclemit_iter_entry_point(CXCursor h_cur,
 					err_puts("workgroup size id is for spirv 1.2");
 					goto LBL_ABRT;
 				}
-					
+
 				S_GETSPECID(0);
 				S_GETSPECID(1);
 				S_GETSPECID(2);
@@ -118,7 +118,7 @@ ACLSPV_ABI_IMPL enum CXChildVisitResult aclemit_iter_entry_point(CXCursor h_cur,
 		unless((CTX->m_count.m_entp = util_emit_wrd(
 						&CTX->m_section.m_entp
 						, CTX->m_count.m_entp
-						, EXEC_MODEL)))
+						, (uint_least32_t) EXEC_MODEL)))
 			goto LBL_ABRT;
 		unless((CTX->m_count.m_entp = util_emit_wrd(
 						&CTX->m_section.m_entp

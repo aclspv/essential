@@ -155,10 +155,10 @@ enum CXChildVisitResult aclexpr_visit(
 				, &LST_EXTRA[GETLASTEL_CMDCOUNTERSTCK(a).m_count_oprnd].m_literal
 		       )) {
 		case EMIT_EXPR_FAILURE:
-			CTX->m_err = ae2f_bll_sel_bool1(
+			CTX->m_err = (e_aclspv_compile_t) ae2f_bll_sel_bool1(
 					uint_leastenum_t
 					, CTX->m_err
-					, CTX->m_err
+					, (uint_leastenum_t) CTX-> m_err
 					, ACLSPV_COMPILE_UNHANDLED_VISIT_SIMPLE);
 			return CXChildVisit_Break;
 

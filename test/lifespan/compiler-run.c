@@ -35,7 +35,7 @@ int main(void) {
 
 	RET = aclspv_compile(files, 2, ARG, 1, &spirv_count, &spirv0, ae2f_NIL);
 
-	printf("aclspv_compile: %u\n", RET);
+	printf("aclspv_compile: %d\n", RET);
 	printf("output spirv: %p, %u\n", (void *)spirv0, spirv_count);
 
 	assert(spirv0);

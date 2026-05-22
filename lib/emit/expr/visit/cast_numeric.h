@@ -64,7 +64,7 @@ ae2f_inline_f static enum EMIT_EXPR_ s_cast_numeric(
 			VEC[2] = opcode_to_wrd(SpvOpSpecConstantOp, 4); 
 			VEC[3] = 0;				/** c_result_type_id */
 			VEC[4] = 0;				/** return id (not specified) */
-			VEC[5] = OPCODE;
+			VEC[5] = (aclspv_wrd_t) OPCODE;
 			VEC[6] = 0;				/** operand 0 */
 
 			if((VEC[UTIL_OPBINCFG_RESTYID] = aclutil_mk_cxtp_by_cursor2(

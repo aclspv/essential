@@ -290,7 +290,7 @@ aclspv_id_t aclutil_mk_cxtp_ptr(
 					, h_ctx->m_count.m_types
 					, SpvOpTypePointer
 					, ID.m_id
-					, c_storage_class
+					, (aclspv_wrd_t) c_storage_class
 					, c_type_elm
 					)) return 0;
 
@@ -541,7 +541,7 @@ ae2f_extern aclspv_id_t aclutil_mk_cxtp_by_cursor2(
 						uint_leastenum_t
 						, SCLASS == SpvStorageClassMax
 						, SpvStorageClassFunction	/* default fallback */
-						, SCLASS
+						, (uint_least32_t) SCLASS
 						);
 
 				return aclutil_mk_cxtp_ptr(ELMID, SCLASS, h_ctx);

@@ -279,10 +279,10 @@ ae2f_MAC((L, )) aclemit_body_while(CXCursor h_cur, aclutil_fnctx * ae2f_restrict
 
 	ae2f_unreachable();
 	L$$ERR:
-		(h_fnctx)->m_ctx->m_err = ae2f_bll_sel_bool_naive1(
+		(h_fnctx)->m_ctx->m_err = (e_aclspv_compile_t) ae2f_bll_sel_bool_naive1(
 				uint_leastenum_t
 				, (h_fnctx)->m_ctx->m_err
-				, (h_fnctx)->m_ctx->m_err
+				, (uint_leastenum_t) (h_fnctx)->m_ctx->m_err
 				, ACLSPV_COMPILE_UNHANDLED_WHILE
 				);
 

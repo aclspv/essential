@@ -226,40 +226,40 @@ aclspv_bool_t	aclid_is_arithmetic(const aclspv_id_t c_id, const h_aclspv_ctx_t h
 ae2f_ccconst B_id_default_t aclid_decide_cast(const e_id_default c_id0, const e_id_default c_id1, const h_aclspv_ctx_t h_ctx) {
 	/** one is 0? */
 	unless(c_id0 & c_id1)
-		return ae2f_bll_sel_bool_naive1(B_id_default_t, c_id0, c_id0, c_id1);
+		return ae2f_bll_sel_bool_naive1(B_id_default_t, c_id0, (B_id_default_t) c_id0, (B_id_default_t) c_id1);
 
 	unless(c_id0 ^ c_id1)
-		return c_id0;
+		return (B_id_default_t) c_id0;
 
-	unless(aclid_is_arithmetic(c_id0, h_ctx) & aclid_is_arithmetic(c_id1, h_ctx))
+	unless(aclid_is_arithmetic((B_id_default_t) c_id0, h_ctx) & aclid_is_arithmetic((B_id_default_t) c_id1, h_ctx))
 		return 0;
 
-	if(aclutil_cxtp_get_veccfg(c_id0, h_ctx).m_num ^ aclutil_cxtp_get_veccfg(c_id1, h_ctx).m_num) {
-		unless(aclutil_cxtp_get_veccfg(c_id0, h_ctx).m_num >> 1) {
-			return c_id1;
-		} else unless(aclutil_cxtp_get_veccfg(c_id1, h_ctx).m_num >> 1) {
-			return c_id0;
+	if(aclutil_cxtp_get_veccfg((B_id_default_t) c_id0, h_ctx).m_num ^ aclutil_cxtp_get_veccfg((B_id_default_t) c_id1, h_ctx).m_num) {
+		unless(aclutil_cxtp_get_veccfg((B_id_default_t) c_id0, h_ctx).m_num >> 1) {
+			return (B_id_default_t) c_id1;
+		} else unless(aclutil_cxtp_get_veccfg((B_id_default_t) c_id1, h_ctx).m_num >> 1) {
+			return (B_id_default_t) c_id0;
 		} return 0;
 	}
 
-	unless(aclid_is_vectorisable(c_id0)) {
+	unless(aclid_is_vectorisable((B_id_default_t) c_id0)) {
 		return ae2f_bll_sel_bool1(B_id_default_t, aclid_decide_cast(
-					aclutil_cxtp_get_veccfg(c_id0, h_ctx).m_ty_elm
-					, aclutil_cxtp_get_veccfg(c_id1, h_ctx).m_ty_elm
+				(e_id_default) aclutil_cxtp_get_veccfg((B_id_default_t) c_id0, h_ctx).m_ty_elm
+					, (e_id_default) aclutil_cxtp_get_veccfg((B_id_default_t) c_id1, h_ctx).m_ty_elm
 					, h_ctx
-					), c_id0, c_id1);
+					), (B_id_default_t) c_id0, (B_id_default_t) c_id1);
 	}
 
-	unless(aclid_is_number(c_id0) & aclid_is_number(c_id1))
+	unless(aclid_is_number((B_id_default_t) c_id0) & aclid_is_number((B_id_default_t) c_id1))
 		return 0;
 
-	if(aclid_is_float(c_id0) != aclid_is_float(c_id1))
-		return ae2f_bll_sel_bool1(B_id_default_t, aclid_is_float(c_id0), c_id0, c_id1);
+	if(aclid_is_float((B_id_default_t) c_id0) != aclid_is_float((B_id_default_t) c_id1))
+		return ae2f_bll_sel_bool1(B_id_default_t, aclid_is_float((B_id_default_t) c_id0), (B_id_default_t) c_id0, (B_id_default_t)c_id1);
 
 	return ae2f_bll_sel_bool1(
 			B_id_default_t
-			, aclid_get_bit_width(c_id0) > aclid_get_bit_width(c_id1)
-			, c_id0 , c_id1);
+			, aclid_get_bit_width((B_id_default_t) c_id0) > aclid_get_bit_width((B_id_default_t) c_id1)
+			, (B_id_default_t) c_id0 , (B_id_default_t) c_id1);
 }
 
 aclspv_id_t aclid_mk_default_id(
