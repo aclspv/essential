@@ -61,7 +61,7 @@ ae2f_inline_f static void _aclspv_memcpy(void* ae2f_restrict const wr_dst, const
 }
 
 #else
-#define _aclspv_malloc(a)	calloc(1, ae2f_static_cast(size_t, a))
+#define _aclspv_malloc(a)	calloc(1ae2f_static_cast(size_t, a), 1)
 #define _aclspv_free(a, b)	free(a)
 #define _aclspv_memcpy(a, b, c)	memmove(a, b, ae2f_static_cast(size_t, c))
 #endif

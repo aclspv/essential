@@ -330,7 +330,8 @@ aclspv_bool_t aclexpr_carve(
 			{
 				aclspv_wrd_t	CI = LST_CMD_COUNT - (!LST_SCALE_BUF[1]);
 				while(CI --> 0) {
-					get_wrd_of_vec(&TMPL_SECTION)[TMPL_COUNT + CI] = LST_SCALE_BUF[UTIL_OPBINCFG_SPECCONSTANTOP + (!LST_SCALE_BUF[1]) + CI];
+					get_wrd_of_vec(&TMPL_SECTION)[TMPL_COUNT + CI] 
+						= LST_SCALE_BUF[(aclspv_wrd_t)UTIL_OPBINCFG_SPECCONSTANTOP + (!LST_SCALE_BUF[1]) + CI];
 				}
 			}
 
