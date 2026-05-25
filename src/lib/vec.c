@@ -19,7 +19,6 @@ void*	f_memcpy(void*, const void*, size_t);
 #include <stdlib.h>
 #include <util/log.h>
 #include <dbg/mallocfree.h>
-
 ae2f_MAC() aclspv_init_vec(x_aclspv_vec	i_vec) {
 	(i_vec).m_p = ae2f_NIL;
 	(i_vec).m_sz = 0ul;
