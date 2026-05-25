@@ -68,7 +68,6 @@ util_constant* aclutil_mk_constant_node(
 #undef	KEY_MADE_L
 	}
 
-
 	while((size_t)(COUNT + 1) >= (h_ctx->m_constant_cache.m_sz) / sizeof(util_constant)) {
 		_aclspv_grow_vec_with_copy(
 				_aclspv_malloc, _aclspv_free
@@ -79,16 +78,18 @@ util_constant* aclutil_mk_constant_node(
 				: (size_t)(COUNT + 1) * sizeof(util_constant)
 				);
 
-		ae2f_expected_but_else(h_ctx->m_constant_cache.m_p) return ae2f_NIL;
+		ae2f_expected_but_else(h_ctx->m_constant_cache.m_p) return 0;
 	}
 
 	if(COUNT > LEFT) {
 		aclspv_wrd_t		C = COUNT - LEFT;
 		p_util_constant_t	BASE = &((p_util_constant_t)(h_ctx->m_constant_cache.m_p))[COUNT];
 
+		ae2fpat_assertassume_strict(COUNT - LEFT <= COUNT);
+
 		while( C --> 0 ) {
 			BASE[1] = BASE[0];
-			--BASE;
+			(void)--BASE;
 		}
 	}
 
