@@ -39,9 +39,9 @@ ae2f_inline_f static void _aclspv_free(void* c_ptr, const size_t c_sz) {
 	fprintf(stderr
 			, "_aclspv_free\n"
 			"\tvoid* c_ptr = %p\n"
-			"\tsize_t c_sz = %zu\n"
+			"\tsize_t c_sz = %lu\n"
 
-			, (void*)c_ptr, (const size_t)c_sz
+			, (void*)c_ptr, (unsigned long)c_sz
 			);
 	fflush(stderr);
 	free(c_ptr);
@@ -61,7 +61,7 @@ ae2f_inline_f static void _aclspv_memcpy(void* ae2f_restrict const wr_dst, const
 }
 
 #else
-#define _aclspv_malloc(a)	calloc(1ae2f_static_cast(size_t, a), 1)
+#define _aclspv_malloc(a)	calloc(ae2f_static_cast(size_t, a), 1)
 #define _aclspv_free(a, b)	free(a)
 #define _aclspv_memcpy(a, b, c)	memmove(a, b, ae2f_static_cast(size_t, c))
 #endif
