@@ -39,7 +39,7 @@ ae2f_inline_f static void _aclspv_free(void* c_ptr, const size_t c_sz) {
 	fprintf(stderr
 			, "_aclspv_free\n"
 			"\tvoid* c_ptr = %p\n"
-			"\tsize_t c_sz = %lu\n"
+			"\tsize_t c_sz = %zu\n"
 
 			, (void*)c_ptr, (const size_t)c_sz
 			);
