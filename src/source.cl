@@ -5,6 +5,8 @@
  * macros will be defined in opencl-base.h
  **/
 
+#include "./ocl.h"
+
 typedef vector(4) float float4;
 typedef vector(4) double double4;
 typedef vector(4) long long4;

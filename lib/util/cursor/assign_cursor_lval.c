@@ -1,4 +1,3 @@
-#include "aclspv.h"
 #include <clang-c/CXString.h>
 #include <util/emitx.h>
 #include <util/cursor.h>
@@ -7,7 +6,7 @@
 #include <ae2f/cgoto.h>
 #include <.aclspv/util/mkname.h>
 
-ae2f_inline ae2f_ccconst static aclspv_bool_t s_is_lval(const enum CXCursorKind	c_cursorkind) {
+ae2f_inline_f ae2f_ccconst static aclspv_bool_t s_is_lval(const enum CXCursorKind	c_cursorkind) {
 	switch((uint_leastenum_t)c_cursorkind) {
 		default: return 0;
 		case CXCursor_VariableRef:
@@ -64,7 +63,11 @@ aclspv_id_t aclutil_assign_cursor_lval(
 				*r_literal_opt = (*wr_cursor).m_data.m_vardecl.m_literal;
 
 				dbg_prefix(a);
-				dbg_call((void), printf("assign_cursor_lval: initval %u\n", wr_cursor->m_data.m_vardecl.m_init_val));
+				dbg_call((void), fprintf(
+							stderr
+							, "assign_cursor_lval: initval %u\n"
+							, wr_cursor->m_data.m_vardecl.m_init_val
+							));
 
 				goto LBL_RETNOLBL;
 		}

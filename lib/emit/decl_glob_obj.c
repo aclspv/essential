@@ -500,6 +500,8 @@ LBL_ABRT_NALLOC:
 	(void)h_parent;
 }
 
+#include <ae2f/cc/memset.h>
+
 ACLSPV_ABI_IMPL enum CXChildVisitResult aclemit_decl_glob_obj(CXCursor h_cur, CXCursor h_cur_parent, CXClientData h_ctx) {
 #define CTX	((x_aclspv_ctx* ae2f_restrict)h_ctx)
 	assert(CTX);
@@ -508,10 +510,8 @@ ACLSPV_ABI_IMPL enum CXChildVisitResult aclemit_decl_glob_obj(CXCursor h_cur, CX
 		return CXChildVisit_Recurse;
 
 	if(util_is_kernel(h_cur_parent)) {
-		struct emit_decl_glob_obj_visit_fetch_data DATA = {
-			0, 0, 0, 0,
-			0, 0, 0
-		};
+		struct emit_decl_glob_obj_visit_fetch_data DATA;
+		ae2fcc_memset(&DATA, 0, sizeof(DATA));
 
 		const int NPARAMS = clang_Cursor_getNumArguments(h_cur_parent);
 
