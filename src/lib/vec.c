@@ -18,55 +18,7 @@ void*	f_memcpy(void*, const void*, size_t);
 #include <string.h>
 #include <stdlib.h>
 #include <util/log.h>
-#include <ae2f/cc/fnpretty.h>
-
-#if	DBG
-
-static void ae2f_unused _aclspv_free(void* c_ptr, const size_t c_sz) {
-	dbg_prefix(a);
-	fprintf(stderr
-			, "_aclspv_free\n"
-			"\tvoid* c_ptr = %p\n"
-			"\tsize_t c_sz = %lu\n"
-
-			, (void*)c_ptr, (const size_t)c_sz
-			);
-	fflush(stderr);
-	free(c_ptr);
-}
-
-ae2f_retnew1(_aclspv_free) ae2f_unused  static void*	_aclspv_malloc(size_t c_sz) {
-	void* R = calloc(c_sz, 1);
-	dbg_prefix(a);
-	fprintf(stderr
-			, "_aclspv_malloc\n"
-			"\tsize_t c_sz = %lu\n"
-			"\treturn: %p\n"
-			, (unsigned long)c_sz
-			, R
-			);
-	fflush(stderr);
-	return R;
-}
-
-ae2f_inline_f static void _aclspv_memcpy(void* ae2f_restrict const wr_dst, const void* ae2f_restrict const rd_src, const size_t c_btsize) {
-	dbg_prefix();
-	fprintf(stderr
-			, "_aclspv_memcpy\n"
-			"\twr_dst: %p\n"
-			"\trd_src: %p\n"
-			"\tc_btsize: %lu\n"
-			, wr_dst, rd_src, (unsigned long)c_btsize);
-
-	memcpy(wr_dst, rd_src, c_btsize);
-	return;
-}
-
-#else
-#define _aclspv_malloc(a)	calloc(ae2f_static_cast(size_t, a), 1)
-#define _aclspv_free(a, b)	free(a)
-#define _aclspv_memcpy(a, b, c)	memmove(a, b, ae2f_static_cast(size_t, c))
-#endif
+#include <dbg/mallocfree.h>
 
 ae2f_MAC() aclspv_init_vec(x_aclspv_vec	i_vec) {
 	(i_vec).m_p = ae2f_NIL;
