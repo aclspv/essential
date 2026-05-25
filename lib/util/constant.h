@@ -27,6 +27,9 @@ typedef struct {
 	aclspv_id_t		m_const_val_bool;
 	aclspv_id_t		m_const_spec_id;
 	e_id_default		m_const_spec_type;
+
+	aclspv_id_t		m_repvec;
+	aclspv_wrd_t		m_repvec_literal_mask;
 } util_constant;
 
 typedef util_constant* ae2f_restrict p_util_constant_t;
@@ -131,8 +134,16 @@ aclspv_id_t	aclutil_mk_constant_ptr_workspec_id(const aclspv_wrd_t c_key, const 
 
 aclspv_id_t	aclutil_mk_constant_ptr_work_id(const aclspv_wrd_t c_wrdcount, h_util_ctx_t h_ctx);
 
+struct aclutil_mk_constant_repvec_t {
+	aclspv_id_t	m_id;
+	aclspv_wrd_t	m_literal_mask;
+};
 
-ae2f_unused ae2f_inline static aclspv_id_t	aclutil_mk_constant_val_by_enum(const u64_least c_val, h_util_ctx_t h_ctx, enum ID_DEFAULT_ c_ty) {
+/** @brief repeating vector */
+struct aclutil_mk_constant_repvec_t	aclutil_mk_constant_repvec_id(const aclspv_id_t	c_id_ty, const aclspv_id_t c_val, const aclspv_wrd_t c_literal_mask, h_util_ctx_t h_ctx);
+
+
+ae2f_unused ae2f_inline_f static aclspv_id_t	aclutil_mk_constant_val_by_enum(const u64_least c_val, h_util_ctx_t h_ctx, enum ID_DEFAULT_ c_ty) {
 	switch((uint_leastenum_t)c_ty) {
 #define	CASE_NUM(k, nbyte, ty)	case (k): return	\
 		aclutil_mk_constant_val_id1(c_val, h_ctx, (nbyte), (ty))
@@ -160,7 +171,7 @@ ae2f_unused ae2f_inline static aclspv_id_t	aclutil_mk_constant_val_by_enum(const
 	}
 }
 
-ae2f_unused ae2f_inline static aclspv_id_t	aclutil_mk_constant_ptr_by_enum(const aclspv_wrd_t c_wrdcount, h_util_ctx_t h_ctx, enum SpvStorageClass_ c_class) {
+ae2f_unused ae2f_inline_f static aclspv_id_t	aclutil_mk_constant_ptr_by_enum(const aclspv_wrd_t c_wrdcount, h_util_ctx_t h_ctx, enum SpvStorageClass_ c_class) {
 	switch((aclspv_wrd_t)c_class) {
 		case SpvStorageClassWorkgroup:
 			return aclutil_mk_constant_ptr_work_id(c_wrdcount, h_ctx);

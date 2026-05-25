@@ -24,18 +24,30 @@ namespace aclspv {
 			ae2f_inline_f enum ACLSPV_COMPILE_
 				dump_output1(wrd_t &ae2f_restrict r_output_count,
 						wrd_t *ae2f_restrict const r_output) const {
-					return aclspv_dump_ctx_output1(this, &r_output_count, r_output);
+					return aclspv_dump_ctx_output1(
+							this
+							, &r_output_count
+							, r_output
+							);
 				}
 
 			ae2f_inline_f enum ACLSPV_COMPILE_
 				dump_output(wrd_t &ae2f_restrict r_output_count) const {
-					return aclspv_dump_ctx_output(this, &r_output_count, 0);
+					return aclspv_dump_ctx_output(
+							this
+							, &r_output_count
+							, 0
+							);
 				}
 
 			ae2f_inline_f enum ACLSPV_COMPILE_
 				dump_output(wrdcount_t &ae2f_restrict r_output_count,
 						wrd_t * ae2f_restrict & ae2f_restrict r_output) const {
-					return aclspv_dump_ctx_output(this, &r_output_count, &r_output);
+					return aclspv_dump_ctx_output(
+							this
+							, &r_output_count
+							, &r_output
+							);
 				}
 
 			ae2f_inline_f enum ACLSPV_COMPILE_

@@ -86,7 +86,6 @@ ACLSPV_ABI_IMPL enum ACLSPV_COMPILE_ aclspv_ctx_compile(h_aclspv_ctx_t h_ctx, CX
 			FNCTX.m_retid	= ID_DEFAULT_VOID;
 			FNCTX.m_var_stage	= 1;
 
-
 			(*h_ctx).m_count.m_fnimpl = 0;
 
 			ae2f_expected_but_else((*h_ctx).m_scale_vars.m_p && FNSCALE) {
@@ -130,7 +129,7 @@ ACLSPV_ABI_IMPL enum ACLSPV_COMPILE_ aclspv_ctx_compile(h_aclspv_ctx_t h_ctx, CX
 				assert(BUFFER);
 
 				ae2f_unexpected_but_if(CURSOR_IDX == (*h_ctx).m_num_cursor + 1) {
-					return h_ctx->m_err = (e_aclspv_compile_t) ae2f_bll_sel_bool_naive1(
+					return h_ctx->m_err = (enum ACLSPV_COMPILE_)ae2f_bll_sel_bool_naive1(
 							uint_fastenum_t
 							, h_ctx->m_err
 							, (uint_fastenum_t) h_ctx-> m_err

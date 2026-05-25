@@ -5,21 +5,24 @@
  * macros will be defined in opencl-base.h
  **/
 
+#include "./ocl.h"
+
 typedef vector(4) float float4;
 typedef vector(4) double double4;
 typedef vector(4) long long4;
 typedef vector(4) int int4;
+typedef vector(4) _Bool bool4;
 
 #if 1
 kernel_raw(0) void KERNEL(void) {
 	goto K;
 	double4	c, c1, c2;
-	float4	d = c + c;
-	float4	a = d + d;
+	float	cc = 1;
+	float4	d = cc;
+	double4	a = d * cc;
 K:
 	c += a;
 	c2 += c;
-	float4 c3 = c2;
 }
 #endif
 
@@ -32,7 +35,6 @@ kernel_raw(5) void N_KERNEL_0(
 	btcast float a0 = 1078774989;
 	char a1 specid(0);
 	int a2 = a0 + (a0 += a1);
-#if 1
 	btcast long a = (double)(int)(float)(a0 + a1 + a2);
 
 	{
@@ -41,6 +43,7 @@ kernel_raw(5) void N_KERNEL_0(
 		else {}
 	}
 
+#if 1
 	while(a2 -= 1) {
 		bratio(0, 0) int AAA;
 		a1 += a2;
@@ -48,13 +51,13 @@ kernel_raw(5) void N_KERNEL_0(
 	}
 
 	a2 += 8;
-	a2 += 8;
+	a2 += 7.;
 #endif
 
 	goto GOTO;
 
-	a2 += 8;
-	a2 += 8;
+	a2 += 6;
+	a2 += 5;
 
 GOTO:
 	a2 += 3;

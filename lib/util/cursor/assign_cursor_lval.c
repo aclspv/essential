@@ -1,5 +1,3 @@
-#include "aclspv.h"
-#include "util/literal.h"
 #include <clang-c/CXString.h>
 #include <util/emitx.h>
 #include <util/cursor.h>
@@ -8,8 +6,8 @@
 #include <ae2f/cgoto.h>
 #include <.aclspv/util/mkname.h>
 
-ae2f_inline ae2f_ccconst static aclspv_bool_t s_is_lval(const enum CXCursorKind	c_cursorkind) {
-	switch((uint_fastenum_t)c_cursorkind) {
+ae2f_inline_f ae2f_ccconst static aclspv_bool_t s_is_lval(const enum CXCursorKind	c_cursorkind) {
+	switch((uint_leastenum_t)c_cursorkind) {
 		default: return 0;
 		case CXCursor_VariableRef:
 		case CXCursor_VarDecl:
@@ -36,9 +34,12 @@ aclspv_id_t aclutil_assign_cursor_lval(
 	
 
 	unless(s_is_lval(wr_cursor->m_cursor.kind)) {
+		err_prefix(a);
+		err_call(fprintf, (stderr, "wr_cursor is not left-value %d\n", (int)wr_cursor->m_cursor.kind));
 		h_ctx->m_err = ACLSPV_COMPILE_ASSIGN_ON_NON_LVAL;
 		return 0; 
 	}
+
 	if(r_literal_opt) *r_literal_opt = (*wr_cursor).m_data.m_vardecl.m_literal;
 	if(rd_literal_to_assign && (c_masklit & UTIL_LITERAL_LITERAL)) {
 		(*wr_cursor).m_data.m_vardecl.m_mask |= 3 | ACLUTIL_CURSOR_VAR_PREDICTABLE;
@@ -62,7 +63,11 @@ aclspv_id_t aclutil_assign_cursor_lval(
 				*r_literal_opt = (*wr_cursor).m_data.m_vardecl.m_literal;
 
 				dbg_prefix(a);
-				dbg_call((void), printf("assign_cursor_lval: initval %u\n", wr_cursor->m_data.m_vardecl.m_init_val));
+				dbg_call((void), fprintf(
+							stderr
+							, "assign_cursor_lval: initval %u\n"
+							, wr_cursor->m_data.m_vardecl.m_init_val
+							));
 
 				goto LBL_RETNOLBL;
 		}

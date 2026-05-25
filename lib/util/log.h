@@ -1,19 +1,24 @@
 #ifndef	aclutil_log_h
 #define	aclutil_log_h
 
+#define DBG 1
+
+#ifndef	DBG
 #if defined(NDEBUG) && NDEBUG
 #define	DBG 0
 
-#define	dbg_call(a, b)
-#define	fixme_call	dbg_call
-
 #else
 #define DBG 1
-#include <stdio.h>
+#endif
+#endif
 
+#if	DBG
+#include <stdio.h>
 #define	dbg_call(func, prm)	func	prm
 #define	fixme_call(func, prm)	func	prm
-
+#else
+#define	dbg_call(a, b)
+#define	fixme_call	dbg_call
 #endif
 
 #ifndef	WARN
@@ -21,6 +26,7 @@
 #endif
 
 #if WARN
+#include <stdio.h>
 #define warn_call(func, prm)	func	prm
 #else
 #define	warn_call(func, prm)
@@ -31,6 +37,7 @@
 #endif
 
 #if ERROR
+#include <stdio.h>
 #define	err_call(func, prm)	func	prm
 #else
 #define	err_call(a, b)

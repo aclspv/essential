@@ -17,12 +17,11 @@
 #include <clang-c/CXString.h>
 
 #include <clang-c/Index.h>
+#include <spirv/unified1/spirv.h>
 #include <util/constant.h>
 #include <util/scale.h>
 #include <util/literal.h>
 #include <.aclspv/util/u32_to_hex8.h>
-
-#include <spirv/unified1/spirv.h>
 
 enum CXChildVisitResult aclemit_entp_body(CXCursor h_cur, ae2f_unused CXCursor h_parent, CXClientData rdwr_data) {
 #define	FNCTX		((aclutil_fnctx* ae2f_restrict) rdwr_data)
@@ -58,30 +57,62 @@ enum CXChildVisitResult aclemit_entp_body(CXCursor h_cur, ae2f_unused CXCursor h
 				CTX->m_count.m_name	= FNCTX->m_name_snapshot;
 			}
 
-			ae2f_expected_but_else(CTX->m_count.m_fnimpl = emit_opcode(
+			FNCTX->m_state0 |= ACLUTIL_FNCTX_STATE0_FNRET;
+			FNCTX->m_state0 &= ~(uint_leastenum_t)(ACLUTIL_FNCTX_STATE0_LBL_DO_SOMETHING);
+
+			if(FNCTX->m_retid != ID_DEFAULT_VOID) {
+				aclspv_id_t	RETVAL;
+				struct aclattr_getkinder KINDER;
+				CXCursor		CURSORCHILD;
+				KINDER.m_num_wanted = 1;
+				KINDER.m_num_grepped = 0;
+				KINDER.m_cursor = &CURSORCHILD;
+				KINDER.m_res = CXChildVisit_Continue;
+
+				clang_visitChildren(h_cur, s_aclattr_getkinder_visit, &KINDER);
+
+				ae2f_ifnezerr(clang_Cursor_isNull(CURSORCHILD)) {
+					goto LBL_FAIL;
+				}
+
+				switch(aclspv_get_expr(&RETVAL
+							, FNCTX->m_retid
+							, CURSORCHILD
+							, 0
+							, CTX)) {
+					case EMIT_EXPR_NOT_THE_CASE:
+					case EMIT_EXPR_FAILURE:
+					default:
+						goto LBL_FAIL;
+
+					case EMIT_EXPR_SUCCESS:
+					case EMIT_EXPR_SUCCESS_CONSTANT:
+					case EMIT_EXPR_SUCCESS_LITERAL:
+						break;
+				}
+
+				ae2f_ifezerr_strict(CTX->m_count.m_fnimpl = util_emitx_2(
+							&CTX->m_section.m_fnimpl
+							, CTX->m_count.m_fnimpl
+							, SpvOpReturnValue
+							, RETVAL
+							)) goto LBL_FAIL;
+
+			} else ae2f_expected_but_else(CTX->m_count.m_fnimpl = emit_opcode(
 						&CTX->m_section.m_fnimpl
 						, CTX->m_count.m_fnimpl
 						, SpvOpReturn, 0
 						)) goto LBL_FAIL;
-			FNCTX->m_state0 |= ACLUTIL_FNCTX_STATE0_FNRET;
 
 			FNCTX->m_lbl_snapshot = CTX->m_count.m_fnimpl;
 			FNCTX->m_name_snapshot = CTX->m_count.m_name;
 
-			if(FNCTX->m_retid != ID_DEFAULT_VOID) {
-				/** have to return a value */
-			}
-
-			FNCTX->m_state0 &= ~(uint_leastenum_t)(ACLUTIL_FNCTX_STATE0_LBL_DO_SOMETHING);
-
-			/** just for branch */
-			ae2f_expected_but_else(CTX->m_count.m_fnimpl = util_emitx_2(
+			ae2f_ifezerr_strict(CTX->m_count.m_fnimpl = util_emitx_2(
 						&CTX->m_section.m_fnimpl
 						, CTX->m_count.m_fnimpl
 						, SpvOpLabel
 						, CTX->m_id++
 						)) goto LBL_FAIL;
-
 			goto LBL_DONE;
 
 		case CXCursor_LabelStmt:

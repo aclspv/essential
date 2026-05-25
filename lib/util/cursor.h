@@ -7,9 +7,6 @@
 #define util_cursor_h
 
 #include <clang-c/Index.h>
-
-#include <aclspv.h>
-
 #include <ae2f/Keys.h>
 
 #include "./wrd.h"

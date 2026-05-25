@@ -15,7 +15,10 @@
 #endif
 
 
-ae2f_inline static aclspv_bool_t s_ndeq(const aclutil_cxtp* const ae2f_restrict A, const aclutil_cxtp* const ae2f_restrict B)
+ae2f_inline_f static aclspv_bool_t s_ndeq(
+		const aclutil_cxtp* const ae2f_restrict A,
+		const aclutil_cxtp* const ae2f_restrict B
+		)
 {
 	if(A->m_class != B->m_class) return 0;
 	switch(A->m_class) {
@@ -42,7 +45,10 @@ ae2f_inline static aclspv_bool_t s_ndeq(const aclutil_cxtp* const ae2f_restrict 
 	return 0;
 }
 
-ae2f_inline static aclspv_wrdcount_t __find_node(const aclutil_cxtp* const ae2f_restrict rd_tar, const h_util_ctx_t h_ctx) {
+ae2f_inline_f static aclspv_wrdcount_t __find_node(
+		const aclutil_cxtp* const ae2f_restrict rd_tar,
+		const h_util_ctx_t h_ctx
+		) {
 	aclspv_wrdcount_t IDX = (h_ctx)->m_num_type_uniques;
 	ae2f_ifezerr(h_ctx->m_type_uniques.m_p)
 		return 0xFFFFFFFF;
@@ -61,7 +67,7 @@ ae2f_inline static aclspv_wrdcount_t __find_node(const aclutil_cxtp* const ae2f_
 
 #define	__get_type_uniques(h_ctx) ((aclutil_cxtp* ae2f_restrict)h_ctx->m_type_uniques.m_p)
 
-ae2f_inline static struct __ret {
+ae2f_inline_f static struct __ret {
 	aclspv_id_t	m_id; 
 	aclspv_bool_t	m_isfirst; 
 } s_ret(const h_aclspv_ctx_t h_ctx, const aclutil_cxtp* ae2f_restrict rd_cxtp)
@@ -494,7 +500,7 @@ aclspv_id_t aclutil_mk_cxtp_by_type2(
 	ae2f_unreachable();
 }
 
-ae2f_extern aclspv_id_t aclutil_mk_cxtp_by_cursor2(
+aclspv_id_t aclutil_mk_cxtp_by_cursor2(
 		const CXCursor		c_cursor,
 		const h_aclspv_ctx_t	h_ctx
 		) {
@@ -602,7 +608,7 @@ ae2f_extern aclspv_id_t aclutil_mk_cxtp_by_cursor2(
 	ae2f_unreachable();
 }
 
-ae2f_extern aclspv_id_t aclutil_mk_cxtp_by_cursor(
+aclspv_id_t aclutil_mk_cxtp_by_cursor(
 		const CXCursor		c_cursor,
 		const CXType		c_ty,
 		const h_aclspv_ctx_t	h_ctx

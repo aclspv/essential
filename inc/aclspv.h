@@ -334,8 +334,7 @@ typedef struct a_aclspv_ctx {
  * @brief	compile files and generate spir-v for vulkan.	\n
  * 		value of `rwr_output` must be manually freed by `free`.
  * */
-ae2f_extern ACLSPV_ABI_DECL enum ACLSPV_COMPILE_ 
-aclspv_compile(
+ae2f_extern ACLSPV_ABI_DECL enum ACLSPV_COMPILE_ aclspv_compile(
 		struct CXUnsavedFile* ae2f_restrict const 	rdwr_unsaved,
 		const unsigned					c_unsaved_count,
 		const char* ae2f_restrict const * ae2f_restrict const	rd_argv_opt,
