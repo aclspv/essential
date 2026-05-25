@@ -4,6 +4,7 @@
 #define util_u32_to_hex8_cc
 
 #include <ae2f/pat/macrofunc.h>
+#include <ae2f/bll.h>
 
 #define		util_u32_to_hex_lookup(a)	\
 	((a) == 0x0 ? '0' :			\

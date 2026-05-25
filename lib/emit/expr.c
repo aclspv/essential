@@ -117,8 +117,8 @@ enum EMIT_EXPR_ aclspv_get_expr_btcast(
 		return EMIT_EXPR_FAILURE;
 
 	SCALE_BOOT = get_buf_from_scale2(aclspv_wrd_t, &h_ctx->m_tmp.m_v1, *get_last_scale_from_vec(&h_ctx->m_tmp.m_v1));
-	assert(SCALE_BOOT);
-	assert(!get_last_scale_from_vec(&h_ctx->m_tmp.m_v1)->m_id);
+	ae2fpat_assertassume_strict(!!SCALE_BOOT);
+	ae2fpat_assertassume_strict(!get_last_scale_from_vec(&h_ctx->m_tmp.m_v1)->m_id);
 
 	SCALE_BOOT[UTIL_OPBINCFG_NUMOPRND]		= 1;
 	SCALE_BOOT[UTIL_OPBINCFG_MASKLITERAL]		= UTIL_LITERAL_MASK_LITERAL;
