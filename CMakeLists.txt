@@ -100,6 +100,7 @@ target_link_libraries(ae3f-aclspv
 	)
 
 ae2f_FileRaw_init(1 100)
+file(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/testinc/.acltest)
 ae2f_FileRaw_Run_One2(
 	${PROJECT_SOURCE_DIR}/src/source.cl 
 	${PROJECT_BINARY_DIR}/testinc/.acltest/source.h
@@ -112,16 +113,20 @@ ae2f_FileRaw_Run_One2(
 	"OCLBASE"
 	)
 
-add_library(
-	ae3f-aclspv-test	INTERFACE
+add_custom_target(ae3f-aclspv-test-gen ALL
+	SOURCES
 	${PROJECT_BINARY_DIR}/testinc/.acltest/source.h
 	${PROJECT_BINARY_DIR}/testinc/.acltest/ocl.h
 	./test/inc/acltest/onefile.h
 	)
 
+add_library(ae3f-aclspv-test INTERFACE)
+
 target_link_libraries(ae3f-aclspv-test 
 	INTERFACE ae3f-aclspv
 	)
+
+add_dependencies(ae3f-aclspv-test ae3f-aclspv-test-gen)
 
 target_include_directories(ae3f-aclspv-test 
 	INTERFACE $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/testinc/>

@@ -114,10 +114,17 @@ enum CXChildVisitResult aclexpr_visit(
 		case EMIT_EXPR_SUCCESS:
 		case EMIT_EXPR_SUCCESS_CONSTANT:
 		case EMIT_EXPR_SUCCESS_LITERAL:
-			while((size_t)(EXPRSTCK_COUNT + 2) > EXPRSTCK.m_sz / sizeof(exprstck)) {
+
+			{
+				size_t	NEWSZ = EXPRSTCK.m_sz;
+				while((size_t)(EXPRSTCK_COUNT + 2) > NEWSZ / sizeof(exprstck))
+					NEWSZ <<= 1;
+
 				_aclspv_grow_vec_with_copy(
 						_aclspv_malloc,  _aclspv_free, _aclspv_memcpy
-						, dest, EXPRSTCK, EXPRSTCK.m_sz << 1
+						, dest
+						, EXPRSTCK
+						, NEWSZ
 						);
 
 				ae2f_expected_but_else(EXPRSTCK.m_p) {
