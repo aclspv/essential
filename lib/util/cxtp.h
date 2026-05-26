@@ -90,12 +90,6 @@ aclspv_id_t aclutil_mk_cxtp_by_cursor2(
 		const h_aclspv_ctx_t	h_ctx
 		);
 
-aclspv_id_t aclutil_mk_cxtp_arr(
-		const aclspv_id_t	c_type_elm,
-		const aclspv_id_t	c_num_arr,
-		const h_aclspv_ctx_t	h_ctx
-		);
-
 /** array with stride */
 aclspv_id_t aclutil_mk_cxtp_arr2(
 		const aclspv_id_t	c_type_elm,
@@ -103,6 +97,9 @@ aclspv_id_t aclutil_mk_cxtp_arr2(
 		const aclspv_wrdcount_t	c_decorate_stride,
 		const h_aclspv_ctx_t	h_ctx
 		);
+
+#define	aclutil_mk_cxtp_arr(c_type_elm, c_num_arr, h_ctx)	\
+	aclutil_mk_cxtp_arr2(c_type_elm, c_num_arr, 0xFFFFFFFF, h_ctx)
 
 aclspv_id_t aclutil_mk_cxtp_vec(
 		const aclspv_id_t	c_type_elm,

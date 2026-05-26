@@ -3,19 +3,6 @@
 #include <util/iddef.h>
 #include <ae2f/cc/memset.h>
 
-aclspv_id_t aclutil_mk_cxtp_arr(
-		const aclspv_id_t	c_type_elm,
-		const aclspv_id_t	c_num_arr,
-		const h_aclspv_ctx_t	h_ctx
-		)
-{
-	return aclutil_mk_cxtp_arr2(
-			c_type_elm, c_num_arr
-			, 0xFFFFFFFF
-			, h_ctx
-			);
-}
-
 aclspv_id_t aclutil_mk_cxtp_arr2(
 		const aclspv_id_t	c_type_elm,
 		const aclspv_id_t	c_num_arr,
@@ -24,11 +11,12 @@ aclspv_id_t aclutil_mk_cxtp_arr2(
 		) {
 	aclutil_cxtp            TAR;
 
-	memset(&TAR, 0, sizeof(TAR));
+	ae2fcc_memset(&TAR, 0, sizeof(TAR));
 
 	TAR.m_class = ACLUTIL_CXTYPE_ARRAY;
-	TAR.m_info.m_arr.m_num_id = c_num_arr;
-	TAR.m_info.m_arr.m_type = c_type_elm;
+	TAR.m_info.m_arr.m_num_id		= c_num_arr;
+	TAR.m_info.m_arr.m_type			= c_type_elm;
+	TAR.m_info.m_arr.m_decorate_stride	= c_decorate_stride;
 
 	(void)(aclid_mk_default_id(c_type_elm, h_ctx));
 
