@@ -40,7 +40,7 @@ ACLSPV_ABI_IMPL enum ACLSPV_COMPILE_ aclspv_ctx_compile(h_aclspv_ctx_t h_ctx, CX
 		const aclspv_wrd_t	ANCHOR	= (*h_ctx).m_tmp.m_w3;
 		const aclspv_id_t	VOID	= aclid_mk_default_id(ID_DEFAULT_VOID, &(*h_ctx));
 
-		const aclspv_id_t	ID_DEFAULT_FN_VOID = aclutil_mk_cxtp_fn_no_prm(
+		const aclspv_id_t	ID_DEFAULT_FN_VOID = aclutil_mk_cxtp_fn(
 				ID_DEFAULT_VOID
 				, &(*h_ctx)
 				);

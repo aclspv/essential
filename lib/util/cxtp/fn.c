@@ -4,7 +4,7 @@
 #include <util/emitx.h>
 #include <ae2f/cc/memset.h>
 
-aclspv_id_t aclutil_mk_cxtp_fn_no_prm(
+aclspv_id_t aclutil_mk_cxtp_fn(
 		const aclspv_id_t	c_ret_id,
 		const h_aclspv_ctx_t	h_ctx
 		)
@@ -33,7 +33,7 @@ aclspv_id_t aclutil_mk_cxtp_fn_no_prm(
 	}
 }
 
-aclspv_id_t aclutil_mk_cxtp_fn_with_prm(
+aclspv_id_t aclutil_mk_cxtp_fn1(
 		const CXCursor		c_cursor_compound,
 		const CXType		c_type_compound,
 		const h_aclspv_ctx_t	h_ctx
@@ -64,7 +64,7 @@ aclspv_id_t aclutil_mk_cxtp_fn_with_prm(
 						, h_ctx);
 
 				ae2f_expected_but_else(RETID) return 0;
-				return aclutil_mk_cxtp_fn_no_prm(RETID, h_ctx);
+				return aclutil_mk_cxtp_fn(RETID, h_ctx);
 			}	/** fallback: argc was under 0 */
 
 			ae2f_expected_but_else(h_ctx->m_count.m_types = util_emit_wrd(

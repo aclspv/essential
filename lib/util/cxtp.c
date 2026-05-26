@@ -116,7 +116,7 @@ aclspv_id_t aclutil_mk_cxtp_by_cursor2(
 		case CXType_FunctionProto:
 			{
 				const CXType CANONICAL	= clang_getCanonicalType(TYPE);
-				return aclutil_mk_cxtp_fn_with_prm(
+				return aclutil_mk_cxtp_fn1(
 						c_cursor
 						, CANONICAL
 						, h_ctx);
@@ -126,7 +126,7 @@ aclspv_id_t aclutil_mk_cxtp_by_cursor2(
 				const CXType RET	= clang_getResultType(TYPE);
 				const aclspv_id_t RETID	= aclutil_mk_cxtp_by_cursor(c_cursor, RET, h_ctx);
 
-				return aclutil_mk_cxtp_fn_no_prm(RETID, h_ctx);
+				return aclutil_mk_cxtp_fn(RETID, h_ctx);
 			}
 
 		case CXType_Pointer:
