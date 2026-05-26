@@ -267,7 +267,8 @@ aclspv_id_t aclid_mk_default_id(
 		)
 {
 	ae2fpat_assertassume(h_ctx);
-	if(c_id_default == ID_DEFAULT_END)
+
+	ae2f_ifezerr(c_id_default < (aclspv_wrd_t)(ID_DEFAULT_END))
 		return 0;
 
 	if(h_ctx->m_id_defaults[c_id_default])

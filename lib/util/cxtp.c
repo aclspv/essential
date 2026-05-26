@@ -169,6 +169,8 @@ aclspv_id_t aclutil_mk_cxtp_arr2(
 	}
 }
 
+#include <ae2f/cc/memset.h>
+
 aclspv_id_t aclutil_mk_cxtp_struct_single(
 		const aclspv_id_t	c_type_member,
 		const B_aclspv_cxtp_struct_decoration_field0_t	
@@ -179,7 +181,7 @@ aclspv_id_t aclutil_mk_cxtp_struct_single(
 {
 	aclutil_cxtp		TAR;
 
-	memset(&TAR, 0, sizeof(TAR));
+	ae2fcc_memset(&TAR, 0, sizeof(TAR));
 
 	TAR.m_class						= ACLUTIL_CXTYPE_STRUCT_SINGLE;
 	TAR.m_info.m_struct_single.m_mem_id			= c_type_member;
