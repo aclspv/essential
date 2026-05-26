@@ -63,10 +63,11 @@ ae2f_MAC((L, )) aclemit_body_while(CXCursor h_cur, aclutil_fnctx * ae2f_restrict
 	ae2fpat_assertassume((h_fnctx)->m_ctx);
 
 	{
-		_ae2f_gnuc(N_ae2f_clang(volatile)) const aclspv_wrd_t L$$LOOPCHECK	= (h_fnctx)->m_ctx->m_id++;
-		_ae2f_gnuc(N_ae2f_clang(volatile)) const aclspv_wrd_t L$$LOOPSTART	= (h_fnctx)->m_ctx->m_id++;
-		_ae2f_gnuc(N_ae2f_clang(volatile)) const aclspv_wrd_t L$$LOOPEND	= (h_fnctx)->m_ctx->m_id++;
-		_ae2f_gnuc(N_ae2f_clang(volatile)) const aclspv_wrd_t L$$LOOPCONTINUE	= (h_fnctx)->m_ctx->m_id++;
+		typedef /** _ae2f_gnuc(N_ae2f_clang(volatile)) */ aclspv_wrd_t L$$LOOPWRD_T;
+		const L$$LOOPWRD_T L$$LOOPCHECK		= (h_fnctx)->m_ctx->m_id++;
+		const L$$LOOPWRD_T L$$LOOPSTART		= (h_fnctx)->m_ctx->m_id++;
+		const L$$LOOPWRD_T L$$LOOPEND		= (h_fnctx)->m_ctx->m_id++;
+		const L$$LOOPWRD_T L$$LOOPCONTINUE	= (h_fnctx)->m_ctx->m_id++;
 
 		ae2f_ifnezerr((h_fnctx->m_ctx)->m_err = aclutil_tell_cursor_lbl(
 					(h_fnctx->m_ctx)->m_num_cursor
