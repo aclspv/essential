@@ -511,10 +511,10 @@ ACLSPV_ABI_IMPL enum CXChildVisitResult aclemit_decl_glob_obj(CXCursor h_cur, CX
 
 	if(util_is_kernel(h_cur_parent)) {
 		struct emit_decl_glob_obj_visit_fetch_data DATA;
-		ae2fcc_memset(&DATA, 0, sizeof(DATA));
-
 		const int NPARAMS = clang_Cursor_getNumArguments(h_cur_parent);
 
+
+		ae2fcc_memset(&DATA, 0, sizeof(DATA));
 		DATA.m_ctx = h_ctx;
 		if(NPARAMS < 0) {
 			CTX->m_err = ACLSPV_COMPILE_MET_INVAL;
@@ -526,7 +526,7 @@ ACLSPV_ABI_IMPL enum CXChildVisitResult aclemit_decl_glob_obj(CXCursor h_cur, CX
 		}
 
 		_aclspv_grow_vec(_aclspv_malloc, _aclspv_free, CTX->m_tmp.m_v0, (size_t)((unsigned)NPARAMS * sizeof(CXType)));
-		ae2f_expected_but_else(CTX->m_tmp.m_v0.m_p) {
+		ae2f_ifezerr(CTX->m_tmp.m_v0.m_p) {
 			CTX->m_err = ACLSPV_COMPILE_ALLOC_FAILED_DECLGLOBOBJ;
 			return CXChildVisit_Break;
 		}

@@ -249,8 +249,7 @@ typedef struct a_aclspv_ctx {
 		aclspv_wrd_t	m_w0, m_w1, m_w2, m_w3;
 
 		/** 
-		 * [emit::body] name
-		 * [emit::body] vector initialiser
+		 * [*]		general-purpose true temporary vector
 		 * */
 		x_aclspv_vec	m_v0;
 
@@ -264,6 +263,11 @@ typedef struct a_aclspv_ctx {
 		 * [emit::body] command counter stack
 		 * */
 		x_aclspv_vec	m_v2;
+
+		/**
+		 * [emit::body]	expression stack
+		 * */
+		x_aclspv_vec	m_v3;
 	}	m_tmp;
 
 

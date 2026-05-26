@@ -15,9 +15,10 @@ aclspv_bool_t aclexpr_carve(
 #define	NUM_CMDCOUNTERSTCK	rdwr_data->m_num_cmdcounter
 #define	RET_LITERAL_REF		rdwr_data->m_ret_literal
 
-#define	EXPRSTCK	CTX->m_tmp.m_v0
 #define	CMDSTCK_SCALE	CTX->m_tmp.m_v1
 #define	CMDCOUNTERSTCK	CTX->m_tmp.m_v2
+#define	EXPRSTCK	CTX->m_tmp.m_v3
+
 	h_scale_t LST_SCALE				= get_last_scale_from_vec(&CMDSTCK_SCALE);
 	aclspv_wrd_t* ae2f_restrict LST_SCALE_BUF	= get_buf_from_scale2(aclspv_wrd_t, &CMDSTCK_SCALE, *LST_SCALE);
 	util_literal* ae2f_restrict RET_LITERAL
@@ -350,9 +351,9 @@ aclspv_bool_t aclexpr_carve(
 #undef	BUF_CMDCOUNTERSTCK
 #undef	GETLASTEL_CMDCOUNTERSTCK
 
-#undef	EXPRSTCK	/** CTX->m_tmp.m_v0 */
 #undef	CMDSTCK_SCALE	/** CTX->m_tmp.m_v1 */
 #undef	CMDCOUNTERSTCK	/** CTX->m_tmp.m_v2 */
+#undef	EXPRSTCK	/** CTX->m_tmp.m_v3 */
 #undef	CTX
 
 	return 0;

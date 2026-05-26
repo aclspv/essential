@@ -5,8 +5,6 @@
 #include "./iddef.h"
 
 #include <ae2f/bll.h>
-#include <clang-c/Index.h>
-#include <assert.h>
 
 #if	1
 #include <attr/storage_class.h>
@@ -48,8 +46,6 @@ ae2f_ccconst aclspv_id_t aclutil_mk_cxtp_by_type(const CXType c_ty) {
 		default: return 0;
 	}
 }
-
-#include "./iddef.h"
 
 aclspv_id_t aclutil_mk_cxtp_by_type2(
 		const CXType		c_type,

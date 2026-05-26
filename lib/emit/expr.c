@@ -30,7 +30,7 @@ enum EMIT_EXPR_ aclspv_get_expr2(
 	DATA.m_tyid_current	= 0;				/* type casted */
 	DATA.m_num_cmdcounter	= 1;				/* count for operand */
 
-	ae2f_expected_but_else(h_ctx->m_tmp.m_v0.m_p)
+	ae2f_expected_but_else(h_ctx->m_tmp.m_v3.m_p)
 		return EMIT_EXPR_FAILURE;
 
 	ae2f_expected_but_else(h_ctx->m_tmp.m_v1.m_p)
@@ -104,7 +104,7 @@ enum EMIT_EXPR_ aclspv_get_expr_btcast(
 	DATA.m_tyid_current	= 0;				/* type casted */
 	DATA.m_num_cmdcounter	= 1;				/* count for operand */
 
-	ae2f_expected_but_else(h_ctx->m_tmp.m_v0.m_p)
+	ae2f_expected_but_else(h_ctx->m_tmp.m_v3.m_p)
 		return EMIT_EXPR_FAILURE;
 
 	ae2f_expected_but_else(h_ctx->m_tmp.m_v1.m_p)
@@ -284,7 +284,7 @@ enum EMIT_EXPR_ aclspv_get_expr(
 	DATA.m_tyid_current	= 0;				/* type casted */
 	DATA.m_num_cmdcounter	= 1;				/* count for operand */
 
-	ae2f_expected_but_else(h_ctx->m_tmp.m_v0.m_p)
+	ae2f_expected_but_else(h_ctx->m_tmp.m_v3.m_p)
 		return EMIT_EXPR_FAILURE;
 
 	ae2f_expected_but_else(h_ctx->m_tmp.m_v1.m_p)

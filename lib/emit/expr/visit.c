@@ -32,17 +32,16 @@ enum CXChildVisitResult aclexpr_visit(
 #define	NUM_CMDCOUNTERSTCK	BASE->m_num_cmdcounter
 #define	LITERAL			BASE->m_ret_literal
 
-	/** for stack tmp.m_v0 will be used. */
-#define	EXPRSTCK	CTX->m_tmp.m_v0
 #define	CMDSTCK_SCALE	CTX->m_tmp.m_v1
 #define	CMDCOUNTERSTCK	CTX->m_tmp.m_v2
+#define	EXPRSTCK	CTX->m_tmp.m_v3
 
 	typedef struct {
-		u32_least	m_id_req;
+		aclspv_wrd_t	m_id_req;
 	} exprstck;
 
 	typedef struct {
-		u32_least	m_count_oprnd;
+		aclspv_wrd_t	m_count_oprnd;
 	} cmdcounterstckelm;
 
 	ae2f_unused typedef char s_ASSRT_ELMSIZE[
