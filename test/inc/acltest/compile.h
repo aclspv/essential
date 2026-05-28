@@ -1,12 +1,19 @@
 /** @file alcpsv.c */
 
+#ifndef	acltest_compile_h
+#define	acltest_compile_h
 
 #include <aclspv.h>
-#include <util/log.h>
+#include <stdio.h>
+#include <ae2f/bll.h>
 
-#include <.aclspv/util/vcopr.h>
-
-ACLSPV_ABI_IMPL e_aclspv_compile_t  aclspv_compile(
+/**
+ * @fn		aclspv_compile
+ *
+ * @brief	compile files and generate spir-v for vulkan.	\n
+ * 		value of `rwr_output` must be manually freed by `free`.
+ * */
+ae2f_unused static e_aclspv_compile_t  dbg_aclspv_compile(
 		struct CXUnsavedFile* ae2f_restrict const 	rdwr_unsaved,
 		const unsigned					c_unsaved_count,
 		const char* ae2f_restrict const * ae2f_restrict const	rd_argv_opt,
@@ -20,13 +27,13 @@ ACLSPV_ABI_IMPL e_aclspv_compile_t  aclspv_compile(
 #define	STATE_VAL	CTX.m_err
 
 	ae2f_ifezerr(rdwr_unsaved) {
-		err_puts("`rdwr_unsaved` is null");
+		puts("`rdwr_unsaved` is null");
 		STATE_VAL = ACLSPV_COMPILE_PRM_INVAL_NIL;
 		goto LBL_ERRCLEANUP;
 	}
 
 	ae2f_ifezerr(rwr_output) {
-		err_puts("`rwr_output` is null");
+		puts("`rwr_output` is null");
 		STATE_VAL = ACLSPV_COMPILE_PRM_INVAL_NIL;
 		goto LBL_ERRCLEANUP;
 	}
@@ -54,13 +61,15 @@ ACLSPV_ABI_IMPL e_aclspv_compile_t  aclspv_compile(
 	goto LBL_CLEANUP;
 
 LBL_ERRCLEANUP:
-	CTX.m_err = (enum ACLSPV_COMPILE_)ae2f_bll_sel_bool_naive1(
-			uint_fastenum_t
-			, CTX.m_err
-			, (uint_fastenum_t) CTX.m_err			, ACLSPV_COMPILE_UNHANDLED
-			);
+	CTX.m_err = 
+		CTX.m_err
+		? CTX.m_err
+		: (ACLSPV_COMPILE_UNHANDLED)
+		;
 
 LBL_CLEANUP:
 	aclspv_fini_ctx(&CTX);
 	return CTX.m_err;
 }
+
+#endif

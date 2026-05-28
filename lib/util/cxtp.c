@@ -1,5 +1,6 @@
 
 #include "./cxtp.h"
+
 #include "./constant.h"
 #include "./log.h"
 #include "./iddef.h"
@@ -10,6 +11,7 @@
 #include <attr/storage_class.h>
 #include <attr/specid.h>
 #endif
+
 ae2f_ccconst aclspv_id_t aclutil_mk_cxtp_by_type(const CXType c_ty) {
 	switch((uint_leastenum_t)c_ty.kind) {
 #define	VECCASE(c_case, c_ret)	\
@@ -211,3 +213,15 @@ aclspv_id_t aclutil_mk_cxtp_by_cursor(
 	return R;
 }
 
+ae2f_ccpure	aclutil_cxtp* aclutil_find_cxtp(const aclspv_id_t c, const h_aclspv_ctx_t h_ctx) {
+	ae2fpat_assertassume_strict(h_ctx);
+	{
+		size_t	C = (size_t)h_ctx->m_num_type_uniques;
+		aclutil_cxtp* ae2f_restrict P =  (aclutil_cxtp* ae2f_restrict)h_ctx->m_type_uniques.m_p;
+		ae2fpat_assertassume_strict(C <= h_ctx->m_type_uniques.m_sz / sizeof(aclutil_cxtp));
+		while( C --> 0 && (P++)->m_type_id != c) {}
+		return ae2f_expected_strict(
+				(C / sizeof(aclutil_cxtp)) < (size_t)(h_ctx->m_num_type_uniques)
+				) ? P - 1 : 0;
+	}
+}

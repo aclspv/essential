@@ -7,10 +7,10 @@
 #define aclspv_h
 
 #include <ae2f/Keys.h>
-#include <ae2f/cc.h>
 #include <ae2f/.Call.h>
 #include <spirv/unified1/spirv.h>
 #include <ae2f/Cxx/Nil.h>
+#include <ae2f/cc/dylink.h>
 
 /**
  * @def ACLSPV_ABI_IMPL	
@@ -332,21 +332,6 @@ typedef struct a_aclspv_ctx {
 	aclspv_id_t		m_id_defaults[ID_DEFAULT_END];
 } x_aclspv_ctx;
 
-/**
- * @fn		aclspv_compile
- *
- * @brief	compile files and generate spir-v for vulkan.	\n
- * 		value of `rwr_output` must be manually freed by `free`.
- * */
-ae2f_extern ACLSPV_ABI_DECL enum ACLSPV_COMPILE_ aclspv_compile(
-		struct CXUnsavedFile* ae2f_restrict const 	rdwr_unsaved,
-		const unsigned					c_unsaved_count,
-		const char* ae2f_restrict const * ae2f_restrict const	rd_argv_opt,
-		const int						c_argc,
-		aclspv_wrdcount_t* ae2f_restrict			rwr_output_count_opt,
-		aclspv_wrd_t* ae2f_restrict* ae2f_restrict		rwr_output,
-		enum CXErrorCode* ae2f_restrict				rwr_cxerr_opt
-	      );
 
 /**
  * @brief	initialisse `i_ctx` with `c_init_flag0` and `c_spirv_version`.

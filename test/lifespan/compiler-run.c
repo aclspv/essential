@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <acltest/onefile.h>
+#include <acltest/compile.h>
 
 #if 1
 int main(void);
@@ -33,7 +34,7 @@ int main(void) {
 	puts(files[1].Contents);
 	puts("opencl-c-base.h::::::::::::::::::");
 
-	RET = aclspv_compile(files, 2, ARG, 1, &spirv_count, &spirv0, ae2f_NIL);
+	RET = dbg_aclspv_compile(files, 2, ARG, 1, &spirv_count, &spirv0, ae2f_NIL);
 
 	printf("aclspv_compile: %d\n", (int) RET);
 	printf("output spirv: %p, %u\n", (void *)spirv0, spirv_count);

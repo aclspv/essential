@@ -5,6 +5,7 @@
 #include <string.h>
 
 #include <acltest/onefile.h>
+#include <acltest/compile.h>
 
 #if 1
 int main_c(void);
@@ -46,7 +47,7 @@ int main_c(void) {
 	puts("opencl-c-base.h::::::::::::::::::");
 #endif
 
-	RET = aclspv_compile(files, 2, ARG, 1, &spirv_count, &spirv0, ae2f_NIL);
+	RET = dbg_aclspv_compile(files, 2, ARG, 1, &spirv_count, &spirv0, ae2f_NIL);
 
 #if	0
 	printf("aclspv_compile: %u\n", RET);

@@ -1,4 +1,6 @@
-#include "./common.h"
+#include "./arr.h"
+#include "./implutil.h"
+
 #include <util/emitx.h>
 #include <util/iddef.h>
 #include <ae2f/cc/memset.h>

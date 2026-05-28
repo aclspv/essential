@@ -20,13 +20,13 @@
 #define	wrd_ext		h_ctx->m_section.m_ext
 #define	wrd_ext_count	h_ctx->m_count.m_ext
 
-ae2f_always_inline static e_aclspv_compile_t impl_conf(
+ae2f_inline_f static e_aclspv_compile_t impl_conf(
 		const h_util_ctx_t		h_ctx
 		)
 {
 	aclspv_wrd_t	POS = 0;
 
-	assert(h_ctx);
+	ae2fpat_assertassume(h_ctx);
 
 	/*** Shader Capability **/
 	ae2f_expected_but_else(aclutil_add_capability_by_flag(h_ctx, SpvCapabilityShader))

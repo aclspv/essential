@@ -49,5 +49,4 @@ typedef struct {
 	aclspv_wrdcount_t	m_continue_loop;	/** continue destination */
 } aclutil_fnctx;
 
-
 #endif

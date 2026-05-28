@@ -59,6 +59,9 @@ ACLSPV_ABI_IMPL enum ACLSPV_COMPILE_ aclspv_init_ctx(
 	_aclspv_grow_vec(_aclspv_malloc, _aclspv_free, i_ctx->m_scale_vars		, INITSZ);
 	_aclspv_grow_vec(_aclspv_malloc, _aclspv_free, i_ctx->m_cursors			, INITSZ);
 
+	_aclspv_grow_vec(_aclspv_malloc, _aclspv_free, i_ctx->m_fnlist.m_fn		, INITSZ);
+	_aclspv_grow_vec(_aclspv_malloc, _aclspv_free, i_ctx->m_fnlist.m_entp		, INITSZ);
+
 	_aclspv_grow_vec(_aclspv_malloc, _aclspv_free, i_ctx->m_section.m_capability	, INITSZ);
 	_aclspv_grow_vec(_aclspv_malloc, _aclspv_free, i_ctx->m_section.m_entp		, INITSZ);
 	_aclspv_grow_vec(_aclspv_malloc, _aclspv_free, i_ctx->m_section.m_ext		, INITSZ);

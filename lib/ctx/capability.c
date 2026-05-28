@@ -92,7 +92,6 @@ ACLSPV_ABI_IMPL aclspv_bool_t aclspv_add_capability_from_ctx(
 		while(C-- > LEFT) {
 			BASE[(C << 1) + 3] = BASE[(C << 1) + 1];
 		}
-
 	}	/** memmove */
 
 

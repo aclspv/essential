@@ -10,7 +10,7 @@
 #include <ae2f/cc/inline.h>
 
 void  aclspv_free(void* c_ptr, const size_t c_sz);
-ae2f_retnew1(aclspv_free) void*	aclspv_malloc(size_t c_sz);
+void* aclspv_malloc(size_t c_sz);
 void aclspv_memcpy(void* ae2f_restrict const wr_dst, const void* ae2f_restrict const rd_src, const size_t c_btsize);
 
 #define	_aclspv_free	aclspv_free

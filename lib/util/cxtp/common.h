@@ -1,102 +1,70 @@
 #ifndef	aclutil_cxtp_common_h
 #define	aclutil_cxtp_common_h
 
-#include <util/cxtp.h>
+#include <aclspv.h>
+#include <util/wrd.h>
 
-ae2f_inline_f static aclspv_bool_t s_ndeq(
-		const aclutil_cxtp* const ae2f_restrict A,
-		const aclutil_cxtp* const ae2f_restrict B
-		)
-{
-	if(A->m_class != B->m_class) return 0;
-	switch(A->m_class) {
-		case ACLUTIL_CXTYPE_FUNC:
-			return clang_equalTypes(
-					A->m_info.m_fn.m_type
-					, B->m_info.m_fn.m_type
-					) && clang_equalCursors(
-						A->m_info.m_fn.m_cursor
-						, B->m_info.m_fn.m_cursor);
+enum ACLUTIL_CXTYPE_ {
+	ACLUTIL_CXTYPE_UNIT,
+	ACLUTIL_CXTYPE_FUNC,
+	ACLUTIL_CXTYPE_FUNC_NOPRM,
+	ACLUTIL_CXTYPE_VECTOR,
+	ACLUTIL_CXTYPE_ARRAY,
+	ACLUTIL_CXTYPE_PTR,
+	ACLUTIL_CXTYPE_STRUCT_SINGLE
+};
 
-		case ACLUTIL_CXTYPE_PTR:
-		case ACLUTIL_CXTYPE_VECTOR:
-		case ACLUTIL_CXTYPE_ARRAY:
-		case ACLUTIL_CXTYPE_FUNC_NOPRM:
-		case ACLUTIL_CXTYPE_STRUCT_SINGLE:
-		default:
-			return !memcmp(&A->m_info, &B->m_info, sizeof(A->m_info));
+enum ACLSPV_CXTP_STRUCT_DECORATION_FIELD0 {
+	ACLSPV_CXTP_STRUCT_DECORATION_FIELD0_BLOCK = 1
+};
 
-		case ACLUTIL_CXTYPE_UNIT:
-			break;
-	}
+/** @see enum ACLSPV_CXTP_STRUCT_DECORATION_FIELD0 */
+typedef aclspv_wrd_t B_aclspv_cxtp_struct_decoration_field0_t;
 
-	return 0;
-}
+typedef struct {
+	B_aclspv_cxtp_struct_decoration_field0_t	m_field0;
+} aclspv_cxtp_struct_decoration;
 
-ae2f_inline_f static aclspv_wrdcount_t __find_node(
-		const aclutil_cxtp* const ae2f_restrict rd_tar,
-		const h_util_ctx_t h_ctx
-		) {
-	aclspv_wrdcount_t IDX = (h_ctx)->m_num_type_uniques;
-	ae2f_ifezerr(h_ctx->m_type_uniques.m_p)
-		return 0xFFFFFFFF;
+typedef struct {
+	aclspv_wrdcount_t	m_offset;
+} aclspv_cxtp_struct_memdecoration;
 
-	ae2f_ifnezerr((h_ctx)->m_num_type_uniques > (aclspv_wrd_t)(h_ctx->m_type_uniques.m_sz / sizeof(aclutil_cxtp)))
-		return 0xFFFFFFFF;
+typedef struct {
+	aclspv_id_t		m_type_id;
+	enum ACLUTIL_CXTYPE_ 	m_class;
 
-	while(IDX-- 
-			&& !s_ndeq(
-				rd_tar
-				, ((const aclutil_cxtp* ae2f_restrict)h_ctx->m_type_uniques.m_p) + IDX))
-	{}
+	union {
+		struct {
+			aclspv_id_t	m_type;
+			aclspv_id_t	m_num_id;
+			aclspv_id_t	m_decorate_stride;
+		} m_arr;
 
-	return IDX;
-}
+		struct {
+			aclspv_id_t	m_type;
+			aclspv_wrd_t	m_num;
+		} m_vec;
 
-#define	__get_type_uniques(h_ctx) ((aclutil_cxtp* ae2f_restrict)h_ctx->m_type_uniques.m_p)
+		struct {
+			aclspv_id_t		m_type;
+			enum SpvStorageClass_	m_storage;
+		} m_ptr;
 
-ae2f_inline_f static struct __ret {
-	aclspv_id_t		m_id;
-	aclspv_bool_t		m_isfirst;
-} s_ret(const h_aclspv_ctx_t h_ctx, const aclutil_cxtp* ae2f_restrict rd_cxtp)
-{
-	aclspv_wrdcount_t	IDX = __find_node(rd_cxtp, h_ctx);
-	struct	__ret		RET;
+		struct {
+			CXType			m_type;
+			CXCursor		m_cursor;
+		} m_fn;
 
-#define	_return(c_id, c_is_first)	{ RET.m_id = c_id; RET.m_isfirst = c_is_first; return RET; }
+		struct {
+			aclspv_id_t	m_ret_id;
+		} m_fn_no_proto;
 
-	ae2f_ifezerr_strict(IDX == 0xFFFFFFFF)
-		_return(__get_type_uniques(h_ctx)[IDX].m_type_id, 0);
-
-	IDX = h_ctx->m_num_type_uniques;
-	while((IDX) >= (aclspv_wrd_t)(h_ctx->m_type_uniques.m_sz / sizeof(aclutil_cxtp))) {
-		const size_t	NEWSIZE 
-			= h_ctx->m_type_uniques.m_sz 
-			? (h_ctx->m_type_uniques.m_sz << 1)
-			: (size_t)(IDX + 1) * sizeof(aclutil_cxtp);
-
-		_aclspv_grow_vec_with_copy(_aclspv_malloc, _aclspv_free, _aclspv_memcpy
-				, L_new, h_ctx->m_type_uniques, NEWSIZE);
-
-		ae2f_ifezerr(h_ctx->m_type_uniques.m_p) {
-			h_ctx->m_err = ACLSPV_COMPILE_ALLOC_FAILED_CXTP;
-			err_puts("[cxtp::s_ret] allocation has failed.");
-			_return(0, 1);
-		}
-	}
-
-	(void)++h_ctx->m_num_type_uniques;
-
-	{
-		const aclspv_id_t	ID = h_ctx->m_id++;
-		__get_type_uniques(h_ctx)[IDX] = *rd_cxtp;
-		__get_type_uniques(h_ctx)[IDX].m_type_id = ID;
-		_return(ID, 1);
-	}
-
-	ae2f_unreachable();
-
-#undef	_return
-}
+		struct {
+			aclspv_id_t				m_mem_id;
+			aclspv_cxtp_struct_decoration		m_decoration;
+			aclspv_cxtp_struct_memdecoration	m_mem_decoration;
+		} m_struct_single;
+	} m_info;	/** must be plain old buffer (pob) */
+} aclutil_cxtp;
 
 #endif

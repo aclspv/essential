@@ -2,7 +2,6 @@
 #include "./constant.h"
 #include "./emitx.h"
 #include "./iddef.h"
-#include "util/wrdemit.h"
 
 #include <string.h>
 #include <ae2f/pat/dbg.h>
@@ -11,7 +10,7 @@
 #include <stdio.h>
 
 
-util_constant* aclutil_mk_constant_node(
+util_constant*  aclutil_mk_constant_node(
 		const u64_least	c_key,
 		h_util_ctx_t	h_ctx
 		)

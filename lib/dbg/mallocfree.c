@@ -5,16 +5,24 @@
 #include <util/log.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ae2f/cc/fnpretty.h>
 
-ae2f_retnew1(_aclspv_free) void*	aclspv_malloc(size_t c_sz) {
+static	unsigned s_malloc_count = 0;
+
+ ae2f_retnew1(aclspv_free) void*	aclspv_malloc(size_t c_sz) {
 	void* R = calloc(c_sz, 1);
+
+	if(R) ++s_malloc_count;
+
 	dbg_prefix(a);
 	fprintf(stderr
 			, "_aclspv_malloc\n"
 			"\tsize_t c_sz = %lu\n"
 			"\treturn: %p\n"
+			"\tstack: %u\n"
 			, (unsigned long)c_sz
 			, R
+			, s_malloc_count
 			);
 	fflush(stderr);
 	return R;
@@ -22,12 +30,16 @@ ae2f_retnew1(_aclspv_free) void*	aclspv_malloc(size_t c_sz) {
 
 void  aclspv_free(void* c_ptr, const size_t c_sz) {
 	dbg_prefix(a);
+
+	if(c_ptr) --s_malloc_count;
+
 	fprintf(stderr
 			, "_aclspv_free\n"
 			"\tvoid* c_ptr = %p\n"
 			"\tsize_t c_sz = %lu\n"
-
+			"\tstack: %u\n"
 			, (void*)c_ptr, (const size_t)c_sz
+			, s_malloc_count
 			);
 	fflush(stderr);
 	free(c_ptr);

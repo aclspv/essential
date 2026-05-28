@@ -1,4 +1,6 @@
-#include "./common.h"
+#include "./fn.h"
+#include "./implutil.h"
+#include "./by_cursor.h"
 
 #include <util/iddef.h>
 #include <util/emitx.h>

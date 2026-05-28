@@ -11,7 +11,6 @@
 #include <util/cxtp.h>
 
 #include "../expr.h"
-#include "ae2f/cc.h"
 
 
 static enum EMIT_EXPR_ s_non_literal_novec(

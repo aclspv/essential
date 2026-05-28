@@ -1,9 +1,11 @@
+#include "./vec.h"
+#include "./implutil.h"
+
 #include <util/cxtp.h>
 #include <util/log.h>
 #include <util/iddef.h>
 #include <util/emitx.h>
 #include <ae2f/pat/dbg.h>
-#include "./common.h"
 
 struct aclutil_cxtp_veccfg_t	aclutil_cxtp_get_veccfg(
 		const aclspv_id_t	c_ty_vec,

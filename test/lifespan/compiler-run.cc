@@ -6,6 +6,7 @@
 #include <string.h>
 
 #include <acltest/onefile.h>
+#include <acltest/compile.h>
 
 #if 1
 int main(void);

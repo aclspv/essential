@@ -154,14 +154,27 @@ static enum CXChildVisitResult emit_decl_glob_obj_visit_fetch(CXCursor h_cur, CX
 		FUNC_NAME	= clang_getCursorSpelling(h_parent);
 		PARAM_NAME	= clang_getCursorSpelling(h_cur);
 
+		_aclspv_grow_vec(_aclspv_malloc, _aclspv_free
+				, CTX->m_tmp.m_v0
+				, strlen(FUNC_NAME.data) + strlen(PARAM_NAME.data) + 3
+				);
+
+		ae2f_ifezerr(CTX->m_tmp.m_v0.m_p) {
+			clang_disposeString(FUNC_NAME);
+			clang_disposeString(PARAM_NAME);
+			return CXChildVisit_Break;
+		}
+
 		{
 			char* ae2f_restrict const	
-				NAME_MERGE = malloc(strlen(FUNC_NAME.data) + strlen(PARAM_NAME.data) + 3);
+				NAME_MERGE = CTX->m_tmp.m_v0.m_p;
+
 			const aclspv_wrdcount_t	POS = CTX->m_count.m_name;
+
+
 			unless(NAME_MERGE) {
 LBL_ABRT_NALLOC:
 				CTX->m_err = ACLSPV_COMPILE_ALLOC_FAILED;
-				free(NAME_MERGE);
 				clang_disposeString(FUNC_NAME);
 				clang_disposeString(PARAM_NAME);
 				return CXChildVisit_Break;
@@ -194,7 +207,6 @@ LBL_ABRT_NALLOC:
 #undef	EMIT_POS
 
 
-			free(NAME_MERGE);
 		}
 
 		clang_disposeString(FUNC_NAME);
@@ -610,7 +622,6 @@ LBL_DBG_STR_DISPOSE_FAIL:
 LBL_HOLLOW_ENTP:
 		mk_scale_from_vec(&CTX->m_scale_vars, 0);
 		++CTX->m_tmp.m_w0;
-	} else {
 	}
 
 	return CXChildVisit_Continue;

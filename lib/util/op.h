@@ -1,9 +1,8 @@
 #ifndef util_op_h
 #define util_op_h
 
-#include "util/cxtp.h"
-#include "util/id.h"
-#include <clang-c/Index.h>
+#include <util/cxtp/vec.h>
+
 enum UTIL_OPBINCFG_ {
 	UTIL_OPBINCFG_NUMOPRND,
 
@@ -18,7 +17,8 @@ enum UTIL_OPBINCFG_ {
 
 enum UTIL_OPBIN1_ {
 	UTIL_OPBIN1_NONE,
-	UTIL_OPBIN1_EXPLICIT_CAST
+	UTIL_OPBIN1_EXPLICIT_CAST,
+	UTIL_OPBIN1_END
 };
 
 enum UTIL_OPBIN2_ {
@@ -53,13 +53,13 @@ typedef struct {
 typedef uint_leastenum_t B_util_opbin2_t;
 
 
-ae2f_unused ae2f_inline static ae2f_ccconst aclspv_bool_t	util_opbin2_is_assign(
+ae2f_unused ae2f_inline_f static ae2f_ccconst aclspv_bool_t	util_opbin2_is_assign(
 		const enum UTIL_OPBIN2_ c_op2
 		)  {
 	return c_op2 == UTIL_OPBIN2_ASSIGN;
 }
 
-ae2f_unused ae2f_inline static B_util_opbin2_t util_opbin2_to_spvop(
+ae2f_unused ae2f_inline_f static B_util_opbin2_t util_opbin2_to_spvop(
 		const e_id_default c_id, 
 		const enum UTIL_OPBIN2_ c_op2,
 		const h_aclspv_ctx_t	h_ctx

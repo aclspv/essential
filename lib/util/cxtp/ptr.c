@@ -1,4 +1,6 @@
-#include "./common.h"
+#include "./ptr.h"
+#include "./implutil.h"
+
 #include <util/iddef.h>
 #include <util/emitx.h>
 
