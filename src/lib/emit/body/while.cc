@@ -63,7 +63,7 @@ ae2f_MAC((L, )) aclemit_body_while(CXCursor h_cur, aclutil_fnctx * ae2f_restrict
 	ae2fpat_assertassume((h_fnctx)->m_ctx);
 
 	{
-		typedef /** _ae2f_gnuc(N_ae2f_clang(volatile)) */ aclspv_wrd_t L$$LOOPWRD_T;
+		typedef aclspv_wrd_t L$$LOOPWRD_T;
 		const L$$LOOPWRD_T L$$LOOPCHECK		= (h_fnctx)->m_ctx->m_id++;
 		const L$$LOOPWRD_T L$$LOOPSTART		= (h_fnctx)->m_ctx->m_id++;
 		const L$$LOOPWRD_T L$$LOOPEND		= (h_fnctx)->m_ctx->m_id++;
@@ -127,6 +127,12 @@ ae2f_MAC((L, )) aclemit_body_while(CXCursor h_cur, aclutil_fnctx * ae2f_restrict
 				break;
 		}
 
+		ae2f_ifnezerr((h_fnctx->m_ctx)->m_err = aclutil_tell_cursor_lbl(
+					(h_fnctx->m_ctx)->m_num_cursor
+					, (h_fnctx->m_ctx)->m_cursors.m_p
+					, (h_fnctx->m_ctx)
+					, (h_fnctx)->m_var_stage + 1)) goto L$$RET;
+
 		ae2f_ifezerr((h_fnctx)->m_ctx->m_count.m_fnimpl = util_emitx_4(
 					&(h_fnctx)->m_ctx->m_section.m_fnimpl
 					, (h_fnctx)->m_ctx->m_count.m_fnimpl
@@ -179,7 +185,7 @@ ae2f_MAC((L, )) aclemit_body_while(CXCursor h_cur, aclutil_fnctx * ae2f_restrict
 						)) goto L$$ERR;
 
 			L$$FNCTX_NEW.m_lbl_snapshot = (h_fnctx->m_ctx)->m_count.m_fnimpl;
-			++L$$FNCTX_NEW.m_var_stage;
+			(void)++L$$FNCTX_NEW.m_var_stage;
 
 			aclutil_visitfromroot(
 					L$$CUR[1]

@@ -26,14 +26,11 @@ ae2f_unused static e_aclspv_compile_t  dbg_aclspv_compile(
 	x_aclspv_ctx	CTX; 
 #define	STATE_VAL	CTX.m_err
 
+	if(rwr_output_count_opt)	*rwr_output_count_opt	= 0;
+	if(rwr_output)			*rwr_output		= 0;
+
 	ae2f_ifezerr(rdwr_unsaved) {
 		puts("`rdwr_unsaved` is null");
-		STATE_VAL = ACLSPV_COMPILE_PRM_INVAL_NIL;
-		goto LBL_ERRCLEANUP;
-	}
-
-	ae2f_ifezerr(rwr_output) {
-		puts("`rwr_output` is null");
 		STATE_VAL = ACLSPV_COMPILE_PRM_INVAL_NIL;
 		goto LBL_ERRCLEANUP;
 	}

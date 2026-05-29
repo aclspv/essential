@@ -132,6 +132,8 @@ ACLSPV_ABI_IMPL enum ACLSPV_COMPILE_ aclspv_dump_ctx_output(
 	aclspv_wrd_t			NUM_RET;
 	aclspv_wrd_t* ae2f_restrict	RET;
 
+	if(r_count)		*r_count = 0;
+
 	ae2f_ifezerr(h_ctx)		return ACLSPV_COMPILE_PRM_INVAL_NIL;
 	ae2f_ifnezerr(h_ctx->m_err)	return h_ctx->m_err;
 

@@ -69,6 +69,7 @@ static enum EMIT_EXPR_ s_non_literal_novec(
 
 	/** two are float */
 	if (aclid_is_float(c_old_type) && aclid_is_float(c_new_type)) {
+		dbg_puts("two are float");
 		if(c_flag_literal & UTIL_LITERAL_CONSTANT) {
 			ae2f_expected_but_else(h_ctx->m_count.m_types
 					= util_emitx_5(
@@ -98,9 +99,8 @@ static enum EMIT_EXPR_ s_non_literal_novec(
 	}
 
 
-	dbg_puts("two are not float");
-
 	if (aclid_is_int(c_old_type) && aclid_is_int(c_new_type)) {
+		dbg_puts("two are int");
 		const aclspv_wrd_t
 			IS_UNSIGNED = aclid_is_unsigned(c_new_type);
 
@@ -434,6 +434,8 @@ enum EMIT_EXPR_ aclexpr_arithmetic_cast_literal(
 			&& aclid_mk_default_id(c_new_type, h_ctx))
 		return EMIT_EXPR_NOT_THE_CASE;
 
+	dbg_puts("start literal cast evaluation");
+
 	if(aclid_is_float(c_old_type) && aclid_is_int(c_new_type)) {
 		dbg_puts(("Cast (float -> int)"));
 		switch(aclid_get_bit_width(c_old_type)) {
@@ -455,7 +457,6 @@ enum EMIT_EXPR_ aclexpr_arithmetic_cast_literal(
 		dbg_prefix();
 		dbg_call(fprintf, (stderr, "Result literal(intmax): %ld\n", (long)RESULT.m_api_intmax));
 	}
-
 	else if(aclid_is_int(c_old_type) && aclid_is_float(c_new_type)) {
 		dbg_prefix(a);
 		dbg_call((void), (fprintf(stderr, "Cast (int -> float): %ld\n", (long)c_old_literal.m_api_intmax)));
@@ -477,7 +478,8 @@ enum EMIT_EXPR_ aclexpr_arithmetic_cast_literal(
 		}
 	}
 
-	else if(aclid_is_float(c_old_type) && aclid_is_float(c_new_type) && c_old_type != c_new_type)
+	else if(aclid_is_float(c_old_type) && aclid_is_float(c_new_type) && c_old_type != c_new_type) {
+		dbg_puts("two are float");
 		switch(aclid_get_bit_width(c_new_type)) {
 			case 64:
 				RESULT.m_dbl = c_old_literal.m_flt;
@@ -489,12 +491,15 @@ enum EMIT_EXPR_ aclexpr_arithmetic_cast_literal(
 				ae2fpat_assertassume(0 && "unknown float bit-width");
 				return EMIT_EXPR_FAILURE;
 		}
+	}
 	else if(aclid_is_int(c_old_type) && c_new_type == ID_DEFAULT_BOOL) {
+		dbg_puts("int -> bool");
 		RESULT.m_u64 = !!c_old_literal.m_api_uintmax;
 		*r_newid = aclutil_mk_constant_bool_id((aclspv_bool_t)RESULT.m_u64, h_ctx);
 		if(wr_new_literal_opt) *wr_new_literal_opt = RESULT;
 		return EMIT_EXPR_SUCCESS_LITERAL;
 	} else if(aclid_is_float(c_old_type) && c_new_type == ID_DEFAULT_BOOL) {
+		dbg_puts("float -> bool");
 		switch(aclid_get_bit_width(c_old_type)) {
 			case 64:
 				RESULT.m_api_int = !!(i64_least)c_old_literal.m_dbl;
@@ -511,6 +516,7 @@ enum EMIT_EXPR_ aclexpr_arithmetic_cast_literal(
 		if(wr_new_literal_opt) *wr_new_literal_opt = RESULT;
 		return EMIT_EXPR_SUCCESS_LITERAL;
 	} else if (aclid_is_int(c_new_type) && c_old_type == ID_DEFAULT_BOOL) {
+		dbg_puts("bool -> int");
 		RESULT.m_api_uintmax = c_old_literal.m_api_uintmax;
 		*r_newid = aclutil_mk_constant_val_by_enum(
 				RESULT.m_api_uintmax = c_old_literal.m_api_uintmax
@@ -520,6 +526,7 @@ enum EMIT_EXPR_ aclexpr_arithmetic_cast_literal(
 		if(wr_new_literal_opt) *wr_new_literal_opt = RESULT;
 		return EMIT_EXPR_SUCCESS_LITERAL;
 	} else if (aclid_is_float(c_new_type) && c_old_type == ID_DEFAULT_BOOL) {
+		dbg_puts("bool -> float");
 		switch(aclid_get_bit_width(c_old_type)) {
 			case 64:
 				RESULT.m_dbl = (double)(c_old_literal.m_api_uintmax);
@@ -538,7 +545,6 @@ enum EMIT_EXPR_ aclexpr_arithmetic_cast_literal(
 				, (enum ID_DEFAULT_) c_new_type);
 		return EMIT_EXPR_SUCCESS_LITERAL;
 	}
-
 
 	if(wr_new_literal_opt) *wr_new_literal_opt = RESULT;
 
@@ -628,12 +634,12 @@ enum EMIT_EXPR_ aclexpr_arithmetic_cast(
 				, wr_new_literal_opt
 				, h_ctx);
 
-		if(R == EMIT_EXPR_NOT_THE_CASE) aclexpr_arithmetic_cast_non_literal(
+		return R == EMIT_EXPR_NOT_THE_CASE ? aclexpr_arithmetic_cast_non_literal(
 			c_old_id
 			, c_old_type
 			, c_flag_literal, r_newid
 			, c_new_type, h_ctx
-			);
+			) : R;
 	}
 
 	return aclexpr_arithmetic_cast_non_literal(

@@ -56,7 +56,8 @@ ae2f_MAC((L, )) aclemit_body_if(CXCursor h_cur, aclutil_fnctx * ae2f_restrict h_
 				&L$$IDVAL
 				, ID_DEFAULT_BOOL
 				, L$$IFPART.m_parts[0]
-				, &L$$LTLR, (h_fnctx->m_ctx)))
+				, &L$$LTLR
+				, (h_fnctx->m_ctx)))
 	{
 		case EMIT_EXPR_NOT_THE_CASE:
 		case EMIT_EXPR_FAILURE:
@@ -193,6 +194,7 @@ ae2f_MAC((L, )) aclemit_body_if(CXCursor h_cur, aclutil_fnctx * ae2f_restrict h_
 				, (h_fnctx)->m_ctx
 				, &(h_fnctx)->m_ctx->m_tmp.m_v0
 				);
+
 		ae2f_ifnezerr(h_fnctx->m_ctx->m_err) {
 			goto L$$LBL_END;
 		}

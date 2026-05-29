@@ -38,27 +38,21 @@ aclexpr_carve_lbl_t aclexpr_carve_op2_arithmetic(
 	rdwr_lst_scale_buf[UTIL_OPBINCFG_MASKLITERAL] = UTIL_LITERAL_MASK_LITERAL;
 	rdwr_lst_scale_buf[UTIL_OPBINCFG_RESID]	= *rdwr_prv_idval = CTX(rdwr_data)->m_id++;
 
-	unless(rdwr_lst_scale_buf[UTIL_OPBINCFG_RESTYID])
-		rdwr_lst_scale_buf[UTIL_OPBINCFG_RESTYID] = aclid_decide_cast(
-				(e_id_default) rdwr_lst_extra[0].m_type_original
-				, (e_id_default) rdwr_lst_extra[1].m_type_original
-				, CTX(rdwr_data)
-				);	/** only when bin2 (arithmetic thing) */
+	rdwr_lst_scale_buf[UTIL_OPBINCFG_RESTYID] = aclid_decide_cast(
+			(e_id_default) rdwr_lst_extra[0].m_type_original
+			, (e_id_default) rdwr_lst_extra[1].m_type_original
+			, CTX(rdwr_data)
+			);	/** only when bin2 (arithmetic thing) */
 
 	rdwr_prv_extra->m_type_original = rdwr_lst_scale_buf[UTIL_OPBINCFG_RESTYID];
-	if(aclid_is_float(rdwr_prv_extra->m_type_original)) {
+
+	if(aclid_is_float(aclutil_cxtp_get_veccfg(rdwr_prv_extra->m_type_original, rdwr_data->m_ctx).m_ty_elm)) {
 		/** FIXME: make this interchangable by compatibility */
-		rdwr_prv_extra->m_mask_literal &= ~(aclspv_wrd_t)UTIL_LITERAL_CONSTANT;
+		rdwr_prv_extra->m_mask_literal &= rdwr_lst_scale_buf[UTIL_OPBINCFG_MASKLITERAL] &= ~(aclspv_wrd_t)UTIL_LITERAL_CONSTANT;
 	}
 
 	ae2fpat_assertassume_strict(rdwr_lst_scale_buf);
 	ae2fpat_assertassume_strict(rdwr_lst_scale_buf[UTIL_OPBINCFG_RESTYID]);
-
-	unless(aclid_is_int(rdwr_lst_scale_buf[UTIL_OPBINCFG_RESTYID])) {
-		rdwr_prv_extra->m_mask_literal
-			&= rdwr_lst_scale_buf[UTIL_OPBINCFG_MASKLITERAL]
-			&= UTIL_LITERAL_LITERAL;
-	}
 
 #define	OPITER(NUM_OPRND) \
 	{										\
