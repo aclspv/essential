@@ -6,9 +6,19 @@
 #ifndef aclspv_h
 #define aclspv_h
 
+#include <ae2f/cc/profiles.h>
+
+#if	_ae2f_gnuc(!)0 || _ae2f_gcc(!)0 || _ae2f_clang(!)0
+_Pragma("GCC diagnostic push")
+_Pragma("GCC diagnostic ignored \"-Wpedantic\"")
+#include <spirv/unified1/spirv.h>
+#include <clang-c/Index.h>
+_Pragma("GCC diagnostic pop")
+#endif
+
 #include <ae2f/Keys.h>
 #include <ae2f/.Call.h>
-#include <spirv/unified1/spirv.h>
+
 #include <ae2f/Cxx/Nil.h>
 #include <ae2f/cc/dylink.h>
 
@@ -51,7 +61,7 @@
 
 #define	aclspv_ver_spv(c_mjr, c_mnr)	\
 	((ae2f_static_cast(aclspv_wrd_t, c_mjr) << ae2f_static_cast(aclspv_wrd_t, 16))	|	\
-	(ae2f_static_cast(aclspv_wrd_t, c_mnr) << ae2f_static_cast(aclspv_wrd_t, 8)))
+	 (ae2f_static_cast(aclspv_wrd_t, c_mnr) << ae2f_static_cast(aclspv_wrd_t, 8)))
 
 /**
  * @typedef	aclspv_wrdcount_t
@@ -68,7 +78,6 @@ typedef aclspv_wrd_t	aclspv_bool_t;
 
 typedef int ACLSPV_WRD_CHECK[sizeof(aclspv_wrd_t) >= 4 ? 1 : -1];
 
-#include <clang-c/Index.h>
 
 typedef enum ACLSPV_COMPILE_ {
 	ACLSPV_COMPILE_OK,

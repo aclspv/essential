@@ -11,7 +11,6 @@
 
 #include <aclexpr.h>
 
-
 static enum EMIT_EXPR_ s_non_literal_novec(
 		const aclspv_id_t	c_old_id,
 		const aclspv_id_t	c_old_type,
