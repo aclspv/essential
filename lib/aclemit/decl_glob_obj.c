@@ -2,7 +2,6 @@
 
 
 #include "./decl_glob_obj.h"
-#include "aclspv.h"
 
 #include <assert.h>
 #include <string.h>
@@ -26,8 +25,6 @@
 #include <ae2f/Keys.h>
 #include <ae2f/c90/StdBool.h>
 #include <ae2f/c90/StdInt.h>
-
-#include <spirv/unified1/spirv.h>
 
 static enum CXChildVisitResult	s_attr_set(CXCursor h_cur, CXCursor h_parent, CXClientData ae2f_restrict h_data) {
 	CXString TEXT;

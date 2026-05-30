@@ -3,11 +3,10 @@
 #ifndef	attr_btcast_h
 #define attr_btcast_h
 
-#include <clang-c/Index.h>
 #include <ae2f/cc.h>
 #include <string.h>
-#include <spirv/unified1/spirv.h>
 #include <util/log.h>
+#include <aclspv3rd/clang/idx.h>
 
 /** 
  * @fn static enum CXChildVisitResult attr_execmodel(CXCursor h_cur, CXCursor h_parent, int* ae2f_restrict wr_is_btcast)

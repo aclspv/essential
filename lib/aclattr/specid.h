@@ -3,7 +3,6 @@
 #ifndef lib_attr_specid_h
 #define lib_attr_specid_h
 
-#include <clang-c/Index.h>
 #include <ae2f/Keys.h>
 #include <stdio.h>
 #include <string.h>

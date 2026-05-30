@@ -14,10 +14,6 @@
 #include <ae2f/c90/StdBool.h>
 #include <ae2f/cgoto.h>
 
-#include <clang-c/CXString.h>
-
-#include <clang-c/Index.h>
-#include <spirv/unified1/spirv.h>
 #include <util/constant.h>
 #include <util/scale.h>
 #include <util/literal.h>

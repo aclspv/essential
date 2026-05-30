@@ -2,8 +2,8 @@
 #define aclattr_rdattr_cc
 
 #include <ae2f/pat/macrofunc.h>
-#include <clang-c/Index.h>
 #include <string.h>
+#include <aclspv3rd/clang/idx.h>
 
 ae2f_MAC((L, L_NDL, )) aclattr_rdattr(
 		const CXCursor c_cur,

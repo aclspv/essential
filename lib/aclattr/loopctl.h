@@ -1,8 +1,8 @@
 #ifndef	aclattr_loopctl_h
 #define aclattr_loopctl_h
 
-#include <clang-c/Index.h>
 #include <ae2f/cc.h>
+#include <aclspv3rd/clang/idx.h>
 
 static enum CXChildVisitResult	s_attr_loopctl_visit(
 		CXCursor h_cur, 

@@ -4,7 +4,6 @@
 #define __lib_build_entp
 
 #include <util/wrd.h>
-#include <clang-c/Index.h>
 
 typedef struct {
 	aclspv_id_t	m_id;

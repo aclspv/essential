@@ -3,7 +3,6 @@
 #ifndef util_is_kernel_h
 #define util_is_kernel_h
 
-#include <clang-c/Index.h>
 #include <ae2f/Keys.h>
 #include <aclattr/execmodel.h>
 #include <ae2f/c90/StdInt.h>

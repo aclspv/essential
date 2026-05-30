@@ -1,5 +1,4 @@
 #include "./count_fn.h"
-#include "aclspv.h"
 
 #include <aclattr/storage_class.h>
 #include <aclattr/execmodel.h>
@@ -15,7 +14,6 @@
 #include <util/iddef.h>
 #include <util/log.h>
 
-#include <spirv/unified1/spirv.h>
 
 ACLSPV_ABI_IMPL enum CXChildVisitResult aclemit_iter_entry_point(CXCursor h_cur, CXCursor h_parent, CXClientData CTX) {
 #define CTX	((x_aclspv_ctx* ae2f_restrict)CTX)

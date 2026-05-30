@@ -6,9 +6,6 @@
 #ifndef	aclexpr_visit_cast_numeric_h
 #define	aclexpr_visit_cast_numeric_h
 
-#include <clang-c/CXString.h>
-#include <clang-c/Index.h>
-
 #include <util/constant.h>
 #include <util/scale.h>
 #include <util/op.h>

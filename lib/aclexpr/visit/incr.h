@@ -1,11 +1,10 @@
 #ifndef	aclemit_expr_visit_incr_h
 #define aclemit_expr_visit_incr_h
 
-#include <clang-c/Index.h>
 #include <util/cursor.h>
 #include <util/emitx.h>
 #include <util/constant.h>
-#include <emit/expr.h>
+#include <aclexpr.h>
 #include <.aclspv/util/mkname.h>
 
 ae2f_inline_f static enum EMIT_EXPR_ s_simple(

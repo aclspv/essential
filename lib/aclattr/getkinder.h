@@ -1,7 +1,6 @@
 #ifndef aclattr_getkinder_h
 #define aclattr_getkinder_h
 
-#include <clang-c/Index.h>
 #include <util/wrd.h>
 #include <ae2f/pat/dbg.h>
 

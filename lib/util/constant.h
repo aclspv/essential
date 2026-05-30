@@ -8,10 +8,7 @@
 #include <ae2f/c90/StdInt.h>
 
 #include "./id.h"
-#include "aclspv.h"
-#include "util/wrd.h"
 
-#include <spirv/unified1/spirv.h>
 
 enum ACLUTIL_CV_NBYTE_ { ACLUTIL_CV_NBYTE_1, ACLUTIL_CV_NBYTE_2, ACLUTIL_CV_NBYTE_4, ACLUTIL_CV_NBYTE_8, ACLUTIL_CV_NBYTE_MAX };
 enum ACLUTIL_CV_TY_ { ACLUTIL_CV_TY_SIGNED, ACLUTIL_CV_TY_UNSIGNED, ACLUTIL_CV_TY_FLT, ACLUTIL_CV_TY_MAX };

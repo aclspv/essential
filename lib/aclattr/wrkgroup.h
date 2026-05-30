@@ -6,7 +6,7 @@ struct aclattr_wrkgroup_prm {
 };
 
 
-#include <clang-c/Index.h>
+#include <aclspv.h>
 #include <ae2f/cc.h>
 #include <string.h>
 #include <stdio.h>

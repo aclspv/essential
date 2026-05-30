@@ -4,7 +4,6 @@
 #define lib_util_emitx
 
 #include "./wrdemit.h"
-#include <spirv/unified1/spirv.h>
 
 ae2f_inline static aclspv_sz_t	aclutil_emitx_2(
 		x_aclspv_vec* ae2f_restrict const	h_wrds,

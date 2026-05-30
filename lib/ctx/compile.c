@@ -1,8 +1,6 @@
 #include "ae2f/c90/StdInt/enum.h"
 #include <aclspv.h>
 
-#include <clang-c/CXErrorCode.h>
-#include <clang-c/Index.h>
 #include <util/entp.h>
 #include <util/fn.h>
 #include <util/fnctx.h>

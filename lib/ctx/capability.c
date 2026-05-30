@@ -1,7 +1,6 @@
 #include <aclspv.h>
 #include <ae2f/cc.h>
 #include <ae2f/bll.h>
-#include <spirv/unified1/spirv.h>
 #include <util/emitx.h>
 
 ACLSPV_ABI_IMPL ae2f_ccpure aclspv_bool_t aclspv_chck_capability_from_ctx(

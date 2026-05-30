@@ -2,7 +2,6 @@
 #include <ae2f/bll.h>
 #include <ae2f/cgoto.h>
 #include <ae2f/cc/switchctl.h>
-#include <spirv/unified1/spirv.h>
 #include <string.h>
 #include <util/emitx.h>
 #include <.aclspv/util/vcopr.h>

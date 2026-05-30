@@ -4,7 +4,6 @@
 #define util_bind_h
 
 #include "./wrd.h"
-#include <clang-c/Index.h>
 
 typedef	struct {
 	aclspv_wrd_t		m_storage_class;

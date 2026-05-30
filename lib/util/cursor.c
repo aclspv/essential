@@ -1,10 +1,8 @@
 /** @file cursor.c */
 
 #include <ae2f/bll.h>
-#include <clang-c/Index.h>
 #include <util/cursor.h>
 #include <assert.h>
-#include <spirv/unified1/spirv.h>
 #include "./emitx.h"
 #include <.aclspv/util/u32_to_hex8.h>
 

@@ -3,11 +3,9 @@
 #ifndef lib_attr_storage_class_h
 #define lib_attr_storage_class_h
 
-#include <clang-c/Index.h>
 #include <ae2f/Keys.h>
 #include <stdio.h>
 #include <string.h>
-#include <spirv/unified1/spirv.h>
 #include <util/wrd.h>
 
 /** 

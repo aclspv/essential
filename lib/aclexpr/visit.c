@@ -1,6 +1,5 @@
 /** @file visit.c */
 
-#include <clang-c/Index.h>
 #include <util/emitx.h>
 #include <util/scale.h>
 #include <util/op.h>
@@ -9,9 +8,6 @@
 
 #include "./visit.h"
 #include "./carve.h"
-#include "aclspv.h"
-#include "ae2f/cc.h"
-#include "util/log.h"
 
 #include "./visit/simple.h"
 #include "./visit/cast_numeric.h"

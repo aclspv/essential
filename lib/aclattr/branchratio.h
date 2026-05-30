@@ -1,7 +1,6 @@
 #ifndef	aclattr_branchratio_h
 #define aclattr_branchratio_h
 
-#include <clang-c/Index.h>
 #include <ae2f/Keys.h>
 #include <util/log.h>
 #include <util/wrd.h>

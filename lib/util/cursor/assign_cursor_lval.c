@@ -1,4 +1,3 @@
-#include <clang-c/CXString.h>
 #include <util/emitx.h>
 #include <util/cursor.h>
 #include <aclexpr.h>

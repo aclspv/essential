@@ -3,12 +3,11 @@
 #ifndef	attr_execmodel_h
 #define attr_execmodel_h
 
-#include <clang-c/Index.h>
 #include <ae2f/cc.h>
 #include <stdio.h>
-#include <spirv/unified1/spirv.h>
-
 #include <.aclspv/attr/rdattr.h>
+#include <aclspv3rd/clang/idx.h>
+#include <aclspv3rd/spirv-unified1.h>
 
 /** 
  * @fn static enum CXChildVisitResult attr_execmodel(CXCursor h_cur, CXCursor h_parent, enum SpvExecutionModel_* ae2f_restrict wr_data)

@@ -6,9 +6,9 @@
 #ifndef attr_glcmagic_h
 #define attr_glcmagic_h
 
-#include <clang-c/Index.h>
 #include <ae2f/Keys.h>
 #include <string.h>
+#include <aclspv3rd/clang/idx.h>
 
 /**
  * @brief	attr_glcmagic

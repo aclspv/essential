@@ -1,7 +1,6 @@
 #include <aclspv.h>
 #include <stdlib.h>
 #include <util/wrdemit.h>
-#include <spirv/unified1/spirv.h>
 
 #include <.aclspv/util/vcopr.h>
 

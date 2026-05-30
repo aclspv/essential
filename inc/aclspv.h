@@ -8,13 +8,8 @@
 
 #include <ae2f/cc/profiles.h>
 
-#if	_ae2f_gnuc(!)0 || _ae2f_gcc(!)0 || _ae2f_clang(!)0
-_Pragma("GCC diagnostic push")
-_Pragma("GCC diagnostic ignored \"-Wpedantic\"")
-#include <spirv/unified1/spirv.h>
-#include <clang-c/Index.h>
-_Pragma("GCC diagnostic pop")
-#endif
+#include "./aclspv3rd/spirv-unified1.h"
+#include "./aclspv3rd/clang/idx.h"
 
 #include <ae2f/Keys.h>
 #include <ae2f/.Call.h>

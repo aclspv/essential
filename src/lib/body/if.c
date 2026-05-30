@@ -4,11 +4,9 @@
 #include <aclattr/ifpart.h>
 #include <aclattr/branchratio.h>
 
-#include <clang-c/Index.h>
 #include <aclexpr.h>
 #include <aclemit/entp_body.h>
 
-#include <spirv/unified1/spirv.h>
 #include <util/emitx.h>
 #include <util/cursor.h>
 #include <util/fnctx.h>

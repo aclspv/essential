@@ -5,8 +5,7 @@
 
 #include <ae2f/Keys.h>
 
-#include <clang-c/CXString.h>
-#include <clang-c/Index.h>
+#include <aclspv3rd/clang/idx.h>
 
 ae2f_extern enum CXChildVisitResult aclemit_iter_entry_point(
 		CXCursor h_cur, CXCursor h_parent, CXClientData h_ctx
