@@ -20,10 +20,6 @@
 #include "clang-c/BuildSystem.h"
 #endif
 
-/** those two has no `long long` */
-#include <clang-c/CXDiagnostic.h>
-#include <clang-c/CXSourceLocation.h>
-
 #include <ae2f/c90/StdInt.h>
 
 #include "./platform.h"
@@ -31,6 +27,10 @@
 #include "./extern-c.h"
 #include "./errcode.h"
 #include "./file.h"
+
+/** those two has no `long long` */
+#include <clang-c/CXDiagnostic.h>
+#include <clang-c/CXSourceLocation.h>
 
 /**
  * The version constants for the libclang API.

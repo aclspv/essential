@@ -1,5 +1,4 @@
-#include <clang-c/CXString.h>
-#include <clang-c/Index.h>
+#include <aclspv.h>
 #include <ae2f/cc.h>
 #include <stdio.h>
 
