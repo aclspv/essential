@@ -267,8 +267,8 @@ enum CXChildVisitResult aclexpr_visit(
 					dbg_call((void), fprintf(stderr
 								, "[carve::%u] after assign %u with type %u\n"
 								, CLVAL
-								, ((util_cursor* ae2f_restrict)CTX->m_cursors.m_p)[IDX].m_data.m_vardecl.m_init_val
-								, ((util_cursor* ae2f_restrict)CTX->m_cursors.m_p)[IDX].m_data.m_vardecl.m_type_id
+								, ((aclutil_cursor* ae2f_restrict)CTX->m_cursors.m_p)[IDX].m_data.m_vardecl.m_init_val
+								, ((aclutil_cursor* ae2f_restrict)CTX->m_cursors.m_p)[IDX].m_data.m_vardecl.m_type_id
 								));
 				}
 
