@@ -2,7 +2,7 @@
 
 #include "./iddef.h"
 #include "./emitx.h"
-#include "./cxtp.h"
+#include "./cxtp/vec.h"
 #include "./capability.h"
 
 #include <assert.h>
@@ -263,7 +263,7 @@ ae2f_ccconst B_id_default_t aclid_decide_cast(const e_id_default c_id0, const e_
 
 aclspv_id_t aclid_mk_default_id(
 		const B_id_default_t	c_id_default,
-		h_util_ctx_t	h_ctx
+		h_aclspv_ctx_t	h_ctx
 		)
 {
 	ae2fpat_assertassume(h_ctx);
@@ -282,7 +282,7 @@ aclspv_id_t aclid_mk_default_id(
 			return 0;
 
 		case ID_DEFAULT_BOOL:
-			ae2f_expected_but_else((ret_count = util_emitx_2(
+			ae2f_expected_but_else((ret_count = aclutil_emitx_2(
 							&CTX->m_section.m_types
 							, ret_count
 							, SpvOpTypeBool
@@ -297,7 +297,7 @@ aclspv_id_t aclid_mk_default_id(
 							, ret_count
 							, SpvOpTypeVoid, 1)))
 				return 0;
-			ae2f_expected_but_else((ret_count = util_emit_wrd(
+			ae2f_expected_but_else((ret_count = aclutil_emit_wrd(
 							&CTX->m_section.m_types
 							, ret_count
 							, ID_DEFAULT_VOID
@@ -307,7 +307,7 @@ aclspv_id_t aclid_mk_default_id(
 
 		case ID_DEFAULT_I64:
 			ae2f_expected_but_else(
-					ret_count = util_emitx_4(
+					ret_count = aclutil_emitx_4(
 						&CTX->m_section.m_types
 						, ret_count
 						, SpvOpTypeInt
@@ -321,7 +321,7 @@ aclspv_id_t aclid_mk_default_id(
 
 		case ID_DEFAULT_U64:
 			ae2f_expected_but_else(
-					ret_count = util_emitx_4(
+					ret_count = aclutil_emitx_4(
 						&CTX->m_section.m_types
 						, ret_count
 						, SpvOpTypeInt
@@ -334,7 +334,7 @@ aclspv_id_t aclid_mk_default_id(
 			break;
 		case ID_DEFAULT_U32:
 			ae2f_expected_but_else(
-					ret_count = util_emitx_4(
+					ret_count = aclutil_emitx_4(
 						&CTX->m_section.m_types
 						, ret_count
 						, SpvOpTypeInt
@@ -345,7 +345,7 @@ aclspv_id_t aclid_mk_default_id(
 
 		case ID_DEFAULT_I32:
 			ae2f_expected_but_else(
-					ret_count = util_emitx_4(
+					ret_count = aclutil_emitx_4(
 						&CTX->m_section.m_types
 						, ret_count
 						, SpvOpTypeInt
@@ -356,7 +356,7 @@ aclspv_id_t aclid_mk_default_id(
 
 		case ID_DEFAULT_U16:
 			ae2f_expected_but_else(
-					ret_count = util_emitx_4(
+					ret_count = aclutil_emitx_4(
 						&CTX->m_section.m_types
 						, ret_count
 						, SpvOpTypeInt
@@ -371,7 +371,7 @@ aclspv_id_t aclid_mk_default_id(
 
 		case ID_DEFAULT_I16:
 			ae2f_expected_but_else(
-					ret_count = util_emitx_4(
+					ret_count = aclutil_emitx_4(
 						&CTX->m_section.m_types
 						, ret_count
 						, SpvOpTypeInt
@@ -386,7 +386,7 @@ aclspv_id_t aclid_mk_default_id(
 
 		case ID_DEFAULT_U8:
 			ae2f_expected_but_else(
-					ret_count = util_emitx_4(
+					ret_count = aclutil_emitx_4(
 						&CTX->m_section.m_types
 						, ret_count
 						, SpvOpTypeInt
@@ -400,7 +400,7 @@ aclspv_id_t aclid_mk_default_id(
 
 		case ID_DEFAULT_I8:
 			ae2f_expected_but_else(
-					ret_count = util_emitx_4(
+					ret_count = aclutil_emitx_4(
 						&CTX->m_section.m_types
 						, ret_count
 						, SpvOpTypeInt
@@ -413,7 +413,7 @@ aclspv_id_t aclid_mk_default_id(
 			break;
 
 		case ID_DEFAULT_F16:
-			ae2f_expected_but_else(ret_count = util_emitx_3(
+			ae2f_expected_but_else(ret_count = aclutil_emitx_3(
 						&CTX->m_section.m_types
 						, ret_count
 						, SpvOpTypeFloat
@@ -426,7 +426,7 @@ aclspv_id_t aclid_mk_default_id(
 			break;
 
 		case ID_DEFAULT_F32:
-			ae2f_expected_but_else(ret_count = util_emitx_3(
+			ae2f_expected_but_else(ret_count = aclutil_emitx_3(
 						&CTX->m_section.m_types
 						, ret_count
 						, SpvOpTypeFloat
@@ -436,7 +436,7 @@ aclspv_id_t aclid_mk_default_id(
 			break;
 
 		case ID_DEFAULT_F64:
-			ae2f_expected_but_else(ret_count = util_emitx_3(
+			ae2f_expected_but_else(ret_count = aclutil_emitx_3(
 						&CTX->m_section.m_types
 						, ret_count
 						, SpvOpTypeFloat

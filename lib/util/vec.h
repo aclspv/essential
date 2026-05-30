@@ -1,7 +1,6 @@
 #ifndef	aclutil_vec_h
 #define aclutil_vec_h
 
-#include "./ctx.h"
 #include "./literal.h"
 
 /** @brief error could be emitted */

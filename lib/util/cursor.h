@@ -83,19 +83,19 @@ typedef struct {
 		m_goto_lbl;
 
 		struct {
-			util_bind	m_info;
+			aclutil_bind	m_info;
 		}
 		/** when cursor kind is param decl */
 		m_prm_decl;
 	} m_data;
-} util_cursor;
+} aclutil_cursor;
 
 /**
  * find cursor
  * */
 ae2f_extern  aclspv_wrdcount_t aclutil_find_cursor(
 		const aclspv_wrdcount_t			c_num_cursor, 
-		const util_cursor* ae2f_restrict const	rd_cursors,
+		const aclutil_cursor* ae2f_restrict const	rd_cursors,
 		const CXCursor				c_cursor_to_find
 		);
 
@@ -109,8 +109,8 @@ ae2f_extern  aclspv_wrdcount_t aclutil_mk_cursor_base(
 
 ae2f_extern  enum ACLSPV_COMPILE_ aclutil_tell_cursor_lbl(
 		const aclspv_wrdcount_t c_num_cursor, 
-		util_cursor* ae2f_restrict const wr_cursor, 
-		const h_util_ctx_t h_ctx,
+		aclutil_cursor* ae2f_restrict const wr_cursor, 
+		const h_aclspv_ctx_t h_ctx,
 		uintmax_t				c_stage_lvl
 		);
 
@@ -122,8 +122,8 @@ aclspv_id_t aclutil_from_cursor_find_stagedval(
 		);
 
 ae2f_extern aclspv_wrdcount_t aclutil_assign_cursor_lval(
-		util_cursor* ae2f_restrict const wr_cursor,
-		const h_util_ctx_t			h_ctx,
+		aclutil_cursor* ae2f_restrict const wr_cursor,
+		const h_aclspv_ctx_t			h_ctx,
 		const aclspv_id_t			c_val,
 		const aclspv_id_t			c_val_ty,
 		const B_util_literal_t			c_masklit,

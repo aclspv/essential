@@ -23,7 +23,7 @@ aclspv_id_t aclutil_mk_cxtp_fn(
 		ae2f_expected_but_else(ID.m_id) return 0;
 		unless(ID.m_isfirst)		return ID.m_id;
 
-		ae2f_expected_but_else(h_ctx->m_count.m_types = util_emitx_3(
+		ae2f_expected_but_else(h_ctx->m_count.m_types = aclutil_emitx_3(
 					&h_ctx->m_section.m_types
 					, h_ctx->m_count.m_types
 					, SpvOpTypeFunction
@@ -69,7 +69,7 @@ aclspv_id_t aclutil_mk_cxtp_fn1(
 				return aclutil_mk_cxtp_fn(RETID, h_ctx);
 			}	/** fallback: argc was under 0 */
 
-			ae2f_expected_but_else(h_ctx->m_count.m_types = util_emit_wrd(
+			ae2f_expected_but_else(h_ctx->m_count.m_types = aclutil_emit_wrd(
 						&h_ctx->m_section.m_types
 						, h_ctx->m_count.m_types + (aclspv_wrd_t)ARGC + 2
 						, 0)) return 0;

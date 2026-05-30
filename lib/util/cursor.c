@@ -5,14 +5,13 @@
 #include <util/cursor.h>
 #include <assert.h>
 #include <spirv/unified1/spirv.h>
-#include "./ctx.h"
 #include "./emitx.h"
 #include <.aclspv/util/u32_to_hex8.h>
 
 
 aclspv_wrdcount_t aclutil_find_cursor(
 		const aclspv_wrdcount_t			c_num_cursor, 
-		const util_cursor* ae2f_restrict const	rd_cursors,
+		const aclutil_cursor* ae2f_restrict const	rd_cursors,
 		const CXCursor				c_cursor_to_find
 		)
 {
@@ -32,8 +31,8 @@ aclspv_wrdcount_t aclutil_mk_cursor_base(
 	const aclspv_wrd_t	c_num_cursor
 		= ae2f_bll_sel_bool1(
 				aclspv_wrd_t
-				, (aclspv_wrd_t)((size_t)_c_num_cursor > h_cursors->m_sz / sizeof(util_cursor))
-				, (aclspv_wrd_t)(h_cursors->m_sz / sizeof(util_cursor))
+				, (aclspv_wrd_t)((size_t)_c_num_cursor > h_cursors->m_sz / sizeof(aclutil_cursor))
+				, (aclspv_wrd_t)(h_cursors->m_sz / sizeof(aclutil_cursor))
 				, _c_num_cursor
 				);
 
@@ -46,13 +45,13 @@ aclspv_wrdcount_t aclutil_mk_cursor_base(
 					, c_cursor_to_add
 					);
 
-		ae2f_assume((size_t)(c_num_cursor * sizeof(util_cursor)) >= h_cursors->m_sz);
+		ae2f_assume((size_t)(c_num_cursor * sizeof(aclutil_cursor)) >= h_cursors->m_sz);
 		unless(IDX == c_num_cursor) return IDX;
 
 		{
 			size_t	NEWSZ = h_cursors->m_sz;
 			ae2f_ifezerr(NEWSZ)	return c_num_cursor + 1;
-			while(NEWSZ >= h_cursors->m_sz && c_num_cursor >= (aclspv_wrd_t)(NEWSZ / sizeof(util_cursor)))
+			while(NEWSZ >= h_cursors->m_sz && c_num_cursor >= (aclspv_wrd_t)(NEWSZ / sizeof(aclutil_cursor)))
 				(void)(NEWSZ <<= 1);
 
 			ae2f_ifezerr(NEWSZ >= h_cursors->m_sz)
@@ -71,7 +70,7 @@ aclspv_wrdcount_t aclutil_mk_cursor_base(
 		*ae2f_bll_sel_ptrbool1(
 				CXCursor* ae2f_restrict
 				, ae2f_expected(h_cursors->m_p)
-				, &((util_cursor* ae2f_restrict)h_cursors->m_p)[c_num_cursor].m_cursor
+				, &((aclutil_cursor* ae2f_restrict)h_cursors->m_p)[c_num_cursor].m_cursor
 				, &CUR_DUMMY) = c_cursor_to_add;
 
 		return c_num_cursor + (!h_cursors->m_p);
@@ -79,8 +78,8 @@ aclspv_wrdcount_t aclutil_mk_cursor_base(
 
 enum ACLSPV_COMPILE_ aclutil_tell_cursor_lbl(
 		const aclspv_wrdcount_t c_num_cursor, 
-		util_cursor* ae2f_restrict const wr_cursor, 
-		const h_util_ctx_t		h_ctx,
+		aclutil_cursor* ae2f_restrict const wr_cursor, 
+		const h_aclspv_ctx_t		h_ctx,
 		uintmax_t			c_cursor_lvl
 		) {
 	aclspv_wrdcount_t	IDX = c_num_cursor;
@@ -103,7 +102,7 @@ enum ACLSPV_COMPILE_ aclutil_tell_cursor_lbl(
 				== (ACLUTIL_CURSOR_VAR_ALLOCATED | ACLUTIL_CURSOR_VAR_OCCUPIED)) {
 			if(CURSORDATA.m_mask & ACLUTIL_CURSOR_VAR_PREDICTABLE &&
 					(CURSORDATA.m_init_val && !ae2f_expected(
-										 h_ctx->m_count.m_fnimpl = util_emitx_3(
+										 h_ctx->m_count.m_fnimpl = aclutil_emitx_3(
 											 &h_ctx->m_section.m_fnimpl
 											 , h_ctx->m_count.m_fnimpl
 											 , SpvOpStore
@@ -133,7 +132,7 @@ enum ACLSPV_COMPILE_ aclutil_tell_cursor_lbl(
 				return ACLSPV_COMPILE_ALLOC_FAILED_CURSOR;
 
 			if(CURSORDATA.m_init_val && !ae2f_expected(
-						h_ctx->m_count.m_fnimpl = util_emitx_3(
+						h_ctx->m_count.m_fnimpl = aclutil_emitx_3(
 							&h_ctx->m_section.m_fnimpl
 							, h_ctx->m_count.m_fnimpl
 							, SpvOpStore
@@ -163,7 +162,7 @@ enum ACLSPV_COMPILE_ aclutil_tell_cursor_lbl(
 								, h_ctx->m_count.m_name
 								, SpvOpName, 0))
 						) goto LBL_FAIL;					
-				ae2f_expected_but_else((h_ctx->m_count.m_name = util_emit_wrd(
+				ae2f_expected_but_else((h_ctx->m_count.m_name = aclutil_emit_wrd(
 								&h_ctx->m_section.m_name
 								, h_ctx->m_count.m_name
 								, CURSORDATA.m_id
@@ -204,7 +203,7 @@ aclspv_wrdcount_t aclutil_from_cursor_find_stagedval(
 		const umax c_stage, 
 		const aclspv_id_t c_ty
 		) {
-#define	CURSORS	((const util_cursor* ae2f_restrict)h_cursors->m_p)
+#define	CURSORS	((const aclutil_cursor* ae2f_restrict)h_cursors->m_p)
 
 	aclspv_wrdcount_t	CURI = c_num_cursor;
 
@@ -212,7 +211,7 @@ aclspv_wrdcount_t aclutil_from_cursor_find_stagedval(
 	ae2fpat_assertassume(CURSORS);
 
 	while(CURI--) {
-		const util_cursor C = CURSORS[CURI];
+		const aclutil_cursor C = CURSORS[CURI];
 		if(clang_getCursorKind(C.m_cursor) != CXCursor_VarDecl)
 			continue;
 

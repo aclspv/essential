@@ -29,7 +29,7 @@ aclspv_id_t aclutil_mk_cxtp_struct_single(
 		ae2f_expected_but_else(ID.m_id) return 0;
 		unless(ID.m_isfirst)		return ID.m_id;
 
-		ae2f_expected_but_else(h_ctx->m_count.m_types = util_emitx_3(
+		ae2f_expected_but_else(h_ctx->m_count.m_types = aclutil_emitx_3(
 					&h_ctx->m_section.m_types
 					, h_ctx->m_count.m_types
 					, SpvOpTypeStruct
@@ -38,7 +38,7 @@ aclspv_id_t aclutil_mk_cxtp_struct_single(
 					)) return 0;
 
 		if(c_decorate_field0 & (ACLSPV_CXTP_STRUCT_DECORATION_FIELD0_BLOCK))
-			ae2f_expected_but_else(h_ctx->m_count.m_decorate = util_emitx_3(
+			ae2f_expected_but_else(h_ctx->m_count.m_decorate = aclutil_emitx_3(
 						&h_ctx->m_section.m_decorate
 						, h_ctx->m_count.m_decorate
 						, SpvOpDecorate
@@ -47,7 +47,7 @@ aclspv_id_t aclutil_mk_cxtp_struct_single(
 						)) return 0;
 
 		if(c_memdecorate_offset ^ 0xFFFFFFFF) {
-			ae2f_expected_but_else(h_ctx->m_count.m_decorate = util_emitx_5(
+			ae2f_expected_but_else(h_ctx->m_count.m_decorate = aclutil_emitx_5(
 						&h_ctx->m_section.m_decorate
 						, h_ctx->m_count.m_decorate
 						, SpvOpMemberDecorate

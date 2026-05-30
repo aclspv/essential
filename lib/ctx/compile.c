@@ -3,7 +3,6 @@
 
 #include <clang-c/CXErrorCode.h>
 #include <clang-c/Index.h>
-#include <util/ctx.h>
 #include <util/entp.h>
 #include <util/fn.h>
 #include <util/fnctx.h>
@@ -13,9 +12,9 @@
 #include <util/cxtp.h>
 #include <util/emitx.h>
 
-#include <emit/count_fn.h>
-#include <emit/decl_glob_obj.h>
-#include <emit/entp_body.h>
+#include <aclemit/count_fn.h>
+#include <aclemit/decl_glob_obj.h>
+#include <aclemit/entp_body.h>
 
 ACLSPV_ABI_IMPL enum ACLSPV_COMPILE_ aclspv_ctx_compile(h_aclspv_ctx_t h_ctx, CXCursor c_cur_root) {
 	ae2f_ifezerr(h_ctx)	return ACLSPV_COMPILE_PRM_INVAL_NIL;
@@ -94,7 +93,7 @@ ACLSPV_ABI_IMPL enum ACLSPV_COMPILE_ aclspv_ctx_compile(h_aclspv_ctx_t h_ctx, CX
 
 			(*h_ctx).m_tmp.m_w0 = IDX;
 
-			ae2f_expected_but_else((*h_ctx).m_count.m_fndef = util_emitx_5(
+			ae2f_expected_but_else((*h_ctx).m_count.m_fndef = aclutil_emitx_5(
 						&(*h_ctx).m_section.m_fndef
 						, (*h_ctx).m_count.m_fndef
 						, SpvOpFunction
@@ -106,7 +105,7 @@ ACLSPV_ABI_IMPL enum ACLSPV_COMPILE_ aclspv_ctx_compile(h_aclspv_ctx_t h_ctx, CX
 				return (*h_ctx).m_err = ACLSPV_COMPILE_ALLOC_FAILED;
 			}
 
-			ae2f_expected_but_else((*h_ctx).m_count.m_fndef = util_emitx_2(
+			ae2f_expected_but_else((*h_ctx).m_count.m_fndef = aclutil_emitx_2(
 						&(*h_ctx).m_section.m_fndef
 						, (*h_ctx).m_count.m_fndef
 						, SpvOpLabel
@@ -114,11 +113,11 @@ ACLSPV_ABI_IMPL enum ACLSPV_COMPILE_ aclspv_ctx_compile(h_aclspv_ctx_t h_ctx, CX
 				return (*h_ctx).m_err = ACLSPV_COMPILE_ALLOC_FAILED;
 			}
 
-			IDX = (aclspv_wrd_t)FNSCALE->m_sz / (size_t)sizeof(util_bind);
+			IDX = (aclspv_wrd_t)FNSCALE->m_sz / (size_t)sizeof(aclutil_bind);
 			(*h_ctx).m_num_cursor	= IDX;
 
 			while(IDX--) {
-				const util_bind* ae2f_restrict const BUFFER = get_buf_from_scale(&(*h_ctx).m_scale_vars, FNSCALE[0]);
+				const aclutil_bind* ae2f_restrict const BUFFER = get_buf_from_scale(&(*h_ctx).m_scale_vars, FNSCALE[0]);
 				const aclspv_wrd_t CURSOR_IDX = aclutil_mk_cursor_base(
 						(*h_ctx).m_num_cursor
 						, &(*h_ctx).m_cursors
@@ -140,7 +139,7 @@ ACLSPV_ABI_IMPL enum ACLSPV_COMPILE_ aclspv_ctx_compile(h_aclspv_ctx_t h_ctx, CX
 				if(CURSOR_IDX == (*h_ctx).m_num_cursor)
 					++(*h_ctx).m_num_cursor;
 
-				CURSOR_IDX[(util_cursor* ae2f_restrict)(*h_ctx).m_cursors.m_p]
+				CURSOR_IDX[(aclutil_cursor* ae2f_restrict)(*h_ctx).m_cursors.m_p]
 					.m_data.m_prm_decl.m_info = BUFFER[IDX];
 			}
 			IDX = (*h_ctx).m_tmp.m_w0;

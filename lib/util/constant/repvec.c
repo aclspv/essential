@@ -14,9 +14,13 @@ ae2f_inline_f static struct aclutil_mk_constant_repvec_t ae2f_ccconst s_mkret(co
 	return R;
 }
 
-struct aclutil_mk_constant_repvec_t	aclutil_mk_constant_repvec_id(const aclspv_id_t	c_id_ty, const aclspv_id_t c_val, const aclspv_wrd_t c_literal, h_util_ctx_t h_ctx) {
+struct aclutil_mk_constant_repvec_t	aclutil_mk_constant_repvec_id(
+		const aclspv_id_t	c_id_ty,
+		const aclspv_id_t c_val,
+		const aclspv_wrd_t c_literal,
+		h_aclspv_ctx_t h_ctx) {
 	const u64_fast KEY = (u64_fast)(c_id_ty) | (((u64_fast)(c_val)) << (u64_fast)32);
-	util_constant* C = aclutil_mk_constant_node(KEY, h_ctx);
+	aclutil_constant* C = aclutil_mk_constant_node(KEY, h_ctx);
 
 	aclspv_id_t	VEC_COUNT = aclutil_cxtp_get_veccfg(c_id_ty, h_ctx).m_num;
 
@@ -57,7 +61,7 @@ struct aclutil_mk_constant_repvec_t	aclutil_mk_constant_repvec_id(const aclspv_i
 	if(C->m_repvec)
 		return s_mkret(C->m_repvec, C->m_repvec_literal_mask);
 
-	ae2f_ifezerr(*P_VWRD = util_emit_wrd(P_VEC, *P_VWRD + 2 + VEC_COUNT, 0)) {
+	ae2f_ifezerr(*P_VWRD = aclutil_emit_wrd(P_VEC, *P_VWRD + 2 + VEC_COUNT, 0)) {
 		h_ctx->m_err = ACLSPV_COMPILE_ALLOC_FAILED_VEC;
 		return s_mkret(0, 0);
 	}

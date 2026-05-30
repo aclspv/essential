@@ -14,13 +14,13 @@ typedef	struct {
 	aclspv_wrdcount_t	m_arg_idx;
 	aclspv_wrdcount_t	m_entp_idx;
 	CXCursor		m_cursor;
-}	util_bind_unified;
+}	aclutil_bind_common;
 
 typedef union {
-	util_bind_unified		m_unified;
+	aclutil_bind_common		m_unified;
 
 	struct {
-		util_bind_unified	m_unified;
+		aclutil_bind_common	m_unified;
 
 		/** extension */
 		aclspv_wrd_t		m_set;
@@ -28,21 +28,21 @@ typedef union {
 	}	m_bindable;
 
 	struct {
-		util_bind_unified	m_unified;
+		aclutil_bind_common	m_unified;
 
 		/** extension */
 		aclspv_wrdcount_t	m_arr_count_id;
 	}	m_work;
 
 	struct {
-		util_bind_unified	m_unified;
+		aclutil_bind_common	m_unified;
 
 		aclspv_wrdcount_t	m_location;
 	}	m_io;
 
 	struct {
 		/** unused except for m_arg_idx, m_storage_class */
-		util_bind_unified	m_unified;
+		aclutil_bind_common	m_unified;
 		/** as word count */
 		aclspv_wrd_t		m_size;
 
@@ -51,6 +51,6 @@ typedef union {
 	}	
 	/** push constant */
 	m_pshconst;
-} util_bind;
+} aclutil_bind;
 
 #endif

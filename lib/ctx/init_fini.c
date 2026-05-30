@@ -1,7 +1,7 @@
 #include <aclspv.h>
 #include <util/scale.h>
 
-#include "./impl/conf.h"
+#include "./conf.h"
 
 ACLSPV_ABI_IMPL void aclspv_fini_ctx(
 		const h_aclspv_ctx_t	d_ctx
@@ -86,5 +86,5 @@ ACLSPV_ABI_IMPL enum ACLSPV_COMPILE_ aclspv_init_ctx(
 
 	return ae2f_unexpected(i_ctx->m_err)
 		? i_ctx->m_err
-		: (i_ctx->m_err = impl_conf(i_ctx));
+		: (i_ctx->m_err = aclspv_ctx_conf(i_ctx));
 }

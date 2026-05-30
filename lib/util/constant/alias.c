@@ -12,14 +12,14 @@
 #include <ae2f/bll.h>
 
 
-aclspv_id_t	aclutil_mk_constant_vec32_id(const aclspv_wrd_t c_val, h_util_ctx_t h_ctx)
+aclspv_id_t	aclutil_mk_constant_vec32_id(const aclspv_wrd_t c_val, h_aclspv_ctx_t h_ctx)
 {
 	return  aclid_mk_default_id(ID_DEFAULT_I32, h_ctx)
 		? aclutil_mk_cxtp_vec(ID_DEFAULT_I32, c_val, h_ctx)
 		: 0;
 }
 
-aclspv_id_t	aclutil_mk_constant_arr8_id(const u64_least c_arrcount, h_util_ctx_t h_ctx)
+aclspv_id_t	aclutil_mk_constant_arr8_id(const u64_least c_arrcount, h_aclspv_ctx_t h_ctx)
 {
 	const aclspv_id_t	VAL = c_arrcount <= 0xFFFFFFFF 
 		? aclutil_mk_constant_val_id((aclspv_wrd_t)c_arrcount, h_ctx)
@@ -30,7 +30,7 @@ aclspv_id_t	aclutil_mk_constant_arr8_id(const u64_least c_arrcount, h_util_ctx_t
 		: 0;
 }
 
-aclspv_id_t	aclutil_mk_constant_arr16_id(const u64_least c_arrcount, h_util_ctx_t h_ctx)
+aclspv_id_t	aclutil_mk_constant_arr16_id(const u64_least c_arrcount, h_aclspv_ctx_t h_ctx)
 {
 	const aclspv_id_t	VAL = c_arrcount <= 0xFFFFFFFF 
 		? aclutil_mk_constant_val_id((aclspv_wrd_t)c_arrcount, h_ctx)
@@ -41,7 +41,7 @@ aclspv_id_t	aclutil_mk_constant_arr16_id(const u64_least c_arrcount, h_util_ctx_
 		: 0;
 }
 
-aclspv_id_t	aclutil_mk_constant_arr32_id(const u64_least c_arrcount, h_util_ctx_t h_ctx)
+aclspv_id_t	aclutil_mk_constant_arr32_id(const u64_least c_arrcount, h_aclspv_ctx_t h_ctx)
 {
 	const aclspv_id_t	VAL = c_arrcount <= 0xFFFFFFFF 
 		? aclutil_mk_constant_val_id((aclspv_wrd_t)c_arrcount, h_ctx)
@@ -52,7 +52,7 @@ aclspv_id_t	aclutil_mk_constant_arr32_id(const u64_least c_arrcount, h_util_ctx_
 		: 0;
 }
 
-aclspv_id_t	aclutil_mk_constant_arr128_id(const u64_least c_arrcount, h_util_ctx_t h_ctx)
+aclspv_id_t	aclutil_mk_constant_arr128_id(const u64_least c_arrcount, h_aclspv_ctx_t h_ctx)
 {
 	const aclspv_id_t ID_U32V4	= aclutil_mk_constant_vec32_id(4, h_ctx);
 	const aclspv_id_t	VAL = c_arrcount <= 0xFFFFFFFF 
@@ -64,7 +64,7 @@ aclspv_id_t	aclutil_mk_constant_arr128_id(const u64_least c_arrcount, h_util_ctx
 		: 0;
 }
 
-aclspv_id_t	aclutil_mk_constant_struct_id(const aclspv_wrd_t c_arrcount, h_util_ctx_t h_ctx) {
+aclspv_id_t	aclutil_mk_constant_struct_id(const aclspv_wrd_t c_arrcount, h_aclspv_ctx_t h_ctx) {
 	const aclspv_id_t ID_ARR32 = aclutil_mk_constant_arr32_id(c_arrcount, h_ctx);
 
 	return ID_ARR32 ? aclutil_mk_cxtp_struct_single(
@@ -73,7 +73,7 @@ aclspv_id_t	aclutil_mk_constant_struct_id(const aclspv_wrd_t c_arrcount, h_util_
 			, 0, h_ctx) : 0;
 }
 
-aclspv_id_t	aclutil_mk_constant_struct128_id(const aclspv_wrd_t c_arrcount, h_util_ctx_t h_ctx) {
+aclspv_id_t	aclutil_mk_constant_struct128_id(const aclspv_wrd_t c_arrcount, h_aclspv_ctx_t h_ctx) {
 	const aclspv_id_t ID_ARR128 = aclutil_mk_constant_arr128_id(c_arrcount, h_ctx);
 	return ID_ARR128 ? aclutil_mk_cxtp_struct_single(
 			ID_ARR128
@@ -81,7 +81,7 @@ aclspv_id_t	aclutil_mk_constant_struct128_id(const aclspv_wrd_t c_arrcount, h_ut
 			, 0, h_ctx) : 0;
 }
 
-aclspv_id_t	aclutil_mk_constant_structpriv_id(const aclspv_wrd_t c_wrdcount, h_util_ctx_t h_ctx) {
+aclspv_id_t	aclutil_mk_constant_structpriv_id(const aclspv_wrd_t c_wrdcount, h_aclspv_ctx_t h_ctx) {
 	const aclspv_id_t ID_ARR32 = aclutil_mk_constant_arr32_id(c_wrdcount, h_ctx);
 
 	return ID_ARR32 ? aclutil_mk_cxtp_struct_single(
@@ -93,7 +93,7 @@ aclspv_id_t	aclutil_mk_constant_structpriv_id(const aclspv_wrd_t c_wrdcount, h_u
 aclspv_id_t	aclutil_mk_constant_structprivspec_id(
 		const aclspv_wrd_t c_key, 
 		const u64_least c_wrdcount, 
-		h_util_ctx_t h_ctx
+		h_aclspv_ctx_t h_ctx
 		) 
 {
 	aclspv_id_t	NUM_ID = aclutil_mk_constant_spec_id(c_key, (aclspv_wrd_t)c_wrdcount, h_ctx);  

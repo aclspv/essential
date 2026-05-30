@@ -27,7 +27,7 @@ aclspv_id_t aclutil_mk_cxtp_arr2(
 		ae2f_expected_but_else(ID.m_id) return 0;
 		unless(ID.m_isfirst)            return ID.m_id;
 
-		ae2f_expected_but_else(h_ctx->m_count.m_types = util_emitx_4(
+		ae2f_expected_but_else(h_ctx->m_count.m_types = aclutil_emitx_4(
 					&h_ctx->m_section.m_types
 					, h_ctx->m_count.m_types
 					, SpvOpTypeArray
@@ -37,7 +37,7 @@ aclspv_id_t aclutil_mk_cxtp_arr2(
 					)) return 0;
 
 		if(c_decorate_stride ^ 0xFFFFFFFF)
-			ae2f_expected_but_else(h_ctx->m_count.m_decorate = util_emitx_4(
+			ae2f_expected_but_else(h_ctx->m_count.m_decorate = aclutil_emitx_4(
 						&h_ctx->m_section.m_decorate
 						, h_ctx->m_count.m_decorate
 						, SpvOpDecorate

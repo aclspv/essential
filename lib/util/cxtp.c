@@ -6,10 +6,11 @@
 #include "./iddef.h"
 
 #include <ae2f/bll.h>
+#include <ae2f/pat/dbg.h>
 
 #if	1
-#include <attr/storage_class.h>
-#include <attr/specid.h>
+#include <aclattr/storage_class.h>
+#include <aclattr/specid.h>
 #endif
 
 ae2f_ccconst aclspv_id_t aclutil_mk_cxtp_by_type(const CXType c_ty) {

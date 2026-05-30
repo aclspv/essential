@@ -1,8 +1,6 @@
 #ifndef	aclutil_log_h
 #define	aclutil_log_h
 
-#define	DBG	1
-
 #ifndef	DBG
 #if defined(NDEBUG) && NDEBUG
 #define	DBG 0

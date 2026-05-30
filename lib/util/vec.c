@@ -41,7 +41,7 @@ aclspv_id_t aclutil_mkvec(
 		return 0;
 	}
 
-	ae2f_ifezerr(*P_VWRD = util_emit_wrd(P_VEC, *P_VWRD + 2 + c_num_elm, 0)) {
+	ae2f_ifezerr(*P_VWRD = aclutil_emit_wrd(P_VEC, *P_VWRD + 2 + c_num_elm, 0)) {
 		h_ctx->m_err = ACLSPV_COMPILE_ALLOC_FAILED_VEC;
 		return 0;
 	}

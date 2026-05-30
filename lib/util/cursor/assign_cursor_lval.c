@@ -1,7 +1,7 @@
 #include <clang-c/CXString.h>
 #include <util/emitx.h>
 #include <util/cursor.h>
-#include <emit/expr.h>
+#include <aclexpr.h>
 #include <ae2f/bll.h>
 #include <ae2f/cgoto.h>
 #include <.aclspv/util/mkname.h>
@@ -16,8 +16,8 @@ ae2f_inline_f ae2f_ccconst static aclspv_bool_t s_is_lval(const enum CXCursorKin
 }
 
 aclspv_id_t aclutil_assign_cursor_lval(
-		util_cursor* ae2f_restrict const wr_cursor,
-		const h_util_ctx_t			h_ctx,
+		aclutil_cursor* ae2f_restrict const wr_cursor,
+		const h_aclspv_ctx_t			h_ctx,
 		const aclspv_id_t			c_val,
 		const aclspv_id_t			c_val_ty,
 		const B_util_literal_t			c_masklit,
@@ -106,7 +106,7 @@ aclspv_id_t aclutil_assign_cursor_lval(
 	}
 
 	(*wr_cursor).m_data.m_vardecl.m_mask	 |= ACLUTIL_CURSOR_VAR_PREDICTABLE;
-	ae2f_expected_but_else(h_ctx->m_count.m_fnimpl = util_emitx_4(
+	ae2f_expected_but_else(h_ctx->m_count.m_fnimpl = aclutil_emitx_4(
 				&h_ctx->m_section.m_fnimpl
 				, h_ctx->m_count.m_fnimpl
 				, SpvOpLoad

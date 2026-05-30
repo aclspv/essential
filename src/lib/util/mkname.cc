@@ -7,7 +7,6 @@
 #include <ae2f/cgoto.h>
 
 #include <util/wrd.h>
-#include <util/ctx.h>
 #include <util/emitx.h>
 #include <string.h>
 
@@ -42,7 +41,7 @@ ae2f_MAC((L, )) aclutil_mkname_dbg(const aclspv_id_t c_id, const char* const c_n
 		{
 			int CND =
 				ae2f_expected_not_strict(!
-						(((cr_ctx).m_count.m_name = util_emitx_2(
+						(((cr_ctx).m_count.m_name = aclutil_emitx_2(
 											 &(cr_ctx).m_section.m_name
 											 , (cr_ctx).m_count.m_name
 											 , SpvOpName

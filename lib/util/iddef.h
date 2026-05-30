@@ -5,7 +5,6 @@
 
 
 #include "./id.h"
-#include "./ctx.h"
 #include "./wrd.h"
 
 /**
@@ -38,7 +37,7 @@ aclspv_bool_t aclid_is_arithmetic(const aclspv_id_t c_id, const h_aclspv_ctx_t h
 
 aclspv_id_t aclid_mk_default_id(
 		const B_id_default_t	c_id_default,
-		h_util_ctx_t	h_ctx
+		h_aclspv_ctx_t	h_ctx
 		);
 
 

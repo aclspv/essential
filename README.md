@@ -14,7 +14,13 @@ cmake --build build
 ```
 
 ## language
-- ISO C90 with strict rule with libclang
+- ISO C90 with strict rule.
+
+## dependency
+- cmake >= 3.10
+- c compiler which compiles c90+
+-
+
 
 ## license
 - [this project](./LICENSE)

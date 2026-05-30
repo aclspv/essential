@@ -10,7 +10,6 @@
 #include <ae2f/cc.h>
 
 #include "./wrd.h"
-#include "./ctx.h"
 
 #include <aclspv.h>
 
@@ -36,7 +35,7 @@ enum ACLUTIL_FNCTX_STATE0_ {
 #undef	__ENUM
 
 typedef struct {
-	h_util_ctx_t		m_ctx;
+	h_aclspv_ctx_t		m_ctx;
 	uintmax_t		m_var_stage;	/** scope level */
 
 	/** @brief see `enum ACLSPV_FNCTX_STATEPAD0_` */

@@ -75,7 +75,7 @@ ACLSPV_ABI_IMPL aclspv_bool_t aclspv_add_capability_from_ctx(
 
 	if(LEFT < COUNT && BASE[(LEFT << 1) + 1] == KEY) return 1;
 
-	ae2f_ifezerr(h_ctx->m_count.m_capability = util_emitx_2(
+	ae2f_ifezerr(h_ctx->m_count.m_capability = aclutil_emitx_2(
 				&h_ctx->m_section.m_capability
 				, h_ctx->m_count.m_capability
 				, SpvOpCapability

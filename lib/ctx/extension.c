@@ -104,7 +104,7 @@ LBL_NOT_FOUND:
 	dbg_puts(c_ext);
 	dbg_puts("extension::edge");
 	unless(I < C) {
-		ae2f_ifezerr(h_ctx->m_count.m_ext = util_emit_wrd(
+		ae2f_ifezerr(h_ctx->m_count.m_ext = aclutil_emit_wrd(
 					&h_ctx->m_section.m_ext
 					, h_ctx->m_count.m_ext
 					, SpvOpExtension | (WCEXT << 16))) {
@@ -125,7 +125,7 @@ LBL_NOT_FOUND:
 	dbg_puts(c_ext);
 	dbg_puts("extension::mid");
 
-	ae2f_ifezerr(h_ctx->m_count.m_ext = util_emit_wrd(
+	ae2f_ifezerr(h_ctx->m_count.m_ext = aclutil_emit_wrd(
 				&h_ctx->m_section.m_ext
 				, h_ctx->m_count.m_ext + WCEXT - 1
 				, 0)) {
