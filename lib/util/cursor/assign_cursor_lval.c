@@ -20,12 +20,12 @@ aclspv_id_t aclutil_assign_cursor_lval(
 		const h_aclspv_ctx_t			h_ctx,
 		const aclspv_id_t			c_val,
 		const aclspv_id_t			c_val_ty,
-		const B_util_literal_t			c_masklit,
-		const util_literal* ae2f_restrict	rd_literal_to_assign,
-		util_literal*	ae2f_restrict		r_literal_opt
+		const aclutil_ltrlmask_t			c_masklit,
+		const aclutil_literal* ae2f_restrict	rd_literal_to_assign,
+		aclutil_literal*	ae2f_restrict		r_literal_opt
 		) {
-	util_literal	LIT_DUMMY;
-	r_literal_opt = ae2f_bll_sel_ptrbool_naive1(util_literal* ae2f_restrict, r_literal_opt, r_literal_opt, &LIT_DUMMY);
+	aclutil_literal	LIT_DUMMY;
+	r_literal_opt = ae2f_bll_sel_ptrbool_naive1(aclutil_literal* ae2f_restrict, r_literal_opt, r_literal_opt, &LIT_DUMMY);
 
 	dbg_prefix();
 	dbg_call((void), fprintf(stderr, "assign_cursor_lval | typeid: %u typeid_req: %u\n"
@@ -41,7 +41,7 @@ aclspv_id_t aclutil_assign_cursor_lval(
 	}
 
 	if(r_literal_opt) *r_literal_opt = (*wr_cursor).m_data.m_vardecl.m_literal;
-	if(rd_literal_to_assign && (c_masklit & UTIL_LITERAL_LITERAL)) {
+	if(rd_literal_to_assign && (c_masklit & ACLUTIL_LITERAL_LITERAL)) {
 		(*wr_cursor).m_data.m_vardecl.m_mask |= 3 | ACLUTIL_CURSOR_VAR_PREDICTABLE;
 
 		switch(aclexpr_arithmetic_cast_literal(
@@ -91,7 +91,7 @@ aclspv_id_t aclutil_assign_cursor_lval(
 			default:
 				return 0;
 			case EMIT_EXPR_SUCCESS_CONSTANT:
-				(*wr_cursor).m_data.m_vardecl.m_mask |= UTIL_LITERAL_CONSTANT;
+				(*wr_cursor).m_data.m_vardecl.m_mask |= ACLUTIL_LITERAL_CONSTANT;
 				ae2f_fallthrough;
 
 			case EMIT_EXPR_SUCCESS:

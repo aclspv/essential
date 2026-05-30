@@ -25,7 +25,7 @@ typedef struct {
 
 	aclspv_id_t		m_const_val_bool;
 	aclspv_id_t		m_const_spec_id;
-	e_id_default		m_const_spec_type;
+	enum ACLSPV_ID_		m_const_spec_type;
 
 	aclspv_id_t		m_repvec;
 	aclspv_wrd_t		m_repvec_literal_mask;
@@ -142,28 +142,28 @@ struct aclutil_mk_constant_repvec_t {
 struct aclutil_mk_constant_repvec_t	aclutil_mk_constant_repvec_id(const aclspv_id_t	c_id_ty, const aclspv_id_t c_val, const aclspv_wrd_t c_literal_mask, h_aclspv_ctx_t h_ctx);
 
 
-ae2f_unused ae2f_inline_f static aclspv_id_t	aclutil_mk_constant_val_by_enum(const u64_least c_val, h_aclspv_ctx_t h_ctx, enum ID_DEFAULT_ c_ty) {
+ae2f_unused ae2f_inline_f static aclspv_id_t	aclutil_mk_constant_val_by_enum(const u64_least c_val, h_aclspv_ctx_t h_ctx, enum ACLSPV_ID_ c_ty) {
 	switch((uint_leastenum_t)c_ty) {
 #define	CASE_NUM(k, nbyte, ty)	case (k): return	\
 		aclutil_mk_constant_val_id1(c_val, h_ctx, (nbyte), (ty))
 
-		CASE_NUM(ID_DEFAULT_I8, ACLUTIL_CV_NBYTE_1, ACLUTIL_CV_TY_SIGNED);
-		CASE_NUM(ID_DEFAULT_I16, ACLUTIL_CV_NBYTE_2, ACLUTIL_CV_TY_SIGNED);
-		CASE_NUM(ID_DEFAULT_I32, ACLUTIL_CV_NBYTE_4, ACLUTIL_CV_TY_SIGNED);
-		CASE_NUM(ID_DEFAULT_I64, ACLUTIL_CV_NBYTE_8, ACLUTIL_CV_TY_SIGNED);
+		CASE_NUM(ACLSPV_ID_I8, ACLUTIL_CV_NBYTE_1, ACLUTIL_CV_TY_SIGNED);
+		CASE_NUM(ACLSPV_ID_I16, ACLUTIL_CV_NBYTE_2, ACLUTIL_CV_TY_SIGNED);
+		CASE_NUM(ACLSPV_ID_I32, ACLUTIL_CV_NBYTE_4, ACLUTIL_CV_TY_SIGNED);
+		CASE_NUM(ACLSPV_ID_I64, ACLUTIL_CV_NBYTE_8, ACLUTIL_CV_TY_SIGNED);
 
-		CASE_NUM(ID_DEFAULT_U8, ACLUTIL_CV_NBYTE_1, ACLUTIL_CV_TY_UNSIGNED);
-		CASE_NUM(ID_DEFAULT_U16, ACLUTIL_CV_NBYTE_2, ACLUTIL_CV_TY_UNSIGNED);
-		CASE_NUM(ID_DEFAULT_U32, ACLUTIL_CV_NBYTE_4, ACLUTIL_CV_TY_UNSIGNED);
-		CASE_NUM(ID_DEFAULT_U64, ACLUTIL_CV_NBYTE_8, ACLUTIL_CV_TY_UNSIGNED);
+		CASE_NUM(ACLSPV_ID_U8, ACLUTIL_CV_NBYTE_1, ACLUTIL_CV_TY_UNSIGNED);
+		CASE_NUM(ACLSPV_ID_U16, ACLUTIL_CV_NBYTE_2, ACLUTIL_CV_TY_UNSIGNED);
+		CASE_NUM(ACLSPV_ID_U32, ACLUTIL_CV_NBYTE_4, ACLUTIL_CV_TY_UNSIGNED);
+		CASE_NUM(ACLSPV_ID_U64, ACLUTIL_CV_NBYTE_8, ACLUTIL_CV_TY_UNSIGNED);
 
-		CASE_NUM(ID_DEFAULT_F16, ACLUTIL_CV_NBYTE_2, ACLUTIL_CV_TY_FLT);
-		CASE_NUM(ID_DEFAULT_F32, ACLUTIL_CV_NBYTE_4, ACLUTIL_CV_TY_FLT);
-		CASE_NUM(ID_DEFAULT_F64, ACLUTIL_CV_NBYTE_8, ACLUTIL_CV_TY_FLT);
+		CASE_NUM(ACLSPV_ID_F16, ACLUTIL_CV_NBYTE_2, ACLUTIL_CV_TY_FLT);
+		CASE_NUM(ACLSPV_ID_F32, ACLUTIL_CV_NBYTE_4, ACLUTIL_CV_TY_FLT);
+		CASE_NUM(ACLSPV_ID_F64, ACLUTIL_CV_NBYTE_8, ACLUTIL_CV_TY_FLT);
 
 #undef	CASE_NUM
 
-		case ID_DEFAULT_BOOL: return aclutil_mk_constant_bool_id((aclspv_bool_t)c_val, h_ctx);
+		case ACLSPV_ID_BOOL: return aclutil_mk_constant_bool_id((aclspv_bool_t)c_val, h_ctx);
 
 		default:
 			return 0;

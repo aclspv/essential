@@ -27,7 +27,7 @@ ae2f_MAC((L, )) aclemit_body_if(CXCursor h_cur, aclutil_fnctx * ae2f_restrict h_
 				L$$WEIGHTS[2] = {0, 0},
 				L$$IFCTL = SpvSelectionControlMaskNone;
 
-	util_literal		L$$LTLR;
+	aclutil_literal		L$$LTLR;
 
 	ae2fpat_assertassume(h_fnctx);
 	ae2fpat_assertassume(h_fnctx->m_ctx);
@@ -54,7 +54,7 @@ ae2f_MAC((L, )) aclemit_body_if(CXCursor h_cur, aclutil_fnctx * ae2f_restrict h_
 
 	switch(aclexpr_eval(
 				&L$$IDVAL
-				, ID_DEFAULT_BOOL
+				, ACLSPV_ID_BOOL
 				, L$$IFPART.m_parts[0]
 				, &L$$LTLR
 				, (h_fnctx->m_ctx)))

@@ -168,13 +168,13 @@ enum ACLSPV_COMPILE_ aclutil_tell_cursor_lbl(
 								, CURSORDATA.m_id
 								)))						
 					goto LBL_FAIL;								
-				ae2f_expected_but_else((h_ctx->m_count.m_name = util_emit_str(
+				ae2f_expected_but_else((h_ctx->m_count.m_name = aclutil_emit_str(
 								&h_ctx->m_section.m_name			
 								, h_ctx->m_count.m_name		
 								, h_ctx->m_tmp.m_v0.m_p 			
 								)))						
 					goto LBL_FAIL;								
-				set_oprnd_count_for_opcode(get_wrd_of_vec(					
+				set_oprnd_count_for_opcode(aclutil_get_wrd_of_vec(					
 							&h_ctx->m_section.m_name)[POS]				
 						, h_ctx->m_count.m_name - POS - 1);
 

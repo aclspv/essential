@@ -14,8 +14,8 @@
 
 aclspv_id_t	aclutil_mk_constant_vec32_id(const aclspv_wrd_t c_val, h_aclspv_ctx_t h_ctx)
 {
-	return  aclid_mk_default_id(ID_DEFAULT_I32, h_ctx)
-		? aclutil_mk_cxtp_vec(ID_DEFAULT_I32, c_val, h_ctx)
+	return  aclid_mk_default_id(ACLSPV_ID_I32, h_ctx)
+		? aclutil_mk_cxtp_vec(ACLSPV_ID_I32, c_val, h_ctx)
 		: 0;
 }
 
@@ -25,8 +25,8 @@ aclspv_id_t	aclutil_mk_constant_arr8_id(const u64_least c_arrcount, h_aclspv_ctx
 		? aclutil_mk_constant_val_id((aclspv_wrd_t)c_arrcount, h_ctx)
 		: aclutil_mk_constant_val64_id(c_arrcount, h_ctx);
 
-	return aclid_mk_default_id(ID_DEFAULT_I8, h_ctx) && VAL
-		? aclutil_mk_cxtp_arr2(ID_DEFAULT_I8, VAL, 4, h_ctx)
+	return aclid_mk_default_id(ACLSPV_ID_I8, h_ctx) && VAL
+		? aclutil_mk_cxtp_arr2(ACLSPV_ID_I8, VAL, 4, h_ctx)
 		: 0;
 }
 
@@ -36,8 +36,8 @@ aclspv_id_t	aclutil_mk_constant_arr16_id(const u64_least c_arrcount, h_aclspv_ct
 		? aclutil_mk_constant_val_id((aclspv_wrd_t)c_arrcount, h_ctx)
 		: aclutil_mk_constant_val64_id(c_arrcount, h_ctx);
 
-	return aclid_mk_default_id(ID_DEFAULT_I16, h_ctx) && VAL
-		? aclutil_mk_cxtp_arr2(ID_DEFAULT_I16, VAL, 4, h_ctx)
+	return aclid_mk_default_id(ACLSPV_ID_I16, h_ctx) && VAL
+		? aclutil_mk_cxtp_arr2(ACLSPV_ID_I16, VAL, 4, h_ctx)
 		: 0;
 }
 
@@ -47,8 +47,8 @@ aclspv_id_t	aclutil_mk_constant_arr32_id(const u64_least c_arrcount, h_aclspv_ct
 		? aclutil_mk_constant_val_id((aclspv_wrd_t)c_arrcount, h_ctx)
 		: aclutil_mk_constant_val64_id(c_arrcount, h_ctx);
 
-	return aclid_mk_default_id(ID_DEFAULT_I32, h_ctx) && VAL
-		? aclutil_mk_cxtp_arr2(ID_DEFAULT_I32, VAL, 4, h_ctx)
+	return aclid_mk_default_id(ACLSPV_ID_I32, h_ctx) && VAL
+		? aclutil_mk_cxtp_arr2(ACLSPV_ID_I32, VAL, 4, h_ctx)
 		: 0;
 }
 
@@ -99,7 +99,7 @@ aclspv_id_t	aclutil_mk_constant_structprivspec_id(
 	aclspv_id_t	NUM_ID = aclutil_mk_constant_spec_id(c_key, (aclspv_wrd_t)c_wrdcount, h_ctx);  
 	aclspv_id_t	ARR32_SPEC;
 
-	ae2f_expected_but_else(aclid_mk_default_id(ID_DEFAULT_I32, h_ctx))
+	ae2f_expected_but_else(aclid_mk_default_id(ACLSPV_ID_I32, h_ctx))
 		return 0;
 
 	unless(NUM_ID)
@@ -107,7 +107,7 @@ aclspv_id_t	aclutil_mk_constant_structprivspec_id(
 		return 0;
 
 	ae2f_expected_but_else(ARR32_SPEC = aclutil_mk_cxtp_arr2(
-				ID_DEFAULT_I32, NUM_ID
+				ACLSPV_ID_I32, NUM_ID
 				, 4, h_ctx))
 		return 0;
 

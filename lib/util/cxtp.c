@@ -19,30 +19,30 @@ ae2f_ccconst aclspv_id_t aclutil_mk_cxtp_by_type(const CXType c_ty) {
 		case c_case: return c_ret
 
 		case CXType_SChar:
-		VECCASE(CXType_Char_S		, ID_DEFAULT_I8);
+		VECCASE(CXType_Char_S		, ACLSPV_ID_I8);
 
 		case CXType_UChar:
-		VECCASE(CXType_Char_U		, ID_DEFAULT_U8);
+		VECCASE(CXType_Char_U		, ACLSPV_ID_U8);
 
 		case CXType_Char16:
-		VECCASE(CXType_Short		, ID_DEFAULT_I16);
-		VECCASE(CXType_UShort		, ID_DEFAULT_U16);
+		VECCASE(CXType_Short		, ACLSPV_ID_I16);
+		VECCASE(CXType_UShort		, ACLSPV_ID_U16);
 
 		case CXType_Char32:
-		VECCASE(CXType_Int		, ID_DEFAULT_I32);
-		VECCASE(CXType_UInt		, ID_DEFAULT_U32);
+		VECCASE(CXType_Int		, ACLSPV_ID_I32);
+		VECCASE(CXType_UInt		, ACLSPV_ID_U32);
 
 		case CXType_LongLong:
-		VECCASE(CXType_Long		, ID_DEFAULT_I64);
+		VECCASE(CXType_Long		, ACLSPV_ID_I64);
 
 		case CXType_ULongLong:
-		VECCASE(CXType_ULong		, ID_DEFAULT_U64);
+		VECCASE(CXType_ULong		, ACLSPV_ID_U64);
 
 		case CXType_BFloat16:
 		case CXType_Float16:
-		VECCASE(CXType_Half		, ID_DEFAULT_F16);
-		VECCASE(CXType_Float		, ID_DEFAULT_F32);
-		VECCASE(CXType_Double		, ID_DEFAULT_F64);
+		VECCASE(CXType_Half		, ACLSPV_ID_F16);
+		VECCASE(CXType_Float		, ACLSPV_ID_F32);
+		VECCASE(CXType_Double		, ACLSPV_ID_F64);
 
 #undef		VECCASE
 

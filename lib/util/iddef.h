@@ -41,6 +41,6 @@ aclspv_id_t aclid_mk_default_id(
 		);
 
 
-ae2f_ccconst B_id_default_t aclid_decide_cast(const e_id_default c_id0, const e_id_default c_id1, const h_aclspv_ctx_t h_ctx);
+ae2f_ccconst B_id_default_t aclid_decide_cast(const enum ACLSPV_ID_ c_id0, const enum ACLSPV_ID_ c_id1, const h_aclspv_ctx_t h_ctx);
 
 #endif

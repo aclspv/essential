@@ -100,7 +100,7 @@ ae2f_inline_f static enum EMIT_EXPR_ aclexpr_visit_op2_arithmetic(
 		NEW_SCALE = mk_scale_from_vec(
 				h_cmdscale
 				, 
-				count_to_sz(UTIL_OPBINCFG_END + 2)
+				aclutil_count_to_sz(UTIL_OPBINCFG_END + 2)
 				+ (sizeof(util_opbincfg_extra) * 2)
 				);
 		ae2f_expected_but_else(NEW_SCALE)
@@ -112,7 +112,7 @@ ae2f_inline_f static enum EMIT_EXPR_ aclexpr_visit_op2_arithmetic(
 			return EMIT_EXPR_FAILURE;
 
 		VEC[0] = 2;				/** number of operands */
-		VEC[1] = UTIL_LITERAL_MASK_LITERAL;	/** is not constant? */
+		VEC[1] = ACLUTIL_LITERAL_MASK_LITERAL;	/** is not constant? */
 		VEC[2] = opcode_to_wrd(SpvOpSpecConstantOp, 5);
 		VEC[3] = 0;				/** return type */
 		VEC[4] = 0;				/** return id (not specified) */

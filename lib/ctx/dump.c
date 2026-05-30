@@ -153,7 +153,7 @@ ACLSPV_ABI_IMPL enum ACLSPV_COMPILE_ aclspv_dump_ctx_output(
 	if(r_count)		*r_count = NUM_RET;
 	unless(ret)		return ACLSPV_COMPILE_OK;
 
-	*ret = RET = malloc(count_to_sz(NUM_RET));
+	*ret = RET = malloc(aclutil_count_to_sz(NUM_RET));
 	ae2f_ifezerr(RET)	return ACLSPV_COMPILE_ALLOC_FAILED_ASM;
 
 	return aclspv_dump_ctx_output1(h_ctx, &NUM_RET, RET);

@@ -26,7 +26,7 @@ struct aclutil_mk_constant_repvec_t	aclutil_mk_constant_repvec_id(
 
 	const aclspv_wrd_t	OPCODE_PURE = ae2f_bll_sel_bool_naive1(
 			aclspv_wrd_t
-			, c_literal & (UTIL_LITERAL_CONSTANT | UTIL_LITERAL_LITERAL)
+			, c_literal & (ACLUTIL_LITERAL_CONSTANT | ACLUTIL_LITERAL_LITERAL)
 			, SpvOpSpecConstantComposite
 			, SpvOpCompositeConstruct);
 
@@ -34,12 +34,12 @@ struct aclutil_mk_constant_repvec_t	aclutil_mk_constant_repvec_id(
 
 
 	x_aclspv_vec* ae2f_restrict const P_VEC =
-			c_literal & (UTIL_LITERAL_CONSTANT | UTIL_LITERAL_LITERAL)
+			c_literal & (ACLUTIL_LITERAL_CONSTANT | ACLUTIL_LITERAL_LITERAL)
 			? &h_ctx->m_section.m_types
 			: &h_ctx->m_section.m_fnimpl;
 
 	aclspv_wrd_t* ae2f_restrict const P_VWRD =
-			c_literal & (UTIL_LITERAL_CONSTANT | UTIL_LITERAL_LITERAL)
+			c_literal & (ACLUTIL_LITERAL_CONSTANT | ACLUTIL_LITERAL_LITERAL)
 			? &h_ctx->m_count.m_types
 			: &h_ctx->m_count.m_fnimpl;
 
@@ -66,18 +66,18 @@ struct aclutil_mk_constant_repvec_t	aclutil_mk_constant_repvec_id(
 		return s_mkret(0, 0);
 	}
 
-	ae2fpat_assertassume(get_wrd_of_vec(P_VEC));
+	ae2fpat_assertassume(aclutil_get_wrd_of_vec(P_VEC));
 
-	get_wrd_of_vec(P_VEC)[ANCHOUR + 0] = OPCODE;
-	get_wrd_of_vec(P_VEC)[ANCHOUR + 1] = c_id_ty;
-	get_wrd_of_vec(P_VEC)[ANCHOUR + 2] = C->m_repvec = h_ctx->m_id++;
+	aclutil_get_wrd_of_vec(P_VEC)[ANCHOUR + 0] = OPCODE;
+	aclutil_get_wrd_of_vec(P_VEC)[ANCHOUR + 1] = c_id_ty;
+	aclutil_get_wrd_of_vec(P_VEC)[ANCHOUR + 2] = C->m_repvec = h_ctx->m_id++;
 
 	while(VEC_COUNT --> 0) {
-		get_wrd_of_vec(P_VEC)[ANCHOUR + 3 + VEC_COUNT] = c_val;
+		aclutil_get_wrd_of_vec(P_VEC)[ANCHOUR + 3 + VEC_COUNT] = c_val;
 	}
 
 	return s_mkret(
 			C->m_repvec
-			, C->m_repvec_literal_mask = c_literal & ~(aclspv_id_t)(UTIL_LITERAL_LITERAL)
+			, C->m_repvec_literal_mask = c_literal & ~(aclspv_id_t)(ACLUTIL_LITERAL_LITERAL)
 			);
 }

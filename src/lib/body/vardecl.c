@@ -168,7 +168,7 @@ ae2f_MAC((L, )) aclemit_body_vardecl(CXCursor h_cur, aclutil_fnctx* ae2f_restric
 				switch(aclexpr_arithmetic_cast_non_literal(
 							L$$NODE->m_const_spec_id
 							, (aclspv_id_t) L$$NODE->m_const_spec_type
-							, UTIL_LITERAL_CONSTANT
+							, ACLUTIL_LITERAL_CONSTANT
 							, &L$$PCURSOR->m_data.m_vardecl.m_init_val
 							, L$$PCURSOR->m_data.m_vardecl.m_type_id
 							, L$$CTX
@@ -197,7 +197,7 @@ ae2f_MAC((L, )) aclemit_body_vardecl(CXCursor h_cur, aclutil_fnctx* ae2f_restric
 							ae2f_unreachable();
 							case EMIT_EXPR_SUCCESS_CONSTANT:
 							L$$PCURSOR->m_data.m_vardecl.m_mask
-								&= ~(aclspv_wrd_t)ACLUTIL_CURSOR_VAR_LITERAL | UTIL_LITERAL_CONSTANT;
+								&= ~(aclspv_wrd_t)ACLUTIL_CURSOR_VAR_LITERAL | ACLUTIL_LITERAL_CONSTANT;
 						}
 
 						L$$PCURSOR->m_data.m_vardecl.m_mask |= ACLUTIL_CURSOR_VAR_PREDICTABLE;
@@ -242,7 +242,7 @@ ae2f_MAC((L, )) aclemit_body_vardecl(CXCursor h_cur, aclutil_fnctx* ae2f_restric
 
 				case EMIT_EXPR_SUCCESS_LITERAL:
 					L$$PCURSOR->m_data.m_vardecl.m_mask
-						|= UTIL_LITERAL_MASK_LITERAL;
+						|= ACLUTIL_LITERAL_MASK_LITERAL;
 
 					dbg_puts(("Constructor is literal."));
 					ae2f_fallthrough;
@@ -250,7 +250,7 @@ ae2f_MAC((L, )) aclemit_body_vardecl(CXCursor h_cur, aclutil_fnctx* ae2f_restric
 
 					dbg_puts(("Constructor may be constant."));
 					L$$PCURSOR->m_data.m_vardecl.m_mask
-						|= UTIL_LITERAL_CONSTANT;
+						|= ACLUTIL_LITERAL_CONSTANT;
 					ae2f_fallthrough;
 				case EMIT_EXPR_SUCCESS:
 					L$$PCURSOR->m_data.m_vardecl.m_mask |= ACLUTIL_CURSOR_VAR_PREDICTABLE;

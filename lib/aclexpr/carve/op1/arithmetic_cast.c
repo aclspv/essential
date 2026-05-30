@@ -11,15 +11,15 @@ aclexpr_carve_lbl_t aclexpr_carve_op1_arithmetic_cast(
 		ae2f_unused h_scale_t			h_lst_scale,
 		aclspv_wrd_t* const ae2f_restrict	rdwr_lst_scale_buf,
 		util_opbincfg_extra* ae2f_restrict rdwr_lst_extra,
-		util_literal* ae2f_restrict	r_ltrl,
+		aclutil_literal* ae2f_restrict	r_ltrl,
 		aclexpr_carve_lbl_t		c_lbl_continue,
 		aclexpr_carve_lbl_t		c_lbl_success,
 		aclexpr_carve_lbl_t		c_lbl_err
 		) { CHECK; {
-	rdwr_lst_scale_buf[UTIL_OPBINCFG_MASKLITERAL] = rdwr_lst_extra[0].m_mask_literal;
+	rdwr_lst_scale_buf[ACLUTIL_OPBINCFG_MASKLITERAL] = rdwr_lst_extra[0].m_mask_literal;
 	*rdwr_prv_idval = rdwr_lst_scale_buf[UTIL_OPBINCFG_END];
 	if(rdwr_lst_scale_buf[UTIL_OPBINCFG_RESTYID] != rdwr_lst_extra[0].m_type_original) {
-		const util_literal OLD_LITERAL = rdwr_lst_extra[0].m_literal;
+		const aclutil_literal OLD_LITERAL = rdwr_lst_extra[0].m_literal;
 		const aclspv_id_t OLD_ID = rdwr_lst_scale_buf[UTIL_OPBINCFG_END];
 
 		dbg_prefix((Yup, old id is needed));
@@ -44,10 +44,10 @@ aclexpr_carve_lbl_t aclexpr_carve_op1_arithmetic_cast(
 				return c_lbl_err;
 
 			case EMIT_EXPR_SUCCESS:
-				rdwr_lst_scale_buf[UTIL_OPBINCFG_MASKLITERAL] &= 0;
+				rdwr_lst_scale_buf[ACLUTIL_OPBINCFG_MASKLITERAL] &= 0;
 				ae2f_fallthrough;
 			case EMIT_EXPR_SUCCESS_CONSTANT:
-				rdwr_lst_scale_buf[UTIL_OPBINCFG_MASKLITERAL] &= 1;
+				rdwr_lst_scale_buf[ACLUTIL_OPBINCFG_MASKLITERAL] &= 1;
 				ae2f_fallthrough;
 			case EMIT_EXPR_SUCCESS_LITERAL:
 				break;
@@ -57,7 +57,7 @@ aclexpr_carve_lbl_t aclexpr_carve_op1_arithmetic_cast(
 	assert(*rdwr_prv_idval);
 
 	rdwr_prv_extra->m_mask_literal
-		&= rdwr_lst_scale_buf[UTIL_OPBINCFG_MASKLITERAL];
+		&= rdwr_lst_scale_buf[ACLUTIL_OPBINCFG_MASKLITERAL];
 	rdwr_prv_extra->m_type_original
 		= rdwr_lst_scale_buf[UTIL_OPBINCFG_RESTYID];
 	*r_ltrl = rdwr_prv_extra->m_literal;

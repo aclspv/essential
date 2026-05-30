@@ -17,7 +17,7 @@
 
 ae2f_MAC((L, )) aclemit_body_while(CXCursor h_cur, aclutil_fnctx * ae2f_restrict h_fnctx) { do {
 	CXCursor			L$$CUR[2];
-	util_literal			L$$LITERAL;
+	aclutil_literal			L$$LITERAL;
 
 	struct aclattr_getkinder	L$$GETKINDER;
 
@@ -95,7 +95,7 @@ ae2f_MAC((L, )) aclemit_body_while(CXCursor h_cur, aclutil_fnctx * ae2f_restrict
 
 		switch(aclexpr_eval(
 					&L$$LOOPCND
-					, ID_DEFAULT_BOOL
+					, ACLSPV_ID_BOOL
 					, L$$CUR[0]
 					, &L$$LITERAL
 					, (h_fnctx)->m_ctx

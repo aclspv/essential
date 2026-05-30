@@ -133,7 +133,7 @@ static enum CXChildVisitResult emit_decl_glob_obj_visit_fetch(CXCursor h_cur, CX
 
 		INFO->m_unified.m_var_id	= (aclspv_wrd_t)PSH_CONSTANT_ID;
 		INFO->m_pshconst.m_pad		= (aclspv_wrd_t)PUSH_SIZE;
-		INFO->m_pshconst.m_size		= sz_to_count(clang_Type_getSizeOf(PARAM_TY));
+		INFO->m_pshconst.m_size		= aclutil_sz_to_count(clang_Type_getSizeOf(PARAM_TY));
 
 		PUSH_SIZE += INFO->m_pshconst.m_size;
 		return CXChildVisit_Continue;
@@ -195,13 +195,13 @@ LBL_ABRT_NALLOC:
 							, EMIT_POS
 							, INFO->m_unified.m_var_id)))
 				goto LBL_ABRT_NALLOC;
-			ae2f_expected_but_else((EMIT_POS = util_emit_str(
+			ae2f_expected_but_else((EMIT_POS = aclutil_emit_str(
 							&CTX->m_section.m_name
 							, EMIT_POS
 							, NAME_MERGE))) 
 				goto LBL_ABRT_NALLOC;
 			set_oprnd_count_for_opcode(
-					get_wrd_of_vec(&CTX->m_section.m_name)[POS]
+					aclutil_get_wrd_of_vec(&CTX->m_section.m_name)[POS]
 					, EMIT_POS - POS - 1);
 #undef	EMIT_POS
 
@@ -356,7 +356,7 @@ LBL_ABRT_NALLOC:
 				ae2f_expected_but_else(CTX->m_count.m_types = util_emitx_spec_constant_op2(
 							&CTX->m_section.m_types
 							, CTX->m_count.m_types
-							, ID_DEFAULT_I32
+							, ACLSPV_ID_I32
 							, CTX->m_id
 							, SpvOpIMul
 							, CTX->m_id - 1
@@ -367,7 +367,7 @@ LBL_ABRT_NALLOC:
 				ae2f_expected_but_else(CTX->m_count.m_types = util_emitx_spec_constant_op2(
 							&CTX->m_section.m_types
 							, CTX->m_count.m_types
-							, ID_DEFAULT_I32
+							, ACLSPV_ID_I32
 							, CTX->m_id + 1
 							, SpvOpIAdd
 							, CTX->m_id
@@ -378,7 +378,7 @@ LBL_ABRT_NALLOC:
 				ae2f_expected_but_else(CTX->m_count.m_types = util_emitx_spec_constant_op2(
 							&CTX->m_section.m_types
 							, CTX->m_count.m_types
-							, ID_DEFAULT_I32
+							, ACLSPV_ID_I32
 							, CTX->m_id + 2
 							, SpvOpShiftRightLogical
 							, CTX->m_id + 1
@@ -389,7 +389,7 @@ LBL_ABRT_NALLOC:
 							&CTX->m_section.m_types
 							, CTX->m_count.m_types
 							, CTX->m_id + 3
-							, ID_DEFAULT_I32
+							, ACLSPV_ID_I32
 							, CTX->m_id + 2
 							)) return CXChildVisit_Break;
 
@@ -434,9 +434,9 @@ LBL_ABRT_NALLOC:
 				case SpvStorageClassInput:
 				case SpvStorageClassOutput:
 				{
-					const aclspv_id_t I32 = aclid_mk_default_id(ID_DEFAULT_I32, CTX);
+					const aclspv_id_t I32 = aclid_mk_default_id(ACLSPV_ID_I32, CTX);
 					const aclspv_id_t I32V4 = aclutil_mk_cxtp_vec(
-							ID_DEFAULT_I32
+							ACLSPV_ID_I32
 							, 4, CTX);
 
 					ae2f_expected_but_else(I32V4 && I32) {
@@ -458,7 +458,7 @@ LBL_ABRT_NALLOC:
 			if(INFO->m_io.m_location == 0xFFFFFFFF)
 				INFO->m_io.m_location = 0;
 
-#define		THIS_ENTP	((util_entp_t* ae2f_restrict)CTX->m_fnlist.m_entp.m_p)[CTX->m_tmp.m_w0]
+#define		THIS_ENTP	((aclutil_entp_t* ae2f_restrict)CTX->m_fnlist.m_entp.m_p)[CTX->m_tmp.m_w0]
 
 			/** TODO: this will now uintvec4. make this flexible some day */
 			assert(IO_ARG_IDX < THIS_ENTP.m_io.m_num);
@@ -483,7 +483,7 @@ LBL_ABRT_NALLOC:
 						)) return CXChildVisit_Break;
 
 			if(CTX->m_flag0 & ACLSPV_CTX_FLAG0_SYMBOL) {
-				get_wrd_of_vec(&CTX->m_section.m_name)[POS_FOR_LOCAL] = INFO->m_unified.m_var_id;
+				aclutil_get_wrd_of_vec(&CTX->m_section.m_name)[POS_FOR_LOCAL] = INFO->m_unified.m_var_id;
 			}
 #undef		THIS_ENTP
 
@@ -520,7 +520,7 @@ ACLSPV_ABI_IMPL enum CXChildVisitResult aclemit_decl_glob_obj(CXCursor h_cur, CX
 	unless(h_cur.kind == CXCursor_CompoundStmt && h_cur_parent.kind == CXCursor_FunctionDecl)
 		return CXChildVisit_Recurse;
 
-	if(util_is_kernel(h_cur_parent)) {
+	if(aclutil_is_kernel(h_cur_parent)) {
 		struct emit_decl_glob_obj_visit_fetch_data DATA;
 		const int NPARAMS = clang_Cursor_getNumArguments(h_cur_parent);
 
@@ -589,9 +589,9 @@ ACLSPV_ABI_IMPL enum CXChildVisitResult aclemit_decl_glob_obj(CXCursor h_cur, CX
 					goto LBL_DBG_STR_DISPOSE_FAIL;
 				ae2f_expected_but_else((EMIT_POS = aclutil_emit_wrd(&CTX->m_section.m_name, EMIT_POS, PSH_VAR_ID)))
 					goto LBL_DBG_STR_DISPOSE_FAIL;
-				ae2f_expected_but_else((EMIT_POS = util_emit_str(&CTX->m_section.m_name, EMIT_POS, NAME))) 
+				ae2f_expected_but_else((EMIT_POS = aclutil_emit_str(&CTX->m_section.m_name, EMIT_POS, NAME))) 
 					goto LBL_DBG_STR_DISPOSE_FAIL;
-				set_oprnd_count_for_opcode(get_wrd_of_vec(&CTX->m_section.m_name)[POS], EMIT_POS - POS - 1);
+				set_oprnd_count_for_opcode(aclutil_get_wrd_of_vec(&CTX->m_section.m_name)[POS], EMIT_POS - POS - 1);
 				clang_disposeString(NAME_STR);
 				free(NAME);
 
@@ -607,15 +607,15 @@ LBL_DBG_STR_DISPOSE_FAIL:
 				}
 			}
 
-			((util_entp_t* ae2f_restrict)CTX->m_fnlist.m_entp.m_p)[CTX->m_tmp.m_w0].m_push_ids.m_push_ptr
+			((aclutil_entp_t* ae2f_restrict)CTX->m_fnlist.m_entp.m_p)[CTX->m_tmp.m_w0].m_push_ids.m_push_ptr
 				= PSH_PTR_ID;
-			((util_entp_t* ae2f_restrict)CTX->m_fnlist.m_entp.m_p)[CTX->m_tmp.m_w0].m_push_ids.m_push_var
+			((aclutil_entp_t* ae2f_restrict)CTX->m_fnlist.m_entp.m_p)[CTX->m_tmp.m_w0].m_push_ids.m_push_var
 				= PSH_VAR_ID;
-			((util_entp_t* ae2f_restrict)CTX->m_fnlist.m_entp.m_p)[CTX->m_tmp.m_w0].m_push_ids.m_push_struct
+			((aclutil_entp_t* ae2f_restrict)CTX->m_fnlist.m_entp.m_p)[CTX->m_tmp.m_w0].m_push_ids.m_push_struct
 				= aclutil_mk_constant_struct_id(DATA.m_push_size, CTX);
 
 
-			((util_entp_t* ae2f_restrict)CTX->m_fnlist.m_entp.m_p)[CTX->m_tmp.m_w0].m_nprm = DATA.m_num_interface;
+			((aclutil_entp_t* ae2f_restrict)CTX->m_fnlist.m_entp.m_p)[CTX->m_tmp.m_w0].m_nprm = DATA.m_num_interface;
 		}
 
 LBL_HOLLOW_ENTP:

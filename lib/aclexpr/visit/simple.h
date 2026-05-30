@@ -20,7 +20,7 @@ ae2f_inline_f static enum EMIT_EXPR_ s_simple(
 		const h_aclspv_ctx_t		h_ctx,
 		aclspv_id_t* ae2f_restrict const	wr_newid,
 		aclspv_id_t* ae2f_restrict const	wr_type_fetched,
-		util_literal* ae2f_restrict const	rwr_literal_opt
+		aclutil_literal* ae2f_restrict const	rwr_literal_opt
 		) {
 	emit_expr_literal EVRES;
 	ae2fpat_assertassume(wr_newid);
@@ -63,7 +63,7 @@ ae2f_inline_f static enum EMIT_EXPR_ s_simple(
 							);
 
 						*wr_type_fetched = (EVRES.m_api_uintmax <= 0xFFFFFFFF 
-								? ID_DEFAULT_I32 : ID_DEFAULT_I64);
+								? ACLSPV_ID_I32 : ACLSPV_ID_I64);
 
 						if(rwr_literal_opt) *rwr_literal_opt = EVRES;
 
@@ -112,11 +112,11 @@ ae2f_inline_f static enum EMIT_EXPR_ s_simple(
 
 						if(aclspv_chck_capability_from_ctx(h_ctx, SpvCapabilityFloat64)) {
 							EVRES.m_flt = (float)clang_EvalResult_getAsDouble(EVAL);
-							*wr_type_fetched = ID_DEFAULT_F32;
+							*wr_type_fetched = ACLSPV_ID_F32;
 							dbg_call(fprintf, (stderr, "Literal fetched: %f\n", (float)EVRES.m_flt));
 						} else {
 							EVRES.m_dbl = clang_EvalResult_getAsDouble(EVAL);
-							*wr_type_fetched = ID_DEFAULT_F64;
+							*wr_type_fetched = ACLSPV_ID_F64;
 							dbg_call(fprintf, (stderr, "Literal fetched: %f\n", (float)EVRES.m_dbl));
 						}
 
@@ -171,12 +171,12 @@ ae2f_inline_f static enum EMIT_EXPR_ s_simple(
 							, 0, 0
 							, rwr_literal_opt)) 
 					switch(DECL_INFO.m_data.m_vardecl.m_mask & ACLUTIL_CURSOR_VAR_LITERAL) {
-						case UTIL_LITERAL_MASK_LITERAL:
-						case UTIL_LITERAL_LITERAL:
+						case ACLUTIL_LITERAL_MASK_LITERAL:
+						case ACLUTIL_LITERAL_LITERAL:
 
 							return EMIT_EXPR_SUCCESS_LITERAL;
 
-						case UTIL_LITERAL_CONSTANT:
+						case ACLUTIL_LITERAL_CONSTANT:
 							return EMIT_EXPR_SUCCESS_CONSTANT;
 
 						default:

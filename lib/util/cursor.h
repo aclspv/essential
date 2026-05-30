@@ -35,7 +35,7 @@ typedef struct {
 	 * */
 	union {
 		struct {
-			util_literal	m_literal;
+			aclutil_literal	m_literal;
 			umax		m_stage_lvl;
 
 			/**
@@ -126,9 +126,9 @@ ae2f_extern aclspv_wrdcount_t aclutil_assign_cursor_lval(
 		const h_aclspv_ctx_t			h_ctx,
 		const aclspv_id_t			c_val,
 		const aclspv_id_t			c_val_ty,
-		const B_util_literal_t			c_masklit,
-		const util_literal* ae2f_restrict	rd_literal_to_assign,
-		util_literal*	ae2f_restrict		r_literal_opt
+		const aclutil_ltrlmask_t			c_masklit,
+		const aclutil_literal* ae2f_restrict	rd_literal_to_assign,
+		aclutil_literal*	ae2f_restrict		r_literal_opt
 		);
 
 #endif

@@ -30,17 +30,17 @@ aclexpr_carve_lbl_t aclexpr_carve_op2_arithmetic(
 		ae2f_unused h_scale_t				h_lst_scale,
 		aclspv_wrd_t* const ae2f_restrict		rdwr_lst_scale_buf,
 		util_opbincfg_extra* ae2f_restrict		rdwr_lst_extra,
-		util_literal* ae2f_restrict			r_ltrl,
+		aclutil_literal* ae2f_restrict			r_ltrl,
 		aclexpr_carve_lbl_t				c_lbl_continue,
 		aclexpr_carve_lbl_t				c_lbl_success,
 		aclexpr_carve_lbl_t				c_lbl_err
 		) { CHECK; {
-	rdwr_lst_scale_buf[UTIL_OPBINCFG_MASKLITERAL] = UTIL_LITERAL_MASK_LITERAL;
+	rdwr_lst_scale_buf[ACLUTIL_OPBINCFG_MASKLITERAL] = ACLUTIL_LITERAL_MASK_LITERAL;
 	rdwr_lst_scale_buf[UTIL_OPBINCFG_RESID]	= *rdwr_prv_idval = CTX(rdwr_data)->m_id++;
 
 	rdwr_lst_scale_buf[UTIL_OPBINCFG_RESTYID] = aclid_decide_cast(
-			(e_id_default) rdwr_lst_extra[0].m_type_original
-			, (e_id_default) rdwr_lst_extra[1].m_type_original
+			(enum ACLSPV_ID_) rdwr_lst_extra[0].m_type_original
+			, (enum ACLSPV_ID_) rdwr_lst_extra[1].m_type_original
 			, CTX(rdwr_data)
 			);	/** only when bin2 (arithmetic thing) */
 
@@ -48,7 +48,7 @@ aclexpr_carve_lbl_t aclexpr_carve_op2_arithmetic(
 
 	if(aclid_is_float(aclutil_cxtp_get_veccfg(rdwr_prv_extra->m_type_original, rdwr_data->m_ctx).m_ty_elm)) {
 		/** FIXME: make this interchangable by compatibility */
-		rdwr_prv_extra->m_mask_literal &= rdwr_lst_scale_buf[UTIL_OPBINCFG_MASKLITERAL] &= ~(aclspv_wrd_t)UTIL_LITERAL_CONSTANT;
+		rdwr_prv_extra->m_mask_literal &= rdwr_lst_scale_buf[ACLUTIL_OPBINCFG_MASKLITERAL] &= ~(aclspv_wrd_t)ACLUTIL_LITERAL_CONSTANT;
 	}
 
 	ae2fpat_assertassume_strict(rdwr_lst_scale_buf);
@@ -57,7 +57,7 @@ aclexpr_carve_lbl_t aclexpr_carve_op2_arithmetic(
 #define	OPITER(NUM_OPRND) \
 	{										\
 		if(rdwr_lst_scale_buf[UTIL_OPBINCFG_RESTYID] != rdwr_lst_extra[NUM_OPRND].m_type_original) {	\
-			const util_literal OLD_LITERAL = rdwr_lst_extra[NUM_OPRND].m_literal;			\
+			const aclutil_literal OLD_LITERAL = rdwr_lst_extra[NUM_OPRND].m_literal;			\
 			aclspv_id_t OLD_ID 									\
 			= rdwr_lst_scale_buf[UTIL_OPBINCFG_END + NUM_OPRND];					\
 			rdwr_lst_scale_buf[UTIL_OPBINCFG_END + NUM_OPRND] = CTX(rdwr_data)->m_id++;		\
@@ -85,10 +85,10 @@ aclexpr_carve_lbl_t aclexpr_carve_op2_arithmetic(
 														return c_lbl_err;							\
 				\
 				case EMIT_EXPR_SUCCESS:								\
-														rdwr_lst_scale_buf[UTIL_OPBINCFG_MASKLITERAL] &= 0;			\
+														rdwr_lst_scale_buf[ACLUTIL_OPBINCFG_MASKLITERAL] &= 0;			\
 				ae2f_fallthrough;							\
 				case EMIT_EXPR_SUCCESS_CONSTANT:						\
-														rdwr_lst_scale_buf[UTIL_OPBINCFG_MASKLITERAL] &= 1;			\
+														rdwr_lst_scale_buf[ACLUTIL_OPBINCFG_MASKLITERAL] &= 1;			\
 				ae2f_fallthrough;							\
 				case EMIT_EXPR_SUCCESS_LITERAL:							\
 														break;									\
@@ -96,7 +96,7 @@ aclexpr_carve_lbl_t aclexpr_carve_op2_arithmetic(
 		}	\
 		\
 		rdwr_prv_extra->m_mask_literal									\
-		&= rdwr_lst_scale_buf[UTIL_OPBINCFG_MASKLITERAL]					\
+		&= rdwr_lst_scale_buf[ACLUTIL_OPBINCFG_MASKLITERAL]					\
 		&= rdwr_lst_extra[NUM_OPRND].m_mask_literal;						\
 		\
 		dbg_prefix(i);											\
@@ -104,7 +104,7 @@ aclexpr_carve_lbl_t aclexpr_carve_op2_arithmetic(
 					, NUM_OPRND, *rdwr_prv_idval, rdwr_lst_scale_buf[UTIL_OPBINCFG_END + NUM_OPRND]	\
 					, (void*)&rdwr_lst_extra[NUM_OPRND].m_mask_literal				\
 					, rdwr_lst_extra[NUM_OPRND].m_mask_literal					\
-					, rdwr_lst_scale_buf[UTIL_OPBINCFG_MASKLITERAL]					\
+					, rdwr_lst_scale_buf[ACLUTIL_OPBINCFG_MASKLITERAL]					\
 					));										\
 	}
 
@@ -112,7 +112,7 @@ aclexpr_carve_lbl_t aclexpr_carve_op2_arithmetic(
 	OPITER(0u);
 
 	ae2f_ifezerr(rdwr_lst_scale_buf[UTIL_OPBINCFG_OPCODE] = util_opbin2_to_spvop(
-				(e_id_default)UTIL_OPBINCFG_RESTYID[rdwr_lst_scale_buf]
+				(enum ACLSPV_ID_)UTIL_OPBINCFG_RESTYID[rdwr_lst_scale_buf]
 				, (enum UTIL_OPBIN2_)UTIL_OPBINCFG_OPCODE[rdwr_lst_scale_buf]
 				, CTX(rdwr_data)
 				)) {
@@ -123,8 +123,8 @@ aclexpr_carve_lbl_t aclexpr_carve_op2_arithmetic(
 		dbg_call((void), (fprintf(stderr, "SpvOp_[%u]\n", rdwr_lst_scale_buf[5])));
 	}
 
-	switch(rdwr_lst_scale_buf[UTIL_OPBINCFG_MASKLITERAL]) {
-		case UTIL_LITERAL_MASK_RT:
+	switch(rdwr_lst_scale_buf[ACLUTIL_OPBINCFG_MASKLITERAL]) {
+		case ACLUTIL_LITERAL_MASK_RT:
 #define	XORSWAP(a, b)	{ (a) ^= (b); (b) ^= (a); (a) ^= (b); }
 			/** 
 			 * here, operation is not constant.
@@ -170,15 +170,15 @@ aclexpr_carve_lbl_t aclexpr_carve_op2_arithmetic(
 #undef	XORSWAP
 			break;
 
-		case UTIL_LITERAL_MASK_LITERAL: 
-		case UTIL_LITERAL_LITERAL:
+		case ACLUTIL_LITERAL_MASK_LITERAL: 
+		case ACLUTIL_LITERAL_LITERAL:
 			{
-				struct util_literal_eval_ EVAL_LIT 
-					= util_literal_eval2(
+				struct aclutil_ltrl_eval_t EVAL_LIT 
+					= aclutil_literal_eval2(
 							rdwr_lst_extra[0].m_literal
 							, rdwr_lst_extra[1].m_literal
 							, (enum SpvOp_)rdwr_lst_scale_buf[5]
-							,(e_id_default)rdwr_lst_scale_buf[UTIL_OPBINCFG_RESTYID]
+							,(enum ACLSPV_ID_)rdwr_lst_scale_buf[UTIL_OPBINCFG_RESTYID]
 							);
 
 				if(EVAL_LIT.m_found) {
@@ -213,20 +213,20 @@ aclexpr_carve_lbl_t aclexpr_carve_op2_arithmetic(
 			}
 
 			ae2f_fallthrough;
-		case UTIL_LITERAL_MASK_CONSTANT: 
+		case ACLUTIL_LITERAL_MASK_CONSTANT: 
 			dbg_puts(("The result is constant(fallback)."));
-			rdwr_lst_scale_buf[1] = UTIL_LITERAL_MASK_CONSTANT;
+			rdwr_lst_scale_buf[1] = ACLUTIL_LITERAL_MASK_CONSTANT;
 			break;
 		default:
 			err_puts(("unknown literal"));
 			ae2f_unreachable();
 	}
 
-#define		TMPL_SECTION	(*((rdwr_lst_scale_buf[1]) == UTIL_LITERAL_RT \
+#define		TMPL_SECTION	(*((rdwr_lst_scale_buf[1]) == ACLUTIL_LITERAL_RT \
 			? &CTX(rdwr_data)->m_section.m_fnimpl		\
 			: &CTX(rdwr_data)->m_section.m_types))
 
-#define		TMPL_COUNT	(*((rdwr_lst_scale_buf[1]) == UTIL_LITERAL_RT	\
+#define		TMPL_COUNT	(*((rdwr_lst_scale_buf[1]) == ACLUTIL_LITERAL_RT	\
 			? &CTX(rdwr_data)->m_count.m_fnimpl			\
 			: &CTX(rdwr_data)->m_count.m_types))
 
@@ -237,8 +237,8 @@ aclexpr_carve_lbl_t aclexpr_carve_op2_arithmetic(
 			, _aclspv_memcpy
 			, L_new
 			, TMPL_SECTION
-			, (size_t)count_to_sz(TMPL_COUNT + (rdwr_lst_scale_buf[0] + UTIL_OPBINCFG_RESID)
-				- (rdwr_lst_scale_buf[1] == UTIL_LITERAL_RT))
+			, (size_t)aclutil_count_to_sz(TMPL_COUNT + (rdwr_lst_scale_buf[0] + UTIL_OPBINCFG_RESID)
+				- (rdwr_lst_scale_buf[1] == ACLUTIL_LITERAL_RT))
 			);
 
 	ae2f_ifezerr(TMPL_SECTION.m_p) {
@@ -253,11 +253,11 @@ aclexpr_carve_lbl_t aclexpr_carve_op2_arithmetic(
 	{
 		aclspv_wrd_t	CI = LST_CMD_COUNT - (!rdwr_lst_scale_buf[1]);
 		while(CI --> 0) {
-			get_wrd_of_vec(&TMPL_SECTION)[TMPL_COUNT + CI] 
+			aclutil_get_wrd_of_vec(&TMPL_SECTION)[TMPL_COUNT + CI] 
 				= rdwr_lst_scale_buf[(aclspv_wrd_t)UTIL_OPBINCFG_SPECCONSTANTOP + (!rdwr_lst_scale_buf[1]) + CI];
 		}
 	}
 
-	TMPL_COUNT += LST_CMD_COUNT - (rdwr_lst_scale_buf[1] == UTIL_LITERAL_RT);
+	TMPL_COUNT += LST_CMD_COUNT - (rdwr_lst_scale_buf[1] == ACLUTIL_LITERAL_RT);
 	return c_lbl_success;
 }}

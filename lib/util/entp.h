@@ -24,6 +24,6 @@ typedef struct {
 	} m_io;
 
 	CXCursor	m_fn;
-} util_entp_t;
+} aclutil_entp_t;
 
 #endif

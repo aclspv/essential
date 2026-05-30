@@ -43,10 +43,10 @@ ae2f_inline_f static e_aclspv_compile_t aclspv_ctx_conf(
 		POS = wrd_ext_count;
 		unless(wrd_ext_count = emit_opcode(&wrd_ext, wrd_ext_count, SpvOpExtension, 0))
 			return ACLSPV_COMPILE_ALLOC_FAILED_CFG;
-		unless(wrd_ext_count = util_emit_str(&wrd_ext, wrd_ext_count
+		unless(wrd_ext_count = aclutil_emit_str(&wrd_ext, wrd_ext_count
 					, "SPV_KHR_vulkan_memory_model"))
 			return ACLSPV_COMPILE_ALLOC_FAILED_CFG;
-		set_oprnd_count_for_opcode(get_wrd_of_vec(&wrd_ext)[POS], (aclspv_wrd_t)(wrd_ext_count - POS - 1));
+		set_oprnd_count_for_opcode(aclutil_get_wrd_of_vec(&wrd_ext)[POS], (aclspv_wrd_t)(wrd_ext_count - POS - 1));
 	}
 
 	/*** Extension Default **/

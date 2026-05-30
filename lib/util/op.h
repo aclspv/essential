@@ -2,12 +2,13 @@
 #define util_op_h
 
 #include <util/cxtp/vec.h>
+#include "./literal.h"
 
-enum UTIL_OPBINCFG_ {
-	UTIL_OPBINCFG_NUMOPRND,
+enum ACLUTIL_OPBINCFG_ {
+	ACLUTIL_OPBINCFG_NUMOPRND,
 
 	/** @see ./literal.h */
-	UTIL_OPBINCFG_MASKLITERAL,
+	ACLUTIL_OPBINCFG_MASKLITERAL,
 	UTIL_OPBINCFG_SPECCONSTANTOP,
 	UTIL_OPBINCFG_RESTYID,
 	UTIL_OPBINCFG_RESID,
@@ -31,17 +32,10 @@ enum UTIL_OPBIN2_ {
 	UTIL_OPBIN2_ASSIGN
 };
 
-#include <ae2f/Keys.h>
-#include <ae2f/c90/StdInt.h>
-
-#include "./iddef.h"
-#include "./literal.h"
-#include <spirv/unified1/spirv.h>
-
 typedef struct {
 	aclspv_wrd_t	m_type_original;
 	aclspv_wrd_t	m_mask_literal;
-	util_literal	m_literal;
+	aclutil_literal	m_literal;
 	CXCursor	m_cursor;
 
 	aclspv_bool_t	m_is_assign;
@@ -60,7 +54,7 @@ ae2f_unused ae2f_inline_f static ae2f_ccconst aclspv_bool_t	util_opbin2_is_assig
 }
 
 ae2f_unused ae2f_inline_f static B_util_opbin2_t util_opbin2_to_spvop(
-		const e_id_default c_id, 
+		const enum ACLSPV_ID_ c_id, 
 		const enum UTIL_OPBIN2_ c_op2,
 		const h_aclspv_ctx_t	h_ctx
 		)

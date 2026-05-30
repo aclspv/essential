@@ -22,7 +22,7 @@ typedef aclexpr_carve_lbl_t aclexpr_carve_api_t(
 		h_scale_t					h_lst_scale,
 		aclspv_wrd_t* const ae2f_restrict		rdwr_lst_scale_buf,
 		util_opbincfg_extra* ae2f_restrict		rdwr_lst_extra,
-		util_literal* ae2f_restrict			r_ltrl,
+		aclutil_literal* ae2f_restrict			r_ltrl,
 		aclexpr_carve_lbl_t				c_lbl_continue,
 		aclexpr_carve_lbl_t				c_lbl_success,
 		aclexpr_carve_lbl_t				c_lbl_err

@@ -55,7 +55,7 @@ enum CXChildVisitResult aclexpr_visit(
 
 	h_scale_t LST_SCALE				= get_last_scale_from_vec(&CMDSTCK_SCALE);
 	aclspv_wrd_t* ae2f_restrict LST_SCALE_BUF	= get_buf_from_scale2(aclspv_wrd_t, &CMDSTCK_SCALE, *LST_SCALE);
-	util_literal* ae2f_restrict RET_LITERAL		= &LITERAL;
+	aclutil_literal* ae2f_restrict RET_LITERAL		= &LITERAL;
 
 	util_opbincfg_extra* ae2f_restrict	LST_EXTRA;
 
@@ -87,7 +87,7 @@ enum CXChildVisitResult aclexpr_visit(
 					, (unsigned long)LST_SCALE->m_id
 				    )));
 	ID_REQ = CTX->m_id++;
-	LST_EXTRA[GETLASTEL_CMDCOUNTERSTCK(a).m_count_oprnd].m_mask_literal = UTIL_LITERAL_MASK_LITERAL;
+	LST_EXTRA[GETLASTEL_CMDCOUNTERSTCK(a).m_count_oprnd].m_mask_literal = ACLUTIL_LITERAL_MASK_LITERAL;
 
 	/** Recurse filter */
 	switch((uintmax_t)h_cur.kind) {
@@ -175,8 +175,8 @@ enum CXChildVisitResult aclexpr_visit(
 			dbg_prefix(a);
 			dbg_call(fprintf, (stderr, "s_bin_1: newid: %u\n", ID_REQ));
 
-			IS_NOT_CONSTANT = UTIL_LITERAL_RT;
-			LST_SCALE_BUF[1] = UTIL_LITERAL_MASK_RT;
+			IS_NOT_CONSTANT = ACLUTIL_LITERAL_RT;
+			LST_SCALE_BUF[1] = ACLUTIL_LITERAL_MASK_RT;
 			LST_EXTRA[GETLASTEL_CMDCOUNTERSTCK(a).m_count_oprnd].m_mask_literal = 0;
 
 			ae2f_unexpected_but_if(0) {
@@ -189,9 +189,9 @@ enum CXChildVisitResult aclexpr_visit(
 				ae2f_unreachable();
 				case EMIT_EXPR_SUCCESS_CONSTANT:
 
-				IS_NOT_CONSTANT &= UTIL_LITERAL_MASK_CONSTANT;
-				LST_SCALE_BUF[1] &= UTIL_LITERAL_MASK_CONSTANT;
-				LST_EXTRA[GETLASTEL_CMDCOUNTERSTCK(a).m_count_oprnd].m_mask_literal &= UTIL_LITERAL_MASK_CONSTANT;
+				IS_NOT_CONSTANT &= ACLUTIL_LITERAL_MASK_CONSTANT;
+				LST_SCALE_BUF[1] &= ACLUTIL_LITERAL_MASK_CONSTANT;
+				LST_EXTRA[GETLASTEL_CMDCOUNTERSTCK(a).m_count_oprnd].m_mask_literal &= ACLUTIL_LITERAL_MASK_CONSTANT;
 			}
 
 			LST_SCALE_BUF[UTIL_OPBINCFG_END + GETLASTEL_CMDCOUNTERSTCK(i).m_count_oprnd] = ID_REQ;

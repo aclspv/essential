@@ -24,7 +24,7 @@ ACLSPV_ABI_IMPL enum CXChildVisitResult aclemit_iter_entry_point(CXCursor h_cur,
 	unless(h_cur.kind == CXCursor_CompoundStmt && h_parent.kind == CXCursor_FunctionDecl)
 		return CXChildVisit_Recurse;
 
-	if(util_is_kernel(h_parent)) {
+	if(aclutil_is_kernel(h_parent)) {
 		const CXString NAME = clang_getCursorSpelling(h_parent);
 		struct	aclattr_wrkgroup_prm	XYZ;
 		enum SpvExecutionModel_	EXEC_MODEL = SpvExecutionModelMax;
@@ -97,7 +97,7 @@ ACLSPV_ABI_IMPL enum CXChildVisitResult aclemit_iter_entry_point(CXCursor h_cur,
 		}
 
 
-#define THIS_ENTRY_POINT	((util_entp_t* ae2f_restrict)CTX->m_fnlist.m_entp.m_p)[CTX->m_tmp.m_w0]
+#define THIS_ENTRY_POINT	((aclutil_entp_t* ae2f_restrict)CTX->m_fnlist.m_entp.m_p)[CTX->m_tmp.m_w0]
 		THIS_ENTRY_POINT.m_fn	= h_parent;
 		THIS_ENTRY_POINT.m_id	= CTX->m_tmp.m_w3 + CTX->m_tmp.m_w0;
 
@@ -123,7 +123,7 @@ ACLSPV_ABI_IMPL enum CXChildVisitResult aclemit_iter_entry_point(CXCursor h_cur,
 						, CTX->m_count.m_entp
 						, THIS_ENTRY_POINT.m_id)))
 			goto LBL_ABRT;
-		unless((CTX->m_count.m_entp = util_emit_str(
+		unless((CTX->m_count.m_entp = aclutil_emit_str(
 						&CTX->m_section.m_entp
 						, CTX->m_count.m_entp
 						, NAME.data))) 
@@ -142,7 +142,7 @@ ACLSPV_ABI_IMPL enum CXChildVisitResult aclemit_iter_entry_point(CXCursor h_cur,
 		}
 
 		set_oprnd_count_for_opcode(
-				get_wrd_of_vec(&CTX->m_section.m_entp)[POS]
+				aclutil_get_wrd_of_vec(&CTX->m_section.m_entp)[POS]
 				, CTX->m_count.m_entp - POS - 1
 				);
 
@@ -171,13 +171,13 @@ ACLSPV_ABI_IMPL enum CXChildVisitResult aclemit_iter_entry_point(CXCursor h_cur,
 							, CTX->m_count.m_name
 							, THIS_ENTRY_POINT.m_id)))
 				goto LBL_ABRT;
-			unless((CTX->m_count.m_name = util_emit_str(
+			unless((CTX->m_count.m_name = aclutil_emit_str(
 							&CTX->m_section.m_name
 							, CTX->m_count.m_name
 							, NAME.data)))	
 				goto LBL_ABRT;
 			set_oprnd_count_for_opcode(
-					get_wrd_of_vec(&CTX->m_section.m_name)[POS]
+					aclutil_get_wrd_of_vec(&CTX->m_section.m_name)[POS]
 					, CTX->m_count.m_name - POS - 1
 					);
 
@@ -193,7 +193,7 @@ LBL_ABRT:
 		clang_disposeString(NAME);
 		return CXChildVisit_Break;
 	} else {
-#define	THIS_FUNCTION	((util_fn_t* ae2f_restrict)CTX->m_fnlist.m_fn.m_p)[CTX->m_tmp.m_w1]
+#define	THIS_FUNCTION	((aclutil_fn_t* ae2f_restrict)CTX->m_fnlist.m_fn.m_p)[CTX->m_tmp.m_w1]
 		THIS_FUNCTION.m_fn = h_parent;
 		THIS_FUNCTION.m_id = CTX->m_id++;
 	}
@@ -210,7 +210,7 @@ ACLSPV_ABI_IMPL enum CXChildVisitResult aclemit_count_fn(CXCursor h_cur, CXCurso
 	unless(h_cur.kind == CXCursor_CompoundStmt && h_parent.kind == CXCursor_FunctionDecl)
 		return CXChildVisit_Recurse;
 
-	if(util_is_kernel(h_parent)) {
+	if(aclutil_is_kernel(h_parent)) {
 		++CTX->m_fnlist.m_num_entp;
 	} else {
 		++CTX->m_fnlist.m_num_fn;

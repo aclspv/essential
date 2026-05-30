@@ -1,23 +1,22 @@
-#ifndef util_literal_h
-#define util_literal_h
+#ifndef aclutil_literal_h
+#define aclutil_literal_h
 
-#include <ae2f/c90/StdInt.h>
+#include "./iddef.h"
+#include "./log.h"
 
-enum UTIL_LITERAL_MASK_ {
-
-	UTIL_LITERAL_MASK_RT,
-
-	UTIL_LITERAL_MASK_CONSTANT	= 0x1,
-	UTIL_LITERAL_MASK_LITERAL	= 0x3
+enum ACLUTIL_LITERAL_MASK_ {
+	ACLUTIL_LITERAL_MASK_RT,
+	ACLUTIL_LITERAL_MASK_CONSTANT	= 0x1,
+	ACLUTIL_LITERAL_MASK_LITERAL	= 0x3
 };
 
-enum UTIL_LITERAL_ {
-	UTIL_LITERAL_RT,
-	UTIL_LITERAL_CONSTANT,
-	UTIL_LITERAL_LITERAL
+enum ACLUTIL_LITERAL_ {
+	ACLUTIL_LITERAL_RT,
+	ACLUTIL_LITERAL_CONSTANT,
+	ACLUTIL_LITERAL_LITERAL
 };
 
-typedef uint_least32_t	B_util_literal_t;
+typedef aclspv_wrd_t	aclutil_ltrlmask_t;
 typedef union {
 	int		m_api_int;
 	intmax_t	m_api_intmax;
@@ -26,27 +25,21 @@ typedef union {
 	u64_least	m_u64;
 	double		m_dbl;
 	float		m_flt;
-} util_literal;
+} aclutil_literal;
 
-#include <ae2f/Keys.h>
-#include <spirv/unified1/spirv.h>
-
-#include "./iddef.h"
-#include "./log.h"
-
-struct util_literal_eval_ {
-	util_literal	m_ret;
+struct aclutil_ltrl_eval_t {
+	aclutil_literal	m_ret;
 	int		m_found;
 };
 
-ae2f_inline static ae2f_ccconst struct util_literal_eval_	util_literal_eval2(
-		const util_literal	c_oprndA,
-		const util_literal	c_oprndB,
+ae2f_inline_f static ae2f_ccconst struct aclutil_ltrl_eval_t	aclutil_literal_eval2(
+		const aclutil_literal	c_oprndA,
+		const aclutil_literal	c_oprndB,
 		const enum SpvOp_	c_opcode,
-		const e_id_default	c_type
+		const enum ACLSPV_ID_	c_type
 		)
 {
-	struct util_literal_eval_ RET;
+	struct aclutil_ltrl_eval_t RET;
 
 	switch((uintmax_t)c_type) {
 #define	EXPR_TWO(L_oper, L_mem, c_case)					\
@@ -55,10 +48,10 @@ ae2f_inline static ae2f_ccconst struct util_literal_eval_	util_literal_eval2(
 		RET.m_ret.L_mem = c_oprndA.L_mem L_oper c_oprndB.L_mem;	\
 		RET.m_found = 1					\
 
-		case ID_DEFAULT_I8:
-		case ID_DEFAULT_I16:
-		case ID_DEFAULT_I32:
-		case ID_DEFAULT_I64:
+		case ACLSPV_ID_I8:
+		case ACLSPV_ID_I16:
+		case ACLSPV_ID_I32:
+		case ACLSPV_ID_I64:
 			switch((uintmax_t)c_opcode) {
 				EXPR_TWO(+, m_api_intmax, SpvOpIAdd); return RET;
 				EXPR_TWO(-, m_api_intmax, SpvOpISub); return RET;
@@ -72,7 +65,7 @@ ae2f_inline static ae2f_ccconst struct util_literal_eval_	util_literal_eval2(
 				return RET;
 			}
 
-		case ID_DEFAULT_F32:
+		case ACLSPV_ID_F32:
 			switch((uintmax_t)c_opcode) {
 				EXPR_TWO(+, m_flt, SpvOpFAdd); return RET;
 				EXPR_TWO(-, m_flt, SpvOpFSub); return RET;
@@ -85,7 +78,7 @@ ae2f_inline static ae2f_ccconst struct util_literal_eval_	util_literal_eval2(
 			}
 
 
-		case ID_DEFAULT_F64:
+		case ACLSPV_ID_F64:
 			switch((uintmax_t)c_opcode) {
 				EXPR_TWO(+, m_dbl, SpvOpFAdd); return RET;
 				EXPR_TWO(-, m_dbl, SpvOpFSub); return RET;

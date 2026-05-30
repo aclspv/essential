@@ -49,7 +49,7 @@ ae2f_MAC((L, )) aclutil_mkname_dbg(const aclspv_id_t c_id, const char* const c_n
 											))
 						))
 				|| ae2f_expected_not_strict(!
-						((cr_ctx).m_count.m_name = util_emit_str(
+						((cr_ctx).m_count.m_name = aclutil_emit_str(
 							&(cr_ctx).m_section.m_name	
 							, (cr_ctx).m_count.m_name
 							, ae2f_reinterpret_cast(const char* ae2f_restrict const, (h_vec).m_p)
@@ -59,10 +59,10 @@ ae2f_MAC((L, )) aclutil_mkname_dbg(const aclspv_id_t c_id, const char* const c_n
 			ae2f_ifnezerr(CND) goto L$$LBL_FAIL;
 		}
 
-		ae2fpat_assertassume(get_wrd_of_vec(&(cr_ctx).m_section.m_name));
+		ae2fpat_assertassume(aclutil_get_wrd_of_vec(&(cr_ctx).m_section.m_name));
 
 		set_oprnd_count_for_opcode(
-				get_wrd_of_vec(
+				aclutil_get_wrd_of_vec(
 					&(cr_ctx).m_section.m_name)[L$$POS]
 				, ((cr_ctx).m_count.m_name - L$$POS - 1));
 		goto L$$LBL_DONE;

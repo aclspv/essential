@@ -60,7 +60,7 @@ enum CXChildVisitResult aclemit_entp_body(CXCursor h_cur, ae2f_unused CXCursor h
 			FNCTX->m_state0 |= ACLUTIL_FNCTX_STATE0_FNRET;
 			FNCTX->m_state0 &= ~(uint_leastenum_t)(ACLUTIL_FNCTX_STATE0_LBL_DO_SOMETHING);
 
-			if(FNCTX->m_retid != ID_DEFAULT_VOID) {
+			if(FNCTX->m_retid != ACLSPV_ID_VOID) {
 				aclspv_id_t	RETVAL;
 				struct aclattr_getkinder KINDER;
 				CXCursor		CURSORCHILD;

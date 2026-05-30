@@ -23,8 +23,8 @@ ACLSPV_ABI_IMPL enum ACLSPV_COMPILE_ aclspv_ctx_compile(h_aclspv_ctx_t h_ctx, CX
 	clang_visitChildren(c_cur_root, aclemit_count_fn, &(*h_ctx));
 	ae2f_ifnezerr(h_ctx->m_err) return h_ctx->m_err;
 
-	_aclspv_grow_vec(_aclspv_malloc, _aclspv_free, (*h_ctx).m_fnlist.m_entp, (size_t)(sizeof(util_entp_t) * (*h_ctx).m_fnlist.m_num_entp));
-	_aclspv_grow_vec(_aclspv_malloc, _aclspv_free, (*h_ctx).m_fnlist.m_fn, (size_t)(sizeof(lib_build_fn_t) * (*h_ctx).m_fnlist.m_num_fn));
+	_aclspv_grow_vec(_aclspv_malloc, _aclspv_free, (*h_ctx).m_fnlist.m_entp, (size_t)(sizeof(aclutil_entp_t) * (*h_ctx).m_fnlist.m_num_entp));
+	_aclspv_grow_vec(_aclspv_malloc, _aclspv_free, (*h_ctx).m_fnlist.m_fn, (size_t)(sizeof(aclutil_fn_t) * (*h_ctx).m_fnlist.m_num_fn));
 
 	(*h_ctx).m_tmp.m_w3 = (*h_ctx).m_id; /** anchor */
 	(*h_ctx).m_id += (*h_ctx).m_fnlist.m_num_entp + (*h_ctx).m_fnlist.m_num_fn;
@@ -37,10 +37,10 @@ ACLSPV_ABI_IMPL enum ACLSPV_COMPILE_ aclspv_ctx_compile(h_aclspv_ctx_t h_ctx, CX
 	{
 		aclspv_wrdcount_t	IDX = (*h_ctx).m_fnlist.m_num_entp;
 		const aclspv_wrd_t	ANCHOR	= (*h_ctx).m_tmp.m_w3;
-		const aclspv_id_t	VOID	= aclid_mk_default_id(ID_DEFAULT_VOID, &(*h_ctx));
+		const aclspv_id_t	VOID	= aclid_mk_default_id(ACLSPV_ID_VOID, &(*h_ctx));
 
 		const aclspv_id_t	ID_DEFAULT_FN_VOID = aclutil_mk_cxtp_fn(
-				ID_DEFAULT_VOID
+				ACLSPV_ID_VOID
 				, &(*h_ctx)
 				);
 
@@ -64,7 +64,7 @@ ACLSPV_ABI_IMPL enum ACLSPV_COMPILE_ aclspv_ctx_compile(h_aclspv_ctx_t h_ctx, CX
 
 
 		while((IDX--)) {
-			((util_entp_t* ae2f_restrict)(*h_ctx).m_fnlist.m_entp.m_p)[IDX].m_id = ANCHOR + IDX;
+			((aclutil_entp_t* ae2f_restrict)(*h_ctx).m_fnlist.m_entp.m_p)[IDX].m_id = ANCHOR + IDX;
 		}
 
 		IDX = (*h_ctx).m_fnlist.m_num_entp;
@@ -74,7 +74,7 @@ ACLSPV_ABI_IMPL enum ACLSPV_COMPILE_ aclspv_ctx_compile(h_aclspv_ctx_t h_ctx, CX
 			 * w0: current entry point index
 			 * v0: current variable table		(scale)
 			 * */
-#define	FNINFO	((util_entp_t* ae2f_restrict)(*h_ctx).m_fnlist.m_entp.m_p)[(*h_ctx).m_tmp.m_w0]
+#define	FNINFO	((aclutil_entp_t* ae2f_restrict)(*h_ctx).m_fnlist.m_entp.m_p)[(*h_ctx).m_tmp.m_w0]
 			x_scale* ae2f_restrict const	FNSCALE	= get_scale_from_vec(&(*h_ctx).m_scale_vars
 					,  (size_t)((*h_ctx).m_tmp.m_w0 = IDX)
 					);
@@ -82,7 +82,7 @@ ACLSPV_ABI_IMPL enum ACLSPV_COMPILE_ aclspv_ctx_compile(h_aclspv_ctx_t h_ctx, CX
 			aclutil_fnctx	FNCTX;
 			FNCTX.m_ctx	= &(*h_ctx);
 			FNCTX.m_state0	= 0;
-			FNCTX.m_retid	= ID_DEFAULT_VOID;
+			FNCTX.m_retid	= ACLSPV_ID_VOID;
 			FNCTX.m_var_stage	= 1;
 
 			(*h_ctx).m_count.m_fnimpl = 0;
@@ -97,7 +97,7 @@ ACLSPV_ABI_IMPL enum ACLSPV_COMPILE_ aclspv_ctx_compile(h_aclspv_ctx_t h_ctx, CX
 						&(*h_ctx).m_section.m_fndef
 						, (*h_ctx).m_count.m_fndef
 						, SpvOpFunction
-						, ID_DEFAULT_VOID
+						, ACLSPV_ID_VOID
 						, FNINFO.m_id
 						, 0
 						, ID_DEFAULT_FN_VOID
@@ -148,7 +148,7 @@ ACLSPV_ABI_IMPL enum ACLSPV_COMPILE_ aclspv_ctx_compile(h_aclspv_ctx_t h_ctx, CX
 #undef	FNINFO
 
 			FNCTX.m_state0 = 0;
-			clang_visitChildren(((util_entp_t* ae2f_restrict)(*h_ctx).m_fnlist.m_entp.m_p)[IDX].m_fn
+			clang_visitChildren(((aclutil_entp_t* ae2f_restrict)(*h_ctx).m_fnlist.m_entp.m_p)[IDX].m_fn
 					, aclemit_entp_body
 					, &FNCTX);
 
@@ -161,7 +161,7 @@ ACLSPV_ABI_IMPL enum ACLSPV_COMPILE_ aclspv_ctx_compile(h_aclspv_ctx_t h_ctx, CX
 			if((*h_ctx).m_count.m_fnimpl) {
 				_aclspv_grow_vec_with_copy(_aclspv_malloc, _aclspv_free, _aclspv_memcpy, L_new
 						, (*h_ctx).m_section.m_fndef
-						, (size_t)count_to_sz((*h_ctx).m_count.m_fndef + (*h_ctx).m_count.m_fnimpl)
+						, (size_t)aclutil_count_to_sz((*h_ctx).m_count.m_fndef + (*h_ctx).m_count.m_fnimpl)
 						);
 
 				ae2f_expected_but_else((*h_ctx).m_section.m_fndef.m_p) {
@@ -169,9 +169,9 @@ ACLSPV_ABI_IMPL enum ACLSPV_COMPILE_ aclspv_ctx_compile(h_aclspv_ctx_t h_ctx, CX
 				}
 
 				memcpy(
-						get_wrd_of_vec(&(*h_ctx).m_section.m_fndef) + (*h_ctx).m_count.m_fndef
+						aclutil_get_wrd_of_vec(&(*h_ctx).m_section.m_fndef) + (*h_ctx).m_count.m_fndef
 						, (*h_ctx).m_section.m_fnimpl.m_p
-						, (size_t)count_to_sz((*h_ctx).m_count.m_fnimpl)
+						, (size_t)aclutil_count_to_sz((*h_ctx).m_count.m_fnimpl)
 				      );
 
 				(*h_ctx).m_count.m_fndef += (*h_ctx).m_count.m_fnimpl;

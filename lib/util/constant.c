@@ -117,14 +117,14 @@ aclspv_id_t aclutil_mk_constant_bool_id(
 	ae2f_expected_but_else(C) return 0;
 	if(C->m_const_val_bool) return C->m_const_val_bool;
 
-	ae2f_expected_but_else(aclid_mk_default_id(ID_DEFAULT_BOOL, h_ctx))
+	ae2f_expected_but_else(aclid_mk_default_id(ACLSPV_ID_BOOL, h_ctx))
 		return 0;
 
 	ae2f_expected_but_else(h_ctx->m_count.m_types = aclutil_emitx_3(
 				&h_ctx->m_section.m_types
 				, h_ctx->m_count.m_types
 				, ae2f_bll_sel_bool1(aclspv_wrd_t, c_val, SpvOpConstantTrue, SpvOpConstantFalse)
-				, ID_DEFAULT_BOOL
+				, ACLSPV_ID_BOOL
 				, h_ctx->m_id
 				)) return 0;
 
@@ -137,10 +137,10 @@ aclspv_id_t aclutil_mk_constant_val_id1(
 		enum ACLUTIL_CV_NBYTE_	c_idx_nbyte,
 		enum ACLUTIL_CV_TY_	c_idx_ty
 		) {
-	const enum ID_DEFAULT_ MAP[ACLUTIL_CV_TY_MAX][ACLUTIL_CV_NBYTE_MAX] = {
-		{ ID_DEFAULT_I8, ID_DEFAULT_I16, ID_DEFAULT_I32, ID_DEFAULT_I64 },
-		{ ID_DEFAULT_U8, ID_DEFAULT_U16, ID_DEFAULT_U32, ID_DEFAULT_U64 },
-		{ 0, ID_DEFAULT_F16, ID_DEFAULT_F32, ID_DEFAULT_F64 }
+	const enum ACLSPV_ID_ MAP[ACLUTIL_CV_TY_MAX][ACLUTIL_CV_NBYTE_MAX] = {
+		{ ACLSPV_ID_I8, ACLSPV_ID_I16, ACLSPV_ID_I32, ACLSPV_ID_I64 },
+		{ ACLSPV_ID_U8, ACLSPV_ID_U16, ACLSPV_ID_U32, ACLSPV_ID_U64 },
+		{ 0, ACLSPV_ID_F16, ACLSPV_ID_F32, ACLSPV_ID_F64 }
 	};
 
 	aclutil_constant* ae2f_restrict const C = aclutil_mk_constant_node(c_val, h_ctx);
@@ -213,18 +213,18 @@ aclspv_id_t	aclutil_mk_constant_spec_id(
 	ae2f_expected_but_else((C)) return 0;
 	if(C->m_const_spec_id)
 		return ae2f_bll_sel_bool1(aclspv_id_t
-				, C->m_const_spec_type == ID_DEFAULT_I32
+				, C->m_const_spec_type == ACLSPV_ID_I32
 				, C->m_const_spec_id
 				, 0);
 
-	ae2f_expected_but_else(aclid_mk_default_id(ID_DEFAULT_I32, h_ctx))
+	ae2f_expected_but_else(aclid_mk_default_id(ACLSPV_ID_I32, h_ctx))
 		return 0;
 
 	ae2f_expected_but_else(h_ctx->m_count.m_types = aclutil_emitx_4(
 				&h_ctx->m_section.m_types
 				, h_ctx->m_count.m_types
 				, SpvOpSpecConstant
-				, ID_DEFAULT_I32
+				, ACLSPV_ID_I32
 				, h_ctx->m_id
 				, c_val))
 		return 0;
@@ -237,7 +237,7 @@ aclspv_id_t	aclutil_mk_constant_spec_id(
 				, SpvDecorationSpecId
 				, c_key)) return 0;
 
-	C->m_const_spec_type	= ID_DEFAULT_I32;
+	C->m_const_spec_type	= ACLSPV_ID_I32;
 	return C->m_const_spec_id = h_ctx->m_id++;
 }
 
@@ -253,18 +253,18 @@ aclspv_id_t	aclutil_mk_constant_spec_id_f32(const aclspv_wrd_t c_key, const floa
 
 	if(C->m_const_spec_id)
 		return ae2f_bll_sel_bool1(aclspv_id_t
-				, C->m_const_spec_type == ID_DEFAULT_F32
+				, C->m_const_spec_type == ACLSPV_ID_F32
 				, C->m_const_spec_id
 				, 0);
 
-	ae2f_expected_but_else(aclid_mk_default_id(ID_DEFAULT_F32, h_ctx))
+	ae2f_expected_but_else(aclid_mk_default_id(ACLSPV_ID_F32, h_ctx))
 		return 0;
 
 	ae2f_expected_but_else(h_ctx->m_count.m_types = aclutil_emitx_4(
 				&h_ctx->m_section.m_types
 				, h_ctx->m_count.m_types
 				, SpvOpSpecConstant
-				, ID_DEFAULT_F32
+				, ACLSPV_ID_F32
 				, h_ctx->m_id
 				, FTOI.m_u))
 		return 0;
@@ -277,7 +277,7 @@ aclspv_id_t	aclutil_mk_constant_spec_id_f32(const aclspv_wrd_t c_key, const floa
 				, SpvDecorationSpecId
 				, c_key)) return 0;
 
-	C->m_const_spec_type	= ID_DEFAULT_F32;
+	C->m_const_spec_type	= ACLSPV_ID_F32;
 
 	return C->m_const_spec_id = h_ctx->m_id++;
 }
@@ -292,18 +292,18 @@ aclspv_id_t	aclutil_mk_constant_spec64_id(
 
 	if(C->m_const_spec_id)
 		return ae2f_bll_sel_bool1(aclspv_id_t
-				, C->m_const_spec_type == ID_DEFAULT_I64
+				, C->m_const_spec_type == ACLSPV_ID_I64
 				, C->m_const_spec_id
 				, 0);
 
-	ae2f_expected_but_else(aclid_mk_default_id(ID_DEFAULT_I64, h_ctx))
+	ae2f_expected_but_else(aclid_mk_default_id(ACLSPV_ID_I64, h_ctx))
 		return 0;
 
 	ae2f_expected_but_else(h_ctx->m_count.m_types = aclutil_emitx_5(
 				&h_ctx->m_section.m_types
 				, h_ctx->m_count.m_types
 				, SpvOpSpecConstant
-				, ID_DEFAULT_I64
+				, ACLSPV_ID_I64
 				, h_ctx->m_id
 				, (u32_least)(c_val & 0xFFFFFFFF)
 				, (u32_least)(c_val >> 32) & 0xFFFFFFFF
@@ -319,7 +319,7 @@ aclspv_id_t	aclutil_mk_constant_spec64_id(
 				, c_key)) return 0;
 
 	C->m_const_spec_id	= h_ctx->m_id++;
-	C->m_const_spec_type	= ID_DEFAULT_I64;
+	C->m_const_spec_type	= ACLSPV_ID_I64;
 	return C->m_const_spec_id;
 }
 
@@ -339,18 +339,18 @@ aclspv_id_t	aclutil_mk_constant_spec_id_f64(
 
 	if(C->m_const_spec_id)
 		return ae2f_bll_sel_bool1(aclspv_id_t
-				, C->m_const_spec_type == ID_DEFAULT_F64
+				, C->m_const_spec_type == ACLSPV_ID_F64
 				, C->m_const_spec_id
 				, 0);
 
-	ae2f_expected_but_else(aclid_mk_default_id(ID_DEFAULT_F64, h_ctx))
+	ae2f_expected_but_else(aclid_mk_default_id(ACLSPV_ID_F64, h_ctx))
 		return 0;
 
 	ae2f_expected_but_else(h_ctx->m_count.m_types = aclutil_emitx_5(
 				&h_ctx->m_section.m_types
 				, h_ctx->m_count.m_types
 				, SpvOpSpecConstant
-				, ID_DEFAULT_F64
+				, ACLSPV_ID_F64
 				, h_ctx->m_id
 				, (u32_least)(FTOI.m_u & 0xFFFFFFFF)
 				, (u32_least)(FTOI.m_u >> 32) & 0xFFFFFFFF
@@ -365,7 +365,7 @@ aclspv_id_t	aclutil_mk_constant_spec_id_f64(
 				, SpvDecorationSpecId
 				, c_key)) return 0;
 
-	C->m_const_spec_type	= ID_DEFAULT_F64;
+	C->m_const_spec_type	= ACLSPV_ID_F64;
 	return C->m_const_spec_id = h_ctx->m_id++;
 }
 

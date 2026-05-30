@@ -162,22 +162,22 @@ enum ACLSPV_CTX_FLAG0_ {
 #undef	__ENUM
 
 /** type id */
-typedef enum ID_DEFAULT_ {
-	ID_DEFAULT_VOID = 1, 
-	ID_DEFAULT_BOOL,
-	ID_DEFAULT_I8,
-	ID_DEFAULT_U8,
-	ID_DEFAULT_I16,
-	ID_DEFAULT_U16,
-	ID_DEFAULT_I32,
-	ID_DEFAULT_U32,
-	ID_DEFAULT_I64,
-	ID_DEFAULT_U64,
-	ID_DEFAULT_F16,
-	ID_DEFAULT_F32,
-	ID_DEFAULT_F64,
-	ID_DEFAULT_END
-} e_id_default;
+enum ACLSPV_ID_ {
+	ACLSPV_ID_VOID = 1, 
+	ACLSPV_ID_BOOL,
+	ACLSPV_ID_I8,
+	ACLSPV_ID_U8,
+	ACLSPV_ID_I16,
+	ACLSPV_ID_U16,
+	ACLSPV_ID_I32,
+	ACLSPV_ID_U32,
+	ACLSPV_ID_I64,
+	ACLSPV_ID_U64,
+	ACLSPV_ID_F16,
+	ACLSPV_ID_F32,
+	ACLSPV_ID_F64,
+	ACLSPV_ID_END
+};
 
 typedef struct a_aclspv_ctx* ae2f_restrict h_aclspv_ctx_t;
 
@@ -329,7 +329,7 @@ typedef struct a_aclspv_ctx {
 			m_fnimpl;
 	}			m_section;
 
-	aclspv_id_t		m_id_defaults[ID_DEFAULT_END];
+	aclspv_id_t		m_id_defaults[ACLSPV_ID_END];
 } x_aclspv_ctx;
 
 

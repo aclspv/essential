@@ -17,21 +17,21 @@ ae2f_ccconst aclspv_bool_t aclid_is_castable1(const B_id_default_t c_id0, const 
 
 ae2f_ccconst aclspv_bool_t aclid_is_unsigned(const B_id_default_t c_id_default) {
 	switch(c_id_default) {
-		case ID_DEFAULT_U8:
-		case ID_DEFAULT_U16:
-		case ID_DEFAULT_U32:
-		case ID_DEFAULT_U64:
+		case ACLSPV_ID_U8:
+		case ACLSPV_ID_U16:
+		case ACLSPV_ID_U32:
+		case ACLSPV_ID_U64:
 			return 1;
 
-		case ID_DEFAULT_I32:
-		case ID_DEFAULT_I8:
-		case ID_DEFAULT_I16:
-		case ID_DEFAULT_I64:
-		case ID_DEFAULT_F16:
-		case ID_DEFAULT_F32:
-		case ID_DEFAULT_F64:
-		case ID_DEFAULT_END:
-		case ID_DEFAULT_VOID:
+		case ACLSPV_ID_I32:
+		case ACLSPV_ID_I8:
+		case ACLSPV_ID_I16:
+		case ACLSPV_ID_I64:
+		case ACLSPV_ID_F16:
+		case ACLSPV_ID_F32:
+		case ACLSPV_ID_F64:
+		case ACLSPV_ID_END:
+		case ACLSPV_ID_VOID:
 		default:
 			return 0;
 	}
@@ -41,21 +41,21 @@ ae2f_ccconst aclspv_bool_t aclid_is_unsigned(const B_id_default_t c_id_default) 
 
 ae2f_ccconst aclspv_bool_t aclid_is_signed(const B_id_default_t c_id_default) {
 	switch(c_id_default) {
-		case ID_DEFAULT_I32:
-		case ID_DEFAULT_I8:
-		case ID_DEFAULT_I16:
-		case ID_DEFAULT_I64:
+		case ACLSPV_ID_I32:
+		case ACLSPV_ID_I8:
+		case ACLSPV_ID_I16:
+		case ACLSPV_ID_I64:
 			return 1;
 
-		case ID_DEFAULT_F16:
-		case ID_DEFAULT_F32:
-		case ID_DEFAULT_F64:
-		case ID_DEFAULT_U8:
-		case ID_DEFAULT_U16:
-		case ID_DEFAULT_U32:
-		case ID_DEFAULT_U64:
-		case ID_DEFAULT_END:
-		case ID_DEFAULT_VOID:
+		case ACLSPV_ID_F16:
+		case ACLSPV_ID_F32:
+		case ACLSPV_ID_F64:
+		case ACLSPV_ID_U8:
+		case ACLSPV_ID_U16:
+		case ACLSPV_ID_U32:
+		case ACLSPV_ID_U64:
+		case ACLSPV_ID_END:
+		case ACLSPV_ID_VOID:
 		default:
 			return 0;
 	}
@@ -69,21 +69,21 @@ ae2f_ccconst aclspv_bool_t aclid_is_int(const B_id_default_t c_id_default) {
 
 ae2f_ccconst aclspv_bool_t aclid_is_float(const B_id_default_t c_id_default) {
 	switch(c_id_default) {
-		case ID_DEFAULT_F16:
-		case ID_DEFAULT_F32:
-		case ID_DEFAULT_F64:
+		case ACLSPV_ID_F16:
+		case ACLSPV_ID_F32:
+		case ACLSPV_ID_F64:
 			return 1;
 
-		case ID_DEFAULT_I8:
-		case ID_DEFAULT_I16:
-		case ID_DEFAULT_I32:
-		case ID_DEFAULT_I64:
-		case ID_DEFAULT_U8:
-		case ID_DEFAULT_U16:
-		case ID_DEFAULT_U32:
-		case ID_DEFAULT_U64:
-		case ID_DEFAULT_END:
-		case ID_DEFAULT_VOID:
+		case ACLSPV_ID_I8:
+		case ACLSPV_ID_I16:
+		case ACLSPV_ID_I32:
+		case ACLSPV_ID_I64:
+		case ACLSPV_ID_U8:
+		case ACLSPV_ID_U16:
+		case ACLSPV_ID_U32:
+		case ACLSPV_ID_U64:
+		case ACLSPV_ID_END:
+		case ACLSPV_ID_VOID:
 		default:
 			return 0;
 	}
@@ -94,19 +94,19 @@ ae2f_ccconst aclspv_bool_t aclid_is_float(const B_id_default_t c_id_default) {
 
 ae2f_ccconst aclspv_bool_t aclid_is_default(const B_id_default_t c_id_default) {
 	switch(c_id_default) {
-		case ID_DEFAULT_F16:
-		case ID_DEFAULT_F32:
-		case ID_DEFAULT_F64:
-		case ID_DEFAULT_I8:
-		case ID_DEFAULT_I16:
-		case ID_DEFAULT_I32:
-		case ID_DEFAULT_I64:
-		case ID_DEFAULT_END:
-		case ID_DEFAULT_VOID:
-		case ID_DEFAULT_U8:
-		case ID_DEFAULT_U16:
-		case ID_DEFAULT_U32:
-		case ID_DEFAULT_U64:
+		case ACLSPV_ID_F16:
+		case ACLSPV_ID_F32:
+		case ACLSPV_ID_F64:
+		case ACLSPV_ID_I8:
+		case ACLSPV_ID_I16:
+		case ACLSPV_ID_I32:
+		case ACLSPV_ID_I64:
+		case ACLSPV_ID_END:
+		case ACLSPV_ID_VOID:
+		case ACLSPV_ID_U8:
+		case ACLSPV_ID_U16:
+		case ACLSPV_ID_U32:
+		case ACLSPV_ID_U64:
 			return 1;
 		default:
 			return 0;
@@ -123,13 +123,13 @@ aclid_is_number(const B_id_default_t c_id_default) {
 ae2f_ccconst B_id_default_t aclid_getty_float(unsigned bit_width) {
 	switch(bit_width) {
 		case 16:
-			return ID_DEFAULT_F16;
+			return ACLSPV_ID_F16;
 		case 32:
-			return ID_DEFAULT_F32;
+			return ACLSPV_ID_F32;
 		case 64:
-			return ID_DEFAULT_F64;
+			return ACLSPV_ID_F64;
 		default:
-			return ID_DEFAULT_END;
+			return ACLSPV_ID_END;
 	}
 
 	ae2f_unreachable();
@@ -138,15 +138,15 @@ ae2f_ccconst B_id_default_t aclid_getty_float(unsigned bit_width) {
 ae2f_ccconst B_id_default_t aclid_getty_signed(unsigned bit_width) {
 	switch(bit_width) {
 		case 8:
-			return ID_DEFAULT_I8;
+			return ACLSPV_ID_I8;
 		case 16:
-			return ID_DEFAULT_I16;
+			return ACLSPV_ID_I16;
 		case 32:
-			return ID_DEFAULT_I32;
+			return ACLSPV_ID_I32;
 		case 64:
-			return ID_DEFAULT_I64;
+			return ACLSPV_ID_I64;
 		default:
-			return ID_DEFAULT_END;
+			return ACLSPV_ID_END;
 	}
 
 	ae2f_unreachable();
@@ -155,15 +155,15 @@ ae2f_ccconst B_id_default_t aclid_getty_signed(unsigned bit_width) {
 ae2f_ccconst B_id_default_t aclid_getty_unsigned(unsigned bit_width) {
 	switch(bit_width) {
 		case 8:
-			return ID_DEFAULT_U8;
+			return ACLSPV_ID_U8;
 		case 16:
-			return ID_DEFAULT_U16;
+			return ACLSPV_ID_U16;
 		case 32:
-			return ID_DEFAULT_U32;
+			return ACLSPV_ID_U32;
 		case 64:
-			return ID_DEFAULT_U64;
+			return ACLSPV_ID_U64;
 		default:
-			return ID_DEFAULT_END;
+			return ACLSPV_ID_END;
 	}
 
 	ae2f_unreachable();
@@ -171,30 +171,30 @@ ae2f_ccconst B_id_default_t aclid_getty_unsigned(unsigned bit_width) {
 
 ae2f_ccconst unsigned aclid_get_bit_width(const B_id_default_t c_id_default) {
 	switch(c_id_default) {
-		case ID_DEFAULT_BOOL:
+		case ACLSPV_ID_BOOL:
 			return 1;
 
-		case ID_DEFAULT_I8:
-		case ID_DEFAULT_U8:
+		case ACLSPV_ID_I8:
+		case ACLSPV_ID_U8:
 			return 8;
 
-		case ID_DEFAULT_I16:
-		case ID_DEFAULT_U16:
-		case ID_DEFAULT_F16:
+		case ACLSPV_ID_I16:
+		case ACLSPV_ID_U16:
+		case ACLSPV_ID_F16:
 			return 16;
 
-		case ID_DEFAULT_I32:
-		case ID_DEFAULT_U32:
-		case ID_DEFAULT_F32:
+		case ACLSPV_ID_I32:
+		case ACLSPV_ID_U32:
+		case ACLSPV_ID_F32:
 			return 32;
 
-		case ID_DEFAULT_F64:
-		case ID_DEFAULT_I64:
-		case ID_DEFAULT_U64:
+		case ACLSPV_ID_F64:
+		case ACLSPV_ID_I64:
+		case ACLSPV_ID_U64:
 			return 64;
 
-		case ID_DEFAULT_END:
-		case ID_DEFAULT_VOID:
+		case ACLSPV_ID_END:
+		case ACLSPV_ID_VOID:
 		default:
 			return 0;
 	}
@@ -203,7 +203,7 @@ ae2f_ccconst unsigned aclid_get_bit_width(const B_id_default_t c_id_default) {
 }
 
 ae2f_ccconst aclspv_bool_t	aclid_is_vectorisable(const aclspv_id_t c_id) {
-	return c_id == ID_DEFAULT_BOOL || aclid_is_number(c_id);
+	return c_id == ACLSPV_ID_BOOL || aclid_is_number(c_id);
 }
 
 aclspv_bool_t	aclid_is_arithmetic(const aclspv_id_t c_id, const h_aclspv_ctx_t h_ctx) 
@@ -222,7 +222,7 @@ aclspv_bool_t	aclid_is_arithmetic(const aclspv_id_t c_id, const h_aclspv_ctx_t h
  * @fn		util_default_decide_cast
  * @returns	0 when invalid
  * */
-ae2f_ccconst B_id_default_t aclid_decide_cast(const e_id_default c_id0, const e_id_default c_id1, const h_aclspv_ctx_t h_ctx) {
+ae2f_ccconst B_id_default_t aclid_decide_cast(const enum ACLSPV_ID_ c_id0, const enum ACLSPV_ID_ c_id1, const h_aclspv_ctx_t h_ctx) {
 	/** one is 0? */
 	unless(c_id0 & c_id1)
 		return ae2f_bll_sel_bool_naive1(B_id_default_t, c_id0, (B_id_default_t) c_id0, (B_id_default_t) c_id1);
@@ -243,8 +243,8 @@ ae2f_ccconst B_id_default_t aclid_decide_cast(const e_id_default c_id0, const e_
 
 	unless(aclid_is_vectorisable((B_id_default_t) c_id0)) {
 		return ae2f_bll_sel_bool1(B_id_default_t, aclid_decide_cast(
-				(e_id_default) aclutil_cxtp_get_veccfg((B_id_default_t) c_id0, h_ctx).m_ty_elm
-					, (e_id_default) aclutil_cxtp_get_veccfg((B_id_default_t) c_id1, h_ctx).m_ty_elm
+				(enum ACLSPV_ID_) aclutil_cxtp_get_veccfg((B_id_default_t) c_id0, h_ctx).m_ty_elm
+					, (enum ACLSPV_ID_) aclutil_cxtp_get_veccfg((B_id_default_t) c_id1, h_ctx).m_ty_elm
 					, h_ctx
 					), (B_id_default_t) c_id0, (B_id_default_t) c_id1);
 	}
@@ -268,7 +268,7 @@ aclspv_id_t aclid_mk_default_id(
 {
 	ae2fpat_assertassume(h_ctx);
 
-	ae2f_ifezerr(c_id_default < (aclspv_wrd_t)(ID_DEFAULT_END))
+	ae2f_ifezerr(c_id_default < (aclspv_wrd_t)(ACLSPV_ID_END))
 		return 0;
 
 	if(h_ctx->m_id_defaults[c_id_default])
@@ -277,20 +277,20 @@ aclspv_id_t aclid_mk_default_id(
 #define CTX		h_ctx
 #define	ret_count	h_ctx->m_count.m_types
 	switch(c_id_default) {
-		case ID_DEFAULT_END:
+		case ACLSPV_ID_END:
 		default:
 			return 0;
 
-		case ID_DEFAULT_BOOL:
+		case ACLSPV_ID_BOOL:
 			ae2f_expected_but_else((ret_count = aclutil_emitx_2(
 							&CTX->m_section.m_types
 							, ret_count
 							, SpvOpTypeBool
-							, ID_DEFAULT_BOOL)))
+							, ACLSPV_ID_BOOL)))
 				return 0;
 			break;
 
-		case ID_DEFAULT_VOID:
+		case ACLSPV_ID_VOID:
 			/** OpTypeVoid */
 			ae2f_expected_but_else((ret_count = emit_opcode(
 							&CTX->m_section.m_types
@@ -300,18 +300,18 @@ aclspv_id_t aclid_mk_default_id(
 			ae2f_expected_but_else((ret_count = aclutil_emit_wrd(
 							&CTX->m_section.m_types
 							, ret_count
-							, ID_DEFAULT_VOID
+							, ACLSPV_ID_VOID
 							))) 
 				return 0;
 			break;
 
-		case ID_DEFAULT_I64:
+		case ACLSPV_ID_I64:
 			ae2f_expected_but_else(
 					ret_count = aclutil_emitx_4(
 						&CTX->m_section.m_types
 						, ret_count
 						, SpvOpTypeInt
-						, ID_DEFAULT_I64
+						, ACLSPV_ID_I64
 						, 64, 1))
 				return 0;
 
@@ -319,48 +319,48 @@ aclspv_id_t aclid_mk_default_id(
 				return 0;
 			break;
 
-		case ID_DEFAULT_U64:
+		case ACLSPV_ID_U64:
 			ae2f_expected_but_else(
 					ret_count = aclutil_emitx_4(
 						&CTX->m_section.m_types
 						, ret_count
 						, SpvOpTypeInt
-						, ID_DEFAULT_U64
+						, ACLSPV_ID_U64
 						, 64, 0))
 				return 0;
 
 			ae2f_expected_but_else(aclutil_add_capability_by_flag(CTX, SpvCapabilityInt64)) 
 				return 0;
 			break;
-		case ID_DEFAULT_U32:
+		case ACLSPV_ID_U32:
 			ae2f_expected_but_else(
 					ret_count = aclutil_emitx_4(
 						&CTX->m_section.m_types
 						, ret_count
 						, SpvOpTypeInt
-						, ID_DEFAULT_U32
+						, ACLSPV_ID_U32
 						, 32, 0))
 				return 0;
 			break;
 
-		case ID_DEFAULT_I32:
+		case ACLSPV_ID_I32:
 			ae2f_expected_but_else(
 					ret_count = aclutil_emitx_4(
 						&CTX->m_section.m_types
 						, ret_count
 						, SpvOpTypeInt
-						, ID_DEFAULT_I32
+						, ACLSPV_ID_I32
 						, 32, 1))
 				return 0;
 			break;
 
-		case ID_DEFAULT_U16:
+		case ACLSPV_ID_U16:
 			ae2f_expected_but_else(
 					ret_count = aclutil_emitx_4(
 						&CTX->m_section.m_types
 						, ret_count
 						, SpvOpTypeInt
-						, ID_DEFAULT_U16
+						, ACLSPV_ID_U16
 						, 16, 0))
 				return 0;
 
@@ -369,13 +369,13 @@ aclspv_id_t aclid_mk_default_id(
 
 			break;
 
-		case ID_DEFAULT_I16:
+		case ACLSPV_ID_I16:
 			ae2f_expected_but_else(
 					ret_count = aclutil_emitx_4(
 						&CTX->m_section.m_types
 						, ret_count
 						, SpvOpTypeInt
-						, ID_DEFAULT_I16
+						, ACLSPV_ID_I16
 						, 16, 1))
 				return 0;
 
@@ -384,13 +384,13 @@ aclspv_id_t aclid_mk_default_id(
 
 			break;
 
-		case ID_DEFAULT_U8:
+		case ACLSPV_ID_U8:
 			ae2f_expected_but_else(
 					ret_count = aclutil_emitx_4(
 						&CTX->m_section.m_types
 						, ret_count
 						, SpvOpTypeInt
-						, ID_DEFAULT_U8
+						, ACLSPV_ID_U8
 						, 8, 0))
 				return 0;
 
@@ -398,13 +398,13 @@ aclspv_id_t aclid_mk_default_id(
 				return 0;
 			break;
 
-		case ID_DEFAULT_I8:
+		case ACLSPV_ID_I8:
 			ae2f_expected_but_else(
 					ret_count = aclutil_emitx_4(
 						&CTX->m_section.m_types
 						, ret_count
 						, SpvOpTypeInt
-						, ID_DEFAULT_I8
+						, ACLSPV_ID_I8
 						, 8, 1))
 				return 0;
 
@@ -412,12 +412,12 @@ aclspv_id_t aclid_mk_default_id(
 				return 0;
 			break;
 
-		case ID_DEFAULT_F16:
+		case ACLSPV_ID_F16:
 			ae2f_expected_but_else(ret_count = aclutil_emitx_3(
 						&CTX->m_section.m_types
 						, ret_count
 						, SpvOpTypeFloat
-						, ID_DEFAULT_F16
+						, ACLSPV_ID_F16
 						, 16
 						)) return 0;
 
@@ -425,22 +425,22 @@ aclspv_id_t aclid_mk_default_id(
 				return 0;
 			break;
 
-		case ID_DEFAULT_F32:
+		case ACLSPV_ID_F32:
 			ae2f_expected_but_else(ret_count = aclutil_emitx_3(
 						&CTX->m_section.m_types
 						, ret_count
 						, SpvOpTypeFloat
-						, ID_DEFAULT_F32
+						, ACLSPV_ID_F32
 						, 32
 						)) return 0;
 			break;
 
-		case ID_DEFAULT_F64:
+		case ACLSPV_ID_F64:
 			ae2f_expected_but_else(ret_count = aclutil_emitx_3(
 						&CTX->m_section.m_types
 						, ret_count
 						, SpvOpTypeFloat
-						, ID_DEFAULT_F64
+						, ACLSPV_ID_F64
 						, 64
 						)) return 0;
 

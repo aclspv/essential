@@ -1,5 +1,6 @@
 #include <aclspv.h>
 #include <util/scale.h>
+#include <ae2f/cc/memset.h>
 
 #include "./conf.h"
 
@@ -33,7 +34,7 @@ ACLSPV_ABI_IMPL void aclspv_fini_ctx(
 	_aclspv_stop_vec(_aclspv_free, d_ctx->m_section.m_vars);
 	_aclspv_stop_vec(_aclspv_free, d_ctx->m_section.m_fnimpl);
 
-	memset(d_ctx, 0, sizeof(x_aclspv_ctx));
+	ae2fcc_memset(d_ctx, 0, sizeof(x_aclspv_ctx));
 	d_ctx->m_err = E;
 }
 
@@ -46,8 +47,8 @@ ACLSPV_ABI_IMPL enum ACLSPV_COMPILE_ aclspv_init_ctx(
 	ae2f_ifezerr(i_ctx)
 		return ACLSPV_COMPILE_PRM_INVAL_NIL;
 
-	memset(i_ctx, 0, sizeof(x_aclspv_ctx));
-	i_ctx->m_id		= ID_DEFAULT_END;
+	ae2fcc_memset(i_ctx, 0, sizeof(x_aclspv_ctx));
+	i_ctx->m_id		= ACLSPV_ID_END;
 	i_ctx->m_flag0		|= c_init_flag0;
 	i_ctx->m_spirv_ver	|= c_spirv_ver;
 

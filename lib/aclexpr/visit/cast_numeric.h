@@ -47,7 +47,7 @@ ae2f_inline_f static enum EMIT_EXPR_ s_cast_numeric(
 			NEW_SCALE = mk_scale_from_vec(
 					h_cmdscale
 					, 
-					count_to_sz(UTIL_OPBINCFG_END + 2)
+					aclutil_count_to_sz(UTIL_OPBINCFG_END + 2)
 					+ (sizeof(util_opbincfg_extra) * 2)
 					);
 			ae2f_expected_but_else(NEW_SCALE)
@@ -59,7 +59,7 @@ ae2f_inline_f static enum EMIT_EXPR_ s_cast_numeric(
 				return EMIT_EXPR_FAILURE;
 
 			VEC[0] = 1;				/** number of operands */
-			VEC[1] = UTIL_LITERAL_MASK_LITERAL;	/** is not constant? */
+			VEC[1] = ACLUTIL_LITERAL_MASK_LITERAL;	/** is not constant? */
 			VEC[2] = opcode_to_wrd(SpvOpSpecConstantOp, 4); 
 			VEC[3] = 0;				/** c_result_type_id */
 			VEC[4] = 0;				/** return id (not specified) */
@@ -97,7 +97,7 @@ ae2f_inline_f static enum EMIT_EXPR_ s_cast_numeric(
 #if	DBG
 	{
 		CXType CURTYPE = (clang_getCursorType(c_cur));
-		CXCursor CUR = c_cur; clang_getTypeDeclaration(CURTYPE);
+		CXCursor CUR = c_cur; /** clang_getTypeDeclaration(CURTYPE); */
 		CXString TYPESTR = clang_getTypeSpelling(CURTYPE);
 		CXString CURSTR = clang_getCursorSpelling(CUR);
 

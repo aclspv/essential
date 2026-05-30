@@ -15,7 +15,7 @@ enum EMIT_EXPR_ aclspv_get_expr2(
 		aclspv_id_t* ae2f_restrict const	ret_id
 		, aclspv_id_t* ae2f_restrict const	r_type_opt
 		, const CXCursor			c_cur
-		, util_literal* ae2f_restrict		wr_literal_opt
+		, aclutil_literal* ae2f_restrict		wr_literal_opt
 		, h_aclspv_ctx_t			h_ctx
 		) {
 	aclspv_wrd_t* ae2f_restrict SCALE_BOOT;
@@ -26,7 +26,7 @@ enum EMIT_EXPR_ aclspv_get_expr2(
 	DATA.m_ctx		= h_ctx;			/* context. must be pointer to context. */
 	DATA.m_exprcount	= 0;				/* stack count. must be 0. */
 	DATA.m_id_ret		= 0;				/* result value id */
-	DATA.m_literal_flag	= UTIL_LITERAL_MASK_LITERAL;	/* see enum UTIL_LITERAL_MASK_ */
+	DATA.m_literal_flag	= ACLUTIL_LITERAL_MASK_LITERAL;	/* see enum UTIL_LITERAL_MASK_ */
 	DATA.m_tyid_current	= 0;				/* type casted */
 	DATA.m_num_cmdcounter	= 1;				/* count for operand */
 
@@ -37,7 +37,7 @@ enum EMIT_EXPR_ aclspv_get_expr2(
 		return EMIT_EXPR_FAILURE;
 
 	ae2f_expected_but_else(init_scale(&h_ctx->m_tmp.m_v1
-				, count_to_sz(UTIL_OPBINCFG_END) + sizeof(aclspv_wrd_t)
+				, aclutil_count_to_sz(UTIL_OPBINCFG_END) + sizeof(aclspv_wrd_t)
 				+ sizeof(util_opbincfg_extra)
 				))
 		return EMIT_EXPR_FAILURE;
@@ -46,8 +46,8 @@ enum EMIT_EXPR_ aclspv_get_expr2(
 	ae2fpat_assertassume(SCALE_BOOT);
 	ae2fpat_assertassume(!get_last_scale_from_vec(&h_ctx->m_tmp.m_v1)->m_id);
 
-	SCALE_BOOT[UTIL_OPBINCFG_NUMOPRND]		= 1;
-	SCALE_BOOT[UTIL_OPBINCFG_MASKLITERAL]		= UTIL_LITERAL_MASK_LITERAL;
+	SCALE_BOOT[ACLUTIL_OPBINCFG_NUMOPRND]		= 1;
+	SCALE_BOOT[ACLUTIL_OPBINCFG_MASKLITERAL]		= ACLUTIL_LITERAL_MASK_LITERAL;
 	SCALE_BOOT[UTIL_OPBINCFG_RESTYID]		= 0;
 	SCALE_BOOT[UTIL_OPBINCFG_RESID]			= 0;
 	SCALE_BOOT[UTIL_OPBINCFG_OPCODE]		= 0;
@@ -77,8 +77,8 @@ enum EMIT_EXPR_ aclspv_get_expr2(
 	ae2fpat_assertassume_strict(ret_id);
 	*ret_id = DATA.m_id_ret;
 
-	return		DATA.m_literal_flag & UTIL_LITERAL_LITERAL ? EMIT_EXPR_SUCCESS_LITERAL
-		: 	DATA.m_literal_flag & UTIL_LITERAL_CONSTANT ? EMIT_EXPR_SUCCESS_CONSTANT
+	return		DATA.m_literal_flag & ACLUTIL_LITERAL_LITERAL ? EMIT_EXPR_SUCCESS_LITERAL
+		: 	DATA.m_literal_flag & ACLUTIL_LITERAL_CONSTANT ? EMIT_EXPR_SUCCESS_CONSTANT
 		: 	EMIT_EXPR_SUCCESS;
 
 #undef	INIT_EXTRA
@@ -88,7 +88,7 @@ enum EMIT_EXPR_ aclexpr_eval_btcast(
 		aclspv_id_t* ae2f_restrict const ret_id
 		, const aclspv_id_t c_type_req
 		, const CXCursor c_cur
-		, util_literal* ae2f_restrict	wr_literal_opt
+		, aclutil_literal* ae2f_restrict	wr_literal_opt
 		, h_aclspv_ctx_t h_ctx
 		) 
 {
@@ -100,7 +100,7 @@ enum EMIT_EXPR_ aclexpr_eval_btcast(
 	DATA.m_ctx		= h_ctx;			/* context. must be pointer to context. */
 	DATA.m_exprcount	= 0;				/* stack count. must be 0. */
 	DATA.m_id_ret		= 0;				/* result value id */
-	DATA.m_literal_flag	= UTIL_LITERAL_MASK_LITERAL;	/* see enum UTIL_LITERAL_MASK_ */
+	DATA.m_literal_flag	= ACLUTIL_LITERAL_MASK_LITERAL;	/* see enum UTIL_LITERAL_MASK_ */
 	DATA.m_tyid_current	= 0;				/* type casted */
 	DATA.m_num_cmdcounter	= 1;				/* count for operand */
 
@@ -111,7 +111,7 @@ enum EMIT_EXPR_ aclexpr_eval_btcast(
 		return EMIT_EXPR_FAILURE;
 
 	ae2f_expected_but_else(init_scale(&h_ctx->m_tmp.m_v1
-				, count_to_sz(UTIL_OPBINCFG_END) + sizeof(aclspv_wrd_t)
+				, aclutil_count_to_sz(UTIL_OPBINCFG_END) + sizeof(aclspv_wrd_t)
 				+ sizeof(util_opbincfg_extra)
 				))
 		return EMIT_EXPR_FAILURE;
@@ -120,8 +120,8 @@ enum EMIT_EXPR_ aclexpr_eval_btcast(
 	ae2fpat_assertassume_strict(!!SCALE_BOOT);
 	ae2fpat_assertassume_strict(!get_last_scale_from_vec(&h_ctx->m_tmp.m_v1)->m_id);
 
-	SCALE_BOOT[UTIL_OPBINCFG_NUMOPRND]		= 1;
-	SCALE_BOOT[UTIL_OPBINCFG_MASKLITERAL]		= UTIL_LITERAL_MASK_LITERAL;
+	SCALE_BOOT[ACLUTIL_OPBINCFG_NUMOPRND]		= 1;
+	SCALE_BOOT[ACLUTIL_OPBINCFG_MASKLITERAL]		= ACLUTIL_LITERAL_MASK_LITERAL;
 	SCALE_BOOT[UTIL_OPBINCFG_RESTYID]		= 0;
 	SCALE_BOOT[UTIL_OPBINCFG_RESID]			= 0;
 	SCALE_BOOT[UTIL_OPBINCFG_OPCODE]		= 0;
@@ -163,7 +163,7 @@ enum EMIT_EXPR_ aclexpr_eval_btcast(
 		return EMIT_EXPR_NOT_THE_CASE;
 	}
 
-	if(DATA.m_literal_flag & UTIL_LITERAL_LITERAL) {
+	if(DATA.m_literal_flag & ACLUTIL_LITERAL_LITERAL) {
 		if(wr_literal_opt)
 			*wr_literal_opt = DATA.m_ret_literal;
 
@@ -271,7 +271,7 @@ enum EMIT_EXPR_ aclexpr_eval(
 		aclspv_id_t* ae2f_restrict const ret_id
 		, const aclspv_id_t c_type_req
 		, const CXCursor c_cur
-		, util_literal* ae2f_restrict	wr_literal_opt
+		, aclutil_literal* ae2f_restrict	wr_literal_opt
 		, h_aclspv_ctx_t h_ctx
 		) {
 	aclspv_wrd_t* ae2f_restrict SCALE_BOOT;
@@ -280,7 +280,7 @@ enum EMIT_EXPR_ aclexpr_eval(
 	DATA.m_ctx		= h_ctx;			/* context. must be pointer to context. */
 	DATA.m_exprcount	= 0;				/* stack count. must be 0. */
 	DATA.m_id_ret		= 0;				/* result value id */
-	DATA.m_literal_flag	= UTIL_LITERAL_MASK_LITERAL;	/* see enum UTIL_LITERAL_MASK_ */
+	DATA.m_literal_flag	= ACLUTIL_LITERAL_MASK_LITERAL;	/* see enum UTIL_LITERAL_MASK_ */
 	DATA.m_tyid_current	= 0;				/* type casted */
 	DATA.m_num_cmdcounter	= 1;				/* count for operand */
 
@@ -291,7 +291,7 @@ enum EMIT_EXPR_ aclexpr_eval(
 		return EMIT_EXPR_FAILURE;
 
 	ae2f_expected_but_else(init_scale(&h_ctx->m_tmp.m_v1
-				, count_to_sz(UTIL_OPBINCFG_END) + sizeof(aclspv_wrd_t)
+				, aclutil_count_to_sz(UTIL_OPBINCFG_END) + sizeof(aclspv_wrd_t)
 				+ sizeof(util_opbincfg_extra)
 				))
 		return EMIT_EXPR_FAILURE;
@@ -300,8 +300,8 @@ enum EMIT_EXPR_ aclexpr_eval(
 	ae2fpat_assertassume_strict(!!SCALE_BOOT);
 	ae2fpat_assertassume_strict(!get_last_scale_from_vec(&h_ctx->m_tmp.m_v1)->m_id);
 
-	SCALE_BOOT[UTIL_OPBINCFG_NUMOPRND]		= 1;
-	SCALE_BOOT[UTIL_OPBINCFG_MASKLITERAL]		= UTIL_LITERAL_MASK_LITERAL;
+	SCALE_BOOT[ACLUTIL_OPBINCFG_NUMOPRND]		= 1;
+	SCALE_BOOT[ACLUTIL_OPBINCFG_MASKLITERAL]		= ACLUTIL_LITERAL_MASK_LITERAL;
 	SCALE_BOOT[UTIL_OPBINCFG_RESTYID]		= 0;
 	SCALE_BOOT[UTIL_OPBINCFG_RESID]			= 0;
 	SCALE_BOOT[UTIL_OPBINCFG_OPCODE]		= 0;

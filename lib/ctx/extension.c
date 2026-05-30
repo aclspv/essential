@@ -13,7 +13,7 @@ ACLSPV_ABI_IMPL ae2f_ccpure ae2f_noexcept aclspv_bool_t aclspv_chck_extension_fr
 		const char* ae2f_restrict const		c_ext
 		) { ae2f_ifezerr_strict(rd_ctx && rd_ctx->m_section.m_ext.m_p && c_ext) return 0; {
 	
-#define	BUF	get_wrd_of_vec(&rd_ctx->m_section.m_ext)
+#define	BUF	aclutil_get_wrd_of_vec(&rd_ctx->m_section.m_ext)
 	aclspv_wrd_t		I	= 0;
 	const aclspv_wrd_t	C	= rd_ctx->m_count.m_ext;
 	const size_t		ELEN	= strlen(c_ext);
@@ -71,7 +71,7 @@ ACLSPV_ABI_IMPL ae2f_ccpure ae2f_noexcept aclspv_bool_t aclspv_add_extension_fro
 	unless(h_ctx->m_section.m_ext.m_p) goto LBL_NOT_FOUND;
 
 	{
-#define	BUF	get_wrd_of_vec(&h_ctx->m_section.m_ext)
+#define	BUF	aclutil_get_wrd_of_vec(&h_ctx->m_section.m_ext)
 
 		while(			I < C
 				&&	((BUF[I] >> 16) & 0xFFFF) < WCEXT
@@ -112,7 +112,7 @@ LBL_NOT_FOUND:
 			return 0;
 		}
 
-		ae2f_ifezerr(h_ctx->m_count.m_ext = util_emit_str(
+		ae2f_ifezerr(h_ctx->m_count.m_ext = aclutil_emit_str(
 					&h_ctx->m_section.m_ext
 					, h_ctx->m_count.m_ext
 					, c_ext)) {
@@ -134,12 +134,12 @@ LBL_NOT_FOUND:
 	}
 
 	_aclutil_vcopr_v(L, =, --
-			, get_wrd_of_vec(&h_ctx->m_section.m_ext) + I + WCEXT - 1	+ (C - I)
-			, get_wrd_of_vec(&h_ctx->m_section.m_ext) + I - 1 		+ (C - I)
+			, aclutil_get_wrd_of_vec(&h_ctx->m_section.m_ext) + I + WCEXT - 1	+ (C - I)
+			, aclutil_get_wrd_of_vec(&h_ctx->m_section.m_ext) + I - 1 		+ (C - I)
 			, C - I);
 
-	get_wrd_of_vec(&h_ctx->m_section.m_ext)[I] = SpvOpExtension | (WCEXT << 16);
-	strcpy((char* ae2f_restrict)&get_wrd_of_vec(&h_ctx->m_section.m_ext)[I + 1], c_ext);
+	aclutil_get_wrd_of_vec(&h_ctx->m_section.m_ext)[I] = SpvOpExtension | (WCEXT << 16);
+	strcpy((char* ae2f_restrict)&aclutil_get_wrd_of_vec(&h_ctx->m_section.m_ext)[I + 1], c_ext);
 
 	return 1;
 }
