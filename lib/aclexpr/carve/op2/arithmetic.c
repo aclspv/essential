@@ -14,13 +14,12 @@ enum S_ARITHMETIC_ {
 };
 
 ae2f_inline_f static ae2f_ccpure aclspv_opcode_t s_op_to_spv(
-		const enum ACLSPV_ID_ c_id, 
+		const aclspv_id_t c_id, 
 		const aclspv_wrd_t c_op2,
 		const h_aclspv_ctx_t	h_ctx
 		)
 {
-	aclspv_id_t	ID = aclid_is_vectorisable((aclspv_id_t) c_id) ? (aclspv_id_t) c_id
-		: aclutil_cxtp_get_veccfg((aclspv_id_t) c_id, h_ctx).m_ty_elm;
+	aclspv_id_t	ID = aclid_is_vectorisable(c_id) ? c_id : aclutil_cxtp_get_veccfg(c_id, h_ctx).m_ty_elm;
 
 	switch((enum S_ARITHMETIC_)c_op2) {
 		default:
@@ -249,7 +248,7 @@ aclexpr_carve_lbl_t aclexpr_carve_op2_arithmetic(
 
 	ae2f_ifezerr(rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_OPCODE] = s_op_to_spv(
 				ACLEXPR_OPBINCFG_RESTYID[rdwr_lst_scale_buf]
-				, (enum S_ARITHMETIC_)ACLEXPR_OPBINCFG_OPCODE[rdwr_lst_scale_buf]
+				, (ACLEXPR_OPBINCFG_OPCODE[rdwr_lst_scale_buf])
 				, CTX(rdwr_data)
 				)) {
 		err_puts(("SpvOp went undefined"));
