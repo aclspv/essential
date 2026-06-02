@@ -2,16 +2,29 @@
 
 #include <util/emitx.h>
 #include <util/scale.h>
-#include <util/op.h>
+#include <aclexpr/op.h>
 
 #include <ae2f/cc/memset.h>
 
 #include "./visit.h"
 #include "./carve.h"
 
+#include "./visit/api.h"
 #include "./visit/simple.h"
-#include "./visit/cast_numeric.h"
+#include "./visit/op1/arithmetic_cast.h"
+#include "./visit/op1/incr.h"
 #include "./visit/op2/arithmetic.h"
+
+enum {
+	OP2_ARITHMETIC,
+	OP1_ARITHMETIC_CAST,
+	OP1_INCR,
+	OP0_,
+	OP0_VAL,
+	OP_FAIL,
+	OP_FALL,
+	OP_RECURSE
+};
 
 enum CXChildVisitResult aclexpr_visit(
 		CXCursor h_cur,
@@ -53,9 +66,22 @@ enum CXChildVisitResult aclexpr_visit(
 	aclspv_wrd_t* ae2f_restrict LST_SCALE_BUF	= get_buf_from_scale2(aclspv_wrd_t, &CMDSTCK_SCALE, *LST_SCALE);
 	aclutil_literal* ae2f_restrict RET_LITERAL		= &LITERAL;
 
-	util_opbincfg_extra* ae2f_restrict	LST_EXTRA;
+	aclexpr_opbincfg_extra* ae2f_restrict	LST_EXTRA;
 
-	ae2f_ifnezerr(CTX->m_err) return CXChildVisit_Break;
+	dbg_prefix(i);
+	dbg_call(ae2f_NONE, (fprintf(stderr, "[visit] OPR: %u/%u ID(scale): %u\n"
+					, (unsigned)GETLASTEL_CMDCOUNTERSTCK().m_count_oprnd
+					, (unsigned)LST_SCALE_BUF[0]
+					, (unsigned)LST_SCALE->m_id
+				    )));
+
+	ae2f_ifnezerr(CTX->m_err) {
+		err_prefix();
+		err_call(ae2f_NONE, (fprintf(stderr, "[visit] error %u\n"
+						, (unsigned)CTX->m_err
+					    )));
+		return CXChildVisit_Break;
+	}
 
 	if(EXPRSTCK_COUNT) {
 		ae2f_expected_but_else(EXPRSTCK.m_p) {
@@ -74,14 +100,8 @@ enum CXChildVisitResult aclexpr_visit(
 		return CXChildVisit_Break;
 	}
 
-	LST_EXTRA = (void* ae2f_restrict)(&LST_SCALE_BUF[(UTIL_OPBINCFG_END + LST_SCALE_BUF[0])]);
+	LST_EXTRA = (void* ae2f_restrict)(&LST_SCALE_BUF[(ACLEXPR_OPBINCFG_END + LST_SCALE_BUF[0])]);
 
-	dbg_prefix(i);
-	dbg_call(ae2f_NONE, (fprintf(stderr, "Operand Counter: %u/%u[%lu]\n"
-					, (unsigned)GETLASTEL_CMDCOUNTERSTCK().m_count_oprnd
-					, (unsigned)LST_SCALE_BUF[0]
-					, (unsigned long)LST_SCALE->m_id
-				    )));
 	ID_REQ = CTX->m_id++;
 	LST_EXTRA[GETLASTEL_CMDCOUNTERSTCK(a).m_count_oprnd].m_mask_literal = ACLUTIL_LITERAL_MASK_LITERAL;
 
@@ -95,113 +115,112 @@ enum CXChildVisitResult aclexpr_visit(
 
 	LST_EXTRA[GETLASTEL_CMDCOUNTERSTCK(a).m_count_oprnd].m_cursor = h_cur;
 
-	switch(aclexpr_visit_op2_arithmetic(
-				h_cur
-				, CTX
-				, &CMDSTCK_SCALE
-				))
-	{
-		default:
-		case EMIT_EXPR_FAILURE:
-			CTX->m_err = CTX->m_err ? CTX->m_err : ACLSPV_COMPILE_UNHANDLED_BODY;
-			return CXChildVisit_Break;
+#if	aclspv_cgoto
+#	define	cgswtch(a)		goto LBL_##a;
+#	define	cgcsdef(a)		LBL_##a
+#	define	cgdefault		cgcsdef
+#	define	cgcase(a)		(&&LBL_##a)
+#	define	cgjmp(a)		ae2f_cgoto_beg(); goto *(a); ae2f_cgoto_end()
+#else
+#	define	cgswtch(a)		uint_leastenum_t LABELJMP = a; LABELJMPINIT: switch(LABELJMP)
+#	define	cgcsdef(a)		case a
+#	define	cgdefault(a)		case a: default
+#	define	cgcase(a)		a
+#	define	cgjmp(a)		LABELJMP = a; goto LABELJMPINIT
+#endif
 
-		case EMIT_EXPR_SUCCESS:
-		case EMIT_EXPR_SUCCESS_CONSTANT:
-		case EMIT_EXPR_SUCCESS_LITERAL:
+	dbg_puts("[visit] CGSWTCH");
+	cgswtch(OP2_ARITHMETIC) {
+		aclspv_wrd_t	N_OPRND_TMP;
+
+		cgcsdef(OP_FAIL):
+		{
+			err_puts("[visit] OP_FAIL");
+			CTX->m_err = (e_aclspv_compile_t) ae2f_bll_sel_bool1(
+					uint_leastenum_t
+					, CTX->m_err
+					, (uint_leastenum_t) CTX-> m_err
+					, ACLSPV_COMPILE_UNHANDLED_VISIT);
+			return CXChildVisit_Break;
+		}
+
+		cgcsdef(OP_RECURSE):
+		{
+			dbg_prefix();
+			dbg_call(, fprintf(stderr, "[visit] OP_RECURSE(%u)\n", N_OPRND_TMP));
 
 			{
 				size_t	NEWSZ = EXPRSTCK.m_sz;
-				while((size_t)(EXPRSTCK_COUNT + 2) > NEWSZ / sizeof(exprstck))
+				while((size_t)(EXPRSTCK_COUNT + N_OPRND_TMP) > NEWSZ / sizeof(exprstck))
 					NEWSZ <<= 1;
 
 				_aclspv_grow_vec_with_copy(
-						_aclspv_malloc,  _aclspv_free, _aclspv_memcpy
+						_aclspv_malloc, _aclspv_free, _aclspv_memcpy
 						, dest
 						, EXPRSTCK
 						, NEWSZ
 						);
 
-				ae2f_expected_but_else(EXPRSTCK.m_p) {
+				ae2f_ifezerr(EXPRSTCK.m_p) {
 					CTX->m_err = ACLSPV_COMPILE_ALLOC_FAILED_EXPR;
 					return CXChildVisit_Break;
 				}
 			}
 
-			EXPRSTCK_COUNT += 2;
+			(void)(EXPRSTCK_COUNT += N_OPRND_TMP);
 
-			while((size_t)NUM_CMDCOUNTERSTCK >= CMDCOUNTERSTCK.m_sz / sizeof(cmdcounterstckelm)) {
+			{
+				size_t NEWSZ = CMDCOUNTERSTCK.m_sz;
+				while(
+						((size_t)NUM_CMDCOUNTERSTCK > NEWSZ / sizeof(cmdcounterstckelm)) 
+						&& ((NEWSZ <<= 1)) > CMDCOUNTERSTCK.m_sz);
+
+				ae2f_ifezerr(NEWSZ > CMDCOUNTERSTCK.m_sz / sizeof(cmdcounterstckelm)) {
+					CTX->m_err = ACLSPV_COMPILE_TOO_BIG;
+					return CXChildVisit_Break;
+				}
+
 				_aclspv_grow_vec_with_copy(
 						_aclspv_malloc,  _aclspv_free, _aclspv_memcpy
 						, dest, CMDCOUNTERSTCK
-						, CMDCOUNTERSTCK.m_sz << 1
+						, NEWSZ
 						);
 
-				ae2f_expected_but_else(CMDCOUNTERSTCK.m_p) {
+				ae2f_ifezerr(CMDCOUNTERSTCK.m_p)
+				{
 					CTX->m_err = ACLSPV_COMPILE_ALLOC_FAILED_EXPR;
 					return CXChildVisit_Break;
 				}
 			}
 
-			++NUM_CMDCOUNTERSTCK;
+			(void)++NUM_CMDCOUNTERSTCK;
 			GETLASTEL_CMDCOUNTERSTCK(a).m_count_oprnd = 0;
 			return CXChildVisit_Recurse;
+		}
 
-		case EMIT_EXPR_NOT_THE_CASE:
-			break;
-	}
+		cgcsdef(OP0_):
+		{
+			dbg_puts("[visit] OP0_");
 
-	switch(s_simple(
-				h_cur
-				, CTX
-				, &ID_REQ
-				, &LST_EXTRA[GETLASTEL_CMDCOUNTERSTCK(a).m_count_oprnd].m_type_original
-				, &LST_EXTRA[GETLASTEL_CMDCOUNTERSTCK(a).m_count_oprnd].m_literal
-		       )) {
-		case EMIT_EXPR_FAILURE:
-			CTX->m_err = (e_aclspv_compile_t) ae2f_bll_sel_bool1(
-					uint_leastenum_t
-					, CTX->m_err
-					, (uint_leastenum_t) CTX-> m_err
-					, ACLSPV_COMPILE_UNHANDLED_VISIT_SIMPLE);
-			return CXChildVisit_Break;
-
-
-		case EMIT_EXPR_SUCCESS:
-			dbg_prefix(a);
-			dbg_call(fprintf, (stderr, "s_bin_1: newid: %u\n", ID_REQ));
-
-			IS_NOT_CONSTANT = ACLUTIL_LITERAL_RT;
-			LST_SCALE_BUF[1] = ACLUTIL_LITERAL_MASK_RT;
-			LST_EXTRA[GETLASTEL_CMDCOUNTERSTCK(a).m_count_oprnd].m_mask_literal = 0;
-
-			ae2f_unexpected_but_if(0) {
-				ae2f_unreachable();
-				case EMIT_EXPR_SUCCESS_LITERAL:
+			if(LST_EXTRA[GETLASTEL_CMDCOUNTERSTCK(a).m_count_oprnd].m_mask_literal & (aclspv_wrd_t)ACLUTIL_LITERAL_LITERAL) {
 				*RET_LITERAL = LST_EXTRA[GETLASTEL_CMDCOUNTERSTCK(i).m_count_oprnd].m_literal; 
 			}
 
-			ae2f_unexpected_but_if(0) {
-				ae2f_unreachable();
-				case EMIT_EXPR_SUCCESS_CONSTANT:
+			LST_SCALE_BUF[ACLEXPR_OPBINCFG_MASKLITERAL] &= LST_EXTRA[GETLASTEL_CMDCOUNTERSTCK(a).m_count_oprnd].m_mask_literal;
+			IS_NOT_CONSTANT &= LST_EXTRA[GETLASTEL_CMDCOUNTERSTCK(a).m_count_oprnd].m_mask_literal;
 
-				IS_NOT_CONSTANT &= ACLUTIL_LITERAL_MASK_CONSTANT;
-				LST_SCALE_BUF[1] &= ACLUTIL_LITERAL_MASK_CONSTANT;
-				LST_EXTRA[GETLASTEL_CMDCOUNTERSTCK(a).m_count_oprnd].m_mask_literal &= ACLUTIL_LITERAL_MASK_CONSTANT;
-			}
-
-			LST_SCALE_BUF[UTIL_OPBINCFG_END + GETLASTEL_CMDCOUNTERSTCK(i).m_count_oprnd] = ID_REQ;
+			LST_SCALE_BUF[ACLEXPR_OPBINCFG_END + GETLASTEL_CMDCOUNTERSTCK(i).m_count_oprnd] = ID_REQ;
 			TYPE_CAST_CURRENT = LST_EXTRA[GETLASTEL_CMDCOUNTERSTCK(a).m_count_oprnd].m_type_original;
 
 			(void)(EXPRSTCK_COUNT && --EXPRSTCK_COUNT);
 			(void)(LST_SCALE->m_id && ++GETLASTEL_CMDCOUNTERSTCK(a).m_count_oprnd);
 
 			while(LST_SCALE->m_id && GETLASTEL_CMDCOUNTERSTCK().m_count_oprnd == LST_SCALE_BUF[0]) {
-				util_opbincfg_extra	EXTRA_PRV;
+				aclexpr_opbincfg_extra	EXTRA_PRV;
 				aclspv_wrd_t	IDVAL_PRV;
 				aclspv_bool_t	IS_ASSIGN	= LST_EXTRA[0].m_is_assign;
 
-				ae2fcc_memset(&EXTRA_PRV, 0, sizeof(util_opbincfg_extra));
+				ae2fcc_memset(&EXTRA_PRV, 0, sizeof(aclexpr_opbincfg_extra));
 
 				(void)--GETLASTEL_CMDCOUNTERSTCK().m_count_oprnd;
 
@@ -211,7 +230,7 @@ enum CXChildVisitResult aclexpr_visit(
 				ae2fpat_assertassume(LST_SCALE_BUF);
 
 				LST_EXTRA
-					= (void* ae2f_restrict)(&LST_SCALE_BUF[(UTIL_OPBINCFG_END + LST_SCALE_BUF[0])]);
+					= (void* ae2f_restrict)(&LST_SCALE_BUF[(ACLEXPR_OPBINCFG_END + LST_SCALE_BUF[0])]);
 				dbg_prefix(a);
 				dbg_call((void), (fprintf(
 								stderr
@@ -253,10 +272,14 @@ enum CXChildVisitResult aclexpr_visit(
 							&((aclutil_cursor* ae2f_restrict)CTX->m_cursors.m_p)[IDX]
 							, CTX, IDVAL_PRV, EXTRA_PRV.m_type_original
 							, EXTRA_PRV.m_mask_literal
-							, &EXTRA_PRV.m_literal, 0);
+							, &EXTRA_PRV.m_literal
+							, 0
+							);
 
 					ae2f_ifezerr(CLVAL) {
 						err_puts("[carve] aclutil_assign_cursor_lval has been failed.");
+						CTX->m_err = ACLSPV_COMPILE_UNHANDLED_VISIT;
+						return CXChildVisit_Break;
 					}
 
 					dbg_prefix();
@@ -275,10 +298,10 @@ enum CXChildVisitResult aclexpr_visit(
 				LST_SCALE_BUF		= get_buf_from_scale2(aclspv_wrd_t, &CMDSTCK_SCALE, *LST_SCALE);
 
 				LST_EXTRA
-					= (void* ae2f_restrict)(&LST_SCALE_BUF[(UTIL_OPBINCFG_END + LST_SCALE_BUF[0])]);
+					= (void* ae2f_restrict)(&LST_SCALE_BUF[(ACLEXPR_OPBINCFG_END + LST_SCALE_BUF[0])]);
 
 				LST_EXTRA[GETLASTEL_CMDCOUNTERSTCK().m_count_oprnd] = EXTRA_PRV;
-				ID_REQ = LST_SCALE_BUF[GETLASTEL_CMDCOUNTERSTCK(a).m_count_oprnd + UTIL_OPBINCFG_END] = IDVAL_PRV;
+				ID_REQ = LST_SCALE_BUF[GETLASTEL_CMDCOUNTERSTCK(a).m_count_oprnd + ACLEXPR_OPBINCFG_END] = IDVAL_PRV;
 				TYPE_CAST_CURRENT = LST_EXTRA[GETLASTEL_CMDCOUNTERSTCK(a).m_count_oprnd].m_type_original;
 				IS_NOT_CONSTANT	&= LST_EXTRA[GETLASTEL_CMDCOUNTERSTCK(a).m_count_oprnd].m_mask_literal;
 				*RET_LITERAL = LST_EXTRA[GETLASTEL_CMDCOUNTERSTCK(a).m_count_oprnd].m_literal;
@@ -293,88 +316,86 @@ enum CXChildVisitResult aclexpr_visit(
 				(void)(LST_SCALE->m_id && ++GETLASTEL_CMDCOUNTERSTCK(a).m_count_oprnd);
 			}
 
-			return ae2f_bll_sel_bool_naive1(uint_leastenum_t, CTX->m_err, CXChildVisit_Break, CXChildVisit_Continue);
+			return ae2f_expected_not(CTX->m_err) ? CXChildVisit_Break : CXChildVisit_Continue;
+		}
 
-		case EMIT_EXPR_NOT_THE_CASE:
-			dbg_puts("[nocase] s_simple");
-			break;
-		default:
-			ae2f_unreachable();
-			CTX->m_err = ACLSPV_COMPILE_MET_INVAL_UNREACHABLE;
-			return CXChildVisit_Break;
-	}
+		cgcsdef(OP2_ARITHMETIC): 
+		{
+			dbg_puts("[visit] OP2_ARITHMETIC");
+			N_OPRND_TMP = 2;
+			cgjmp(aclexpr_visit_op2_arithmetic(
+						h_cur, CTX
+						, &CMDSTCK_SCALE
+						, cgcase(OP_RECURSE)
+						, cgcase(OP_FAIL)
+						, cgcase(OP1_ARITHMETIC_CAST)
+						));
+		}
 
-	switch(s_cast_numeric(
-				h_cur
-				, CTX
-				, &CMDSTCK_SCALE
-			     )) {
-		default:
-		case EMIT_EXPR_FAILURE:
-			CTX->m_err = CTX->m_err ? CTX->m_err : ACLSPV_COMPILE_UNHANDLED_BODY;
-			return CXChildVisit_Break;
+		cgcsdef(OP1_ARITHMETIC_CAST):
+		{
+			dbg_puts("[visit] OP1_ARITHMETIC_CAST");
+			N_OPRND_TMP = 1;
+			cgjmp(aclexpr_visit_op1_arithmetic_cast(
+						h_cur, CTX
+						, &CMDSTCK_SCALE
+						, cgcase(OP_RECURSE)
+						, cgcase(OP_FAIL)
+						, cgcase(OP1_INCR)
+						));
+		}
 
-		case EMIT_EXPR_SUCCESS:
-		case EMIT_EXPR_SUCCESS_CONSTANT:
-		case EMIT_EXPR_SUCCESS_LITERAL:
-			_aclspv_grow_vec_with_copy(
-					_aclspv_malloc
-					, _aclspv_free
-					, _aclspv_memcpy
-					, dest
-					, EXPRSTCK
-					, (size_t)(sizeof(exprstck) * (EXPRSTCK_COUNT + 1))
-					);
+		cgcsdef(OP1_INCR):
+		{
+			dbg_puts("[visit] OP1_ARITHMETIC_CAST");
+			N_OPRND_TMP = 1;
+			cgjmp(aclexpr_visit_op1_incr(
+						h_cur, CTX
+						, &CMDSTCK_SCALE
+						, cgcase(OP_RECURSE)
+						, cgcase(OP_FAIL)
+						, cgcase(OP0_VAL)
+						));
+		}
 
-			ae2f_expected_but_else(EXPRSTCK.m_p) {
-				CTX->m_err = ACLSPV_COMPILE_ALLOC_FAILED_EXPR;
-				return CXChildVisit_Break;
-			}
+		cgcsdef(OP0_VAL):
+		{
+			dbg_puts("[visit] OP0_VAL");
+			cgjmp(aclexpr_visit_op0_val(
+						h_cur, CTX
+						, &LST_EXTRA[GETLASTEL_CMDCOUNTERSTCK(a).m_count_oprnd]
+						, &ID_REQ
+						, cgcase(OP0_)
+						, cgcase(OP_FAIL)
+						, cgcase(OP_FALL)
+						));
+		}
 
-			(void)++EXPRSTCK_COUNT;
+		cgdefault(OP_FALL):
+		{
+			dbg_puts("[visit] OP_FALL");
+			CXString SPELL = clang_getCursorSpelling(h_cur);
+			CXString KINDSPELL = clang_getCursorKindSpelling(h_cur.kind);
 
-			_aclspv_grow_vec_with_copy(
-					_aclspv_malloc, _aclspv_free, memcpy
-					, dest, CMDCOUNTERSTCK
-					, (size_t)(sizeof(cmdcounterstckelm) * (NUM_CMDCOUNTERSTCK + 1))
-					);
+			warn_prefix(i);
+			warn_call(fprintf, (stderr, "[visit] OP_FALL::spell(%s)::kind(%s)\n"
+						, (const char*)SPELL.data
+						, (const char*)KINDSPELL.data));
 
-			ae2f_expected_but_else(CMDCOUNTERSTCK.m_p) {
-				CTX->m_err = ACLSPV_COMPILE_ALLOC_FAILED_EXPR;
-				return CXChildVisit_Break;
-			}
-
-			(void)++NUM_CMDCOUNTERSTCK;
-			GETLASTEL_CMDCOUNTERSTCK(a).m_count_oprnd = 0;
+			clang_disposeString(SPELL);
+			clang_disposeString(KINDSPELL);
 
 			return CXChildVisit_Recurse;
-
-		case EMIT_EXPR_NOT_THE_CASE:
-			break;
+		}
 	}
 
-	dbg_prefix(a);
-	dbg_call(ae2f_NONE, (fprintf(stderr, "Type Casted Current: %u\n", TYPE_CAST_CURRENT)));
-
+	ae2f_unreachable();
 
 #if	WARN
 
-	{
-		CXString SPELL = clang_getCursorSpelling(h_cur);
-		CXString KINDSPELL = clang_getCursorKindSpelling(h_cur.kind);
 
-		warn_prefix(i);
-		warn_call(fprintf, (stderr, "Met unprocessed spell(%s) in kind(%s) [NOIMPL, EXPR]\n"
-					, (const char*)SPELL.data
-					, (const char*)KINDSPELL.data));
-
-		clang_disposeString(SPELL);
-		clang_disposeString(KINDSPELL);
-	}
 
 #endif
-
-	return CXChildVisit_Recurse;
 
 #undef	CTX
 #undef	EXPRSTCK_COUNT

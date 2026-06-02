@@ -51,14 +51,14 @@ aclspv_id_t aclutil_assign_cursor_lval(
 					, &(*wr_cursor).m_data.m_vardecl.m_literal
 					, h_ctx))
 		{
-			case EMIT_EXPR_NOT_THE_CASE:
-			case EMIT_EXPR_SUCCESS:
-			case EMIT_EXPR_SUCCESS_CONSTANT:
-			case EMIT_EXPR_FAILURE:
+			case ACLEXPR_RET_NOT_THE_CASE:
+			case ACLEXPR_RET_SUCCESS:
+			case ACLEXPR_RET_SUCCESS_CONSTANT:
+			case ACLEXPR_RET_FAILURE:
 			default:
 				return 0;
 
-			case EMIT_EXPR_SUCCESS_LITERAL:
+			case ACLEXPR_RET_SUCCESS_LITERAL:
 				*r_literal_opt = (*wr_cursor).m_data.m_vardecl.m_literal;
 
 				dbg_prefix(a);
@@ -84,16 +84,16 @@ aclspv_id_t aclutil_assign_cursor_lval(
 					, (*wr_cursor).m_data.m_vardecl.m_type_id
 					, h_ctx
 					)) {
-			case EMIT_EXPR_SUCCESS_LITERAL:
-			case EMIT_EXPR_FAILURE:
-			case EMIT_EXPR_NOT_THE_CASE:
+			case ACLEXPR_RET_SUCCESS_LITERAL:
+			case ACLEXPR_RET_FAILURE:
+			case ACLEXPR_RET_NOT_THE_CASE:
 			default:
 				return 0;
-			case EMIT_EXPR_SUCCESS_CONSTANT:
+			case ACLEXPR_RET_SUCCESS_CONSTANT:
 				(*wr_cursor).m_data.m_vardecl.m_mask |= ACLUTIL_LITERAL_CONSTANT;
 				ae2f_fallthrough;
 
-			case EMIT_EXPR_SUCCESS:
+			case ACLEXPR_RET_SUCCESS:
 				ae2f_ifezerr(wr_cursor->m_data.m_vardecl.m_init_val)
 					h_ctx->m_err = ACLSPV_COMPILE_ASSIGN_CAST_GOT_ZERO;
 				return (*wr_cursor).m_data.m_vardecl.m_init_val;

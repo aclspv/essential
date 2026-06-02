@@ -14,7 +14,6 @@ enum {
 
 	OP2_,
 	OP2_ARITHMETIC,
-
 	OP1_,
 	OP1_ARITHMETIC_CAST
 };
@@ -22,7 +21,7 @@ enum {
 aclspv_bool_t aclexpr_carve(
 		struct aclexpr_visit_data* const ae2f_restrict	rdwr_data,
 		aclspv_wrd_t* const ae2f_restrict rdwr_prv_idval,
-		util_opbincfg_extra* const ae2f_restrict rdwr_prv_extra
+		aclexpr_opbincfg_extra* const ae2f_restrict rdwr_prv_extra
 		) {
 	h_scale_t LST_SCALE				= get_last_scale_from_vec(&CMDSTCK_SCALE(CTX(rdwr_data)));
 	aclspv_wrd_t* ae2f_restrict LST_SCALE_BUF	= get_buf_from_scale2(
@@ -35,14 +34,14 @@ aclspv_bool_t aclexpr_carve(
 
 	aclspv_wrd_t	NUM_OPRND;
 
-	util_opbincfg_extra* ae2f_restrict LST_EXTRA;
+	aclexpr_opbincfg_extra* ae2f_restrict LST_EXTRA;
 
 	ae2fpat_assertassume(LST_SCALE_BUF);
 	ae2fpat_assertassume(rdwr_prv_extra);
 	ae2fpat_assertassume(rdwr_prv_idval);
 
 	NUM_OPRND = LST_SCALE_BUF[0];
-	LST_EXTRA = (void* ae2f_restrict)(LST_SCALE_BUF + NUM_OPRND + UTIL_OPBINCFG_END);
+	LST_EXTRA = (void* ae2f_restrict)(LST_SCALE_BUF + NUM_OPRND + ACLEXPR_OPBINCFG_END);
 
 	/****************************************************
 	 * Contributor: https://github.com/dxdxffgg99
@@ -76,10 +75,9 @@ aclspv_bool_t aclexpr_carve(
 			return 0;
 
 		cgcsdef(OP2_):
-			cgjmp(LST_SCALE_BUF[ACLUTIL_OPBINCFG_NUMOPRND] == 2 ? cgcase(OP2_ARITHMETIC) : cgcase(OP1_));
+			cgjmp(LST_SCALE_BUF[ACLEXPR_OPBINCFG_NUMOPRND] == 2 ? cgcase(OP2_ARITHMETIC) : cgcase(OP1_));
 
 		cgcsdef(OP2_ARITHMETIC):
-			ae2fpat_assertassume(LST_SCALE_BUF[ACLUTIL_OPBINCFG_NUMOPRND] == 2);
 		cgjmp(aclexpr_carve_op2_arithmetic(
 					rdwr_data
 					, rdwr_prv_idval
@@ -94,10 +92,9 @@ aclspv_bool_t aclexpr_carve(
 					));
 
 		cgcsdef(OP1_):
-			cgjmp((LST_SCALE_BUF[ACLUTIL_OPBINCFG_NUMOPRND] == 1) ? cgcase(OP1_ARITHMETIC_CAST) : cgcase(OP_FAILURE));
+			cgjmp(LST_SCALE_BUF[ACLEXPR_OPBINCFG_NUMOPRND] == 1 ? cgcase(OP1_ARITHMETIC_CAST) : cgcase(OP_FAILURE));
 
 		cgcsdef(OP1_ARITHMETIC_CAST):
-			ae2fpat_assertassume(LST_SCALE_BUF[ACLUTIL_OPBINCFG_NUMOPRND] == 1);
 		cgjmp(aclexpr_carve_op1_arithmetic_cast(
 					rdwr_data
 					, rdwr_prv_idval

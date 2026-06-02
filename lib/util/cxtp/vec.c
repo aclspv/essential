@@ -7,7 +7,7 @@
 #include <util/emitx.h>
 #include <ae2f/pat/dbg.h>
 
-struct aclutil_cxtp_veccfg_t	aclutil_cxtp_get_veccfg(
+ struct aclutil_cxtp_veccfg_t	aclutil_cxtp_get_veccfg(
 		const aclspv_id_t	c_ty_vec,
 		const h_aclspv_ctx_t	h_ctx
 		) {

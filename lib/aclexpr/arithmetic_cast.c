@@ -11,7 +11,7 @@
 
 #include <aclexpr.h>
 
-static enum EMIT_EXPR_ s_non_literal_novec(
+static enum ACLEXPR_RET_ s_non_literal_novec(
 		const aclspv_id_t	c_old_id,
 		const aclspv_id_t	c_old_type,
 		const aclutil_ltrlmask_t	c_flag_literal,
@@ -31,17 +31,17 @@ static enum EMIT_EXPR_ s_non_literal_novec(
 
 	ae2f_ifezerr(c_old_type) {
 		h_ctx->m_err = ACLSPV_COMPILE_ARITHMETIC_CAST_TYPE_IS_UNDEFINED_OLD;
-		return EMIT_EXPR_FAILURE;
+		return ACLEXPR_RET_FAILURE;
 	}
 
 	ae2f_ifezerr(c_new_type) {
 		h_ctx->m_err = ACLSPV_COMPILE_ARITHMETIC_CAST_TYPE_IS_UNDEFINED_NEW;
-		return EMIT_EXPR_FAILURE;
+		return ACLEXPR_RET_FAILURE;
 	}
 
 	ae2f_ifezerr(c_old_id) {
 		h_ctx->m_err = ACLSPV_COMPILE_ARITHMETIC_CAST_ID_IS_UNDEFINED_OLD;
-		return EMIT_EXPR_FAILURE;
+		return ACLEXPR_RET_FAILURE;
 	}
 
 	dbg_puts(("Arithmetic cast: non-literal"));
@@ -52,18 +52,18 @@ static enum EMIT_EXPR_ s_non_literal_novec(
 
 		*r_newid = c_old_id;
 
-		return (enum EMIT_EXPR_)ae2f_bll_sel_bool_naive1(
+		return (enum ACLEXPR_RET_)ae2f_bll_sel_bool_naive1(
 				uint_fastenum_t
 				, CND
-				, EMIT_EXPR_SUCCESS_CONSTANT
-				, EMIT_EXPR_SUCCESS);
+				, ACLEXPR_RET_SUCCESS_CONSTANT
+				, ACLEXPR_RET_SUCCESS);
 	}
 
 	/** down here, two types are different */
 	dbg_puts("two are not same");
 
 	unless(aclid_is_vectorisable(c_old_type) && aclid_is_vectorisable(c_new_type))
-		return EMIT_EXPR_NOT_THE_CASE;
+		return ACLEXPR_RET_NOT_THE_CASE;
 
 	/** two are float */
 	if (aclid_is_float(c_old_type) && aclid_is_float(c_new_type)) {
@@ -78,9 +78,9 @@ static enum EMIT_EXPR_ s_non_literal_novec(
 						, *r_newid = h_ctx->m_id++
 						, SpvOpFConvert
 						, c_old_id))
-				return EMIT_EXPR_FAILURE;
+				return ACLEXPR_RET_FAILURE;
 
-			return EMIT_EXPR_SUCCESS_CONSTANT;
+			return ACLEXPR_RET_SUCCESS_CONSTANT;
 		} else {
 			ae2f_expected_but_else(h_ctx->m_count.m_fnimpl
 					= aclutil_emitx_4(
@@ -91,8 +91,8 @@ static enum EMIT_EXPR_ s_non_literal_novec(
 						, *r_newid = h_ctx->m_id++
 						, c_old_id
 						)
-					) return EMIT_EXPR_FAILURE;
-			return EMIT_EXPR_SUCCESS;
+					) return ACLEXPR_RET_FAILURE;
+			return ACLEXPR_RET_SUCCESS;
 		}
 	}
 
@@ -118,7 +118,7 @@ static enum EMIT_EXPR_ s_non_literal_novec(
 						, aclutil_mk_constant_val_id(0, h_ctx));
 
 			ae2f_expected_but_else(VAL_ZERO) {
-				return EMIT_EXPR_FAILURE;
+				return ACLEXPR_RET_FAILURE;
 			}
 
 			if(c_flag_literal & ACLUTIL_LITERAL_CONSTANT) {
@@ -132,9 +132,9 @@ static enum EMIT_EXPR_ s_non_literal_novec(
 							, SpvOpBitwiseOr 
 							, c_old_id
 							, VAL_ZERO))
-					return EMIT_EXPR_FAILURE;
+					return ACLEXPR_RET_FAILURE;
 
-				return EMIT_EXPR_SUCCESS_CONSTANT;
+				return ACLEXPR_RET_SUCCESS_CONSTANT;
 			} else {
 				ae2f_expected_but_else(h_ctx->m_count.m_fnimpl
 						= aclutil_emitx_5(
@@ -146,8 +146,8 @@ static enum EMIT_EXPR_ s_non_literal_novec(
 							, c_old_id
 							, VAL_ZERO
 							)
-						) return EMIT_EXPR_FAILURE;
-				return EMIT_EXPR_SUCCESS;
+						) return ACLEXPR_RET_FAILURE;
+				return ACLEXPR_RET_SUCCESS;
 			}
 
 			ae2f_unreachable();
@@ -163,9 +163,9 @@ static enum EMIT_EXPR_ s_non_literal_novec(
 						, *r_newid = h_ctx->m_id++
 						, OPCODE 
 						, c_old_id))
-				return EMIT_EXPR_FAILURE;
+				return ACLEXPR_RET_FAILURE;
 
-			return EMIT_EXPR_SUCCESS_CONSTANT;
+			return ACLEXPR_RET_SUCCESS_CONSTANT;
 		} else {
 			ae2f_expected_but_else(h_ctx->m_count.m_fnimpl
 					= aclutil_emitx_4(
@@ -176,8 +176,8 @@ static enum EMIT_EXPR_ s_non_literal_novec(
 						, *r_newid = h_ctx->m_id++
 						, c_old_id
 						)
-					) return EMIT_EXPR_FAILURE;
-			return EMIT_EXPR_SUCCESS;
+					) return ACLEXPR_RET_FAILURE;
+			return ACLEXPR_RET_SUCCESS;
 		}
 
 		ae2f_unreachable();
@@ -190,7 +190,7 @@ static enum EMIT_EXPR_ s_non_literal_novec(
 		aclspv_wrd_t		OPCODE = ae2f_bll_sel_bool1(aclspv_wrd_t, aclid_is_int(c_old_type), SpvOpINotEqual, SpvOpFOrdNotEqual);
 		
 		ae2f_expected_but_else(V0 = aclutil_mk_constant_val_by_enum(0, h_ctx, (enum ACLSPV_ID_) c_old_type))
-			return EMIT_EXPR_FAILURE;
+			return ACLEXPR_RET_FAILURE;
 
 		if(c_flag_literal & ACLUTIL_LITERAL_CONSTANT) {
 			ae2f_expected_but_else(h_ctx->m_count.m_types
@@ -202,9 +202,9 @@ static enum EMIT_EXPR_ s_non_literal_novec(
 						, *r_newid = h_ctx->m_id++
 						,OPCODE 
 						, c_old_id, V0))
-				return EMIT_EXPR_FAILURE;
+				return ACLEXPR_RET_FAILURE;
 
-			return EMIT_EXPR_SUCCESS_CONSTANT;
+			return ACLEXPR_RET_SUCCESS_CONSTANT;
 		} else {
 			ae2f_expected_but_else(h_ctx->m_count.m_fnimpl
 					= aclutil_emitx_5(
@@ -216,8 +216,8 @@ static enum EMIT_EXPR_ s_non_literal_novec(
 						, c_old_id 
 						, V0
 						)
-					) return EMIT_EXPR_FAILURE;
-			return EMIT_EXPR_SUCCESS;
+					) return ACLEXPR_RET_FAILURE;
+			return ACLEXPR_RET_SUCCESS;
 		}
 	}
 
@@ -225,10 +225,10 @@ static enum EMIT_EXPR_ s_non_literal_novec(
 		aclspv_id_t		V0, V1;
 
 		ae2f_expected_but_else(V0 = aclutil_mk_constant_val_by_enum(0, h_ctx, (enum ACLSPV_ID_) c_old_type))
-			return EMIT_EXPR_FAILURE;
+			return ACLEXPR_RET_FAILURE;
 
 		ae2f_expected_but_else(V1 = aclutil_mk_constant_val_by_enum(1, h_ctx, (enum ACLSPV_ID_) c_old_type))
-			return EMIT_EXPR_FAILURE;
+			return ACLEXPR_RET_FAILURE;
 
 
 		if(c_flag_literal & ACLUTIL_LITERAL_CONSTANT) {
@@ -241,9 +241,9 @@ static enum EMIT_EXPR_ s_non_literal_novec(
 						, *r_newid = h_ctx->m_id++
 						, SpvOpSelect
 						, c_old_id, V1, V0))
-				return EMIT_EXPR_FAILURE;
+				return ACLEXPR_RET_FAILURE;
 
-			return EMIT_EXPR_SUCCESS_CONSTANT;
+			return ACLEXPR_RET_SUCCESS_CONSTANT;
 		} else {
 			ae2f_expected_but_else(h_ctx->m_count.m_fnimpl
 					= aclutil_emitx_6(
@@ -255,8 +255,8 @@ static enum EMIT_EXPR_ s_non_literal_novec(
 						, c_old_id
 						, V1, V0
 						)
-					) return EMIT_EXPR_FAILURE;
-			return EMIT_EXPR_SUCCESS;
+					) return ACLEXPR_RET_FAILURE;
+			return ACLEXPR_RET_SUCCESS;
 		}
 	}
 
@@ -271,9 +271,9 @@ static enum EMIT_EXPR_ s_non_literal_novec(
 					, *r_newid = h_ctx->m_id++
 					, c_old_id
 					)
-				) return EMIT_EXPR_FAILURE;
+				) return ACLEXPR_RET_FAILURE;
 
-		return EMIT_EXPR_SUCCESS;
+		return ACLEXPR_RET_SUCCESS;
 	}
 
 	if(aclid_is_int(c_new_type)) {
@@ -287,17 +287,17 @@ static enum EMIT_EXPR_ s_non_literal_novec(
 					, h_ctx->m_id++
 					, c_old_id
 					)
-				) return EMIT_EXPR_FAILURE;
+				) return ACLEXPR_RET_FAILURE;
 
-		return EMIT_EXPR_SUCCESS;
+		return ACLEXPR_RET_SUCCESS;
 	}
 
-	return EMIT_EXPR_NOT_THE_CASE;
+	return ACLEXPR_RET_NOT_THE_CASE;
 }
 
 #include <util/vec.h>
 
-static enum EMIT_EXPR_ s_non_literal_vec(
+static enum ACLEXPR_RET_ s_non_literal_vec(
 		const aclspv_id_t	c_old_id,
 		const aclspv_id_t	c_old_type,
 		const aclutil_ltrlmask_t	c_flag_literal,
@@ -310,7 +310,7 @@ static enum EMIT_EXPR_ s_non_literal_vec(
 
 	unless(aclid_is_arithmetic(c_old_type, h_ctx) && aclid_is_arithmetic(c_new_type, h_ctx)) {
 		warn_puts("[s_non_literal_vec::no_arithmetic]");
-		return EMIT_EXPR_NOT_THE_CASE;
+		return ACLEXPR_RET_NOT_THE_CASE;
 	}
 
 	/** old and new */
@@ -343,7 +343,7 @@ static enum EMIT_EXPR_ s_non_literal_vec(
 
 		ae2f_ifezerr(REPVEC.m_id) {
 			h_ctx->m_err = ACLSPV_COMPILE_ALLOC_FAILED;
-			return EMIT_EXPR_FAILURE;
+			return ACLEXPR_RET_FAILURE;
 		}
 
 		return s_non_literal_novec(
@@ -355,12 +355,12 @@ static enum EMIT_EXPR_ s_non_literal_vec(
 				, h_ctx
 				, c_new_type
 				);
-	} else return EMIT_EXPR_NOT_THE_CASE;
+	} else return ACLEXPR_RET_NOT_THE_CASE;
 
 	ae2f_unreachable();
 }
 
-enum EMIT_EXPR_ aclexpr_arithmetic_cast_non_literal(
+enum ACLEXPR_RET_ aclexpr_arithmetic_cast_non_literal(
 		const aclspv_id_t	c_old_id,
 		const aclspv_id_t	c_old_type,
 		const aclutil_ltrlmask_t	c_flag_literal,
@@ -368,7 +368,7 @@ enum EMIT_EXPR_ aclexpr_arithmetic_cast_non_literal(
 		aclspv_id_t				c_new_type,
 		const h_aclspv_ctx_t			h_ctx
 		) {
-	enum EMIT_EXPR_ R = s_non_literal_novec(
+	enum ACLEXPR_RET_ R = s_non_literal_novec(
 			c_old_id
 			, c_old_type
 			, c_flag_literal
@@ -384,13 +384,13 @@ enum EMIT_EXPR_ aclexpr_arithmetic_cast_non_literal(
 	switch(R) {
 		default:
 			ae2f_unreachable();
-		case EMIT_EXPR_NOT_THE_CASE:
+		case ACLEXPR_RET_NOT_THE_CASE:
 			break;
 
-		case EMIT_EXPR_SUCCESS:
-		case EMIT_EXPR_SUCCESS_LITERAL:
-		case EMIT_EXPR_SUCCESS_CONSTANT:
-		case EMIT_EXPR_FAILURE:
+		case ACLEXPR_RET_SUCCESS:
+		case ACLEXPR_RET_SUCCESS_LITERAL:
+		case ACLEXPR_RET_SUCCESS_CONSTANT:
+		case ACLEXPR_RET_FAILURE:
 			return R;
 	}
 
@@ -406,15 +406,15 @@ enum EMIT_EXPR_ aclexpr_arithmetic_cast_non_literal(
 			);
 }
 
-enum EMIT_EXPR_ aclexpr_arithmetic_cast_literal(
+enum ACLEXPR_RET_ aclexpr_arithmetic_cast_literal(
 		const aclspv_id_t	c_old_type,
-		const emit_expr_literal	c_old_literal,
+		const aclexpr_literal	c_old_literal,
 		aclspv_id_t* ae2f_restrict	r_newid,
 		aclspv_id_t			c_new_type,
-		emit_expr_literal* ae2f_restrict	wr_new_literal_opt,
+		aclexpr_literal* ae2f_restrict	wr_new_literal_opt,
 		const h_aclspv_ctx_t		h_ctx
 		) {
-	emit_expr_literal	RESULT = c_old_literal;
+	aclexpr_literal	RESULT = c_old_literal;
 
 	dbg_prefix(a);
 	dbg_call(ae2f_NONE, (fprintf(
@@ -424,12 +424,12 @@ enum EMIT_EXPR_ aclexpr_arithmetic_cast_literal(
 				    )));
 
 	ae2f_expected_but_else(aclid_is_vectorisable(c_old_type) && aclid_is_vectorisable(c_new_type)) {
-		return EMIT_EXPR_NOT_THE_CASE;
+		return ACLEXPR_RET_NOT_THE_CASE;
 	}
 
 	ae2f_expected_but_else(aclid_mk_default_id(c_old_type, h_ctx) 
 			&& aclid_mk_default_id(c_new_type, h_ctx))
-		return EMIT_EXPR_NOT_THE_CASE;
+		return ACLEXPR_RET_NOT_THE_CASE;
 
 	dbg_puts("start literal cast evaluation");
 
@@ -448,7 +448,7 @@ enum EMIT_EXPR_ aclexpr_arithmetic_cast_literal(
 				break;
 			default:
 				ae2fpat_assertassume(0 && "unknown float bit-width");
-				return EMIT_EXPR_FAILURE;
+				return ACLEXPR_RET_FAILURE;
 		}
 
 		dbg_prefix();
@@ -471,7 +471,7 @@ enum EMIT_EXPR_ aclexpr_arithmetic_cast_literal(
 				break;
 			default:
 				ae2fpat_assertassume(0 && "unknown float bit-width");
-				return EMIT_EXPR_FAILURE;
+				return ACLEXPR_RET_FAILURE;
 		}
 	}
 
@@ -486,7 +486,7 @@ enum EMIT_EXPR_ aclexpr_arithmetic_cast_literal(
 				break;
 			default:
 				ae2fpat_assertassume(0 && "unknown float bit-width");
-				return EMIT_EXPR_FAILURE;
+				return ACLEXPR_RET_FAILURE;
 		}
 	}
 	else if(aclid_is_int(c_old_type) && c_new_type == ACLSPV_ID_BOOL) {
@@ -494,7 +494,7 @@ enum EMIT_EXPR_ aclexpr_arithmetic_cast_literal(
 		RESULT.m_u64 = !!c_old_literal.m_api_uintmax;
 		*r_newid = aclutil_mk_constant_bool_id((aclspv_bool_t)RESULT.m_u64, h_ctx);
 		if(wr_new_literal_opt) *wr_new_literal_opt = RESULT;
-		return EMIT_EXPR_SUCCESS_LITERAL;
+		return ACLEXPR_RET_SUCCESS_LITERAL;
 	} else if(aclid_is_float(c_old_type) && c_new_type == ACLSPV_ID_BOOL) {
 		dbg_puts("float -> bool");
 		switch(aclid_get_bit_width(c_old_type)) {
@@ -505,13 +505,13 @@ enum EMIT_EXPR_ aclexpr_arithmetic_cast_literal(
 				RESULT.m_api_int = !!(i32_least)c_old_literal.m_flt;
 				break;
 			default:
-				return EMIT_EXPR_NOT_THE_CASE;
+				return ACLEXPR_RET_NOT_THE_CASE;
 		}
 
 		*r_newid = aclutil_mk_constant_bool_id((aclspv_bool_t)RESULT.m_u64, h_ctx);
 		RESULT.m_u64 = !!c_old_literal.m_api_uintmax;
 		if(wr_new_literal_opt) *wr_new_literal_opt = RESULT;
-		return EMIT_EXPR_SUCCESS_LITERAL;
+		return ACLEXPR_RET_SUCCESS_LITERAL;
 	} else if (aclid_is_int(c_new_type) && c_old_type == ACLSPV_ID_BOOL) {
 		dbg_puts("bool -> int");
 		RESULT.m_api_uintmax = c_old_literal.m_api_uintmax;
@@ -521,7 +521,7 @@ enum EMIT_EXPR_ aclexpr_arithmetic_cast_literal(
 				, (enum ACLSPV_ID_) c_new_type
 				);
 		if(wr_new_literal_opt) *wr_new_literal_opt = RESULT;
-		return EMIT_EXPR_SUCCESS_LITERAL;
+		return ACLEXPR_RET_SUCCESS_LITERAL;
 	} else if (aclid_is_float(c_new_type) && c_old_type == ACLSPV_ID_BOOL) {
 		dbg_puts("bool -> float");
 		switch(aclid_get_bit_width(c_old_type)) {
@@ -532,7 +532,7 @@ enum EMIT_EXPR_ aclexpr_arithmetic_cast_literal(
 				RESULT.m_flt = (float)(c_old_literal.m_api_uintmax);
 				break;
 			default:
-				return EMIT_EXPR_FAILURE;
+				return ACLEXPR_RET_FAILURE;
 		}
 
 		if(wr_new_literal_opt) *wr_new_literal_opt = RESULT;
@@ -540,7 +540,7 @@ enum EMIT_EXPR_ aclexpr_arithmetic_cast_literal(
 				RESULT.m_api_uintmax
 				, h_ctx
 				, (enum ACLSPV_ID_) c_new_type);
-		return EMIT_EXPR_SUCCESS_LITERAL;
+		return ACLEXPR_RET_SUCCESS_LITERAL;
 	}
 
 	if(wr_new_literal_opt) *wr_new_literal_opt = RESULT;
@@ -552,52 +552,52 @@ enum EMIT_EXPR_ aclexpr_arithmetic_cast_literal(
 		case ACLSPV_ID_I32:
 		ae2f_expected_but_else(ID_RET = aclutil_mk_constant_val_id(
 					(aclspv_wrd_t)RESULT.m_api_uintmax
-					, h_ctx)) return EMIT_EXPR_FAILURE;
+					, h_ctx)) return ACLEXPR_RET_FAILURE;
 
 		*r_newid = ID_RET;
-		return EMIT_EXPR_SUCCESS_LITERAL;
+		return ACLEXPR_RET_SUCCESS_LITERAL;
 
 		case ACLSPV_ID_U64:
 		case ACLSPV_ID_I64:
 		ae2f_expected_but_else(ID_RET = aclutil_mk_constant_val64_id(
 					RESULT.m_api_uintmax
-					, h_ctx)) return EMIT_EXPR_FAILURE;
+					, h_ctx)) return ACLEXPR_RET_FAILURE;
 
 		*r_newid = ID_RET;
-		return EMIT_EXPR_SUCCESS_LITERAL;
+		return ACLEXPR_RET_SUCCESS_LITERAL;
 
 		case ACLSPV_ID_F32:
 		ae2f_expected_but_else(ID_RET = aclutil_mk_constant_val_f32_id(
 					RESULT.m_flt
-					, h_ctx)) return EMIT_EXPR_FAILURE;
+					, h_ctx)) return ACLEXPR_RET_FAILURE;
 
 		*r_newid = ID_RET;
-		return EMIT_EXPR_SUCCESS_LITERAL;
+		return ACLEXPR_RET_SUCCESS_LITERAL;
 		case ACLSPV_ID_F64:
 		ae2f_expected_but_else(ID_RET = aclutil_mk_constant_val_f64_id(
 					RESULT.m_dbl
-					, h_ctx)) return EMIT_EXPR_FAILURE;
+					, h_ctx)) return ACLEXPR_RET_FAILURE;
 		*r_newid = ID_RET;
-		return EMIT_EXPR_SUCCESS_LITERAL;
+		return ACLEXPR_RET_SUCCESS_LITERAL;
 
 		default:
 		fixme_puts("Type not found");
-		return EMIT_EXPR_FAILURE;
+		return ACLEXPR_RET_FAILURE;
 	}
 
 	ae2f_unreachable();
 
 }
 
-enum EMIT_EXPR_ aclexpr_arithmetic_cast(
+enum ACLEXPR_RET_ aclexpr_arithmetic_cast(
 		const aclspv_id_t	c_old_id,
 		const aclspv_id_t	c_old_type,
 		const aclutil_ltrlmask_t	c_flag_literal,
-		const emit_expr_literal	c_old_literal,
+		const aclexpr_literal	c_old_literal,
 
 		aclspv_id_t* ae2f_restrict	r_newid,
 		aclspv_id_t		c_new_type,
-		emit_expr_literal* ae2f_restrict wr_new_literal_opt,
+		aclexpr_literal* ae2f_restrict wr_new_literal_opt,
 		const h_aclspv_ctx_t	h_ctx
 		)
 {
@@ -606,24 +606,24 @@ enum EMIT_EXPR_ aclexpr_arithmetic_cast(
 
 	ae2f_ifezerr(c_old_type) {
 		h_ctx->m_err = ACLSPV_COMPILE_ARITHMETIC_CAST_TYPE_IS_UNDEFINED_OLD;
-		return EMIT_EXPR_FAILURE;
+		return ACLEXPR_RET_FAILURE;
 	}
 
 	ae2f_ifezerr(c_new_type) {
 		h_ctx->m_err = ACLSPV_COMPILE_ARITHMETIC_CAST_TYPE_IS_UNDEFINED_NEW;
-		return EMIT_EXPR_FAILURE;
+		return ACLEXPR_RET_FAILURE;
 	}
 
 	ae2f_ifezerr(c_old_id) {
 		h_ctx->m_err = ACLSPV_COMPILE_ARITHMETIC_CAST_ID_IS_UNDEFINED_OLD;
-		return EMIT_EXPR_FAILURE;
+		return ACLEXPR_RET_FAILURE;
 	}
 
 	(void)aclid_mk_default_id(c_new_type, h_ctx);
 	(void)aclid_mk_default_id(c_old_type, h_ctx);
 
 	if(c_flag_literal & ACLUTIL_LITERAL_LITERAL) {
-		const enum EMIT_EXPR_ R = aclexpr_arithmetic_cast_literal(
+		const enum ACLEXPR_RET_ R = aclexpr_arithmetic_cast_literal(
 				c_old_type
 				, c_old_literal
 				, r_newid
@@ -631,7 +631,7 @@ enum EMIT_EXPR_ aclexpr_arithmetic_cast(
 				, wr_new_literal_opt
 				, h_ctx);
 
-		return R == EMIT_EXPR_NOT_THE_CASE ? aclexpr_arithmetic_cast_non_literal(
+		return R == ACLEXPR_RET_NOT_THE_CASE ? aclexpr_arithmetic_cast_non_literal(
 			c_old_id
 			, c_old_type
 			, c_flag_literal, r_newid

@@ -174,28 +174,28 @@ ae2f_MAC((L, )) aclemit_body_vardecl(CXCursor h_cur, aclutil_fnctx* ae2f_restric
 							, L$$CTX
 							))
 				{
-					case EMIT_EXPR_SUCCESS_LITERAL:
+					case ACLEXPR_RET_SUCCESS_LITERAL:
 					default:
 						assert(0 && "unreachable & default");
 						ae2f_unreachable();
 						break;
-					case EMIT_EXPR_NOT_THE_CASE:
+					case ACLEXPR_RET_NOT_THE_CASE:
 						assert(0 && "not the case");
 						ae2f_unreachable();
 						break;
 
-					case EMIT_EXPR_FAILURE:
+					case ACLEXPR_RET_FAILURE:
 						goto L$$LBL_END;
 						ae2f_unexpected_but_if(0) {
 							ae2f_unreachable();
-							case EMIT_EXPR_SUCCESS:
+							case ACLEXPR_RET_SUCCESS:
 							L$$PCURSOR->m_data.m_vardecl.m_mask
 								&= (aclspv_wrd_t)~ACLUTIL_CURSOR_VAR_LITERAL;
 						}
 
 						ae2f_unexpected_but_if(0) {
 							ae2f_unreachable();
-							case EMIT_EXPR_SUCCESS_CONSTANT:
+							case ACLEXPR_RET_SUCCESS_CONSTANT:
 							L$$PCURSOR->m_data.m_vardecl.m_mask
 								&= ~(aclspv_wrd_t)ACLUTIL_CURSOR_VAR_LITERAL | ACLUTIL_LITERAL_CONSTANT;
 						}
@@ -231,28 +231,28 @@ ae2f_MAC((L, )) aclemit_body_vardecl(CXCursor h_cur, aclutil_fnctx* ae2f_restric
 						, &L$$PCURSOR->m_data.m_vardecl.m_literal
 						, L$$CTX))
 			{
-				case EMIT_EXPR_NOT_THE_CASE:
+				case ACLEXPR_RET_NOT_THE_CASE:
 					L$$CTX->m_err = ACLSPV_COMPILE_NOIMPL;
 					break;
 
 				default:
-				case EMIT_EXPR_FAILURE:
+				case ACLEXPR_RET_FAILURE:
 					L$$CTX->m_err = ACLSPV_COMPILE_MET_INVAL;
 					break;
 
-				case EMIT_EXPR_SUCCESS_LITERAL:
+				case ACLEXPR_RET_SUCCESS_LITERAL:
 					L$$PCURSOR->m_data.m_vardecl.m_mask
 						|= ACLUTIL_LITERAL_MASK_LITERAL;
 
 					dbg_puts(("Constructor is literal."));
 					ae2f_fallthrough;
-				case EMIT_EXPR_SUCCESS_CONSTANT:
+				case ACLEXPR_RET_SUCCESS_CONSTANT:
 
 					dbg_puts(("Constructor may be constant."));
 					L$$PCURSOR->m_data.m_vardecl.m_mask
 						|= ACLUTIL_LITERAL_CONSTANT;
 					ae2f_fallthrough;
-				case EMIT_EXPR_SUCCESS:
+				case ACLEXPR_RET_SUCCESS:
 					L$$PCURSOR->m_data.m_vardecl.m_mask |= ACLUTIL_CURSOR_VAR_PREDICTABLE;
 					break;
 			}

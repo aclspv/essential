@@ -76,14 +76,14 @@ enum CXChildVisitResult aclemit_entp_body(CXCursor h_cur, ae2f_unused CXCursor h
 							, CURSORCHILD
 							, 0
 							, CTX)) {
-					case EMIT_EXPR_NOT_THE_CASE:
-					case EMIT_EXPR_FAILURE:
+					case ACLEXPR_RET_NOT_THE_CASE:
+					case ACLEXPR_RET_FAILURE:
 					default:
 						goto LBL_FAIL;
 
-					case EMIT_EXPR_SUCCESS:
-					case EMIT_EXPR_SUCCESS_CONSTANT:
-					case EMIT_EXPR_SUCCESS_LITERAL:
+					case ACLEXPR_RET_SUCCESS:
+					case ACLEXPR_RET_SUCCESS_CONSTANT:
+					case ACLEXPR_RET_SUCCESS_LITERAL:
 						break;
 				}
 

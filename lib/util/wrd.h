@@ -14,7 +14,7 @@
  * */
 #ifndef aclspv_opcode_t
 #define aclspv_opcode_t	aclspv_opcode_t
-typedef uint_fast16_t aclspv_opcode_t;
+typedef uint_least16_t aclspv_opcode_t;
 #endif
 
 extern char ACLSPV_CHECK[sizeof(aclspv_opcode_t) >= 2 ? 1 : -1];

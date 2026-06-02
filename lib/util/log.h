@@ -4,7 +4,6 @@
 #ifndef	DBG
 #if defined(NDEBUG) && NDEBUG
 #define	DBG 0
-
 #else
 #define DBG 1
 #endif

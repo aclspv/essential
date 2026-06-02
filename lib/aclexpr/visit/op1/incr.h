@@ -1,0 +1,72 @@
+#ifndef	aclexpr_visit_op1_incr_h
+#define	aclexpr_visit_op1_incr_h
+
+#include <util/constant.h>
+#include <util/scale.h>
+#include <util/cxtp.h>
+#include <util/wrdemit.h>
+
+#include <aclexpr.h>
+#include <aclexpr/visit/api.h>
+#include <aclexpr/op.h>
+
+ae2f_inline_f static aclexpr_visit_lbl_t aclexpr_visit_op1_incr(
+		const CXCursor				c_cur,
+		const h_aclspv_ctx_t			h_ctx, 
+		x_aclspv_vec* ae2f_restrict const	h_cmdscale,
+		aclexpr_visit_lbl_t			c_lbl_success,
+		aclexpr_visit_lbl_t			c_lbl_fail,
+		aclexpr_visit_lbl_t			c_lbl_pass
+		)
+{
+	x_scale* ae2f_restrict	NEW_SCALE;
+	enum ACLEXPR_OP_	OPCODE;
+	aclspv_wrd_t* ae2f_restrict VEC;
+
+	ae2fpat_assertunless(h_ctx) {
+		return c_lbl_fail;
+	}
+
+	unless(CXCursor_UnaryExpr == c_cur.kind)
+		return c_lbl_pass;
+
+	switch((uint_leastenum_t)clang_getCursorUnaryOperatorKind(c_cur)) {
+		default:
+			return c_lbl_pass;
+		case CXUnaryOperator_PostDec:
+			OPCODE = ACLEXPR_OP1_POSTDEG;
+			break;
+		case CXUnaryOperator_PreDec:
+			OPCODE = ACLEXPR_OP1_PREDEG;
+			break;
+		case CXUnaryOperator_PostInc:
+			OPCODE = ACLEXPR_OP1_POSTINC;
+			break;
+		case CXUnaryOperator_PreInc:
+			OPCODE = ACLEXPR_OP1_PREINC;
+			break;
+	}
+
+	NEW_SCALE = get_last_scale_from_vec(h_cmdscale);
+	NEW_SCALE = mk_scale_from_vec(
+			h_cmdscale
+			, 
+			aclutil_count_to_sz(ACLEXPR_OPBINCFG_END + 2)
+			+ (sizeof(aclexpr_opbincfg_extra) * 2)
+			);
+	ae2f_expected_but_else(NEW_SCALE)
+		return c_lbl_fail;
+
+	VEC = get_buf_from_scale2(aclspv_wrd_t, h_cmdscale, *NEW_SCALE);
+
+	ae2f_expected_but_else(VEC)
+		return c_lbl_fail;
+
+	VEC[ACLEXPR_OPBINCFG_NUMOPRND]		= 1;
+	VEC[ACLEXPR_OPBINCFG_OPCODE]		= (aclspv_wrd_t)OPCODE;
+	VEC[ACLEXPR_OPBINCFG_MASKLITERAL]	= ACLUTIL_LITERAL_MASK_LITERAL;
+
+	return c_lbl_success;
+}
+
+#endif

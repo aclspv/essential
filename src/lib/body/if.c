@@ -57,15 +57,15 @@ ae2f_MAC((L, )) aclemit_body_if(CXCursor h_cur, aclutil_fnctx * ae2f_restrict h_
 				, &L$$LTLR
 				, (h_fnctx->m_ctx)))
 	{
-		case EMIT_EXPR_NOT_THE_CASE:
-		case EMIT_EXPR_FAILURE:
+		case ACLEXPR_RET_NOT_THE_CASE:
+		case ACLEXPR_RET_FAILURE:
 		default:
 			goto L$$LBL_END;
 
-		case EMIT_EXPR_SUCCESS:
-		case EMIT_EXPR_SUCCESS_CONSTANT:
+		case ACLEXPR_RET_SUCCESS:
+		case ACLEXPR_RET_SUCCESS_CONSTANT:
 			break;
-		case EMIT_EXPR_SUCCESS_LITERAL:
+		case ACLEXPR_RET_SUCCESS_LITERAL:
 			if(L$$LTLR.m_api_int) {
 				const enum CXChildVisitResult L$$RET = aclemit_entp_body(
 						L$$IFPART.m_parts[1]

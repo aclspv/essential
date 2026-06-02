@@ -101,11 +101,11 @@ ae2f_MAC((L, )) aclemit_body_while(CXCursor h_cur, aclutil_fnctx * ae2f_restrict
 					, (h_fnctx)->m_ctx
 				      )) {
 			default:
-			case EMIT_EXPR_FAILURE:
-			case EMIT_EXPR_NOT_THE_CASE:
+			case ACLEXPR_RET_FAILURE:
+			case ACLEXPR_RET_NOT_THE_CASE:
 				goto L$$ERR;
 
-			case EMIT_EXPR_SUCCESS_LITERAL:
+			case ACLEXPR_RET_SUCCESS_LITERAL:
 				(h_fnctx)->m_ctx->m_count.m_fnimpl
 					= ae2f_bll_sel_bool1(
 							aclspv_wrd_t
@@ -115,13 +115,13 @@ ae2f_MAC((L, )) aclemit_body_while(CXCursor h_cur, aclutil_fnctx * ae2f_restrict
 
 				ae2f_cgoto2_strict(L$$LITERAL.m_api_uintmax, L$$CONTINUE, L$$RET);
 
-			case EMIT_EXPR_SUCCESS_CONSTANT:
+			case ACLEXPR_RET_SUCCESS_CONSTANT:
 				L$$CONTINUE:
 					warn_puts("Constant value on loop condition");
 				L$$IS_INFINITE_LOOP = (aclspv_wrd_t)L$$LITERAL.m_api_uintmax;
 				ae2f_fallthrough;
 
-			case EMIT_EXPR_SUCCESS:
+			case ACLEXPR_RET_SUCCESS:
 				break;
 		}
 

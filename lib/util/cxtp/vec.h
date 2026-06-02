@@ -2,11 +2,12 @@
 #define	aclutil_cxtp_vec_h
 
 #include "./common.h"
+#include <ae2f/cc/fnpretty.h>
 
-struct aclutil_cxtp_veccfg_t {
+ae2f_ccpure struct aclutil_cxtp_veccfg_t {
 	aclspv_id_t	m_ty_elm;
 	aclspv_wrd_t	m_num;
-}	aclutil_cxtp_get_veccfg(
+}	 aclutil_cxtp_get_veccfg(
 		const aclspv_id_t	c_ty_vec,
 		const h_aclspv_ctx_t	h_ctx
 		);

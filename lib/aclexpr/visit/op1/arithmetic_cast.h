@@ -8,29 +8,33 @@
 
 #include <util/constant.h>
 #include <util/scale.h>
-#include <util/op.h>
 #include <util/cxtp.h>
 #include <util/wrdemit.h>
 
 #include <aclexpr.h>
+#include <aclexpr/visit/api.h>
+#include <aclexpr/op.h>
 
-ae2f_inline_f static enum EMIT_EXPR_ s_cast_numeric(
+ae2f_inline_f static aclexpr_visit_lbl_t aclexpr_visit_op1_arithmetic_cast(
 		const CXCursor				c_cur,
 		const h_aclspv_ctx_t			h_ctx, 
-		x_aclspv_vec* ae2f_restrict const	h_cmdscale
+		x_aclspv_vec* ae2f_restrict const	h_cmdscale,
+		aclexpr_visit_lbl_t			c_lbl_success,
+		aclexpr_visit_lbl_t			c_lbl_fail,
+		aclexpr_visit_lbl_t			c_lbl_pass
 		)
 {
 	x_scale* ae2f_restrict	NEW_SCALE;
-	enum UTIL_OPBIN1_	OPCODE;
+	enum ACLEXPR_OP_	OPCODE;
 	aclspv_wrd_t* ae2f_restrict VEC;
 
 	ae2fpat_assertunless(h_ctx) {
-		return EMIT_EXPR_FAILURE;
+		return c_lbl_fail;
 	}
 
 	switch((uint_leastenum_t)c_cur.kind) {
 		default:
-			return EMIT_EXPR_NOT_THE_CASE;
+			return c_lbl_pass;
 
 			/** casts */
 		case CXCursor_CStyleCastExpr:
@@ -39,21 +43,21 @@ ae2f_inline_f static enum EMIT_EXPR_ s_cast_numeric(
 		case CXCursor_CXXReinterpretCastExpr:
 		case CXCursor_CXXConstCastExpr:
 		case CXCursor_CXXFunctionalCastExpr:
-			OPCODE = UTIL_OPBIN1_EXPLICIT_CAST;
+			OPCODE = ACLEXPR_OP1_EXPLICIT_CAST;
 			NEW_SCALE = get_last_scale_from_vec(h_cmdscale);
 			NEW_SCALE = mk_scale_from_vec(
 					h_cmdscale
 					, 
-					aclutil_count_to_sz(UTIL_OPBINCFG_END + 2)
-					+ (sizeof(util_opbincfg_extra) * 2)
+					aclutil_count_to_sz(ACLEXPR_OPBINCFG_END + 2)
+					+ (sizeof(aclexpr_opbincfg_extra) * 2)
 					);
 			ae2f_expected_but_else(NEW_SCALE)
-				return EMIT_EXPR_FAILURE;
+				return c_lbl_fail;
 
 			VEC = get_buf_from_scale2(aclspv_wrd_t, h_cmdscale, *NEW_SCALE);
 
 			ae2f_expected_but_else(VEC)
-				return EMIT_EXPR_FAILURE;
+				return c_lbl_fail;
 
 			VEC[0] = 1;				/** number of operands */
 			VEC[1] = ACLUTIL_LITERAL_MASK_LITERAL;	/** is not constant? */
@@ -63,31 +67,26 @@ ae2f_inline_f static enum EMIT_EXPR_ s_cast_numeric(
 			VEC[5] = (aclspv_wrd_t) OPCODE;
 			VEC[6] = 0;				/** operand 0 */
 
-			if((VEC[UTIL_OPBINCFG_RESTYID] = aclutil_mk_cxtp_by_cursor2(
-							clang_getTypeDeclaration(clang_getCursorType(c_cur))
-							, h_ctx
-							))) break;
-
-			ae2f_ifezerr(VEC[UTIL_OPBINCFG_RESTYID] = aclutil_mk_cxtp_by_cursor(
+			ae2f_ifezerr(VEC[ACLEXPR_OPBINCFG_RESTYID] = aclutil_mk_cxtp_by_cursor(
 						c_cur
 						, clang_getCursorType(c_cur)
 						, h_ctx
 						)) {
 				err_puts("[s_cast_numeric] failed aclutil_mk_cxtp_by_cursor");
 				h_ctx->m_err = ACLSPV_COMPILE_ARITHMETIC_CAST_TYPE_IS_UNDEFINED_NEW;
-				return EMIT_EXPR_FAILURE;
+				return c_lbl_fail;
 			}
 
-			ae2f_ifezerr_strict(aclid_is_arithmetic(VEC[UTIL_OPBINCFG_RESTYID], h_ctx)) {
+			ae2f_ifezerr_strict(aclid_is_arithmetic(VEC[ACLEXPR_OPBINCFG_RESTYID], h_ctx)) {
 				err_prefix(a);
 				err_call((void)
 						, fprintf(
 							stderr
 							, "[s_cast_numeric::aclid_is_arithmetic] %u\n"
-							, (unsigned)VEC[UTIL_OPBINCFG_RESTYID]));
+							, (unsigned)VEC[ACLEXPR_OPBINCFG_RESTYID]));
 
 				h_ctx->m_err = ACLSPV_COMPILE_ARITHMETIC_CAST_TYPE_IS_UNDEFINED_NEW;
-				return EMIT_EXPR_FAILURE;
+				return c_lbl_fail;
 			}
 	}
 
@@ -110,9 +109,9 @@ ae2f_inline_f static enum EMIT_EXPR_ s_cast_numeric(
 #endif
 
 	dbg_prefix();
-	dbg_call((void), fprintf(stderr, "[s_cast_numeric::aclutil_mk_cxtp_by_cursor] %u\n", VEC[UTIL_OPBINCFG_RESTYID]));
+	dbg_call((void), fprintf(stderr, "[s_cast_numeric::aclutil_mk_cxtp_by_cursor] %u\n", VEC[ACLEXPR_OPBINCFG_RESTYID]));
 
-	return EMIT_EXPR_SUCCESS_LITERAL;
+	return c_lbl_success;
 }
 
 #endif

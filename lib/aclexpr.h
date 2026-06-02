@@ -4,25 +4,24 @@
 #define	aclexpr_h
 #include <util/literal.h>
 
-typedef enum EMIT_EXPR_ {
-
-	EMIT_EXPR_FAILURE,
+enum ACLEXPR_RET_ {
+	ACLEXPR_RET_FAILURE,
 
 	/** succeed, value was not constant */
-	EMIT_EXPR_SUCCESS,
+	ACLEXPR_RET_SUCCESS,
 
 	/** succeed, value was constant. */
-	EMIT_EXPR_SUCCESS_CONSTANT,
+	ACLEXPR_RET_SUCCESS_CONSTANT,
 
 	/** succeed, value was literal. */
-	EMIT_EXPR_SUCCESS_LITERAL,
+	ACLEXPR_RET_SUCCESS_LITERAL,
 
-	EMIT_EXPR_NOT_THE_CASE
-} e_emit_expr_bin_1_t;
+	ACLEXPR_RET_NOT_THE_CASE
+};
 
-typedef aclutil_literal emit_expr_literal;
+typedef aclutil_literal aclexpr_literal;
 
-enum EMIT_EXPR_ aclexpr_arithmetic_cast_non_literal(
+enum ACLEXPR_RET_ aclexpr_arithmetic_cast_non_literal(
 		const aclspv_id_t	c_old_id,
 		const aclspv_id_t	c_old_type,
 		const aclutil_ltrlmask_t	c_flag_literal,
@@ -31,28 +30,28 @@ enum EMIT_EXPR_ aclexpr_arithmetic_cast_non_literal(
 		const h_aclspv_ctx_t			h_ctx
 		);
 
-enum EMIT_EXPR_ aclexpr_arithmetic_cast(
+enum ACLEXPR_RET_ aclexpr_arithmetic_cast(
 		const aclspv_id_t	c_old_id,
 		const aclspv_id_t	c_old_type,
 		const aclutil_ltrlmask_t	c_flag_literal,
-		const emit_expr_literal	c_old_literal,
+		const aclexpr_literal	c_old_literal,
 
 		aclspv_id_t* ae2f_restrict	r_newid,
 		aclspv_id_t		c_new_type,
-		emit_expr_literal* ae2f_restrict wr_new_literal_opt,
+		aclexpr_literal* ae2f_restrict wr_new_literal_opt,
 		const h_aclspv_ctx_t	h_ctx
 		);
 
-enum EMIT_EXPR_ aclexpr_arithmetic_cast_literal(
+enum ACLEXPR_RET_ aclexpr_arithmetic_cast_literal(
 		const aclspv_id_t	c_old_type,
-		const emit_expr_literal	c_old_literal,
+		const aclexpr_literal	c_old_literal,
 		aclspv_id_t* ae2f_restrict	r_newid,
 		aclspv_id_t			c_new_type,
-		emit_expr_literal* ae2f_restrict	wr_new_literal_opt,
+		aclexpr_literal* ae2f_restrict	wr_new_literal_opt,
 		const h_aclspv_ctx_t		h_ctx
 		);
 
-typedef enum EMIT_EXPR_ fn_aclspv_get_expr_t(
+typedef enum ACLEXPR_RET_ fn_aclspv_get_expr_t(
 		aclspv_id_t* ae2f_restrict const ret_id
 		, const aclspv_id_t c_type_req
 		, const CXCursor c_cur
@@ -60,7 +59,7 @@ typedef enum EMIT_EXPR_ fn_aclspv_get_expr_t(
 		, h_aclspv_ctx_t h_ctx
 		);
 
-enum EMIT_EXPR_ aclexpr_eval_btcast(
+enum ACLEXPR_RET_ aclexpr_eval_btcast(
 		aclspv_id_t* ae2f_restrict const ret_id
 		, const aclspv_id_t c_type_req
 		, const CXCursor c_cur
@@ -68,7 +67,7 @@ enum EMIT_EXPR_ aclexpr_eval_btcast(
 		, h_aclspv_ctx_t h_ctx
 		);
 
-enum EMIT_EXPR_ aclexpr_eval(
+enum ACLEXPR_RET_ aclexpr_eval(
 		aclspv_id_t* ae2f_restrict const ret_id
 		, const aclspv_id_t c_type_req
 		, const CXCursor c_cur
@@ -76,7 +75,7 @@ enum EMIT_EXPR_ aclexpr_eval(
 		, h_aclspv_ctx_t h_ctx
 		);
 
-enum EMIT_EXPR_ aclspv_get_expr2(
+enum ACLEXPR_RET_ aclspv_get_expr2(
 		aclspv_id_t* ae2f_restrict const ret_id
 		, aclspv_id_t* ae2f_restrict const r_type_opt
 		, const CXCursor c_cur

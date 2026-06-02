@@ -9,32 +9,39 @@
 #include <util/cursor.h>
 #include <util/emitx.h>
 #include <util/constant.h>
+#include <aclexpr/op.h>
+
 #include <aclexpr.h>
 #include <.aclspv/util/mkname.h>
+#include <aclexpr/visit/api.h>
 
 /** 
  * binary expression with 1 operators.
  * */
-ae2f_inline_f static enum EMIT_EXPR_ s_simple(
+ae2f_inline_f static aclexpr_visit_lbl_t aclexpr_visit_op0_val(
 		const CXCursor			c_cur,
 		const h_aclspv_ctx_t		h_ctx,
+		aclexpr_opbincfg_extra*		rdwr_extra,
+#define		wr_type_fetched			(&(rdwr_extra)->m_type_original)
+#define		rwr_literal			(&(rdwr_extra)->m_literal)
+#define		r_literal_mask			(&(rdwr_extra)->m_mask_literal)
+
 		aclspv_id_t* ae2f_restrict const	wr_newid,
-		aclspv_id_t* ae2f_restrict const	wr_type_fetched,
-		aclutil_literal* ae2f_restrict const	rwr_literal_opt
+		const aclexpr_visit_lbl_t		c_lbl_success,
+		const aclexpr_visit_lbl_t		c_lbl_fail,
+		const aclexpr_visit_lbl_t		c_lbl_pass
 		) {
-	emit_expr_literal EVRES;
+	aclexpr_literal EVRES;
 	ae2fpat_assertassume(wr_newid);
 	ae2fpat_assertassume(h_ctx);
+	ae2fpat_assertassume(rdwr_extra);
+
+	rdwr_extra->m_mask_literal = ACLUTIL_LITERAL_MASK_LITERAL;
 
 	switch((uint_leastenum_t)c_cur.kind) {
 		/** unknown */
 		default:
-			dbg_prefix(a);
-			dbg_call((void), (fprintf(stderr
-							, "current cursor kind is not known by simple(1) %u\n"
-							, (unsigned) c_cur.kind
-						 )));
-			return EMIT_EXPR_NOT_THE_CASE;
+			return c_lbl_pass;
 
 			/** literals */
 
@@ -45,8 +52,8 @@ ae2f_inline_f static enum EMIT_EXPR_ s_simple(
 
 				/** no cleanup needed. init already fucked. */
 				ae2f_expected_but_else (EVAL) {
-					assert(0 && "EVAL is not running");
-					return EMIT_EXPR_FAILURE;
+					err_puts("[visit::0::val] clang_Cursor_Evaluate failed.");
+					return c_lbl_fail;
 				}
 
 				switch((uint_leastenum_t)clang_EvalResult_getKind(EVAL)) {
@@ -65,20 +72,14 @@ ae2f_inline_f static enum EMIT_EXPR_ s_simple(
 						*wr_type_fetched = (EVRES.m_api_uintmax <= 0xFFFFFFFF 
 								? ACLSPV_ID_I32 : ACLSPV_ID_I64);
 
-						if(rwr_literal_opt) *rwr_literal_opt = EVRES;
+						if(rwr_literal) *rwr_literal = EVRES;
 
 						ae2fpat_assertassume_strict(*wr_type_fetched);
 
 						ae2f_expected_but_else(aclid_mk_default_id(
 									*wr_type_fetched
 									, h_ctx)) {
-							err_prefix(a);
-							err_call(fprintf, (stderr
-										, "Default id fetch has failed. %u\n"
-										, *wr_type_fetched
-									  )
-								);
-							return EMIT_EXPR_FAILURE;
+							return c_lbl_fail;
 						}
 
 						switch(aclid_get_bit_width(*wr_type_fetched)) {
@@ -88,9 +89,9 @@ ae2f_inline_f static enum EMIT_EXPR_ s_simple(
 											(aclspv_wrd_t)EVRES.m_u64
 											, h_ctx
 											))
-									return EMIT_EXPR_FAILURE;
+									return c_lbl_fail;
 
-								return EMIT_EXPR_SUCCESS_LITERAL;
+								return c_lbl_success;
 
 							case 64:
 								dbg_puts("I64");
@@ -98,12 +99,11 @@ ae2f_inline_f static enum EMIT_EXPR_ s_simple(
 											(aclspv_wrd_t)EVRES.m_u64
 											, h_ctx
 											))
-									return EMIT_EXPR_FAILURE;
+									return c_lbl_fail;
 
-								return EMIT_EXPR_SUCCESS_LITERAL;
+								return c_lbl_success;
 							default:
-								assert(0);
-								ae2f_unreachable();
+								return c_lbl_fail;
 						}
 
 					case CXEval_Float:
@@ -124,19 +124,18 @@ ae2f_inline_f static enum EMIT_EXPR_ s_simple(
 
 						ae2fpat_assertassume_strict(*wr_type_fetched);
 
-						*rwr_literal_opt = EVRES;
+						*rwr_literal = EVRES;
 
 						ae2f_expected_but_else(*wr_newid = aclutil_mk_constant_val_f32_id(
 									EVRES.m_flt
 									, h_ctx
 									))
-							return EMIT_EXPR_FAILURE;
+							return c_lbl_fail;
 
-						return EMIT_EXPR_SUCCESS_LITERAL;
+						return c_lbl_success;
 
 					default:
-						assert(0 && "unknown evaluation");
-						return EMIT_EXPR_FAILURE;
+						return c_lbl_fail;
 				}
 			} assert(0); ae2f_unreachable();
 
@@ -150,7 +149,7 @@ ae2f_inline_f static enum EMIT_EXPR_ s_simple(
 						);
 
 				ae2f_expected_but_else(DECL_IDX < h_ctx->m_num_cursor)
-					return EMIT_EXPR_FAILURE;
+					return c_lbl_fail;
 
 #define	DECL_INFO	DECL_IDX[((aclutil_cursor* ae2f_restrict)h_ctx->m_cursors.m_p)]
 
@@ -158,33 +157,22 @@ ae2f_inline_f static enum EMIT_EXPR_ s_simple(
 				unless(aclid_is_arithmetic(DECL_INFO.m_data.m_vardecl.m_type_id, h_ctx)) {
 					err_prefix(a);
 					err_call((void), (fprintf(stderr
-									, "Type(%u) is no arithmetic [NOIMPL]\n"
+									, "[visit::0::val] type(%u) is no arithmetic [NOIMPL]\n"
 									, DECL_INFO.m_data.m_vardecl.m_type_id))
 						);
-					return EMIT_EXPR_FAILURE;
+					return c_lbl_fail;
 				}
 
 				*wr_type_fetched = DECL_INFO.m_data.m_vardecl.m_type_id;
-				ae2f_expected_if(*wr_newid = aclutil_assign_cursor_lval(
+				ae2f_ifezerr(*wr_newid = aclutil_assign_cursor_lval(
 							&DECL_INFO, h_ctx
 							, 0, 0
 							, 0, 0
-							, rwr_literal_opt)) 
-					switch(DECL_INFO.m_data.m_vardecl.m_mask & ACLUTIL_CURSOR_VAR_LITERAL) {
-						case ACLUTIL_LITERAL_MASK_LITERAL:
-						case ACLUTIL_LITERAL_LITERAL:
+							, rwr_literal))
+					return c_lbl_fail;
 
-							return EMIT_EXPR_SUCCESS_LITERAL;
-
-						case ACLUTIL_LITERAL_CONSTANT:
-							return EMIT_EXPR_SUCCESS_CONSTANT;
-
-						default:
-							return EMIT_EXPR_SUCCESS;
-					}
-
-
-				return EMIT_EXPR_FAILURE;
+				rdwr_extra->m_mask_literal &= ((ACLUTIL_CURSOR_VAR_LITERAL) & DECL_INFO.m_data.m_vardecl.m_mask);
+				return c_lbl_success;
 #undef	DECL_INFO
 			}
 	}

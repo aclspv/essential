@@ -7,23 +7,27 @@
 #define aclexpr_visit_basic_numeric_operation_h
 
 #include <util/scale.h>
-#include <util/op.h>
 #include <util/emitx.h>
 #include <util/log.h>
 
 #include <aclexpr.h>
+#include <aclexpr/visit/api.h>
+#include <aclexpr/op.h>
 
-ae2f_inline_f static enum EMIT_EXPR_ aclexpr_visit_op2_arithmetic(
+ae2f_inline_f static aclexpr_visit_lbl_t aclexpr_visit_op2_arithmetic(
 		const CXCursor				c_cur,
 		const h_aclspv_ctx_t			h_ctx, 
-		x_aclspv_vec* ae2f_restrict const	h_cmdscale
+		x_aclspv_vec* ae2f_restrict const	h_cmdscale,
+		const aclexpr_visit_lbl_t		c_lbl_success,
+		const aclexpr_visit_lbl_t		c_lbl_fail,
+		const aclexpr_visit_lbl_t		c_lbl_pass
 		)
 {
-	enum UTIL_OPBIN2_	OPCODE;
+	enum ACLEXPR_OP_	OPCODE;
 	aclspv_bool_t		IS_ASSIGN = 0;
 
 	ae2f_expected_but_else(h_ctx) {
-		return EMIT_EXPR_FAILURE;
+		return c_lbl_fail;
 	}
 
 #if	DBG
@@ -35,7 +39,7 @@ ae2f_inline_f static enum EMIT_EXPR_ aclexpr_visit_op2_arithmetic(
 
 		ae2f_expected_but_else(OP) {
 			h_ctx->m_err = ACLSPV_COMPILE_ERR_CLANG;
-			return EMIT_EXPR_FAILURE;
+			return c_lbl_fail;
 		}
 
 		dbg_prefix(a);
@@ -49,7 +53,7 @@ ae2f_inline_f static enum EMIT_EXPR_ aclexpr_visit_op2_arithmetic(
 
 	switch((uint_leastenum_t)clang_getCursorKind(c_cur)) {
 		default:
-			return EMIT_EXPR_NOT_THE_CASE;
+			return c_lbl_pass;
 
 		case CXCursor_BinaryOperator:
 		case CXCursor_CompoundAssignOperator:
@@ -58,36 +62,36 @@ ae2f_inline_f static enum EMIT_EXPR_ aclexpr_visit_op2_arithmetic(
 
 	switch((uint_leastenum_t)clang_getCursorBinaryOperatorKind(c_cur)) {
 		default:
-			return EMIT_EXPR_NOT_THE_CASE;
+			return c_lbl_pass;
 
 		case CXBinaryOperator_AddAssign:
 			IS_ASSIGN |= 1; ae2f_fallthrough;
 		case CXBinaryOperator_Add:
-			OPCODE = UTIL_OPBIN2_ADD;
+			OPCODE = ACLEXPR_OP2_ARITHMETIC_ADD;
 			break;
 
 		case CXBinaryOperator_SubAssign:
 			IS_ASSIGN |= 1; ae2f_fallthrough;
 		case CXBinaryOperator_Sub:
-			OPCODE = UTIL_OPBIN2_SUB;
+			OPCODE = ACLEXPR_OP2_ARITHMETIC_SUB;
 			break;
 
 		case CXBinaryOperator_MulAssign:
 			IS_ASSIGN |= 1; ae2f_fallthrough;
 		case CXBinaryOperator_Mul:
-			OPCODE = UTIL_OPBIN2_MUL;
+			OPCODE = ACLEXPR_OP2_ARITHMETIC_MUL;
 			break;
 
 		case CXBinaryOperator_DivAssign:
 			IS_ASSIGN |= 1; ae2f_fallthrough;
 		case CXBinaryOperator_Div:
-			OPCODE = UTIL_OPBIN2_DIV;
+			OPCODE = ACLEXPR_OP2_ARITHMETIC_DIV;
 			break;
 
 		case CXBinaryOperator_RemAssign:
 			IS_ASSIGN |= 1; ae2f_fallthrough;
 		case CXBinaryOperator_Rem:
-			OPCODE = UTIL_OPBIN2_REM;
+			OPCODE = ACLEXPR_OP2_ARITHMETIC_REM;
 			break;
 	}
 
@@ -100,16 +104,16 @@ ae2f_inline_f static enum EMIT_EXPR_ aclexpr_visit_op2_arithmetic(
 		NEW_SCALE = mk_scale_from_vec(
 				h_cmdscale
 				, 
-				aclutil_count_to_sz(UTIL_OPBINCFG_END + 2)
-				+ (sizeof(util_opbincfg_extra) * 2)
+				aclutil_count_to_sz(ACLEXPR_OPBINCFG_END + 2)
+				+ (sizeof(aclexpr_opbincfg_extra) * 2)
 				);
 		ae2f_expected_but_else(NEW_SCALE)
-			return EMIT_EXPR_FAILURE;
+			return c_lbl_fail;
 
 		VEC = get_buf_from_scale2(aclspv_wrd_t, h_cmdscale, *NEW_SCALE);
 
 		ae2f_expected_but_else(VEC)
-			return EMIT_EXPR_FAILURE;
+			return c_lbl_fail;
 
 		VEC[0] = 2;				/** number of operands */
 		VEC[1] = ACLUTIL_LITERAL_MASK_LITERAL;	/** is not constant? */
@@ -120,11 +124,11 @@ ae2f_inline_f static enum EMIT_EXPR_ aclexpr_visit_op2_arithmetic(
 		VEC[6] = 0;
 		VEC[7] = 0;
 
-		((util_opbincfg_extra* ae2f_restrict)(void* ae2f_restrict)(&VEC[(UTIL_OPBINCFG_END + 2)]))[0].m_is_assign = IS_ASSIGN;
-		((util_opbincfg_extra* ae2f_restrict)(void* ae2f_restrict)(&VEC[(UTIL_OPBINCFG_END + 2)]))[1].m_is_assign = IS_ASSIGN;
+		((aclexpr_opbincfg_extra* ae2f_restrict)(void* ae2f_restrict)(&VEC[(ACLEXPR_OPBINCFG_END + 2)]))[0].m_is_assign = IS_ASSIGN;
+		((aclexpr_opbincfg_extra* ae2f_restrict)(void* ae2f_restrict)(&VEC[(ACLEXPR_OPBINCFG_END + 2)]))[1].m_is_assign = IS_ASSIGN;
 	}
 
-	return EMIT_EXPR_SUCCESS_LITERAL;
+	return c_lbl_success;
 }
 
 #endif
