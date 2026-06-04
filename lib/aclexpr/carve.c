@@ -6,6 +6,7 @@
 #include <ae2f/cgoto.h>
 #include "./carve/util.h"
 #include "./carve/op1/arithmetic_cast.h"
+#include "./carve/op1/incr.h"
 #include "./carve/op2/arithmetic.h"
 
 enum {
@@ -15,7 +16,8 @@ enum {
 	OP2_,
 	OP2_ARITHMETIC,
 	OP1_,
-	OP1_ARITHMETIC_CAST
+	OP1_ARITHMETIC_CAST,
+	OP1_INCR
 };
 
 aclspv_bool_t aclexpr_carve(
@@ -67,6 +69,10 @@ aclspv_bool_t aclexpr_carve(
 #	define	cgjmp(a)		LABELJMP = a; goto LABELJMPINIT
 #endif
 
+	dbg_call(, fprintf(stderr, "[aclexpr::carve] oprnd %u opcode %u\n"
+				, (unsigned)LST_SCALE_BUF[ACLEXPR_OPBINCFG_NUMOPRND]
+				, (unsigned)LST_SCALE_BUF[ACLEXPR_OPBINCFG_OPCODE]));
+
 	cgswtch(OP2_) {
 		cgdefault(OP_FAILURE):
 			return 1;
@@ -78,35 +84,49 @@ aclspv_bool_t aclexpr_carve(
 			cgjmp(LST_SCALE_BUF[ACLEXPR_OPBINCFG_NUMOPRND] == 2 ? cgcase(OP2_ARITHMETIC) : cgcase(OP1_));
 
 		cgcsdef(OP2_ARITHMETIC):
-		cgjmp(aclexpr_carve_op2_arithmetic(
-					rdwr_data
-					, rdwr_prv_idval
-					, rdwr_prv_extra
-					, LST_SCALE
-					, LST_SCALE_BUF
-					, LST_EXTRA
-					, RET_LITERAL
-					, cgcase(OP_FAILURE)
-					, cgcase(OP_SUCCESS)
-					, cgcase(OP_FAILURE)
-					));
+			cgjmp(aclexpr_carve_op2_arithmetic(
+						rdwr_data
+						, rdwr_prv_idval
+						, rdwr_prv_extra
+						, LST_SCALE
+						, LST_SCALE_BUF
+						, LST_EXTRA
+						, RET_LITERAL
+						, cgcase(OP_FAILURE)
+						, cgcase(OP_SUCCESS)
+						, cgcase(OP_FAILURE)
+						));
 
 		cgcsdef(OP1_):
 			cgjmp(LST_SCALE_BUF[ACLEXPR_OPBINCFG_NUMOPRND] == 1 ? cgcase(OP1_ARITHMETIC_CAST) : cgcase(OP_FAILURE));
 
 		cgcsdef(OP1_ARITHMETIC_CAST):
-		cgjmp(aclexpr_carve_op1_arithmetic_cast(
-					rdwr_data
-					, rdwr_prv_idval
-					, rdwr_prv_extra
-					, LST_SCALE
-					, LST_SCALE_BUF
-					, LST_EXTRA
-					, RET_LITERAL
-					, cgcase(OP2_ARITHMETIC)
-					, cgcase(OP_SUCCESS)
-					, cgcase(OP_FAILURE)
-					));
+			cgjmp(aclexpr_carve_op1_arithmetic_cast(
+						rdwr_data
+						, rdwr_prv_idval
+						, rdwr_prv_extra
+						, LST_SCALE
+						, LST_SCALE_BUF
+						, LST_EXTRA
+						, RET_LITERAL
+						, cgcase(OP1_INCR)
+						, cgcase(OP_SUCCESS)
+						, cgcase(OP_FAILURE)
+						));
+
+		cgcsdef(OP1_INCR):
+			cgjmp(aclexpr_carve_op1_incr(
+						rdwr_data
+						, rdwr_prv_idval
+						, rdwr_prv_extra
+						, LST_SCALE
+						, LST_SCALE_BUF
+						, LST_EXTRA
+						, RET_LITERAL
+						, cgcase(OP_FAILURE)
+						, cgcase(OP_SUCCESS)
+						, cgcase(OP_FAILURE)
+						));
 	}
 
 	ae2f_unreachable();

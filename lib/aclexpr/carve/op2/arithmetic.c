@@ -1,6 +1,7 @@
 #include "./arithmetic.h"
 #include <aclexpr/carve/util.h>
 #include <util/wrdemit.h>
+#include <util/cursor.h>
 #include <.aclspv/vec.h>
 #include <ae2f/c90/StdInt/enum.h>
 #include <ae2f/cc/switchctl.h>
@@ -80,7 +81,6 @@ ae2f_inline_f static ae2f_ccconst aclspv_bool_t s_checkhelper(const aclspv_wrd_t
 		case ACLEXPR_OP2_ARITHMETIC_DIV:
 		case ACLEXPR_OP2_ARITHMETIC_MUL:
 		case ACLEXPR_OP2_ARITHMETIC_REM:
-		case ACLEXPR_OP2_ASSIGN:
 			return 1;
 	}
 }
@@ -394,5 +394,29 @@ aclexpr_carve_lbl_t aclexpr_carve_op2_arithmetic(
 	}
 
 	TMPL_COUNT += LST_CMD_COUNT - (rdwr_lst_scale_buf[1] == ACLUTIL_LITERAL_RT);
+
+
+	if(rdwr_lst_extra->m_is_assign) {
+		CXCursor	CASSIGN		= rdwr_lst_extra->m_cursor;
+		aclspv_wrd_t IDX = aclutil_find_cursor(
+				rdwr_data->m_ctx->m_num_cursor
+				, rdwr_data->m_ctx->m_cursors.m_p
+				, clang_getCanonicalCursor(clang_getCursorDefinition(CASSIGN))
+				);
+
+		aclspv_wrd_t	CLVAL = aclutil_assign_cursor_lval(
+				&((aclutil_cursor* ae2f_restrict)rdwr_data->m_ctx->m_cursors.m_p)[IDX]
+				, rdwr_data->m_ctx, *rdwr_prv_idval, rdwr_prv_extra->m_type_original
+				, rdwr_prv_extra->m_mask_literal
+				, &rdwr_prv_extra->m_literal
+				, 0
+				);
+
+		ae2f_ifezerr_strict(CLVAL) {
+			err_puts("[carve] aclutil_assign_cursor_lval has been failed.");
+			rdwr_data->m_ctx->m_err = ACLSPV_COMPILE_UNHANDLED_VISIT;
+			return c_lbl_err;
+		}
+	}
 	return c_lbl_success;
 }}

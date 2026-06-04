@@ -30,8 +30,8 @@ aclexpr_carve_lbl_t aclexpr_carve_op1_arithmetic_cast(
 
 		switch(aclexpr_arithmetic_cast(
 					OLD_ID
-					, rdwr_lst_extra[0].m_type_original
-					, rdwr_lst_extra[0].m_mask_literal
+					, rdwr_lst_extra->m_type_original
+					, rdwr_lst_extra->m_mask_literal
 					, OLD_LITERAL
 					, rdwr_prv_idval
 					, rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_RESTYID]

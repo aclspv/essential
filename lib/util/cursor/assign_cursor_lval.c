@@ -73,7 +73,8 @@ aclspv_id_t aclutil_assign_cursor_lval(
 	}
 
 	if(c_val) {
-		dbg_puts("[assign] c_val");
+		dbg_prefix(a);
+		dbg_call((void), fprintf(stderr, "[assign] c_val %u\n", (unsigned)c_val));
 		(*wr_cursor).m_data.m_vardecl.m_mask	|= ACLUTIL_CURSOR_VAR_PREDICTABLE;
 		(*wr_cursor).m_data.m_vardecl.m_mask	&= ~((aclspv_wrd_t)ACLUTIL_CURSOR_VAR_LITERAL);
 		switch(aclexpr_arithmetic_cast_non_literal(
@@ -94,6 +95,10 @@ aclspv_id_t aclutil_assign_cursor_lval(
 				ae2f_fallthrough;
 
 			case ACLEXPR_RET_SUCCESS:
+				dbg_prefix();
+				dbg_call(, fprintf(stderr, "[assign] c_val casted %u\n"
+							, (unsigned)wr_cursor->m_data.m_vardecl.m_init_val
+							));
 				ae2f_ifezerr(wr_cursor->m_data.m_vardecl.m_init_val)
 					h_ctx->m_err = ACLSPV_COMPILE_ASSIGN_CAST_GOT_ZERO;
 				return (*wr_cursor).m_data.m_vardecl.m_init_val;
@@ -131,6 +136,5 @@ aclspv_id_t aclutil_assign_cursor_lval(
 	}
 
 LBL_RETNOLBL:
-
 	return (*wr_cursor).m_data.m_vardecl.m_init_val;
 }

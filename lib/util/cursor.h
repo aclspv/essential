@@ -120,7 +120,7 @@ aclspv_id_t aclutil_from_cursor_find_stagedval(
 		const aclspv_id_t c_ty
 		);
 
-ae2f_extern aclspv_wrdcount_t aclutil_assign_cursor_lval(
+ae2f_extern aclspv_id_t aclutil_assign_cursor_lval(
 		aclutil_cursor* ae2f_restrict const wr_cursor,
 		const h_aclspv_ctx_t			h_ctx,
 		const aclspv_id_t			c_val,

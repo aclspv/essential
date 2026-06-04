@@ -19,15 +19,16 @@ ae2f_inline_f static aclexpr_visit_lbl_t aclexpr_visit_op1_incr(
 		aclexpr_visit_lbl_t			c_lbl_pass
 		)
 {
-	x_scale* ae2f_restrict	NEW_SCALE;
-	enum ACLEXPR_OP_	OPCODE;
-	aclspv_wrd_t* ae2f_restrict VEC;
+	x_scale* ae2f_restrict		NEW_SCALE;
+	aclspv_wrd_t			OPCODE;
+	aclspv_wrd_t* ae2f_restrict	VEC;
+
 
 	ae2fpat_assertunless(h_ctx) {
 		return c_lbl_fail;
 	}
 
-	unless(CXCursor_UnaryExpr == c_cur.kind)
+	unless(CXCursor_UnaryOperator == c_cur.kind)
 		return c_lbl_pass;
 
 	switch((uint_leastenum_t)clang_getCursorUnaryOperatorKind(c_cur)) {
@@ -47,12 +48,13 @@ ae2f_inline_f static aclexpr_visit_lbl_t aclexpr_visit_op1_incr(
 			break;
 	}
 
+
 	NEW_SCALE = get_last_scale_from_vec(h_cmdscale);
 	NEW_SCALE = mk_scale_from_vec(
 			h_cmdscale
 			, 
 			aclutil_count_to_sz(ACLEXPR_OPBINCFG_END + 2)
-			+ (sizeof(aclexpr_opbincfg_extra) * 2)
+			+ (sizeof(aclexpr_opbincfg_extra) * 1)
 			);
 	ae2f_expected_but_else(NEW_SCALE)
 		return c_lbl_fail;
@@ -63,7 +65,7 @@ ae2f_inline_f static aclexpr_visit_lbl_t aclexpr_visit_op1_incr(
 		return c_lbl_fail;
 
 	VEC[ACLEXPR_OPBINCFG_NUMOPRND]		= 1;
-	VEC[ACLEXPR_OPBINCFG_OPCODE]		= (aclspv_wrd_t)OPCODE;
+	VEC[ACLEXPR_OPBINCFG_OPCODE]		= OPCODE;
 	VEC[ACLEXPR_OPBINCFG_MASKLITERAL]	= ACLUTIL_LITERAL_MASK_LITERAL;
 
 	return c_lbl_success;

@@ -218,7 +218,6 @@ enum CXChildVisitResult aclexpr_visit(
 			while(LST_SCALE->m_id && GETLASTEL_CMDCOUNTERSTCK().m_count_oprnd == LST_SCALE_BUF[0]) {
 				aclexpr_opbincfg_extra	EXTRA_PRV;
 				aclspv_wrd_t	IDVAL_PRV;
-				aclspv_bool_t	IS_ASSIGN	= LST_EXTRA[0].m_is_assign;
 
 				ae2fcc_memset(&EXTRA_PRV, 0, sizeof(aclexpr_opbincfg_extra));
 
@@ -250,46 +249,7 @@ enum CXChildVisitResult aclexpr_visit(
 							rdwr_data
 							, &IDVAL_PRV
 							, &EXTRA_PRV))
-					return CXChildVisit_Break;
-
-				if(IS_ASSIGN) {
-					CXCursor	CASSIGN		= LST_EXTRA[0].m_cursor;
-					aclspv_wrd_t IDX = aclutil_find_cursor(
-							CTX->m_num_cursor
-							, CTX->m_cursors.m_p
-							, clang_getCanonicalCursor(clang_getCursorDefinition(CASSIGN)));
-
-
-					aclspv_wrd_t	CLVAL;
-
-					dbg_prefix(a);
-					dbg_call((void), fprintf(stderr, "assign after carve %u in type %u\n"
-								, IDVAL_PRV
-								, EXTRA_PRV.m_type_original
-								));
-
-					CLVAL = aclutil_assign_cursor_lval(
-							&((aclutil_cursor* ae2f_restrict)CTX->m_cursors.m_p)[IDX]
-							, CTX, IDVAL_PRV, EXTRA_PRV.m_type_original
-							, EXTRA_PRV.m_mask_literal
-							, &EXTRA_PRV.m_literal
-							, 0
-							);
-
-					ae2f_ifezerr(CLVAL) {
-						err_puts("[carve] aclutil_assign_cursor_lval has been failed.");
-						CTX->m_err = ACLSPV_COMPILE_UNHANDLED_VISIT;
-						return CXChildVisit_Break;
-					}
-
-					dbg_prefix();
-					dbg_call((void), fprintf(stderr
-								, "[carve::%u] after assign %u with type %u\n"
-								, CLVAL
-								, ((aclutil_cursor* ae2f_restrict)CTX->m_cursors.m_p)[IDX].m_data.m_vardecl.m_init_val
-								, ((aclutil_cursor* ae2f_restrict)CTX->m_cursors.m_p)[IDX].m_data.m_vardecl.m_type_id
-								));
-				}
+					return CXChildVisit_Break; 
 
 				del_scale_from_vec_last(&CMDSTCK_SCALE);
 				(void)(NUM_CMDCOUNTERSTCK && --NUM_CMDCOUNTERSTCK);

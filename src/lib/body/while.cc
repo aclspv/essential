@@ -4,6 +4,7 @@
 #include <util/fnctx.h>
 #include <util/emitx.h>
 #include <util/visitfromroot.h>
+#include <util/cursor.h>
 
 #include <ae2f/cc.h>
 #include <ae2f/cgoto.h>
@@ -280,7 +281,6 @@ ae2f_MAC((L, )) aclemit_body_while(CXCursor h_cur, aclutil_fnctx * ae2f_restrict
 				);
 
 		break;
-
 	}
 
 	ae2f_unreachable();
