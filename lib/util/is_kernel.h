@@ -5,7 +5,7 @@
 
 #include <ae2f/Keys.h>
 #include <aclattr/execmodel.h>
-#include <ae2f/c90/StdInt.h>
+#include "./wrd.h"
 
 
 ae2f_inline_f static u32_least aclutil_is_kernel(const CXCursor h_fndecl) {

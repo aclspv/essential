@@ -10,8 +10,6 @@
 #include <aclspv.h>
 
 #include <ae2f/Keys.h>
-#include <ae2f/c90/StdInt.h>
-#include <ae2f/c90/StdBool.h>
 #include <ae2f/cgoto.h>
 
 #include <util/constant.h>

@@ -20,7 +20,7 @@
 #include "clang-c/BuildSystem.h"
 #endif
 
-#include <ae2f/c90/StdInt.h>
+#include <ae2f/c90/stdint.h>
 
 #include "./platform.h"
 #include "./str.h"

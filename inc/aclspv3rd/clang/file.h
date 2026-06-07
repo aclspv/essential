@@ -15,7 +15,7 @@
 #define LLVM_CLANG_C_CXFILE_H
 
 #include <time.h>
-#include <ae2f/c90/StdInt.h>
+#include <ae2f/c90/stdint.h>
 
 #include "./platform.h"
 #include "./extern-c.h"

@@ -6,7 +6,6 @@
 #define	aclutil_fnctx_h
 
 #include <ae2f/pat/vec.auto.h>
-#include <ae2f/c90/StdInt.h>
 #include <ae2f/cc.h>
 
 #include "./wrd.h"

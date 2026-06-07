@@ -158,7 +158,7 @@ ae2f_inline_f static ae2f_ccconst struct aclutil_ltrl_eval_t	s_eval2_ltrl(
 #undef	EXPR_TWO
 }
 
-ae2f_inline_f static aclspv_wrd_t s_decide_cast(const enum ACLSPV_ID_ c_id0, const enum ACLSPV_ID_ c_id1, const h_aclspv_ctx_t h_ctx) {
+static aclspv_wrd_t s_decide_cast(const enum ACLSPV_ID_ c_id0, const enum ACLSPV_ID_ c_id1, const h_aclspv_ctx_t h_ctx) {
 	/** one is 0? */
 	unless(c_id0 && c_id1)
 		return ae2f_bll_sel_bool_naive1(B_id_default_t, c_id0, (B_id_default_t) c_id0, (B_id_default_t) c_id1);
@@ -424,7 +424,7 @@ aclexpr_carve_lbl_t aclexpr_carve_op2_arithmetic(
 			, _aclspv_memcpy
 			, L_new
 			, TMPL_SECTION
-			, (size_t)aclutil_count_to_sz(TMPL_COUNT + 6 - (rdwr_prv_extra->m_mask_literal == ACLUTIL_LITERAL_RT))
+			, (size_t)aclutil_count_to_sz(TMPL_COUNT + 6u - (aclspv_wrd_t)(rdwr_prv_extra->m_mask_literal == (aclspv_wrd_t)ACLUTIL_LITERAL_RT))
 			);
 
 	ae2f_ifezerr(TMPL_SECTION.m_p) {
@@ -436,11 +436,11 @@ aclexpr_carve_lbl_t aclexpr_carve_op2_arithmetic(
 		aclspv_wrd_t	CI = 6 - (!rdwr_prv_extra->m_mask_literal);
 		while(CI --> 0) {
 			aclutil_get_wrd_of_vec(&TMPL_SECTION)[TMPL_COUNT + CI]
-				= rdwr_lst_scale_buf[1 + (!rdwr_prv_extra->m_mask_literal) + CI];
+				= rdwr_lst_scale_buf[1u + (!rdwr_prv_extra->m_mask_literal) + CI];
 		}
 	}
 
-	TMPL_COUNT += 6 - (rdwr_prv_extra->m_mask_literal == ACLUTIL_LITERAL_RT);
+	TMPL_COUNT += 6u - (aclspv_wrd_t)(rdwr_prv_extra->m_mask_literal == ACLUTIL_LITERAL_RT);
 
 	if(rdwr_lst_extra->m_state0 & (aclspv_wrd_t)ACLEXPR_OPCFGX_STATE0_ASSIGN) {
 		CXCursor	CASSIGN		= rdwr_lst_extra->m_cursor;

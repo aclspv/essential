@@ -23,8 +23,6 @@
 #include <aclattr/storage_class.h>
 
 #include <ae2f/Keys.h>
-#include <ae2f/c90/StdBool.h>
-#include <ae2f/c90/StdInt.h>
 
 static enum CXChildVisitResult	s_attr_set(CXCursor h_cur, CXCursor h_parent, CXClientData ae2f_restrict h_data) {
 	CXString TEXT;

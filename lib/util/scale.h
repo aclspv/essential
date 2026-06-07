@@ -6,7 +6,6 @@
 #ifndef pass_scale_h
 #define pass_scale_h
 
-#include <ae2f/c90/StdInt.h>
 #include <assert.h>
 
 #include <.aclspv/vec.h>
