@@ -7,6 +7,7 @@
 #define aclspv_spvty_h
 
 #include <aclspv.h>
+#include <ae2f/c90/stdint/shorten.h>
 
 /**
  * @typedef	aclspv_opcode_t

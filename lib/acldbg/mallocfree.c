@@ -13,7 +13,7 @@ static	unsigned s_malloc_count = 0;
 ae2f_retnew1(aclspv_free) void*	aclspv_malloc(size_t c_sz) {
 	void* R = calloc(1, c_sz);
 
-#ifndef	DBG
+#if	DBG
 	if(R) ++s_malloc_count;
 #endif
 
@@ -33,7 +33,7 @@ ae2f_retnew1(aclspv_free) void*	aclspv_malloc(size_t c_sz) {
 void  aclspv_free(void* c_ptr, const ae2f_unused size_t c_sz) {
 	dbg_prefix(a);
 
-#ifndef	DBG
+#if DBG
 	if(c_ptr) --s_malloc_count;
 #endif
 

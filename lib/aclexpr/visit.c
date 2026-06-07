@@ -6,7 +6,6 @@
 
 #include <ae2f/cc/memset.h>
 
-#include "./visit.h"
 #include "./carve.h"
 
 #include "./visit/api.h"
@@ -14,9 +13,13 @@
 #include "./visit/op1/arithmetic_cast.h"
 #include "./visit/op1/incr.h"
 #include "./visit/op2/arithmetic.h"
+#include "./visit/op2/assign.h"
+#include "./visit/op2/bitwise.h"
 
 enum {
 	OP2_ARITHMETIC,
+	OP2_BITWISE,
+	OP2_ASSIGN,
 	OP1_ARITHMETIC_CAST,
 	OP1_INCR,
 	OP0_,
@@ -206,7 +209,6 @@ enum CXChildVisitResult aclexpr_visit(
 				*RET_LITERAL = LST_EXTRA[GETLASTEL_CMDCOUNTERSTCK(i).m_count_oprnd].m_literal; 
 			}
 
-			LST_SCALE_BUF[ACLEXPR_OPBINCFG_MASKLITERAL] &= LST_EXTRA[GETLASTEL_CMDCOUNTERSTCK(a).m_count_oprnd].m_mask_literal;
 			IS_NOT_CONSTANT &= LST_EXTRA[GETLASTEL_CMDCOUNTERSTCK(a).m_count_oprnd].m_mask_literal;
 
 			LST_SCALE_BUF[ACLEXPR_OPBINCFG_END + GETLASTEL_CMDCOUNTERSTCK(i).m_count_oprnd] = ID_REQ;
@@ -215,9 +217,9 @@ enum CXChildVisitResult aclexpr_visit(
 			(void)(EXPRSTCK_COUNT && --EXPRSTCK_COUNT);
 			(void)(LST_SCALE->m_id && ++GETLASTEL_CMDCOUNTERSTCK(a).m_count_oprnd);
 
-			while(LST_SCALE->m_id && GETLASTEL_CMDCOUNTERSTCK().m_count_oprnd == LST_SCALE_BUF[0]) {
+			while(LST_SCALE->m_id && GETLASTEL_CMDCOUNTERSTCK().m_count_oprnd == LST_SCALE_BUF[ACLEXPR_OPBINCFG_NUMOPRND]) {
 				aclexpr_opbincfg_extra	EXTRA_PRV;
-				aclspv_wrd_t	IDVAL_PRV;
+				aclspv_wrd_t	IDVAL_PRV = 0;
 
 				ae2fcc_memset(&EXTRA_PRV, 0, sizeof(aclexpr_opbincfg_extra));
 
@@ -249,16 +251,23 @@ enum CXChildVisitResult aclexpr_visit(
 							rdwr_data
 							, &IDVAL_PRV
 							, &EXTRA_PRV))
-					return CXChildVisit_Break; 
+					return CXChildVisit_Break;
+
+				ae2f_ifezerr(IDVAL_PRV) {
+					CTX->m_err = CTX->m_err ? CTX->m_err : ACLSPV_COMPILE_UNHANDLED_VISIT;
+					return CXChildVisit_Break;
+				}
 
 				del_scale_from_vec_last(&CMDSTCK_SCALE);
-				(void)(NUM_CMDCOUNTERSTCK && --NUM_CMDCOUNTERSTCK);
+
+				ae2f_ifezerr(NUM_CMDCOUNTERSTCK) {
+					err_puts("[visit] command counter stack has been broken.");
+					return CXChildVisit_Break;
+				} (void)--NUM_CMDCOUNTERSTCK;
 
 				LST_SCALE		= get_last_scale_from_vec(&CMDSTCK_SCALE);
 				LST_SCALE_BUF		= get_buf_from_scale2(aclspv_wrd_t, &CMDSTCK_SCALE, *LST_SCALE);
-
-				LST_EXTRA
-					= (void* ae2f_restrict)(&LST_SCALE_BUF[(ACLEXPR_OPBINCFG_END + LST_SCALE_BUF[0])]);
+				LST_EXTRA		= (void* ae2f_restrict)(&LST_SCALE_BUF[(ACLEXPR_OPBINCFG_END + LST_SCALE_BUF[0])]);
 
 				LST_EXTRA[GETLASTEL_CMDCOUNTERSTCK().m_count_oprnd] = EXTRA_PRV;
 				ID_REQ = LST_SCALE_BUF[GETLASTEL_CMDCOUNTERSTCK(a).m_count_oprnd + ACLEXPR_OPBINCFG_END] = IDVAL_PRV;
@@ -288,6 +297,32 @@ enum CXChildVisitResult aclexpr_visit(
 						, &CMDSTCK_SCALE
 						, cgcase(OP_RECURSE)
 						, cgcase(OP_FAIL)
+						, cgcase(OP2_BITWISE)
+						));
+		}
+
+		cgcsdef(OP2_BITWISE):
+		{
+			dbg_puts("[visit] OP2_BITWISE");
+			N_OPRND_TMP = 2;
+			cgjmp(aclexpr_visit_op2_bitwise(
+						h_cur, CTX
+						, &CMDSTCK_SCALE
+						, cgcase(OP_RECURSE)
+						, cgcase(OP_FAIL)
+						, cgcase(OP2_ASSIGN)
+						));
+		}
+
+		cgcsdef(OP2_ASSIGN):
+		{
+			dbg_puts("[visit] OP2_ASSIGN");
+			N_OPRND_TMP = 2;
+			cgjmp(aclexpr_visit_op2_assign(
+						h_cur, CTX
+						, &CMDSTCK_SCALE
+						, cgcase(OP_RECURSE)
+						, cgcase(OP_FAIL)
 						, cgcase(OP1_ARITHMETIC_CAST)
 						));
 		}
@@ -307,7 +342,7 @@ enum CXChildVisitResult aclexpr_visit(
 
 		cgcsdef(OP1_INCR):
 		{
-			dbg_puts("[visit] OP1_ARITHMETIC_CAST");
+			dbg_puts("[visit] OP1_INCR");
 			N_OPRND_TMP = 1;
 			cgjmp(aclexpr_visit_op1_incr(
 						h_cur, CTX

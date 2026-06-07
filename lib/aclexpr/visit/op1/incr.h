@@ -10,6 +10,8 @@
 #include <aclexpr/visit/api.h>
 #include <aclexpr/op.h>
 
+#include <ae2f/cc/memset.h>
+
 ae2f_inline_f static aclexpr_visit_lbl_t aclexpr_visit_op1_incr(
 		const CXCursor				c_cur,
 		const h_aclspv_ctx_t			h_ctx, 
@@ -34,11 +36,12 @@ ae2f_inline_f static aclexpr_visit_lbl_t aclexpr_visit_op1_incr(
 	switch((uint_leastenum_t)clang_getCursorUnaryOperatorKind(c_cur)) {
 		default:
 			return c_lbl_pass;
+
 		case CXUnaryOperator_PostDec:
-			OPCODE = ACLEXPR_OP1_POSTDEG;
+			OPCODE = ACLEXPR_OP1_POSTDEC;
 			break;
 		case CXUnaryOperator_PreDec:
-			OPCODE = ACLEXPR_OP1_PREDEG;
+			OPCODE = ACLEXPR_OP1_PREDEC;
 			break;
 		case CXUnaryOperator_PostInc:
 			OPCODE = ACLEXPR_OP1_POSTINC;
@@ -53,7 +56,7 @@ ae2f_inline_f static aclexpr_visit_lbl_t aclexpr_visit_op1_incr(
 	NEW_SCALE = mk_scale_from_vec(
 			h_cmdscale
 			, 
-			aclutil_count_to_sz(ACLEXPR_OPBINCFG_END + 2)
+			aclutil_count_to_sz(ACLEXPR_OPBINCFG_END + 1)
 			+ (sizeof(aclexpr_opbincfg_extra) * 1)
 			);
 	ae2f_expected_but_else(NEW_SCALE)
@@ -66,7 +69,9 @@ ae2f_inline_f static aclexpr_visit_lbl_t aclexpr_visit_op1_incr(
 
 	VEC[ACLEXPR_OPBINCFG_NUMOPRND]		= 1;
 	VEC[ACLEXPR_OPBINCFG_OPCODE]		= OPCODE;
-	VEC[ACLEXPR_OPBINCFG_MASKLITERAL]	= ACLUTIL_LITERAL_MASK_LITERAL;
+	VEC[ACLEXPR_OPBINCFG_END]		= 0;
+
+	ae2fcc_memset(&VEC[ACLEXPR_OPBINCFG_END + 1], 0, sizeof(aclexpr_opbincfg_extra));
 
 	return c_lbl_success;
 }

@@ -6,21 +6,21 @@
 #include <ae2f/pat/macrofunc.h>
 
 #if	ae2f_cgoto_available
-#define	CASE(L, A)		L##A
+#define	aclutil_vcopr_case(L, A)		L##A
 
-#define	LBLDECL(L)		\
+#define	aclutil_vcopr_lbldcl(L)		\
 	void*	L##LBL[]	= { &&L##0, &&L##1, &&L##2, &&L##3, &&L##4, &&L##5, &&L##6, &&L##7 }
 
-#define	SWITCH(L, A)	ae2f_cgoto_beg(); { LBLDECL(L); goto *L##LBL[A]; } ae2f_cgoto_end();
-#define	FALLTHROUGH
-#define	DEFAULT
+#define	aclutil_vcopr_swtch(L, A)	ae2f_cgoto_beg(); { aclutil_vcopr_lbldcl(L); goto *L##LBL[A]; } ae2f_cgoto_end();
+#define	aclutil_vcopr_fall
+#define	aclutil_vcopr_default
 
 #else
-#define	CASE(L, A)		case A
-#define	SWITCH(L, A)	switch(A)
-#define	FALLTHROUGH	ae2f_fallthrough
-#define	DEFAULT		default: ae2f_unreachable(); return
-#define	LBLDECL(L)
+#define	aclutil_vcopr_case(L, A)		case A
+#define	aclutil_vcopr_swtch(L, A)	switch(A)
+#define	aclutil_vcopr_fall	ae2f_fallthrough
+#define	aclutil_vcopr_default		default: ae2f_unreachable(); return
+#define	aclutil_vcopr_lbldcl(L)
 #endif
 
 #if	!__ae2f_MACRO_GENERATED
@@ -45,18 +45,18 @@ ae2f_MAC((L, k_oper, k_oper_inc, )) aclutil_vcopr_v(
 		const aclspv_wrd_t* ae2f_restrict	L$$SRC	= (rd);
 		aclspv_wrd_t* ae2f_restrict		L$$DST	= (r);
 
-		SWITCH(L, (c) & 7) {
-			DEFAULT;
+		aclutil_vcopr_swtch(L, (c) & 7) {
+			aclutil_vcopr_default;
 
 			do {
-				CASE(L, 0): *L$$DST k_oper_inc k_oper *L$$SRC k_oper_inc; FALLTHROUGH;
-				CASE(L, 7): *L$$DST k_oper_inc k_oper *L$$SRC k_oper_inc; FALLTHROUGH;
-				CASE(L, 6): *L$$DST k_oper_inc k_oper *L$$SRC k_oper_inc; FALLTHROUGH;
-				CASE(L, 5): *L$$DST k_oper_inc k_oper *L$$SRC k_oper_inc; FALLTHROUGH;
-				CASE(L, 4): *L$$DST k_oper_inc k_oper *L$$SRC k_oper_inc; FALLTHROUGH;
-				CASE(L, 3): *L$$DST k_oper_inc k_oper *L$$SRC k_oper_inc; FALLTHROUGH;
-				CASE(L, 2): *L$$DST k_oper_inc k_oper *L$$SRC k_oper_inc; FALLTHROUGH;
-				CASE(L, 1): *L$$DST k_oper_inc k_oper *L$$SRC k_oper_inc;
+				aclutil_vcopr_case(L, 0): *L$$DST k_oper_inc k_oper *L$$SRC k_oper_inc; aclutil_vcopr_fall;
+				aclutil_vcopr_case(L, 7): *L$$DST k_oper_inc k_oper *L$$SRC k_oper_inc; aclutil_vcopr_fall;
+				aclutil_vcopr_case(L, 6): *L$$DST k_oper_inc k_oper *L$$SRC k_oper_inc; aclutil_vcopr_fall;
+				aclutil_vcopr_case(L, 5): *L$$DST k_oper_inc k_oper *L$$SRC k_oper_inc; aclutil_vcopr_fall;
+				aclutil_vcopr_case(L, 4): *L$$DST k_oper_inc k_oper *L$$SRC k_oper_inc; aclutil_vcopr_fall;
+				aclutil_vcopr_case(L, 3): *L$$DST k_oper_inc k_oper *L$$SRC k_oper_inc; aclutil_vcopr_fall;
+				aclutil_vcopr_case(L, 2): *L$$DST k_oper_inc k_oper *L$$SRC k_oper_inc; aclutil_vcopr_fall;
+				aclutil_vcopr_case(L, 1): *L$$DST k_oper_inc k_oper *L$$SRC k_oper_inc;
 			} while(--L$$N8 > 0);
 		}
 	}

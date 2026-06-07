@@ -1,6 +1,8 @@
 /** @file cursor.c */
 
 #include <ae2f/bll.h>
+#include <ae2f/cc/memset.h>
+
 #include <util/cursor.h>
 #include <assert.h>
 #include "./emitx.h"
@@ -35,7 +37,6 @@ aclspv_wrdcount_t aclutil_mk_cursor_base(
 				);
 
 	{
-		CXCursor		CUR_DUMMY;
 		const aclspv_wrdcount_t IDX 
 			= aclutil_find_cursor(
 					c_num_cursor
@@ -65,13 +66,14 @@ aclspv_wrdcount_t aclutil_mk_cursor_base(
 					);
 		}
 
-		*ae2f_bll_sel_ptrbool1(
-				CXCursor* ae2f_restrict
-				, ae2f_expected(h_cursors->m_p)
-				, &((aclutil_cursor* ae2f_restrict)h_cursors->m_p)[c_num_cursor].m_cursor
-				, &CUR_DUMMY) = c_cursor_to_add;
+		ae2f_ifezerr(h_cursors->m_p) return c_num_cursor + 1;
 
-		return c_num_cursor + (!h_cursors->m_p);
+		ae2fcc_memset(&((aclutil_cursor* ae2f_restrict)h_cursors->m_p)[c_num_cursor], 0, sizeof(aclutil_cursor));
+
+		((aclutil_cursor* ae2f_restrict)h_cursors->m_p)[c_num_cursor].m_cursor
+			= c_cursor_to_add;
+
+		return c_num_cursor ;
 	}}
 
 enum ACLSPV_COMPILE_ aclutil_tell_cursor_lbl(

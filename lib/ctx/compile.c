@@ -1,4 +1,3 @@
-#include "ae2f/c90/StdInt/enum.h"
 #include <aclspv.h>
 
 #include <util/entp.h>
@@ -283,8 +282,7 @@ ae2f_extern ACLSPV_ABI_DECL enum ACLSPV_COMPILE_ aclspv_ctx_compile2(
 	}
 
 	ae2f_ifezerr(CXTU)		return h_ctx->m_err = ACLSPV_COMPILE_ERR_CXTU;
-
-	h_ctx->m_err = aclspv_ctx_compile1(h_ctx, CXTU);
+	ae2f_ifeznrm(h_ctx->m_err)	h_ctx->m_err = aclspv_ctx_compile1(h_ctx, CXTU);
 	clang_disposeTranslationUnit(CXTU);
 
 	return h_ctx->m_err;

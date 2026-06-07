@@ -5,13 +5,16 @@
 
 
 #include <ae2f/Keys.h>
-#include <ae2f/c90/StdInt.h>
-
+#include "./wrd.h"
 #include "./id.h"
 
 
 enum ACLUTIL_CV_NBYTE_ { ACLUTIL_CV_NBYTE_1, ACLUTIL_CV_NBYTE_2, ACLUTIL_CV_NBYTE_4, ACLUTIL_CV_NBYTE_8, ACLUTIL_CV_NBYTE_MAX };
 enum ACLUTIL_CV_TY_ { ACLUTIL_CV_TY_SIGNED, ACLUTIL_CV_TY_UNSIGNED, ACLUTIL_CV_TY_FLT, ACLUTIL_CV_TY_MAX };
+
+typedef struct {
+	aclspv_id_t	m_val, m_ty;
+} aclutil_specconstant_val_t;
 
 typedef struct {
 	aclspv_wrd_t		m_key_0;
@@ -21,8 +24,8 @@ typedef struct {
 	aclspv_id_t		m_const_ids[ACLUTIL_CV_NBYTE_MAX][ACLUTIL_CV_TY_MAX];
 
 	aclspv_id_t		m_const_val_bool;
-	aclspv_id_t		m_const_spec_id;
-	enum ACLSPV_ID_		m_const_spec_type;
+
+	aclutil_specconstant_val_t	m_spec_constant;
 
 	aclspv_id_t		m_repvec;
 	aclspv_wrd_t		m_repvec_literal_mask;
@@ -38,6 +41,18 @@ aclspv_id_t aclutil_mk_constant_val_id1(
 		enum ACLUTIL_CV_TY_	c_idx_ty
 		);
 
+aclutil_specconstant_val_t ae2f_ccpure aclutil_get_specconstant_val_id(
+		h_aclspv_ctx_t		h_ctx,
+		aclspv_wrd_t		c_idx_specconst
+		);
+
+aclutil_specconstant_val_t aclutil_mk_specconstant_val_id(
+		const u64_least		c_val,
+		h_aclspv_ctx_t		h_ctx,
+		enum ACLUTIL_CV_NBYTE_	c_idx_nbyte,
+		enum ACLUTIL_CV_TY_	c_idx_ty,
+		aclspv_wrd_t		c_idx_specconst
+		);
 
 aclspv_id_t aclutil_mk_constant_bool_id(
 		const aclspv_bool_t c_val,
@@ -69,6 +84,12 @@ aclspv_id_t aclutil_mk_constant_val_f64_id(
 
 aclspv_id_t	aclutil_mk_constant_spec_id(
 		const aclspv_wrd_t c_key, const aclspv_wrd_t c_val, 
+		h_aclspv_ctx_t h_ctx
+		);
+
+aclspv_id_t aclutil_mk_specconstant_bool_id(
+		const aclspv_wrd_t	c_idx_spec,
+		const aclspv_bool_t	c_val,
 		h_aclspv_ctx_t h_ctx
 		);
 
@@ -162,6 +183,36 @@ ae2f_unused ae2f_inline_f static aclspv_id_t	aclutil_mk_constant_val_by_enum(con
 
 		case ACLSPV_ID_BOOL: return aclutil_mk_constant_bool_id((aclspv_bool_t)c_val, h_ctx);
 
+		default:
+			return 0;
+	}
+}
+
+ae2f_unused ae2f_inline_f static aclspv_id_t	aclutil_mk_specconstant_val_by_enum(
+		const aclspv_wrd_t c_key,
+		const u64_least c_val,
+		h_aclspv_ctx_t h_ctx,
+		enum ACLSPV_ID_ c_ty
+		) {
+	switch((uint_leastenum_t)c_ty) {
+#define	CASE_NUM(k, nbyte, ty)	case (k): return	\
+		aclutil_mk_specconstant_val_id(c_val, h_ctx, (nbyte), (ty), c_key).m_val
+
+		CASE_NUM(ACLSPV_ID_I8, ACLUTIL_CV_NBYTE_1, ACLUTIL_CV_TY_SIGNED);
+		CASE_NUM(ACLSPV_ID_I16, ACLUTIL_CV_NBYTE_2, ACLUTIL_CV_TY_SIGNED);
+		CASE_NUM(ACLSPV_ID_I32, ACLUTIL_CV_NBYTE_4, ACLUTIL_CV_TY_SIGNED);
+		CASE_NUM(ACLSPV_ID_I64, ACLUTIL_CV_NBYTE_8, ACLUTIL_CV_TY_SIGNED);
+
+		CASE_NUM(ACLSPV_ID_U8, ACLUTIL_CV_NBYTE_1, ACLUTIL_CV_TY_UNSIGNED);
+		CASE_NUM(ACLSPV_ID_U16, ACLUTIL_CV_NBYTE_2, ACLUTIL_CV_TY_UNSIGNED);
+		CASE_NUM(ACLSPV_ID_U32, ACLUTIL_CV_NBYTE_4, ACLUTIL_CV_TY_UNSIGNED);
+		CASE_NUM(ACLSPV_ID_U64, ACLUTIL_CV_NBYTE_8, ACLUTIL_CV_TY_UNSIGNED);
+
+		CASE_NUM(ACLSPV_ID_F16, ACLUTIL_CV_NBYTE_2, ACLUTIL_CV_TY_FLT);
+		CASE_NUM(ACLSPV_ID_F32, ACLUTIL_CV_NBYTE_4, ACLUTIL_CV_TY_FLT);
+		CASE_NUM(ACLSPV_ID_F64, ACLUTIL_CV_NBYTE_8, ACLUTIL_CV_TY_FLT);
+
+#undef	CASE_NUM
 		default:
 			return 0;
 	}

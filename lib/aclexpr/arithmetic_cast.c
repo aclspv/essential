@@ -99,7 +99,7 @@ static enum ACLEXPR_RET_ s_non_literal_novec(
 
 	if (aclid_is_int(c_old_type) && aclid_is_int(c_new_type)) {
 		const aclspv_wrd_t
-			IS_UNSIGNED = aclid_is_unsigned(c_new_type);
+			IS_UNSIGNED = aclid_is_uint(c_new_type);
 
 		const aclspv_wrd_t
 			OPCODE = ae2f_bll_sel_bool1(
@@ -580,8 +580,16 @@ enum ACLEXPR_RET_ aclexpr_arithmetic_cast_literal(
 		*r_newid = ID_RET;
 		return ACLEXPR_RET_SUCCESS_LITERAL;
 
+		case ACLSPV_ID_BOOL:
+		ae2f_ifezerr(ID_RET = aclutil_mk_constant_bool_id((aclspv_wrd_t)!!RESULT.m_api_uintmax, h_ctx))
+			return ACLEXPR_RET_FAILURE;
+
+		*r_newid = ID_RET;
+		return ACLEXPR_RET_SUCCESS_LITERAL;
+
 		default:
-		fixme_puts("Type not found");
+		err_prefix();
+		err_call(, fprintf(stderr, "Type not found %u\n", (unsigned)c_new_type));
 		return ACLEXPR_RET_FAILURE;
 	}
 

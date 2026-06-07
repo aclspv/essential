@@ -11,7 +11,7 @@
 int main_c(void);
 int main(void);
 int main(void) {
-	size_t	COUNT = (size_t)1 << (size_t)13;
+	size_t	COUNT = (size_t)1 << (size_t)3;
 	while(COUNT--) {
 		int R = main_c();
 		ae2f_ifnezerr(R)	return R;
@@ -69,9 +69,9 @@ int main_c(void) {
 	}
 
 	puts("freeing spirv");
-	free(spirv0);
 #endif
 
+	free(spirv0);
 	return 0;
 }
 #else

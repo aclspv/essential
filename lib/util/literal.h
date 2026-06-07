@@ -29,7 +29,7 @@ typedef union {
 
 struct aclutil_ltrl_eval_t {
 	aclutil_literal	m_ret;
-	int		m_found;
+	aclspv_bool_t	m_found;
 };
 
 

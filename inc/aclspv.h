@@ -42,7 +42,8 @@
 #define	ACLSPV_ABI_IMPL	
 #define	ACLSPV_ABI_DECL	ACLSPV_ABI_LINK
 
-#include <ae2f/c90/StdInt.h>
+#include <ae2f/c90/stdint.h>
+#include <ae2f/c90/stdint/enum.h>
 #include <stddef.h>
 
 /**
@@ -129,6 +130,7 @@ typedef enum ACLSPV_COMPILE_ {
 	ACLSPV_COMPILE_UNHANDLED_BODY,
 	ACLSPV_COMPILE_UNHANDLED_WHILE,
 	ACLSPV_COMPILE_UNHANDLED_VISIT,
+	ACLSPV_COMPILE_UNHANDLED_CARVE,
 
 	ACLSPV_COMPILE_DIAG_FTAL,
 	ACLSPV_COMPILE_DIAG_ERR

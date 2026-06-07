@@ -45,14 +45,14 @@ ACLSPV_ABI_IMPL enum CXChildVisitResult aclemit_iter_entry_point(CXCursor h_cur,
 
 #define	S_GETSPECID(K_idx)										\
 			if(XYZ.m_flag_specid & (1 << K_idx)) {						\
-				aclutil_constant* nd = aclutil_mk_constant_node(XYZ.m_##K_idx, CTX);	\
-				ae2f_ifezerr(nd) goto LBL_ABRT;						\
-				if(nd->m_const_spec_id) {						\
-					ae2f_ifezerr_strict(aclid_is_int((B_id_default_t) nd->m_const_spec_type)) {	\
+				aclutil_specconstant_val_t nd = aclutil_get_specconstant_val_id(CTX, XYZ.m_##K_idx);	\
+				ae2f_ifezerr(nd.m_val) goto LBL_ABRT;						\
+				if(nd.m_val) {								\
+					ae2f_ifezerr_strict(aclid_is_int((B_id_default_t) nd.m_ty)) {	\
 						CTX->m_err = ACLSPV_COMPILE_WORKGROUP_SIZE_NO_INT;	\
 						goto LBL_ABRT;						\
 					}								\
-					XYZ.m_##K_idx	= nd->m_const_spec_id;				\
+					XYZ.m_##K_idx	= nd.m_val;					\
 				} else {								\
 					ae2f_ifezerr(XYZ.m_##K_idx = aclutil_mk_constant_spec_id(	\
 								XYZ.m_##K_idx, 1, CTX)) {		\
@@ -60,11 +60,11 @@ ACLSPV_ABI_IMPL enum CXChildVisitResult aclemit_iter_entry_point(CXCursor h_cur,
 						goto LBL_ABRT;						\
 					}								\
 				}									\
-			} else ae2f_ifezerr(aclutil_mk_constant_val_id(	\
-						(uint_least64_t)XYZ.m_0	\
-						, CTX)) {	\
-				CTX->m_err = ACLSPV_COMPILE_ALLOC_FAILED;	\
-				goto LBL_ABRT;	\
+			} else ae2f_ifezerr(aclutil_mk_constant_val_id(					\
+						(uint_least64_t)XYZ.m_0					\
+						, CTX)) {						\
+				CTX->m_err = ACLSPV_COMPILE_ALLOC_FAILED;				\
+				goto LBL_ABRT;								\
 			}
 
 			if(XYZ.m_flag_specid) {

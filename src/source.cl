@@ -31,7 +31,7 @@ kernel_raw(5) void N_KERNEL_0(
 
         ) {
     btcast float a0 = 1078774989;
-    char a1 specid(0);
+    int a1 specid(0) = 3;
     int a2 = a0 + (a0 += a1);
     btcast long a = (double)(int)(float)(a0 + a1 + a2);
 
@@ -49,7 +49,7 @@ kernel_raw(5) void N_KERNEL_0(
     }
 
     a2 += 8;
-    a2 += 7.;
+    a2 = 7;
 #endif
 
     goto GOTO;

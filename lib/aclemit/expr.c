@@ -47,9 +47,8 @@ enum ACLEXPR_RET_ aclspv_get_expr2(
 	ae2fpat_assertassume(!get_last_scale_from_vec(&h_ctx->m_tmp.m_v1)->m_id);
 
 	SCALE_BOOT[ACLEXPR_OPBINCFG_NUMOPRND]		= 1;
-	SCALE_BOOT[ACLEXPR_OPBINCFG_MASKLITERAL]		= ACLUTIL_LITERAL_MASK_LITERAL;
 	SCALE_BOOT[ACLEXPR_OPBINCFG_RESTYID]		= 0;
-	SCALE_BOOT[ACLEXPR_OPBINCFG_RESID]			= 0;
+	SCALE_BOOT[ACLEXPR_OPBINCFG_RESID]		= 0;
 	SCALE_BOOT[ACLEXPR_OPBINCFG_OPCODE]		= 0;
 #define INIT_EXTRA ((aclexpr_opbincfg_extra* ae2f_restrict)(void* ae2f_restrict)(&SCALE_BOOT[ACLEXPR_OPBINCFG_END + 1]))
 
@@ -121,7 +120,6 @@ enum ACLEXPR_RET_ aclexpr_eval_btcast(
 	ae2fpat_assertassume_strict(!get_last_scale_from_vec(&h_ctx->m_tmp.m_v1)->m_id);
 
 	SCALE_BOOT[ACLEXPR_OPBINCFG_NUMOPRND]		= 1;
-	SCALE_BOOT[ACLEXPR_OPBINCFG_MASKLITERAL]		= ACLUTIL_LITERAL_MASK_LITERAL;
 	SCALE_BOOT[ACLEXPR_OPBINCFG_RESTYID]		= 0;
 	SCALE_BOOT[ACLEXPR_OPBINCFG_RESID]			= 0;
 	SCALE_BOOT[ACLEXPR_OPBINCFG_OPCODE]		= 0;
@@ -179,11 +177,11 @@ enum ACLEXPR_RET_ aclexpr_eval_btcast(
 
 	/** NON-LITERAL */
 	{
-		const aclspv_id_t	TYPE_SRC = aclid_getty_unsigned(
+		const aclspv_id_t	TYPE_SRC = aclid_getty_uint(
 				aclid_get_bit_width(DATA.m_tyid_current)
 				);
 
-		const aclspv_id_t	TYPE_DST = aclid_getty_unsigned(aclid_get_bit_width(c_type_req));
+		const aclspv_id_t	TYPE_DST = aclid_getty_uint(aclid_get_bit_width(c_type_req));
 
 		const aclspv_id_t	VAL_SRC = h_ctx->m_id;
 		typedef const aclspv_id_t* ae2f_restrict ptr_id_t;
@@ -237,7 +235,7 @@ enum ACLEXPR_RET_ aclexpr_eval_btcast(
 				break;
 		}
 
-		ae2fpat_assertassume(aclid_is_unsigned(TYPE_DST));
+		ae2fpat_assertassume(aclid_is_uint(TYPE_DST));
 
 		unless(aclid_is_int(c_type_req)) {
 			ae2f_expected_but_else(h_ctx->m_count.m_fnimpl = aclutil_emitx_4(
@@ -301,7 +299,6 @@ enum ACLEXPR_RET_ aclexpr_eval(
 	ae2fpat_assertassume_strict(!get_last_scale_from_vec(&h_ctx->m_tmp.m_v1)->m_id);
 
 	SCALE_BOOT[ACLEXPR_OPBINCFG_NUMOPRND]		= 1;
-	SCALE_BOOT[ACLEXPR_OPBINCFG_MASKLITERAL]		= ACLUTIL_LITERAL_MASK_LITERAL;
 	SCALE_BOOT[ACLEXPR_OPBINCFG_RESTYID]		= 0;
 	SCALE_BOOT[ACLEXPR_OPBINCFG_RESID]			= 0;
 	SCALE_BOOT[ACLEXPR_OPBINCFG_OPCODE]		= 0;

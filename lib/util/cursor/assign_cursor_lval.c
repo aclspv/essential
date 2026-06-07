@@ -68,7 +68,7 @@ aclspv_id_t aclutil_assign_cursor_lval(
 							, wr_cursor->m_data.m_vardecl.m_init_val
 							));
 
-				goto LBL_RETNOLBL;
+				return wr_cursor->m_data.m_vardecl.m_init_val;
 		}
 	}
 
@@ -106,7 +106,7 @@ aclspv_id_t aclutil_assign_cursor_lval(
 	}
 
 	if((*wr_cursor).m_data.m_vardecl.m_mask & ACLUTIL_CURSOR_VAR_PREDICTABLE) {
-		goto LBL_RETNOLBL;
+		return (*wr_cursor).m_data.m_vardecl.m_init_val;
 	}
 
 	(*wr_cursor).m_data.m_vardecl.m_mask	 |= ACLUTIL_CURSOR_VAR_PREDICTABLE;
@@ -135,6 +135,5 @@ aclspv_id_t aclutil_assign_cursor_lval(
 		clang_disposeString(SPL);
 	}
 
-LBL_RETNOLBL:
 	return (*wr_cursor).m_data.m_vardecl.m_init_val;
 }

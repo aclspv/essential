@@ -140,7 +140,10 @@ ae2f_inline_f static aclexpr_visit_lbl_t aclexpr_visit_op0_val(
 			} assert(0); ae2f_unreachable();
 
 		case CXCursor_DeclRefExpr:
-			{
+			if(rdwr_extra->m_state0 & ACLEXPR_OPCFGX_STATE0_VAL_NO_NEED) {
+				dbg_puts("[visit0::val value not needed]");
+				return c_lbl_success;
+			} else {
 				const CXCursor DECL = clang_getCursorReferenced(c_cur);
 				const aclspv_wrd_t	DECL_IDX = aclutil_find_cursor(
 						h_ctx->m_num_cursor
@@ -157,21 +160,37 @@ ae2f_inline_f static aclexpr_visit_lbl_t aclexpr_visit_op0_val(
 				unless(aclid_is_arithmetic(DECL_INFO.m_data.m_vardecl.m_type_id, h_ctx)) {
 					err_prefix(a);
 					err_call((void), (fprintf(stderr
-									, "[visit::0::val] type(%u) is no arithmetic [NOIMPL]\n"
+									, "[visit0::val] type(%u) is no arithmetic [NOIMPL]\n"
 									, DECL_INFO.m_data.m_vardecl.m_type_id))
 						);
 					return c_lbl_fail;
 				}
 
 				*wr_type_fetched = DECL_INFO.m_data.m_vardecl.m_type_id;
+				*rwr_literal = DECL_INFO.m_data.m_vardecl.m_literal;
+
+				dbg_prefix();
+				dbg_call(, fprintf(stderr, "[visit0::val] lval cache check %u value %u idx %u before\n"
+							, (unsigned)!!(DECL_INFO.m_data.m_vardecl.m_mask 
+								& (aclspv_wrd_t)ACLUTIL_CURSOR_VAR_PREDICTABLE)
+							, (unsigned)*wr_newid
+							, (unsigned)DECL_IDX));
+
 				ae2f_ifezerr(*wr_newid = aclutil_assign_cursor_lval(
 							&DECL_INFO, h_ctx
 							, 0, 0
-							, 0, 0
+							, 3, 0
 							, rwr_literal))
 					return c_lbl_fail;
 
-				rdwr_extra->m_mask_literal &= ((ACLUTIL_CURSOR_VAR_LITERAL) & DECL_INFO.m_data.m_vardecl.m_mask);
+				dbg_prefix();
+				dbg_call(, fprintf(stderr, "[visit0::val] lval cache check %u value %u idx %u\n"
+							, (unsigned)!!(DECL_INFO.m_data.m_vardecl.m_mask 
+								& (aclspv_wrd_t)ACLUTIL_CURSOR_VAR_PREDICTABLE)
+							, (unsigned)*wr_newid
+							, (unsigned)DECL_IDX));
+
+				rdwr_extra->m_mask_literal &= ((aclspv_wrd_t)(ACLUTIL_CURSOR_VAR_LITERAL) & DECL_INFO.m_data.m_vardecl.m_mask);
 				return c_lbl_success;
 #undef	DECL_INFO
 			}

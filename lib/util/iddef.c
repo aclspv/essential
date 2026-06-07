@@ -15,7 +15,7 @@ ae2f_ccconst aclspv_bool_t aclid_is_castable1(const B_id_default_t c_id0, const 
 	return aclid_is_arithmetic(c_id0, h_ctx) && aclid_is_arithmetic(c_id1, h_ctx);
 }
 
-ae2f_ccconst aclspv_bool_t aclid_is_unsigned(const B_id_default_t c_id_default) {
+ae2f_ccconst aclspv_bool_t aclid_is_uint(const B_id_default_t c_id_default) {
 	switch(c_id_default) {
 		case ACLSPV_ID_U8:
 		case ACLSPV_ID_U16:
@@ -38,6 +38,31 @@ ae2f_ccconst aclspv_bool_t aclid_is_unsigned(const B_id_default_t c_id_default) 
 
 	ae2f_unreachable();
 }
+
+ae2f_ccconst aclspv_bool_t aclid_is_sint(const B_id_default_t c_id_default) {
+	switch(c_id_default) {
+		case ACLSPV_ID_I32:
+		case ACLSPV_ID_I8:
+		case ACLSPV_ID_I16:
+		case ACLSPV_ID_I64:
+			return 1;
+
+		case ACLSPV_ID_F16:
+		case ACLSPV_ID_F32:
+		case ACLSPV_ID_F64:
+		case ACLSPV_ID_U8:
+		case ACLSPV_ID_U16:
+		case ACLSPV_ID_U32:
+		case ACLSPV_ID_U64:
+		case ACLSPV_ID_END:
+		case ACLSPV_ID_VOID:
+		default:
+			return 0;
+	}
+
+	ae2f_unreachable();
+}
+
 
 ae2f_ccconst aclspv_bool_t aclid_is_signed(const B_id_default_t c_id_default) {
 	switch(c_id_default) {
@@ -45,11 +70,10 @@ ae2f_ccconst aclspv_bool_t aclid_is_signed(const B_id_default_t c_id_default) {
 		case ACLSPV_ID_I8:
 		case ACLSPV_ID_I16:
 		case ACLSPV_ID_I64:
-			return 1;
-
 		case ACLSPV_ID_F16:
 		case ACLSPV_ID_F32:
 		case ACLSPV_ID_F64:
+			return 1;
 		case ACLSPV_ID_U8:
 		case ACLSPV_ID_U16:
 		case ACLSPV_ID_U32:
@@ -59,12 +83,10 @@ ae2f_ccconst aclspv_bool_t aclid_is_signed(const B_id_default_t c_id_default) {
 		default:
 			return 0;
 	}
-
-	ae2f_unreachable();
 }
 
 ae2f_ccconst aclspv_bool_t aclid_is_int(const B_id_default_t c_id_default) {
-	return aclid_is_unsigned(c_id_default) | aclid_is_signed(c_id_default);
+	return aclid_is_uint(c_id_default) | aclid_is_sint(c_id_default);
 }
 
 ae2f_ccconst aclspv_bool_t aclid_is_float(const B_id_default_t c_id_default) {
@@ -135,7 +157,7 @@ ae2f_ccconst B_id_default_t aclid_getty_float(unsigned bit_width) {
 	ae2f_unreachable();
 }
 
-ae2f_ccconst B_id_default_t aclid_getty_signed(unsigned bit_width) {
+ae2f_ccconst B_id_default_t aclid_getty_sint(unsigned bit_width) {
 	switch(bit_width) {
 		case 8:
 			return ACLSPV_ID_I8;
@@ -152,7 +174,7 @@ ae2f_ccconst B_id_default_t aclid_getty_signed(unsigned bit_width) {
 	ae2f_unreachable();
 }
 
-ae2f_ccconst B_id_default_t aclid_getty_unsigned(unsigned bit_width) {
+ae2f_ccconst B_id_default_t aclid_getty_uint(unsigned bit_width) {
 	switch(bit_width) {
 		case 8:
 			return ACLSPV_ID_U8;
@@ -218,48 +240,7 @@ aclspv_bool_t	aclid_is_arithmetic(const aclspv_id_t c_id, const h_aclspv_ctx_t h
 
 #include <ae2f/bll.h>
 
-/**
- * @fn		util_default_decide_cast
- * @returns	0 when invalid
- * */
-ae2f_ccconst B_id_default_t aclid_decide_cast(const enum ACLSPV_ID_ c_id0, const enum ACLSPV_ID_ c_id1, const h_aclspv_ctx_t h_ctx) {
-	/** one is 0? */
-	unless(c_id0 & c_id1)
-		return ae2f_bll_sel_bool_naive1(B_id_default_t, c_id0, (B_id_default_t) c_id0, (B_id_default_t) c_id1);
 
-	unless(c_id0 ^ c_id1)
-		return (B_id_default_t) c_id0;
-
-	unless(aclid_is_arithmetic((B_id_default_t) c_id0, h_ctx) & aclid_is_arithmetic((B_id_default_t) c_id1, h_ctx))
-		return 0;
-
-	if(aclutil_cxtp_get_veccfg((B_id_default_t) c_id0, h_ctx).m_num ^ aclutil_cxtp_get_veccfg((B_id_default_t) c_id1, h_ctx).m_num) {
-		unless(aclutil_cxtp_get_veccfg((B_id_default_t) c_id0, h_ctx).m_num >> 1) {
-			return (B_id_default_t) c_id1;
-		} else unless(aclutil_cxtp_get_veccfg((B_id_default_t) c_id1, h_ctx).m_num >> 1) {
-			return (B_id_default_t) c_id0;
-		} return 0;
-	}
-
-	unless(aclid_is_vectorisable((B_id_default_t) c_id0)) {
-		return ae2f_bll_sel_bool1(B_id_default_t, aclid_decide_cast(
-				(enum ACLSPV_ID_) aclutil_cxtp_get_veccfg((B_id_default_t) c_id0, h_ctx).m_ty_elm
-					, (enum ACLSPV_ID_) aclutil_cxtp_get_veccfg((B_id_default_t) c_id1, h_ctx).m_ty_elm
-					, h_ctx
-					), (B_id_default_t) c_id0, (B_id_default_t) c_id1);
-	}
-
-	unless(aclid_is_number((B_id_default_t) c_id0) & aclid_is_number((B_id_default_t) c_id1))
-		return 0;
-
-	if(aclid_is_float((B_id_default_t) c_id0) != aclid_is_float((B_id_default_t) c_id1))
-		return ae2f_bll_sel_bool1(B_id_default_t, aclid_is_float((B_id_default_t) c_id0), (B_id_default_t) c_id0, (B_id_default_t)c_id1);
-
-	return ae2f_bll_sel_bool1(
-			B_id_default_t
-			, aclid_get_bit_width((B_id_default_t) c_id0) > aclid_get_bit_width((B_id_default_t) c_id1)
-			, (B_id_default_t) c_id0 , (B_id_default_t) c_id1);
-}
 
 aclspv_id_t aclid_mk_default_id(
 		const B_id_default_t	c_id_default,
@@ -454,11 +435,11 @@ aclspv_id_t aclid_mk_default_id(
 
 
 ae2f_ccconst B_id_default_t aclid_number_cvtbitcount(const B_id_default_t c_id, const unsigned bitcount) {
-	if(aclid_is_unsigned(c_id))
-		return aclid_getty_unsigned(bitcount);
+	if(aclid_is_uint(c_id))
+		return aclid_getty_uint(bitcount);
 
-	if(aclid_is_signed(c_id))
-		return aclid_getty_signed(bitcount);
+	if(aclid_is_sint(c_id))
+		return aclid_getty_sint(bitcount);
 
 	if(aclid_is_float(c_id))
 		return aclid_getty_float(bitcount);

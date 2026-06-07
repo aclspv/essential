@@ -8,9 +8,9 @@
 
 ae2f_inline_f	ae2f_ccconst static aclspv_bool_t	s_check(aclspv_wrd_t	c_op) {
 	switch(c_op) {
-		case ACLEXPR_OP1_POSTDEG:
+		case ACLEXPR_OP1_POSTDEC:
 		case ACLEXPR_OP1_POSTINC:
-		case ACLEXPR_OP1_PREDEG:
+		case ACLEXPR_OP1_PREDEC:
 		case ACLEXPR_OP1_PREINC:
 			return 1;
 
@@ -45,10 +45,12 @@ aclexpr_carve_lbl_t aclexpr_carve_op1_incr(
 	aclspv_wrd_t	O = rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_OPCODE];
 
 	ae2f_ifnezerr_strict(CURIDX >= rdwr_data->m_ctx->m_num_cursor) {
+		err_puts("[carve1::incr] CURIDX is out of bound.");
 		return c_lbl_err;
 	}
 
 	ae2f_ifezerr(aclid_is_int(aclutil_cxtp_get_veccfg(rdwr_lst_extra->m_type_original, rdwr_data->m_ctx).m_ty_elm)) {
+		err_puts("[carve1::incr] no integer detected.");
 		return c_lbl_err;
 	}
 
@@ -60,30 +62,31 @@ aclexpr_carve_lbl_t aclexpr_carve_op1_incr(
 
 	if(rdwr_lst_extra->m_mask_literal & (aclspv_wrd_t)ACLUTIL_LITERAL_LITERAL) {
 		switch(O) {
-			case ACLEXPR_OP1_PREDEG:
+			case ACLEXPR_OP1_PREDEC:
 				r_ltrl->m_api_uintmax = LTRL.m_api_uintmax - 1;
 				break;
 			case ACLEXPR_OP1_PREINC:
 				r_ltrl->m_api_uintmax = LTRL.m_api_uintmax + 1;
 				break;
-			case ACLEXPR_OP1_POSTDEG:
+			case ACLEXPR_OP1_POSTDEC:
 				r_ltrl->m_api_uintmax = LTRL.m_api_uintmax--;
 				break;
 			case ACLEXPR_OP1_POSTINC:
 				r_ltrl->m_api_uintmax = LTRL.m_api_uintmax++;
 				break;
 			default:
-				return c_lbl_err;
+				ae2f_unreachable();
 		}
-
-		rdwr_prv_extra->m_mask_literal = rdwr_lst_extra->m_mask_literal;
 
 		ae2f_ifezerr(*rdwr_prv_idval = aclutil_assign_cursor_lval(
 					C, rdwr_data->m_ctx, 0
 					, rdwr_lst_extra->m_type_original
 					, ACLUTIL_LITERAL_LITERAL
 					, &LTRL, 0
-					)) return c_lbl_err;
+					)) { 
+			err_puts("[carve1::incr] getting value from cursor has been failed.");
+			return c_lbl_err;
+		}
 
 		return c_lbl_success;
 	} else {
@@ -107,8 +110,8 @@ aclexpr_carve_lbl_t aclexpr_carve_op1_incr(
 				RO = SpvOpIAdd;
 				break;
 
-			case ACLEXPR_OP1_POSTDEG:
-			case ACLEXPR_OP1_PREDEG:
+			case ACLEXPR_OP1_POSTDEC:
+			case ACLEXPR_OP1_PREDEC:
 				RO = SpvOpISub;
 				break;
 
@@ -152,11 +155,11 @@ aclexpr_carve_lbl_t aclexpr_carve_op1_incr(
 
 		switch(O) {
 			case ACLEXPR_OP1_PREINC:
-			case ACLEXPR_OP1_PREDEG:
+			case ACLEXPR_OP1_PREDEC:
 				*rdwr_prv_idval = VP;
 				break;
 
-			case ACLEXPR_OP1_POSTDEG:
+			case ACLEXPR_OP1_POSTDEC:
 			case ACLEXPR_OP1_POSTINC:
 				*rdwr_prv_idval = V;
 				break;

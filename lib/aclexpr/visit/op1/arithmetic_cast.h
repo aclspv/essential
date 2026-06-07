@@ -15,6 +15,8 @@
 #include <aclexpr/visit/api.h>
 #include <aclexpr/op.h>
 
+#include <ae2f/cc/memset.h>
+
 ae2f_inline_f static aclexpr_visit_lbl_t aclexpr_visit_op1_arithmetic_cast(
 		const CXCursor				c_cur,
 		const h_aclspv_ctx_t			h_ctx, 
@@ -49,7 +51,7 @@ ae2f_inline_f static aclexpr_visit_lbl_t aclexpr_visit_op1_arithmetic_cast(
 					h_cmdscale
 					, 
 					aclutil_count_to_sz(ACLEXPR_OPBINCFG_END + 2)
-					+ (sizeof(aclexpr_opbincfg_extra) * 2)
+					+ (sizeof(aclexpr_opbincfg_extra))
 					);
 			ae2f_expected_but_else(NEW_SCALE)
 				return c_lbl_fail;
@@ -59,13 +61,10 @@ ae2f_inline_f static aclexpr_visit_lbl_t aclexpr_visit_op1_arithmetic_cast(
 			ae2f_expected_but_else(VEC)
 				return c_lbl_fail;
 
-			VEC[0] = 1;				/** number of operands */
-			VEC[1] = ACLUTIL_LITERAL_MASK_LITERAL;	/** is not constant? */
-			VEC[2] = opcode_to_wrd(SpvOpSpecConstantOp, 4); 
-			VEC[3] = 0;				/** c_result_type_id */
-			VEC[4] = 0;				/** return id (not specified) */
-			VEC[5] = (aclspv_wrd_t) OPCODE;
-			VEC[6] = 0;				/** operand 0 */
+			VEC[ACLEXPR_OPBINCFG_NUMOPRND]	= 1;				/** number of operands */
+			VEC[ACLEXPR_OPBINCFG_OPCODE]	= (aclspv_wrd_t) OPCODE;
+
+			ae2fcc_memset(&VEC[ACLEXPR_OPBINCFG_END + 1], 0, sizeof(aclexpr_opbincfg_extra));
 
 			ae2f_ifezerr(VEC[ACLEXPR_OPBINCFG_RESTYID] = aclutil_mk_cxtp_by_cursor(
 						c_cur
