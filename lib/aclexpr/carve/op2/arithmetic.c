@@ -7,12 +7,36 @@
 #include <util/constant.h>
 
 enum S_ARITHMETIC_ {
-	S_ARITHMETIC_ADD	= ACLEXPR_OP2_ARITHMETIC_ADD,
-	S_ARITHMETIC_SUB	= ACLEXPR_OP2_ARITHMETIC_SUB,
-	S_ARITHMETIC_MUL	= ACLEXPR_OP2_ARITHMETIC_MUL,
-	S_ARITHMETIC_DIV	= ACLEXPR_OP2_ARITHMETIC_DIV,
-	S_ARITHMETIC_REM	= ACLEXPR_OP2_ARITHMETIC_REM
+	S_ARITHMETIC_ADD	= ACLEXPR_OP2_ADD,
+	S_ARITHMETIC_ADDX	= ACLEXPR_OP2_ADDASS,
+	S_ARITHMETIC_SUB	= ACLEXPR_OP2_SUB,
+	S_ARITHMETIC_SUBX	= ACLEXPR_OP2_SUBASS,
+	S_ARITHMETIC_MUL	= ACLEXPR_OP2_MUL,
+	S_ARITHMETIC_MULX	= ACLEXPR_OP2_MULASS,
+	S_ARITHMETIC_DIV	= ACLEXPR_OP2_DIV,
+	S_ARITHMETIC_DIVX	= ACLEXPR_OP2_DIVASS,
+	S_ARITHMETIC_REM	= ACLEXPR_OP2_REM,
+	S_ARITHMETIC_REMX	= ACLEXPR_OP2_REMASS
 };
+
+ae2f_inline_f static ae2f_ccconst aclspv_bool_t s_is_assign(aclspv_wrd_t c_opcode) {
+	switch(c_opcode) {
+		case S_ARITHMETIC_ADD:
+		case S_ARITHMETIC_DIV:
+		case S_ARITHMETIC_MUL:
+		case S_ARITHMETIC_REM:
+		case S_ARITHMETIC_SUB:
+		default:
+			return 0;
+
+		case S_ARITHMETIC_ADDX:
+		case S_ARITHMETIC_DIVX:
+		case S_ARITHMETIC_MULX:
+		case S_ARITHMETIC_SUBX:
+		case S_ARITHMETIC_REMX:
+			return 1;
+	}
+}
 
 ae2f_inline_f static ae2f_ccpure aclspv_opcode_t s_op_to_spv(
 		const aclspv_id_t c_id, 
@@ -27,6 +51,7 @@ ae2f_inline_f static ae2f_ccpure aclspv_opcode_t s_op_to_spv(
 			return 0;
 
 		case S_ARITHMETIC_ADD:
+		case S_ARITHMETIC_ADDX:
 			if(aclid_is_int(ID))
 				return SpvOpIAdd;
 			else if(aclid_is_float(ID))
@@ -34,6 +59,7 @@ ae2f_inline_f static ae2f_ccpure aclspv_opcode_t s_op_to_spv(
 			else return 0;
 
 		case S_ARITHMETIC_DIV:
+		case S_ARITHMETIC_DIVX:
 			if(aclid_is_sint(ID))
 				return SpvOpSDiv;
 			else if (aclid_is_uint(ID))
@@ -43,6 +69,7 @@ ae2f_inline_f static ae2f_ccpure aclspv_opcode_t s_op_to_spv(
 			else return 0;
 
 		case S_ARITHMETIC_MUL:
+		case S_ARITHMETIC_MULX:
 			if(aclid_is_sint(ID))
 				return SpvOpIMul;
 			else if (aclid_is_uint(ID))
@@ -52,6 +79,7 @@ ae2f_inline_f static ae2f_ccpure aclspv_opcode_t s_op_to_spv(
 			else return 0;
 
 		case S_ARITHMETIC_REM:
+		case S_ARITHMETIC_REMX:
 			if(aclid_is_sint(ID))
 				return SpvOpSRem;
 			else if (aclid_is_uint(ID))
@@ -61,6 +89,7 @@ ae2f_inline_f static ae2f_ccpure aclspv_opcode_t s_op_to_spv(
 			else return 0;
 
 		case S_ARITHMETIC_SUB:
+		case S_ARITHMETIC_SUBX:
 			if(aclid_is_sint(ID))
 				return SpvOpISub;
 			else if (aclid_is_uint(ID))
@@ -76,11 +105,16 @@ ae2f_inline_f static ae2f_ccconst aclspv_bool_t s_checkhelper(const aclspv_wrd_t
 		default:
 			return 0;
 
-		case ACLEXPR_OP2_ARITHMETIC_ADD:
-		case ACLEXPR_OP2_ARITHMETIC_SUB:
-		case ACLEXPR_OP2_ARITHMETIC_DIV:
-		case ACLEXPR_OP2_ARITHMETIC_MUL:
-		case ACLEXPR_OP2_ARITHMETIC_REM:
+		case ACLEXPR_OP2_ADD:
+		case ACLEXPR_OP2_SUB:
+		case ACLEXPR_OP2_DIV:
+		case ACLEXPR_OP2_MUL:
+		case ACLEXPR_OP2_REM:
+		case ACLEXPR_OP2_ADDASS:
+		case ACLEXPR_OP2_SUBASS:
+		case ACLEXPR_OP2_DIVASS:
+		case ACLEXPR_OP2_MULASS:
+		case ACLEXPR_OP2_REMASS:
 			return 1;
 	}
 }
@@ -117,6 +151,24 @@ ae2f_inline_f static ae2f_ccconst struct aclutil_ltrl_eval_t	s_eval2_ltrl(
 				EXPR_TWO(/, m_api_intmax, SpvOpSDiv); return RET;
 				EXPR_TWO(/, m_api_intmax, SpvOpUDiv); return RET;
 				EXPR_TWO(%, m_api_intmax, SpvOpSRem); return RET;
+
+				default:
+				RET.m_ret.m_u64 = 0;
+				RET.m_found = 0;
+				return RET;
+			}
+
+		case ACLSPV_ID_U8:
+		case ACLSPV_ID_U16:
+		case ACLSPV_ID_U32:
+		case ACLSPV_ID_U64:
+			switch((uintmax_t)c_opcode) {
+				EXPR_TWO(+, m_api_uintmax, SpvOpIAdd); return RET;
+				EXPR_TWO(-, m_api_uintmax, SpvOpISub); return RET;
+				EXPR_TWO(*, m_api_uintmax, SpvOpIMul); return RET;
+				EXPR_TWO(/, m_api_uintmax, SpvOpSDiv); return RET;
+				EXPR_TWO(/, m_api_uintmax, SpvOpUDiv); return RET;
+				EXPR_TWO(%, m_api_uintmax, SpvOpSRem); return RET;
 
 				default:
 				RET.m_ret.m_u64 = 0;
@@ -209,15 +261,17 @@ aclexpr_carve_lbl_t aclexpr_carve_op2_arithmetic(
 		aclexpr_carve_lbl_t				c_lbl_success,
 		aclexpr_carve_lbl_t				c_lbl_err
 		) { CHECK; {
+	const aclspv_bool_t IS_ASSIGN = s_is_assign(rdwr_lst_scale_buf[0]);
+
 	rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_RESID]	= *rdwr_prv_idval = CTX(rdwr_data)->m_id++;
 
 	rdwr_prv_extra->m_type_original = rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_RESTYID] = s_decide_cast(
 			(enum ACLSPV_ID_) rdwr_lst_extra[0].m_type_original
 			, (enum ACLSPV_ID_) rdwr_lst_extra[1].m_type_original
 			, CTX(rdwr_data)
-			);	/** only when bin2 (arithmetic thing) */
+			);
 
-	rdwr_prv_extra->m_mask_literal = rdwr_lst_extra[0].m_mask_literal & rdwr_lst_extra[1].m_mask_literal & 3;
+	rdwr_prv_extra->m_mask_literal = rdwr_lst_extra[0].m_mask_literal & rdwr_lst_extra[1].m_mask_literal;
 
 	ae2fpat_assertassume_strict(rdwr_lst_scale_buf);
 
@@ -397,12 +451,12 @@ aclexpr_carve_lbl_t aclexpr_carve_op2_arithmetic(
 	}
 
 #define		TMPL_SECTION	(*((rdwr_prv_extra->m_mask_literal) == ACLUTIL_LITERAL_RT \
-			? &CTX(rdwr_data)->m_section.m_fnimpl		\
-			: &CTX(rdwr_data)->m_section.m_types))
+			? &(rdwr_data)->m_ctx->m_section.m_fnimpl		\
+			: &(rdwr_data)->m_ctx->m_section.m_types))
 
 #define		TMPL_COUNT	(*((rdwr_prv_extra->m_mask_literal) == ACLUTIL_LITERAL_RT	\
-			? &CTX(rdwr_data)->m_count.m_fnimpl			\
-			: &CTX(rdwr_data)->m_count.m_types))
+			? &(rdwr_data)->m_ctx->m_count.m_fnimpl			\
+			: &(rdwr_data)->m_ctx->m_count.m_types))
 
 	ae2f_ifnezerr_strict(rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_END] >= rdwr_data->m_ctx->m_id)
 		return c_lbl_err;
@@ -442,7 +496,7 @@ aclexpr_carve_lbl_t aclexpr_carve_op2_arithmetic(
 
 	TMPL_COUNT += 6u - (aclspv_wrd_t)(rdwr_prv_extra->m_mask_literal == ACLUTIL_LITERAL_RT);
 
-	if(rdwr_lst_extra->m_state0 & (aclspv_wrd_t)ACLEXPR_OPCFGX_STATE0_ASSIGN) {
+	if(IS_ASSIGN) {
 		CXCursor	CASSIGN		= rdwr_lst_extra->m_cursor;
 		aclspv_wrd_t IDX = aclutil_find_cursor(
 				rdwr_data->m_ctx->m_num_cursor

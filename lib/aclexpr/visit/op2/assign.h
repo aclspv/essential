@@ -50,8 +50,7 @@ ae2f_inline_f static aclexpr_visit_lbl_t aclexpr_visit_op2_assign(
 	VEC[ACLEXPR_OPBINCFG_OPCODE]		= ACLEXPR_OP2_ASSIGN;
 
 	ae2fcc_memset(&VEC[ACLEXPR_OPBINCFG_END + 2], 0, sizeof(aclexpr_opbincfg_extra) << 1);
-
-	((aclexpr_opbincfg_extra* ae2f_restrict)(void*)&VEC[ACLEXPR_OPBINCFG_END + 2])->m_state0 = ACLEXPR_OPCFGX_STATE0_VAL_NO_NEED;
+	((aclexpr_opbincfg_extra* ae2f_restrict)(void*)&VEC[ACLEXPR_OPBINCFG_END + 2])->m_state0 = (aclspv_wrd_t)ACLEXPR_OPCFGX_STATE0_VAL_NO_NEED;
 
 	return c_lbl_success;
 }

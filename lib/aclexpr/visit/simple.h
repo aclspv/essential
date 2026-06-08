@@ -190,7 +190,7 @@ ae2f_inline_f static aclexpr_visit_lbl_t aclexpr_visit_op0_val(
 							, (unsigned)*wr_newid
 							, (unsigned)DECL_IDX));
 
-				rdwr_extra->m_mask_literal &= ((aclspv_wrd_t)(ACLUTIL_CURSOR_VAR_LITERAL) & DECL_INFO.m_data.m_vardecl.m_mask);
+				rdwr_extra->m_mask_literal = ((aclspv_wrd_t)(ACLUTIL_CURSOR_VAR_LITERAL) & DECL_INFO.m_data.m_vardecl.m_mask);
 				return c_lbl_success;
 #undef	DECL_INFO
 			}

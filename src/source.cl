@@ -42,14 +42,13 @@ kernel_raw(5) void N_KERNEL_0(
     }
 
 #if 1
-    while(a2++) {
+    while((a2++ != a1)) {
         bratio(1, 2) int AAA;
         a1 += a2;
         break;
     }
 
-    a2 += 8;
-    a2 = 7;
+    a2 = 8;
 #endif
 
     goto GOTO;

@@ -20,7 +20,6 @@ ACLSPV_ABI_IMPL void aclspv_fini_ctx(
 	_aclspv_stop_vec(_aclspv_free, d_ctx->m_tmp.m_v0);
 	_aclspv_stop_vec(_aclspv_free, d_ctx->m_tmp.m_v1);
 	_aclspv_stop_vec(_aclspv_free, d_ctx->m_tmp.m_v2);
-	_aclspv_stop_vec(_aclspv_free, d_ctx->m_tmp.m_v3);
 
 	_aclspv_stop_vec(_aclspv_free, d_ctx->m_section.m_capability);
 	_aclspv_stop_vec(_aclspv_free, d_ctx->m_section.m_decorate);
@@ -76,7 +75,6 @@ ACLSPV_ABI_IMPL enum ACLSPV_COMPILE_ aclspv_init_ctx(
 	_aclspv_grow_vec(_aclspv_malloc, _aclspv_free, i_ctx->m_tmp.m_v0		, INITSZ);
 	_aclspv_grow_vec(_aclspv_malloc, _aclspv_free, i_ctx->m_tmp.m_v1		, INITSZ);
 	_aclspv_grow_vec(_aclspv_malloc, _aclspv_free, i_ctx->m_tmp.m_v2		, INITSZ);
-	_aclspv_grow_vec(_aclspv_malloc, _aclspv_free, i_ctx->m_tmp.m_v3		, INITSZ);
 
 #undef	ISZEXP2
 

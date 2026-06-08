@@ -269,11 +269,6 @@ typedef struct a_aclspv_ctx {
 		 * [emit::body] command counter stack
 		 * */
 		x_aclspv_vec	m_v2;
-
-		/**
-		 * [emit::body]	expression stack
-		 * */
-		x_aclspv_vec	m_v3;
 	}	m_tmp;
 
 

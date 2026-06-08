@@ -26,7 +26,6 @@ ae2f_inline_f static aclexpr_visit_lbl_t aclexpr_visit_op2_arithmetic(
 		)
 {
 	enum ACLEXPR_OP_	OPCODE;
-	aclspv_bool_t		IS_ASSIGN = 0;
 
 	ae2f_expected_but_else(h_ctx) {
 		return c_lbl_fail;
@@ -46,33 +45,39 @@ ae2f_inline_f static aclexpr_visit_lbl_t aclexpr_visit_op2_arithmetic(
 			return c_lbl_pass;
 
 		case CXBinaryOperator_AddAssign:
-			IS_ASSIGN = ACLEXPR_OPCFGX_STATE0_ASSIGN; ae2f_fallthrough;
+			OPCODE = ACLEXPR_OP2_ADDASS;
+			break;
 		case CXBinaryOperator_Add:
-			OPCODE = ACLEXPR_OP2_ARITHMETIC_ADD;
+			OPCODE = ACLEXPR_OP2_ADD;
 			break;
 
 		case CXBinaryOperator_SubAssign:
-			IS_ASSIGN = ACLEXPR_OPCFGX_STATE0_ASSIGN; ae2f_fallthrough;
+			OPCODE = ACLEXPR_OP2_SUBASS;
+			break;
+
 		case CXBinaryOperator_Sub:
-			OPCODE = ACLEXPR_OP2_ARITHMETIC_SUB;
+			OPCODE = ACLEXPR_OP2_SUB;
 			break;
 
 		case CXBinaryOperator_MulAssign:
-			IS_ASSIGN = ACLEXPR_OPCFGX_STATE0_ASSIGN; ae2f_fallthrough;
+			OPCODE = ACLEXPR_OP2_MULASS;
+			break;
 		case CXBinaryOperator_Mul:
-			OPCODE = ACLEXPR_OP2_ARITHMETIC_MUL;
+			OPCODE = ACLEXPR_OP2_MUL;
 			break;
 
 		case CXBinaryOperator_DivAssign:
-			IS_ASSIGN = ACLEXPR_OPCFGX_STATE0_ASSIGN; ae2f_fallthrough;
+			OPCODE = ACLEXPR_OP2_DIVASS;
+			break;
 		case CXBinaryOperator_Div:
-			OPCODE = ACLEXPR_OP2_ARITHMETIC_DIV;
+			OPCODE = ACLEXPR_OP2_DIV;
 			break;
 
 		case CXBinaryOperator_RemAssign:
-			IS_ASSIGN = ACLEXPR_OPCFGX_STATE0_ASSIGN; ae2f_fallthrough;
+			OPCODE = ACLEXPR_OP2_REMASS;
+			break;
 		case CXBinaryOperator_Rem:
-			OPCODE = ACLEXPR_OP2_ARITHMETIC_REM;
+			OPCODE = ACLEXPR_OP2_REM;
 			break;
 	}
 
@@ -103,7 +108,6 @@ ae2f_inline_f static aclexpr_visit_lbl_t aclexpr_visit_op2_arithmetic(
 
 		ae2fcc_memset(&VEC[ACLEXPR_OPBINCFG_END + 2], 0, sizeof(aclexpr_opbincfg_extra) << 1);
 
-		((aclexpr_opbincfg_extra* ae2f_restrict)(void* ae2f_restrict)(&VEC[(ACLEXPR_OPBINCFG_END + 2)]))->m_state0 = IS_ASSIGN;
 		((aclexpr_opbincfg_extra* ae2f_restrict)(void* ae2f_restrict)(&VEC[(ACLEXPR_OPBINCFG_END + 2)]))->m_mask_literal = 3;
 	}
 

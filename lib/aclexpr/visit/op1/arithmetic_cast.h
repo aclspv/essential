@@ -50,7 +50,7 @@ ae2f_inline_f static aclexpr_visit_lbl_t aclexpr_visit_op1_arithmetic_cast(
 			NEW_SCALE = mk_scale_from_vec(
 					h_cmdscale
 					, 
-					aclutil_count_to_sz(ACLEXPR_OPBINCFG_END + 2)
+					aclutil_count_to_sz(ACLEXPR_OPBINCFG_END + 1)
 					+ (sizeof(aclexpr_opbincfg_extra))
 					);
 			ae2f_expected_but_else(NEW_SCALE)
@@ -88,24 +88,6 @@ ae2f_inline_f static aclexpr_visit_lbl_t aclexpr_visit_op1_arithmetic_cast(
 				return c_lbl_fail;
 			}
 	}
-
-#if	DBG
-	{
-		CXType CURTYPE = (clang_getCursorType(c_cur));
-		CXCursor CUR = c_cur; /** clang_getTypeDeclaration(CURTYPE); */
-		CXString TYPESTR = clang_getTypeSpelling(CURTYPE);
-		CXString CURSTR = clang_getCursorSpelling(CUR);
-
-		dbg_prefix(a);
-		fputs("[s_cast_numeric::dbg::spl]\n", stderr);
-		fputs(CURSTR.data, stderr);
-		fputs("\n", stderr);
-		fputs(TYPESTR.data, stderr);
-		fputs("\n", stderr);
-		clang_disposeString(CURSTR);
-		clang_disposeString(TYPESTR);
-	}
-#endif
 
 	dbg_prefix();
 	dbg_call((void), fprintf(stderr, "[s_cast_numeric::aclutil_mk_cxtp_by_cursor] %u\n", VEC[ACLEXPR_OPBINCFG_RESTYID]));

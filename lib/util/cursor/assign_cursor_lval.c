@@ -110,6 +110,7 @@ aclspv_id_t aclutil_assign_cursor_lval(
 	}
 
 	(*wr_cursor).m_data.m_vardecl.m_mask	 |= ACLUTIL_CURSOR_VAR_PREDICTABLE;
+	wr_cursor->m_data.m_vardecl.m_mask &= ~(aclspv_wrd_t)ACLUTIL_CURSOR_VAR_LITERAL;
 	ae2f_expected_but_else(h_ctx->m_count.m_fnimpl = aclutil_emitx_4(
 				&h_ctx->m_section.m_fnimpl
 				, h_ctx->m_count.m_fnimpl

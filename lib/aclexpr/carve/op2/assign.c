@@ -22,8 +22,10 @@ aclexpr_carve_lbl_t aclexpr_carve_op2_assign(
 
 	aclutil_cursor* const ae2f_restrict C = &((aclutil_cursor* ae2f_restrict)rdwr_data->m_ctx->m_cursors.m_p)[CIDX];
 
-	ae2f_ifnezerr_strict(CIDX >= rdwr_data->m_ctx->m_num_cursor)
+	ae2f_ifnezerr_strict(CIDX >= rdwr_data->m_ctx->m_num_cursor) {
+		err_puts("[carve2::assign] CIDX assert");
 		return c_lbl_err;
+	}
 
 	ae2f_ifezerr(*rdwr_prv_idval = aclutil_assign_cursor_lval(
 			C, rdwr_data->m_ctx
@@ -32,7 +34,10 @@ aclexpr_carve_lbl_t aclexpr_carve_op2_assign(
 			, rdwr_lst_extra[1].m_mask_literal
 			, &rdwr_lst_extra[1].m_literal
 			, r_ltrl
-			)) return c_lbl_err;
+			)) {
+		err_puts("[carve2::assign] assign cursor has failed");
+		return c_lbl_err;
+	}
 
 	*rdwr_prv_extra = rdwr_lst_extra[1];
 	rdwr_prv_extra->m_literal = *r_ltrl;

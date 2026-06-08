@@ -30,9 +30,6 @@ enum ACLEXPR_RET_ aclspv_get_expr2(
 	DATA.m_tyid_current	= 0;				/* type casted */
 	DATA.m_num_cmdcounter	= 1;				/* count for operand */
 
-	ae2f_expected_but_else(h_ctx->m_tmp.m_v3.m_p)
-		return ACLEXPR_RET_FAILURE;
-
 	ae2f_expected_but_else(h_ctx->m_tmp.m_v1.m_p)
 		return ACLEXPR_RET_FAILURE;
 
@@ -102,9 +99,6 @@ enum ACLEXPR_RET_ aclexpr_eval_btcast(
 	DATA.m_literal_flag	= ACLUTIL_LITERAL_MASK_LITERAL;	/* see enum UTIL_LITERAL_MASK_ */
 	DATA.m_tyid_current	= 0;				/* type casted */
 	DATA.m_num_cmdcounter	= 1;				/* count for operand */
-
-	ae2f_expected_but_else(h_ctx->m_tmp.m_v3.m_p)
-		return ACLEXPR_RET_FAILURE;
 
 	ae2f_expected_but_else(h_ctx->m_tmp.m_v1.m_p)
 		return ACLEXPR_RET_FAILURE;
@@ -281,9 +275,6 @@ enum ACLEXPR_RET_ aclexpr_eval(
 	DATA.m_literal_flag	= ACLUTIL_LITERAL_MASK_LITERAL;	/* see enum UTIL_LITERAL_MASK_ */
 	DATA.m_tyid_current	= 0;				/* type casted */
 	DATA.m_num_cmdcounter	= 1;				/* count for operand */
-
-	ae2f_expected_but_else(h_ctx->m_tmp.m_v3.m_p)
-		return ACLEXPR_RET_FAILURE;
 
 	ae2f_expected_but_else(h_ctx->m_tmp.m_v1.m_p)
 		return ACLEXPR_RET_FAILURE;

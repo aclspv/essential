@@ -9,7 +9,7 @@
 
 #include <ae2f/cc/memset.h>
 
-ae2f_inline_f static aclexpr_visit_lbl_t aclexpr_visit_op2_bitwise(
+ae2f_inline_f static aclexpr_visit_lbl_t aclexpr_visit_op2_bool0(
 		const CXCursor				c_cur,
 		const h_aclspv_ctx_t			h_ctx, 
 		x_aclspv_vec* ae2f_restrict const	h_cmdscale,
@@ -19,7 +19,6 @@ ae2f_inline_f static aclexpr_visit_lbl_t aclexpr_visit_op2_bitwise(
 		)
 {
 	enum ACLEXPR_OP_	OPCODE;
-	aclspv_wrd_t		FIELD = 0;
 	uint_leastenum_t	BOK	= (uint_leastenum_t)clang_getCursorBinaryOperatorKind(c_cur);
 
 	ae2f_expected_but_else(h_ctx) {
@@ -38,33 +37,35 @@ ae2f_inline_f static aclexpr_visit_lbl_t aclexpr_visit_op2_bitwise(
 	switch(BOK) {
 		default:
 			return c_lbl_pass;
+		case CXBinaryOperator_And:
+			OPCODE = ACLEXPR_OP2_AND;
+			break;
+		case CXBinaryOperator_AndAssign:
+			OPCODE = ACLEXPR_OP2_AND_A;
+			break;
+		case CXBinaryOperator_LAnd:
+			OPCODE = ACLEXPR_OP2_AND_L;
+			break;
 
-#define	CASE(x, x_assign, x_logical, y_opcode)	\
-		case x_assign: case x_logical:									\
-				FIELD |= ae2f_bll_sel_bool1(aclspv_wrd_t, (aclspv_wrd_t)(BOK == x_assign)	\
-						, (aclspv_wrd_t)ACLEXPR_OPCFGX_STATE0_ASSIGN			\
-						, (aclspv_wrd_t)ACLEXPR_OPCFGX_STATE0_LOGICAL);			\
-			ae2f_fallthrough;					\
-		case x:		\
-				OPCODE = y_opcode;				\
-			break;							\
+		case CXBinaryOperator_Or:
+			OPCODE = ACLEXPR_OP2_OR;
+			break;
+		case CXBinaryOperator_OrAssign:
+			OPCODE = ACLEXPR_OP2_OR_A;
+			break;
+		case CXBinaryOperator_LOr:
+			OPCODE = ACLEXPR_OP2_OR_L;
+			break;
 
-			CASE(
-					CXBinaryOperator_And, CXBinaryOperator_AndAssign
-					, CXBinaryOperator_LAnd, ACLEXPR_OP2_AND
-			    );
-
-			CASE(
-					CXBinaryOperator_Or, CXBinaryOperator_OrAssign
-					, CXBinaryOperator_LOr, ACLEXPR_OP2_OR
-			    );
-
-			CASE(
-					CXBinaryOperator_Xor, CXBinaryOperator_XorAssign
-					, CXBinaryOperator_NE, ACLEXPR_OP2_XOR
-			    );
-#undef	CASE
-
+		case CXBinaryOperator_Xor:
+			OPCODE = ACLEXPR_OP2_XOR;
+			break;
+		case CXBinaryOperator_XorAssign:
+			OPCODE = ACLEXPR_OP2_XOR_A;
+			break;
+		case CXBinaryOperator_NE:
+			OPCODE = ACLEXPR_OP2_XOR_L;
+			break;
 	}
 
 	{
@@ -87,13 +88,12 @@ ae2f_inline_f static aclexpr_visit_lbl_t aclexpr_visit_op2_bitwise(
 		ae2f_expected_but_else(VEC)
 			return c_lbl_fail;
 
-		VEC[ACLEXPR_OPBINCFG_NUMOPRND] = 2;				/** number of operands */
-		VEC[ACLEXPR_OPBINCFG_SPECCONSTANTOP] = opcode_to_wrd(SpvOpSpecConstantOp, 5);
-		VEC[ACLEXPR_OPBINCFG_OPCODE] = (aclspv_wrd_t) OPCODE;
 
 		ae2fcc_memset(&VEC[ACLEXPR_OPBINCFG_END + 2], 0, sizeof(aclexpr_opbincfg_extra) << 1);
 
-		((aclexpr_opbincfg_extra* ae2f_restrict)(void* ae2f_restrict)(&VEC[(ACLEXPR_OPBINCFG_END + 2)]))[0].m_state0 = FIELD;
+		VEC[ACLEXPR_OPBINCFG_NUMOPRND] = 2;				/** number of operands */
+		VEC[ACLEXPR_OPBINCFG_SPECCONSTANTOP] = opcode_to_wrd(SpvOpSpecConstantOp, 5);
+		VEC[ACLEXPR_OPBINCFG_OPCODE] = (aclspv_wrd_t) OPCODE;
 	}
 
 	return c_lbl_success;

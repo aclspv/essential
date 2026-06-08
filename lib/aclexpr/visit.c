@@ -14,11 +14,11 @@
 #include "./visit/op1/incr.h"
 #include "./visit/op2/arithmetic.h"
 #include "./visit/op2/assign.h"
-#include "./visit/op2/bitwise.h"
+#include "./visit/op2/bool0.h"
 
 enum {
 	OP2_ARITHMETIC,
-	OP2_BITWISE,
+	OP2_BOOL0,
 	OP2_ASSIGN,
 	OP1_ARITHMETIC_CAST,
 	OP1_INCR,
@@ -37,7 +37,6 @@ enum CXChildVisitResult aclexpr_visit(
 {
 #define	BASE			((struct aclexpr_visit_data* ae2f_restrict)(rdwr_data))
 #define	CTX			BASE->m_ctx
-#define EXPRSTCK_COUNT		BASE->m_exprcount 
 #define ID_REQ			BASE->m_id_ret 
 #define	IS_NOT_CONSTANT		BASE->m_literal_flag 
 #define	TYPE_CAST_CURRENT	BASE->m_tyid_current 
@@ -46,7 +45,6 @@ enum CXChildVisitResult aclexpr_visit(
 
 #define	CMDSTCK_SCALE	CTX->m_tmp.m_v1
 #define	CMDCOUNTERSTCK	CTX->m_tmp.m_v2
-#define	EXPRSTCK	CTX->m_tmp.m_v3
 
 	typedef struct {
 		aclspv_wrd_t	m_id_req;
@@ -60,10 +58,9 @@ enum CXChildVisitResult aclexpr_visit(
 		sizeof(exprstck) == sizeof(cmdcounterstckelm) && sizeof(cmdcounterstckelm) == sizeof(u32_least)
 	];
 
-#define	BUF_EXPRSTCK(a)	((exprstck* ae2f_restrict)(EXPRSTCK).m_p)
-#define	GETLASTELEXPRSTCK(a)	BUF_EXPRSTCK(c_stck)[EXPRSTCK_COUNT - 1]
 #define	BUF_CMDCOUNTERSTCK(a)	((cmdcounterstckelm* ae2f_restrict)(CMDCOUNTERSTCK).m_p)
 #define	GETLASTEL_CMDCOUNTERSTCK(a)	BUF_CMDCOUNTERSTCK()[NUM_CMDCOUNTERSTCK - 1]
+#define	GETLASTEL_CMDCOUNTERSTCK_PRV(a)	BUF_CMDCOUNTERSTCK()[NUM_CMDCOUNTERSTCK - 2]
 
 	h_scale_t LST_SCALE				= get_last_scale_from_vec(&CMDSTCK_SCALE);
 	aclspv_wrd_t* ae2f_restrict LST_SCALE_BUF	= get_buf_from_scale2(aclspv_wrd_t, &CMDSTCK_SCALE, *LST_SCALE);
@@ -86,13 +83,7 @@ enum CXChildVisitResult aclexpr_visit(
 		return CXChildVisit_Break;
 	}
 
-	if(EXPRSTCK_COUNT) {
-		ae2f_expected_but_else(EXPRSTCK.m_p) {
-			CTX->m_err = ACLSPV_COMPILE_ALLOC_FAILED_EXPR;
-			return CXChildVisit_Break;
-		}
-	}
-
+	
 	ae2f_ifezerr(NUM_CMDCOUNTERSTCK) {
 		CTX->m_err = ACLSPV_COMPILE_TOO_BIG_EXPRVISIT;
 		return CXChildVisit_Break;
@@ -153,26 +144,6 @@ enum CXChildVisitResult aclexpr_visit(
 			dbg_call(, fprintf(stderr, "[visit] OP_RECURSE(%u)\n", N_OPRND_TMP));
 
 			{
-				size_t	NEWSZ = EXPRSTCK.m_sz;
-				while((size_t)(EXPRSTCK_COUNT + N_OPRND_TMP) > NEWSZ / sizeof(exprstck))
-					NEWSZ <<= 1;
-
-				_aclspv_grow_vec_with_copy(
-						_aclspv_malloc, _aclspv_free, _aclspv_memcpy
-						, dest
-						, EXPRSTCK
-						, NEWSZ
-						);
-
-				ae2f_ifezerr(EXPRSTCK.m_p) {
-					CTX->m_err = ACLSPV_COMPILE_ALLOC_FAILED_EXPR;
-					return CXChildVisit_Break;
-				}
-			}
-
-			(void)(EXPRSTCK_COUNT += N_OPRND_TMP);
-
-			{
 				size_t NEWSZ = CMDCOUNTERSTCK.m_sz;
 				while(
 						((size_t)NUM_CMDCOUNTERSTCK > NEWSZ / sizeof(cmdcounterstckelm)) 
@@ -214,16 +185,13 @@ enum CXChildVisitResult aclexpr_visit(
 			LST_SCALE_BUF[ACLEXPR_OPBINCFG_END + GETLASTEL_CMDCOUNTERSTCK(i).m_count_oprnd] = ID_REQ;
 			TYPE_CAST_CURRENT = LST_EXTRA[GETLASTEL_CMDCOUNTERSTCK(a).m_count_oprnd].m_type_original;
 
-			(void)(EXPRSTCK_COUNT && --EXPRSTCK_COUNT);
 			(void)(LST_SCALE->m_id && ++GETLASTEL_CMDCOUNTERSTCK(a).m_count_oprnd);
 
 			while(LST_SCALE->m_id && GETLASTEL_CMDCOUNTERSTCK().m_count_oprnd == LST_SCALE_BUF[ACLEXPR_OPBINCFG_NUMOPRND]) {
-				aclexpr_opbincfg_extra	EXTRA_PRV;
 				aclspv_wrd_t	IDVAL_PRV = 0;
-
-				ae2fcc_memset(&EXTRA_PRV, 0, sizeof(aclexpr_opbincfg_extra));
-
-				(void)--GETLASTEL_CMDCOUNTERSTCK().m_count_oprnd;
+				aclexpr_opbincfg_extra PRV_EXTRA;
+				
+				ae2fcc_memset(&PRV_EXTRA, 0, sizeof(PRV_EXTRA));
 
 				LST_SCALE		= get_last_scale_from_vec(&CMDSTCK_SCALE);
 				LST_SCALE_BUF		= get_buf_from_scale2(aclspv_wrd_t, &CMDSTCK_SCALE, *LST_SCALE);
@@ -232,25 +200,23 @@ enum CXChildVisitResult aclexpr_visit(
 
 				LST_EXTRA
 					= (void* ae2f_restrict)(&LST_SCALE_BUF[(ACLEXPR_OPBINCFG_END + LST_SCALE_BUF[0])]);
-				dbg_prefix(a);
-				dbg_call((void), (fprintf(
-								stderr
-								, "Last scale ID[%lu]: [%p]%lu\n"
-								, (unsigned long)*((size_t*)CMDSTCK_SCALE.m_p)
-								, (void*)&LST_SCALE->m_id
-								, (unsigned long)LST_SCALE->m_id
-							 )));
-				dbg_prefix(a);
-				dbg_call((void), (fprintf(
-								stderr
-								, "count operand: %u\n"
-								, LST_SCALE_BUF[0] - 1
-							 )));
+
+				ae2f_ifnezerr_strict(NUM_CMDCOUNTERSTCK < 2) {
+					err_puts("[visit] NUM_CMDCOUNTERSTCK is fishy");
+					CTX->m_err = CTX->m_err ? CTX->m_err : ACLSPV_COMPILE_UNHANDLED_VISIT;
+					return CXChildVisit_Break;
+				}
+
+				dbg_prefix();
+				dbg_call(, fprintf(stderr
+							, "[visit] carve: depth %u prvidx %u (before)\n"
+							, (unsigned)NUM_CMDCOUNTERSTCK - 1u
+							, (unsigned)GETLASTEL_CMDCOUNTERSTCK_PRV(a).m_count_oprnd));
 
 				ae2f_unexpected_but_if(aclexpr_carve(
 							rdwr_data
 							, &IDVAL_PRV
-							, &EXTRA_PRV))
+							, &PRV_EXTRA))
 					return CXChildVisit_Break;
 
 				ae2f_ifezerr(IDVAL_PRV) {
@@ -263,24 +229,25 @@ enum CXChildVisitResult aclexpr_visit(
 				ae2f_ifezerr(NUM_CMDCOUNTERSTCK) {
 					err_puts("[visit] command counter stack has been broken.");
 					return CXChildVisit_Break;
-				} (void)--NUM_CMDCOUNTERSTCK;
+				} 
+
+				(void)--NUM_CMDCOUNTERSTCK;
+
+				dbg_prefix();
+				dbg_call(, fprintf(stderr
+							, "[visit] carve: depth %u prvidx %u (after)\n"
+							, (unsigned)NUM_CMDCOUNTERSTCK - 1u
+							, (unsigned)GETLASTEL_CMDCOUNTERSTCK(a).m_count_oprnd));
 
 				LST_SCALE		= get_last_scale_from_vec(&CMDSTCK_SCALE);
 				LST_SCALE_BUF		= get_buf_from_scale2(aclspv_wrd_t, &CMDSTCK_SCALE, *LST_SCALE);
 				LST_EXTRA		= (void* ae2f_restrict)(&LST_SCALE_BUF[(ACLEXPR_OPBINCFG_END + LST_SCALE_BUF[0])]);
+				LST_EXTRA[GETLASTEL_CMDCOUNTERSTCK(a).m_count_oprnd] = PRV_EXTRA;
 
-				LST_EXTRA[GETLASTEL_CMDCOUNTERSTCK().m_count_oprnd] = EXTRA_PRV;
 				ID_REQ = LST_SCALE_BUF[GETLASTEL_CMDCOUNTERSTCK(a).m_count_oprnd + ACLEXPR_OPBINCFG_END] = IDVAL_PRV;
-				TYPE_CAST_CURRENT = LST_EXTRA[GETLASTEL_CMDCOUNTERSTCK(a).m_count_oprnd].m_type_original;
-				IS_NOT_CONSTANT	&= LST_EXTRA[GETLASTEL_CMDCOUNTERSTCK(a).m_count_oprnd].m_mask_literal;
-				*RET_LITERAL = LST_EXTRA[GETLASTEL_CMDCOUNTERSTCK(a).m_count_oprnd].m_literal;
-
-				dbg_prefix(a);
-				dbg_call((void), (fprintf(stderr, "LST_EXTRA(%u): %p %u\n"
-								, GETLASTEL_CMDCOUNTERSTCK(a).m_count_oprnd
-								, (void*)&LST_EXTRA[GETLASTEL_CMDCOUNTERSTCK().m_count_oprnd].m_mask_literal
-								, LST_EXTRA[GETLASTEL_CMDCOUNTERSTCK(a).m_count_oprnd].m_mask_literal
-							 )));
+				TYPE_CAST_CURRENT = PRV_EXTRA.m_type_original;
+				IS_NOT_CONSTANT	&= PRV_EXTRA.m_mask_literal;
+				*RET_LITERAL = PRV_EXTRA.m_literal;
 
 				(void)(LST_SCALE->m_id && ++GETLASTEL_CMDCOUNTERSTCK(a).m_count_oprnd);
 			}
@@ -297,15 +264,15 @@ enum CXChildVisitResult aclexpr_visit(
 						, &CMDSTCK_SCALE
 						, cgcase(OP_RECURSE)
 						, cgcase(OP_FAIL)
-						, cgcase(OP2_BITWISE)
+						, cgcase(OP2_BOOL0)
 						));
 		}
 
-		cgcsdef(OP2_BITWISE):
+		cgcsdef(OP2_BOOL0):
 		{
-			dbg_puts("[visit] OP2_BITWISE");
+			dbg_puts("[visit] OP2_BOOL0");
 			N_OPRND_TMP = 2;
-			cgjmp(aclexpr_visit_op2_bitwise(
+			cgjmp(aclexpr_visit_op2_bool0(
 						h_cur, CTX
 						, &CMDSTCK_SCALE
 						, cgcase(OP_RECURSE)
@@ -393,14 +360,10 @@ enum CXChildVisitResult aclexpr_visit(
 #endif
 
 #undef	CTX
-#undef	EXPRSTCK_COUNT
-#undef	EXPRSTCK
 #undef	CMDSTCK_SCALE
 #undef	ID_REQ
 #undef	LST_CMD_COUNT
 #undef	LST_CMDBUF_COUNT
-#undef	BUF_EXPRSTCK
-#undef	GETLASTELEXPRSTCK
 #undef	CMDCOUNTERSTCK
 #undef	NUM_CMDCOUNTERSTCK
 #undef	GETLASTEL_CMDCOUNTERSTCK
