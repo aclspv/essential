@@ -1,10 +1,10 @@
 #include <aclspv.h>
+#include <aclcursor.h>
 
 #include <util/entp.h>
 #include <util/fn.h>
 #include <util/fnctx.h>
 #include <util/iddef.h>
-#include <util/cursor.h>
 #include <util/scale.h>
 #include <util/cxtp.h>
 #include <util/emitx.h>

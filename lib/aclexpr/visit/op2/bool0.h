@@ -63,9 +63,6 @@ ae2f_inline_f static aclexpr_visit_lbl_t aclexpr_visit_op2_bool0(
 		case CXBinaryOperator_XorAssign:
 			OPCODE = ACLEXPR_OP2_XOR_A;
 			break;
-		case CXBinaryOperator_NE:
-			OPCODE = ACLEXPR_OP2_XOR_L;
-			break;
 	}
 
 	{

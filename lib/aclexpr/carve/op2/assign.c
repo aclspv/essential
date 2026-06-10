@@ -1,6 +1,6 @@
 #include "./assign.h"
 #include <util/iddef.h>
-#include <util/cursor.h>
+#include <aclcursor.h>
 
 aclexpr_carve_lbl_t aclexpr_carve_op2_assign(
 		struct aclexpr_visit_data* const ae2f_restrict	rdwr_data,

@@ -8,9 +8,9 @@
 
 #include <ae2f/Keys.h>
 
-#include "./wrd.h"
-#include "./bind.h"
-#include "./literal.h"
+#include <util/wrd.h>
+#include <util/bind.h>
+#include <util/literal.h>
 #include <.aclspv/vec.h>
 
 enum	ACLUTIL_CURSOR_VAR_ {

@@ -3,7 +3,8 @@
 #include "./bool0.h"
 #include <util/constant.h>
 #include <util/wrdemit.h>
-#include <util/cursor.h>
+
+#include <aclcursor.h>
 
 ae2f_inline_f static ae2f_ccconst aclspv_wrd_t	s_opcvrt(const aclspv_wrd_t c_op) {
 	switch(c_op) {
@@ -18,8 +19,6 @@ ae2f_inline_f static ae2f_ccconst aclspv_wrd_t	s_opcvrt(const aclspv_wrd_t c_op)
 		case ACLEXPR_OP2_XOR_A:
 		case ACLEXPR_OP2_XOR:
 			return SpvOpBitwiseXor;
-		case ACLEXPR_OP2_XOR_L:
-			return SpvOpLogicalNotEqual;
 
 		default:
 			return 0;
@@ -35,7 +34,6 @@ ae2f_inline_f static ae2f_ccconst aclspv_bool_t s_is_assign(const aclspv_wrd_t c
 
 		case ACLEXPR_OP2_AND_L:
 		case ACLEXPR_OP2_OR_L:
-		case ACLEXPR_OP2_XOR_L:
 		case ACLEXPR_OP2_AND:
 		case ACLEXPR_OP2_OR:
 		case ACLEXPR_OP2_XOR:
@@ -50,7 +48,6 @@ ae2f_inline_f static ae2f_ccconst aclspv_bool_t s_is_logical(const aclspv_wrd_t 
 	switch(c) {
 		case ACLEXPR_OP2_AND_L:
 		case ACLEXPR_OP2_OR_L:
-		case ACLEXPR_OP2_XOR_L:
 			return 1;
 
 		case ACLEXPR_OP2_AND_A:
@@ -158,14 +155,10 @@ static aclexpr_carve_lbl_t s_iter(
 static aclspv_id_t	s_ty_oprnd(
 		aclspv_id_t	c_ty_origin,
 		aclspv_bool_t	c_is_logical,
-		aclspv_bool_t	c_is_neq,
 		h_aclspv_ctx_t	h_ctx
 		) {
 	unless(c_is_logical)
 		return c_ty_origin; 
-
-	if(c_is_neq)
-		return c_ty_origin;
 
 	{
 		struct aclutil_cxtp_veccfg_t V = aclutil_cxtp_get_veccfg(c_ty_origin, h_ctx);
@@ -205,7 +198,6 @@ ae2f_inline_f static ae2f_ccconst struct aclutil_ltrl_eval_t	s_eval2_ltrl(
 			switch((uintmax_t)c_opcode) {
 				EXPR_TWO(&&, m_api_intmax, SpvOpLogicalAnd); return RET;
 				EXPR_TWO(||, m_api_intmax, SpvOpLogicalOr); return RET;
-				EXPR_TWO(!=, m_api_intmax, SpvOpLogicalNotEqual); return RET;
 				EXPR_TWO(&, m_api_intmax, SpvOpBitwiseAnd); return RET;
 				EXPR_TWO(|, m_api_intmax, SpvOpBitwiseOr); return RET;
 				EXPR_TWO(^, m_api_intmax, SpvOpBitwiseXor); return RET;
@@ -222,7 +214,6 @@ ae2f_inline_f static ae2f_ccconst struct aclutil_ltrl_eval_t	s_eval2_ltrl(
 			switch((uintmax_t)c_opcode) {
 				EXPR_TWO(&&, m_api_uintmax, SpvOpLogicalAnd); return RET;
 				EXPR_TWO(||, m_api_uintmax, SpvOpLogicalOr); return RET;
-				EXPR_TWO(!=, m_api_uintmax, SpvOpLogicalNotEqual); return RET;
 				EXPR_TWO(&, m_api_uintmax, SpvOpBitwiseAnd); return RET;
 				EXPR_TWO(|, m_api_uintmax, SpvOpBitwiseOr); return RET;
 				EXPR_TWO(^, m_api_uintmax, SpvOpBitwiseXor); return RET;
@@ -262,7 +253,6 @@ aclexpr_carve_lbl_t aclexpr_carve_op2_bool0(
 				, (enum ACLSPV_ID_) rdwr_lst_extra[1].m_type_original
 				, (rdwr_data)->m_ctx
 				), s_is_logical(rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_OPCODE])
-			, OPNATIVE == SpvOpLogicalNotEqual
 			, rdwr_data->m_ctx);
 
 	rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_RESID] = *rdwr_prv_idval = (rdwr_data)->m_ctx->m_id++;

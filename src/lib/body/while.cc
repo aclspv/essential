@@ -4,13 +4,15 @@
 #include <util/fnctx.h>
 #include <util/emitx.h>
 #include <util/visitfromroot.h>
-#include <util/cursor.h>
 
 #include <ae2f/cc.h>
 #include <ae2f/cgoto.h>
+
+#include <aclexpr.h>
+#include <aclcursor.h>
 #include <aclattr/getkinder.h>
 #include <aclattr/branchratio.h>
-#include <aclexpr.h>
+
 #include <.aclspv/util/mkname.h>
 
 #include <ae2f/pat/macrofunc.h>

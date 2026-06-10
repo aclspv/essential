@@ -1,5 +1,7 @@
 #include "./incr.h"
-#include <util/cursor.h>
+
+#include <aclcursor.h>
+
 #include <util/cxtp.h>
 #include <util/constant.h>
 #include <util/emitx.h>

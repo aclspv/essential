@@ -5,10 +5,11 @@
 #include <aclattr/branchratio.h>
 
 #include <aclexpr.h>
+#include <aclcursor.h>
+
 #include <aclemit/entp_body.h>
 
 #include <util/emitx.h>
-#include <util/cursor.h>
 #include <util/fnctx.h>
 #include <util/visitfromroot.h>
 

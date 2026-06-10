@@ -6,12 +6,14 @@
 #ifndef aclexpr_visit_simple1_h
 #define aclexpr_visit_simple1_h
 
-#include <util/cursor.h>
 #include <util/emitx.h>
 #include <util/constant.h>
-#include <aclexpr/op.h>
 
 #include <aclexpr.h>
+#include <aclexpr/op.h>
+
+#include <aclcursor.h>
+
 #include <.aclspv/util/mkname.h>
 #include <aclexpr/visit/api.h>
 

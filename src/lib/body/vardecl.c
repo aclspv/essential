@@ -2,7 +2,6 @@
 #define aclemit_body_vardecl_c
 
 #include <util/cxtp.h>
-#include <util/cursor.h>
 #include <util/constant.h>
 #include <util/fnctx.h>
 #include <util/log.h>
@@ -11,6 +10,7 @@
 #include <aclattr/btcast.h>
 
 #include <aclexpr.h>
+#include <aclcursor.h>
 
 #include <ae2f/pat/macrofunc.h>
 #include <ae2f/pat/dbg.h>

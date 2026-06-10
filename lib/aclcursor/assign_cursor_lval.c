@@ -1,6 +1,7 @@
-#include <util/emitx.h>
-#include <util/cursor.h>
 #include <aclexpr.h>
+#include <aclcursor.h>
+
+#include <util/emitx.h>
 #include <ae2f/bll.h>
 #include <ae2f/cgoto.h>
 #include <.aclspv/util/mkname.h>

@@ -1,7 +1,9 @@
 #include "./arithmetic.h"
+
 #include <aclexpr/carve/util.h>
+#include <aclcursor.h>
+
 #include <util/wrdemit.h>
-#include <util/cursor.h>
 #include <.aclspv/vec.h>
 #include <ae2f/cc/switchctl.h>
 #include <util/constant.h>
