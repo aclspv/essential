@@ -8,7 +8,6 @@ static char s_src0[
 	sizeof(SRC0_0)
 	+ sizeof(SRC0_1) - 1
 	+ sizeof(SRC0_2) - 1
-	+ sizeof(SRC0_3) - 1
 #if	0
 	+ sizeof(SRC0_4) - 1
 	+ sizeof(SRC0_5) - 1
@@ -28,7 +27,6 @@ static void acltestcfg(void) {
 	strcpy(s_src0, SRC0_0);
 	strcat(s_src0, SRC0_1);
 	strcat(s_src0, SRC0_2);
-	strcat(s_src0, SRC0_3);
 
 	strcpy(s_oclbase, OCLBASE_0);
 	strcat(s_oclbase, OCLBASE_1);

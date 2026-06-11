@@ -44,7 +44,7 @@ enum CXChildVisitResult aclemit_entp_body(CXCursor h_cur, ae2f_unused CXCursor h
 
 		case CXCursor_ReturnStmt:
 			if(FNCTX->m_state0 & (uint_leastenum_t)(ACLUTIL_FNCTX_STATE0_LBL_DO_SOMETHING)) {
-				aclutil_tell_cursor_lbl(CTX->m_num_cursor, CTX->m_cursors.m_p
+				aclcursor_vardecl_evuclbl(CTX->m_num_cursor, CTX->m_cursors.m_p
 						, CTX, FNCTX->m_var_stage + 1);
 			} else {
 				CTX->m_count.m_fnimpl	= FNCTX->m_lbl_snapshot;
@@ -115,7 +115,7 @@ enum CXChildVisitResult aclemit_entp_body(CXCursor h_cur, ae2f_unused CXCursor h
 				CTX->m_count.m_name = FNCTX->m_name_snapshot;
 			}
 
-			ae2f_unexpected_but_if(CTX->m_err = aclutil_tell_cursor_lbl(
+			ae2f_unexpected_but_if(CTX->m_err = aclcursor_vardecl_evuclbl(
 						CTX->m_num_cursor
 						, CTX->m_cursors.m_p
 						, CTX
@@ -123,7 +123,7 @@ enum CXChildVisitResult aclemit_entp_body(CXCursor h_cur, ae2f_unused CXCursor h
 				goto LBL_FAIL;
 			{
 
-#define	CURSOR	((aclutil_cursor* ae2f_restrict)CTX->m_cursors.m_p)[IDX]
+#define	CURSOR	((x_aclcursor* ae2f_restrict)CTX->m_cursors.m_p)[IDX]
 				const aclspv_wrd_t IDX = aclutil_mk_cursor_base(
 						CTX->m_num_cursor
 						, &CTX->m_cursors
@@ -142,7 +142,7 @@ enum CXChildVisitResult aclemit_entp_body(CXCursor h_cur, ae2f_unused CXCursor h
 							&CTX->m_section.m_fnimpl
 							, CTX->m_count.m_fnimpl
 							, SpvOpBranch
-							, ((aclutil_cursor* ae2f_restrict)CTX->m_cursors.m_p)[IDX]
+							, ((x_aclcursor* ae2f_restrict)CTX->m_cursors.m_p)[IDX]
 							.m_data.m_goto_lbl.m_id
 							)) goto LBL_FAIL;
 
@@ -184,9 +184,9 @@ enum CXChildVisitResult aclemit_entp_body(CXCursor h_cur, ae2f_unused CXCursor h
 
 				ae2f_unexpected_but_if(CTX->m_num_cursor + 1 == IDX) goto LBL_FAIL;
 				if(CTX->m_num_cursor == IDX) {
-					((aclutil_cursor* ae2f_restrict)CTX->m_cursors.m_p)[IDX].m_cursor
+					((x_aclcursor* ae2f_restrict)CTX->m_cursors.m_p)[IDX].m_cursor
 						= LBL_STMT;
-					((aclutil_cursor* ae2f_restrict)CTX->m_cursors.m_p)[IDX].m_data.m_goto_lbl.m_id
+					((x_aclcursor* ae2f_restrict)CTX->m_cursors.m_p)[IDX].m_data.m_goto_lbl.m_id
 						= CTX->m_id++;
 
 					++CTX->m_num_cursor;
@@ -197,7 +197,7 @@ enum CXChildVisitResult aclemit_entp_body(CXCursor h_cur, ae2f_unused CXCursor h
 				FNCTX->m_name_snapshot	= CTX->m_count.m_name;
 
 				if(FNCTX->m_state0 & (uint_leastenum_t)(ACLUTIL_FNCTX_STATE0_LBL_DO_SOMETHING)) {
-					aclutil_tell_cursor_lbl(CTX->m_num_cursor, CTX->m_cursors.m_p
+					aclcursor_vardecl_evuclbl(CTX->m_num_cursor, CTX->m_cursors.m_p
 							, CTX, FNCTX->m_var_stage + 1);
 				}
 
@@ -205,7 +205,7 @@ enum CXChildVisitResult aclemit_entp_body(CXCursor h_cur, ae2f_unused CXCursor h
 							&CTX->m_section.m_fnimpl
 							, CTX->m_count.m_fnimpl
 							, SpvOpBranch
-							, ((aclutil_cursor* ae2f_restrict)CTX->m_cursors.m_p)[IDX]
+							, ((x_aclcursor* ae2f_restrict)CTX->m_cursors.m_p)[IDX]
 							.m_data.m_goto_lbl.m_id
 							)) goto LBL_FAIL;
 
@@ -272,7 +272,7 @@ enum CXChildVisitResult aclemit_entp_body(CXCursor h_cur, ae2f_unused CXCursor h
 			}
 
 			if(FNCTX->m_state0 & (uint_leastenum_t)(ACLUTIL_FNCTX_STATE0_LBL_DO_SOMETHING)) {
-				aclutil_tell_cursor_lbl(CTX->m_num_cursor, CTX->m_cursors.m_p
+				aclcursor_vardecl_evuclbl(CTX->m_num_cursor, CTX->m_cursors.m_p
 						, CTX, FNCTX->m_var_stage + 1);
 			}
 
@@ -303,7 +303,7 @@ enum CXChildVisitResult aclemit_entp_body(CXCursor h_cur, ae2f_unused CXCursor h
 			}
 
 			if(FNCTX->m_state0 & (uint_leastenum_t)(ACLUTIL_FNCTX_STATE0_LBL_DO_SOMETHING)) {
-				aclutil_tell_cursor_lbl(CTX->m_num_cursor, CTX->m_cursors.m_p
+				aclcursor_vardecl_evuclbl(CTX->m_num_cursor, CTX->m_cursors.m_p
 						, CTX, FNCTX->m_var_stage + 1);
 			}
 

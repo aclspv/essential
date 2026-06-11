@@ -35,7 +35,7 @@ enum ACLUTIL_FNCTX_STATE0_ {
 
 typedef struct {
 	h_aclspv_ctx_t		m_ctx;
-	uintmax_t		m_var_stage;	/** scope level */
+	aclspv_wrd_t		m_var_stage;	/** scope level */
 
 	/** @brief see `enum ACLSPV_FNCTX_STATEPAD0_` */
 	uint_leastenum_t	m_state0;

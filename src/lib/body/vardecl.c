@@ -32,7 +32,7 @@ ae2f_MAC((L, )) aclemit_body_vardecl(CXCursor h_cur, aclutil_fnctx* ae2f_restric
 	aclspv_wrdcount_t	L$$ORIGIN_CURSORS_NUM = L$$CTX->m_num_cursor;
 
 	const CXType	L$$TYPE = clang_getCanonicalType(clang_getCursorType(h_cur));
-	aclutil_cursor* L$$PCURSOR = L$$CTX->m_cursors.m_p ? &((aclutil_cursor* ae2f_restrict)L$$CTX->m_cursors.m_p)[L$$IDX] : 0;
+	x_aclcursor* L$$PCURSOR = L$$CTX->m_cursors.m_p ? &((x_aclcursor* ae2f_restrict)L$$CTX->m_cursors.m_p)[L$$IDX] : 0;
 
 	ae2f_ifezerr(L$$PCURSOR) {
 		L$$CTX->m_err = ACLSPV_COMPILE_UNHANDLED_BODY;
@@ -96,7 +96,7 @@ ae2f_MAC((L, )) aclemit_body_vardecl(CXCursor h_cur, aclutil_fnctx* ae2f_restric
 				));
 
 	{
-		aclspv_wrdcount_t L$$STAGEDIDX = aclutil_from_cursor_find_stagedval(
+		aclspv_wrdcount_t L$$STAGEDIDX = aclcursor_vardecl_find_stagedval(
 				L$$ORIGIN_CURSORS_NUM
 				, &h_fnctx->m_ctx->m_cursors
 				, L$$PCURSOR->m_data.m_vardecl.m_stage_lvl

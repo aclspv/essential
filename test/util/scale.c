@@ -3,6 +3,11 @@
 
 #include <assert.h>
 
+typedef struct {
+	char* m_name;
+	char* m_brief;
+} evknd;
+
 int main(void) {
 	x_aclspv_vec	alloc;
 	_aclspv_init_vec(alloc);

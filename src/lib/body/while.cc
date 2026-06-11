@@ -70,7 +70,7 @@ ae2f_MAC((L, )) aclemit_body_while(CXCursor h_cur, aclutil_fnctx * ae2f_restrict
 		const L$$LOOPWRD_T L$$LOOPEND		= (h_fnctx)->m_ctx->m_id++;
 		const L$$LOOPWRD_T L$$LOOPCONTINUE	= (h_fnctx)->m_ctx->m_id++;
 
-		ae2f_ifnezerr((h_fnctx->m_ctx)->m_err = aclutil_tell_cursor_lbl(
+		ae2f_ifnezerr((h_fnctx->m_ctx)->m_err = aclcursor_vardecl_evuclbl(
 					(h_fnctx->m_ctx)->m_num_cursor
 					, (h_fnctx->m_ctx)->m_cursors.m_p
 					, (h_fnctx->m_ctx)
@@ -128,7 +128,7 @@ ae2f_MAC((L, )) aclemit_body_while(CXCursor h_cur, aclutil_fnctx * ae2f_restrict
 				break;
 		}
 
-		ae2f_ifnezerr((h_fnctx->m_ctx)->m_err = aclutil_tell_cursor_lbl(
+		ae2f_ifnezerr((h_fnctx->m_ctx)->m_err = aclcursor_vardecl_evuclbl(
 					(h_fnctx->m_ctx)->m_num_cursor
 					, (h_fnctx->m_ctx)->m_cursors.m_p
 					, (h_fnctx->m_ctx)
@@ -201,7 +201,7 @@ ae2f_MAC((L, )) aclemit_body_while(CXCursor h_cur, aclutil_fnctx * ae2f_restrict
 
 			h_fnctx->m_state0		|= L$$FNCTX_NEW.m_state0;
 
-			ae2f_ifnezerr((h_fnctx->m_ctx)->m_err = aclutil_tell_cursor_lbl(
+			ae2f_ifnezerr((h_fnctx->m_ctx)->m_err = aclcursor_vardecl_evuclbl(
 						(h_fnctx->m_ctx)->m_num_cursor
 						, (h_fnctx->m_ctx)->m_cursors.m_p
 						, (h_fnctx->m_ctx)

@@ -6,6 +6,8 @@
 #ifndef util_cursor_h
 #define util_cursor_h
 
+#include "./aclcursor/vardecl.h"
+
 #include <ae2f/Keys.h>
 
 #include <util/wrd.h>
@@ -21,7 +23,8 @@ enum	ACLUTIL_CURSOR_VAR_ {
 	ACLUTIL_CURSOR_VAR_OWNER	= 0x20
 };
 
-typedef struct {
+
+typedef struct a_aclcursor {
 	/**
 	 * @var		m_cursor
 	 * @brief	`CXCursorKind` could be retrieved here
@@ -33,46 +36,7 @@ typedef struct {
 	 * @brief	additional data
 	 * */
 	union {
-		struct {
-			aclutil_literal	m_literal;
-			umax		m_stage_lvl;
-
-			/**
-			 * @var	m_id
-			 *
-			 * @brief
-			 * the id of variable 
-			 * */
-			aclspv_id_t	m_id;
-			aclspv_id_t	m_type_id;
-			aclspv_id_t	m_etype_id;	/** element type */
-			aclspv_id_t	m_ptr_type_id;
-
-			/**
-			 * @var	m_init_val
-			 *
-			 * @brief
-			 * the initial value id 
-			 * */
-			aclspv_id_t	m_init_val;
-
-			/**
-			 * @brief
-			 * [0,1]	mask_literal
-			 * [2]		is predictable
-			 * [3]		is allocated
-			 * [4]		is m_is_occupied
-			 * [5]		is owner
-			 *
-			 * @see ACLUTIL_CURSOR_VAR_
-			 * */
-			aclspv_wrd_t	m_mask;
-			aclspv_wrd_t	m_num;
-			aclspv_wrd_t	m_idx;
-			aclspv_wrd_t	m_nxt;
-		}
-		/** when cursor kind is arithmetic variable declaration */
-		m_vardecl;
+		aclcursor_vardecl_t m_vardecl;
 
 		struct {
 			/** @brief label id for goto */
@@ -87,14 +51,14 @@ typedef struct {
 		/** when cursor kind is param decl */
 		m_prm_decl;
 	} m_data;
-} aclutil_cursor;
+} x_aclcursor;
 
 /**
  * find cursor
  * */
 ae2f_extern  aclspv_wrdcount_t aclutil_find_cursor(
 		const aclspv_wrdcount_t			c_num_cursor, 
-		const aclutil_cursor* ae2f_restrict const	rd_cursors,
+		const x_aclcursor* ae2f_restrict const	rd_cursors,
 		const CXCursor				c_cursor_to_find
 		);
 
@@ -106,22 +70,8 @@ ae2f_extern  aclspv_wrdcount_t aclutil_mk_cursor_base(
 		const CXCursor				c_cursor_to_add
 		);
 
-ae2f_extern  enum ACLSPV_COMPILE_ aclutil_tell_cursor_lbl(
-		const aclspv_wrdcount_t c_num_cursor, 
-		aclutil_cursor* ae2f_restrict const wr_cursor, 
-		const h_aclspv_ctx_t h_ctx,
-		uintmax_t				c_stage_lvl
-		);
-
-aclspv_id_t aclutil_from_cursor_find_stagedval(
-		const aclspv_wrdcount_t		c_num_cursor,
-		const x_aclspv_vec* const ae2f_restrict h_cursors,
-		const umax c_stage, 
-		const aclspv_id_t c_ty
-		);
-
 ae2f_extern aclspv_id_t aclutil_assign_cursor_lval(
-		aclutil_cursor* ae2f_restrict const wr_cursor,
+		x_aclcursor* ae2f_restrict const wr_cursor,
 		const h_aclspv_ctx_t			h_ctx,
 		const aclspv_id_t			c_val,
 		const aclspv_id_t			c_val_ty,

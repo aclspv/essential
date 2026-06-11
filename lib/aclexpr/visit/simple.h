@@ -156,7 +156,7 @@ ae2f_inline_f static aclexpr_visit_lbl_t aclexpr_visit_op0_val(
 				ae2f_expected_but_else(DECL_IDX < h_ctx->m_num_cursor)
 					return c_lbl_fail;
 
-#define	DECL_INFO	DECL_IDX[((aclutil_cursor* ae2f_restrict)h_ctx->m_cursors.m_p)]
+#define	DECL_INFO	DECL_IDX[((x_aclcursor* ae2f_restrict)h_ctx->m_cursors.m_p)]
 
 				/** NaN is undefined behaviour here */
 				unless(aclid_is_arithmetic(DECL_INFO.m_data.m_vardecl.m_type_id, h_ctx)) {

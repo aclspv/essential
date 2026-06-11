@@ -136,7 +136,7 @@ ACLSPV_ABI_IMPL enum ACLSPV_COMPILE_ aclspv_ctx_compile(h_aclspv_ctx_t h_ctx, CX
 				if(CURSOR_IDX == (*h_ctx).m_num_cursor)
 					++(*h_ctx).m_num_cursor;
 
-				CURSOR_IDX[(aclutil_cursor* ae2f_restrict)(*h_ctx).m_cursors.m_p]
+				CURSOR_IDX[(x_aclcursor* ae2f_restrict)(*h_ctx).m_cursors.m_p]
 					.m_data.m_prm_decl.m_info = BUFFER[IDX];
 			}
 			IDX = (*h_ctx).m_tmp.m_w0;

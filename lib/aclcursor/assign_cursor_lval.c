@@ -16,7 +16,7 @@ ae2f_inline_f ae2f_ccconst static aclspv_bool_t s_is_lval(const enum CXCursorKin
 }
 
 aclspv_id_t aclutil_assign_cursor_lval(
-		aclutil_cursor* ae2f_restrict const wr_cursor,
+		x_aclcursor* ae2f_restrict const wr_cursor,
 		const h_aclspv_ctx_t			h_ctx,
 		const aclspv_id_t			c_val,
 		const aclspv_id_t			c_val_ty,
@@ -110,7 +110,7 @@ aclspv_id_t aclutil_assign_cursor_lval(
 		return (*wr_cursor).m_data.m_vardecl.m_init_val;
 	}
 
-	(*wr_cursor).m_data.m_vardecl.m_mask	 |= ACLUTIL_CURSOR_VAR_PREDICTABLE;
+	wr_cursor->m_data.m_vardecl.m_mask	 |= ACLUTIL_CURSOR_VAR_PREDICTABLE;
 	wr_cursor->m_data.m_vardecl.m_mask &= ~(aclspv_wrd_t)ACLUTIL_CURSOR_VAR_LITERAL;
 	ae2f_expected_but_else(h_ctx->m_count.m_fnimpl = aclutil_emitx_4(
 				&h_ctx->m_section.m_fnimpl

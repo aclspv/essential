@@ -11,16 +11,16 @@ typedef vector(4) long long4;
 typedef vector(4) int int4;
 typedef vector(4) _Bool bool4;
 
-#if 1
+#if 0
 kernel_raw(0) void KERNEL(void) {
-    goto K;
     double4    c, c1, c2;
-    float    cc = 1;
+    float    cc = 2;
     float4    d = cc;
     double4    a = d * cc;
-K:
-    c += a;
-    c2 += c;
+
+    if((int)cc) {}
+
+    return;
 }
 #endif
 
@@ -31,33 +31,12 @@ kernel_raw(5) void N_KERNEL_0(
 
         ) {
     btcast float a0 = 1078774989;
-    int a1 specid(0) = 3;
-    int a2 = a0 + (a0 += a1);
-    btcast long a = (double)(int)(float)(a0 + a1 + a2);
+    float a1 = (a0 += 3.f) * 2;
+    float a2;
 
-    {
-        if(0) { int B = 3; a2 += (B -= 2); }
-        else if(a) { bratio(3, 3) int B = 4; a2 += B; if(1) { int C = 3; a2 += C; } }
-        else {}
-    }
+    a2 -= a1;
 
-#if 1
-    while(a2++ & a1) {
-        bratio(1, 2) int AAA;
-        a1 += a2;
-        break;
-    }
+    if((int)a1) {  } else {}
 
-    a2 = 8;
-#endif
-
-    goto GOTO;
-
-    a2 += 6;
-    a2 += 5;
-
-GOTO:
-    a2 += 3;
-    a2 += 3;
     return;
 }

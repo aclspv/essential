@@ -39,7 +39,7 @@ aclexpr_carve_lbl_t aclexpr_carve_op1_incr(
 			, clang_getCanonicalCursor(clang_getCursorDefinition(rdwr_lst_extra->m_cursor))
 			);
 
-	aclutil_cursor	* ae2f_restrict C = ((aclutil_cursor* ae2f_restrict)rdwr_data->m_ctx->m_cursors.m_p) + CURIDX;
+	x_aclcursor	* ae2f_restrict C = ((x_aclcursor* ae2f_restrict)rdwr_data->m_ctx->m_cursors.m_p) + CURIDX;
 
 	aclutil_literal LTRL;
 	aclspv_id_t	V;

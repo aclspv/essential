@@ -303,6 +303,40 @@ aclexpr_carve_lbl_t aclexpr_carve_op2_bool0(
 	rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_OPCODE] = OPNATIVE;
 
 	switch(rdwr_prv_extra->m_mask_literal) {
+		case ACLUTIL_LITERAL_MASK_LITERAL: 
+		case ACLUTIL_LITERAL_LITERAL:
+			{
+				struct aclutil_ltrl_eval_t EVAL_LIT 
+					= s_eval2_ltrl(
+							rdwr_lst_extra[0].m_literal
+							, rdwr_lst_extra[1].m_literal
+							, (enum SpvOp_)OPNATIVE
+							,(enum ACLSPV_ID_)rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_RESTYID]
+						      );
+
+				ae2f_ifnezerr_strict(EVAL_LIT.m_found) {
+					dbg_puts(("The result is literal."));
+					*r_ltrl = rdwr_prv_extra->m_literal = EVAL_LIT.m_ret;
+					rdwr_prv_extra->m_type_original = rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_RESTYID];
+
+
+					ae2f_ifezerr(*rdwr_prv_idval = aclutil_mk_constant_val_by_enum(EVAL_LIT.m_ret.m_api_uintmax, rdwr_data->m_ctx
+								, rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_RESTYID])) {
+						err_puts("[carve2::bool] aclutil_mk_constant_val_by_enum");
+						return c_lbl_err;
+					}
+
+
+					dbg_prefix();
+					dbg_call((void), fprintf(stderr, "literal id: %u\n", *rdwr_prv_idval));
+				} else {
+					err_puts("[carve2::bool] EVAL_LIT");
+					return c_lbl_err;
+				}
+
+				break;
+			}
+
 		case ACLUTIL_LITERAL_MASK_RT:
 #define	XORSWAP(a, b)	{ (a) ^= (b); (b) ^= (a); (a) ^= (b); }
 			/** 
@@ -347,49 +381,8 @@ aclexpr_carve_lbl_t aclexpr_carve_op2_bool0(
 			 * */
 			XORSWAP(rdwr_lst_scale_buf[3], rdwr_lst_scale_buf[4]);
 #undef	XORSWAP
-			break;
-
-		case ACLUTIL_LITERAL_MASK_LITERAL: 
-		case ACLUTIL_LITERAL_LITERAL:
-			{
-				struct aclutil_ltrl_eval_t EVAL_LIT 
-					= s_eval2_ltrl(
-							rdwr_lst_extra[0].m_literal
-							, rdwr_lst_extra[1].m_literal
-							, (enum SpvOp_)OPNATIVE
-							,(enum ACLSPV_ID_)rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_RESTYID]
-						      );
-
-				ae2f_ifnezerr_strict(EVAL_LIT.m_found) {
-					dbg_puts(("The result is literal."));
-					*r_ltrl = rdwr_prv_extra->m_literal = EVAL_LIT.m_ret;
-					rdwr_prv_extra->m_type_original = rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_RESTYID];
-
-
-					ae2f_ifezerr(*rdwr_prv_idval = aclutil_mk_constant_val_by_enum(EVAL_LIT.m_ret.m_api_uintmax, rdwr_data->m_ctx
-								, rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_RESTYID])) {
-						err_puts("[carve2::bool] aclutil_mk_constant_val_by_enum");
-						return c_lbl_err;
-					}
-
-
-					dbg_prefix();
-					dbg_call((void), fprintf(stderr, "literal id: %u\n", *rdwr_prv_idval));
-					return c_lbl_success;
-				} else {
-					err_puts("[carve2::bool] EVAL_LIT");
-					return c_lbl_err;
-				}
-			}
-
 			ae2f_fallthrough;
-		case ACLUTIL_LITERAL_MASK_CONSTANT: 
-			dbg_puts(("The result is constant(fallback)."));
-			break;
-		default:
-			err_puts(("unknown literal"));
-			ae2f_unreachable();
-	}
+		case ACLUTIL_LITERAL_MASK_CONSTANT:
 
 #define		TMPL_SECTION	(*((rdwr_prv_extra->m_mask_literal) == ACLUTIL_LITERAL_RT \
 			? &(rdwr_data)->m_ctx->m_section.m_fnimpl		\
@@ -399,30 +392,35 @@ aclexpr_carve_lbl_t aclexpr_carve_op2_bool0(
 			? &(rdwr_data)->m_ctx->m_count.m_fnimpl			\
 			: &(rdwr_data)->m_ctx->m_count.m_types))
 
-	dbg_puts("[carve2::arithmetic] vec_with_copy");
-	_aclspv_grow_vec_with_copy(
-			_aclspv_malloc
-			, _aclspv_free
-			, _aclspv_memcpy
-			, L_new
-			, TMPL_SECTION
-			, (size_t)aclutil_count_to_sz(TMPL_COUNT + 6u - (aclspv_wrd_t)(rdwr_prv_extra->m_mask_literal == (aclspv_wrd_t)ACLUTIL_LITERAL_RT))
-			);
+			dbg_puts("[carve2::arithmetic] vec_with_copy");
+			_aclspv_grow_vec_with_copy(
+					_aclspv_malloc
+					, _aclspv_free
+					, _aclspv_memcpy
+					, L_new
+					, TMPL_SECTION
+					, (size_t)aclutil_count_to_sz(TMPL_COUNT + 6u - (aclspv_wrd_t)(rdwr_prv_extra->m_mask_literal == (aclspv_wrd_t)ACLUTIL_LITERAL_RT))
+					);
 
-	ae2f_ifezerr(TMPL_SECTION.m_p) {
-		(rdwr_data)->m_ctx->m_err = ACLSPV_COMPILE_ALLOC_FAILED_EXPR;
-		return c_lbl_err;
+			ae2f_ifezerr(TMPL_SECTION.m_p) {
+				(rdwr_data)->m_ctx->m_err = ACLSPV_COMPILE_ALLOC_FAILED_EXPR;
+				return c_lbl_err;
+			}
+
+			{
+				aclspv_wrd_t	CI = 6 - (!rdwr_prv_extra->m_mask_literal);
+				while(CI --> 0) {
+					aclutil_get_wrd_of_vec(&TMPL_SECTION)[TMPL_COUNT + CI]
+						= rdwr_lst_scale_buf[1u + (!rdwr_prv_extra->m_mask_literal) + CI];
+				}
+			}
+
+			TMPL_COUNT += 6u - (aclspv_wrd_t)(rdwr_prv_extra->m_mask_literal == ACLUTIL_LITERAL_RT);
+			break;
+		default:
+			err_puts(("unknown literal"));
+			ae2f_unreachable();
 	}
-
-	{
-		aclspv_wrd_t	CI = 6 - (!rdwr_prv_extra->m_mask_literal);
-		while(CI --> 0) {
-			aclutil_get_wrd_of_vec(&TMPL_SECTION)[TMPL_COUNT + CI]
-				= rdwr_lst_scale_buf[1u + (!rdwr_prv_extra->m_mask_literal) + CI];
-		}
-	}
-
-	TMPL_COUNT += 6u - (aclspv_wrd_t)(rdwr_prv_extra->m_mask_literal == ACLUTIL_LITERAL_RT);
 
 	if(ISASS) {
 		CXCursor	CASSIGN		= rdwr_lst_extra->m_cursor;
@@ -433,7 +431,7 @@ aclexpr_carve_lbl_t aclexpr_carve_op2_bool0(
 				);
 
 		aclspv_wrd_t	CLVAL = aclutil_assign_cursor_lval(
-				&((aclutil_cursor* ae2f_restrict)rdwr_data->m_ctx->m_cursors.m_p)[IDX]
+				&((x_aclcursor* ae2f_restrict)rdwr_data->m_ctx->m_cursors.m_p)[IDX]
 				, rdwr_data->m_ctx, *rdwr_prv_idval, rdwr_prv_extra->m_type_original
 				, rdwr_prv_extra->m_mask_literal
 				, &rdwr_prv_extra->m_literal

@@ -20,7 +20,7 @@ aclexpr_carve_lbl_t aclexpr_carve_op2_assign(
 			, clang_getCursorReferenced(rdwr_lst_extra->m_cursor));
 
 
-	aclutil_cursor* const ae2f_restrict C = &((aclutil_cursor* ae2f_restrict)rdwr_data->m_ctx->m_cursors.m_p)[CIDX];
+	x_aclcursor* const ae2f_restrict C = &((x_aclcursor* ae2f_restrict)rdwr_data->m_ctx->m_cursors.m_p)[CIDX];
 
 	ae2f_ifnezerr_strict(CIDX >= rdwr_data->m_ctx->m_num_cursor) {
 		err_puts("[carve2::assign] CIDX assert");
