@@ -6,6 +6,14 @@
 #include <util/wrd.h>
 #include <util/literal.h>
 
+enum	ACLCURSOR_VARDECL_ {
+	ACLCURSOR_VARDECL_LITERAL	= 0x3,
+	ACLCURSOR_VARDECL_PREDICTABLE	= 0x4,
+	ACLCURSOR_VARDECL_ALLOCATED	= 0x8,
+	ACLCURSOR_VARDECL_OCCUPIED	= 0x10,
+	ACLCURSOR_VARDECL_OWNER		= 0x20
+};
+
 /** when cursor kind is arithmetic variable declaration */
 typedef struct {
 	aclutil_literal	m_literal;
@@ -46,7 +54,16 @@ typedef struct {
 	aclspv_wrd_t	m_nxt;
 } aclcursor_vardecl_t;
 
-ae2f_extern  enum ACLSPV_COMPILE_ aclcursor_vardecl_evuclbl(
+aclspv_bool_t	ae2f_ccpure aclcursor_is_vardecl(
+		const h_aclcursor_t	rd_cursor
+		);
+
+CXCursor	aclcursor_get_vardecl_from_ref(
+		const CXCursor		c_cur,
+		const h_aclspv_ctx_t	h_ctx
+		);
+
+enum ACLSPV_COMPILE_ aclcursor_vardecl_evuclbl(
 		const aclspv_wrdcount_t c_num_cursor, 
 		const h_aclcursor_t	wr_cursor, 
 		const h_aclspv_ctx_t	h_ctx,
@@ -58,6 +75,25 @@ aclspv_id_t aclcursor_vardecl_find_stagedval(
 		const x_aclspv_vec* const ae2f_restrict h_cursors,
 		const umax c_stage, 
 		const aclspv_id_t c_ty
+		);
+
+aclspv_id_t aclcursor_vardecl_assign(
+		const h_aclcursor_t			wr_cursor,
+		const h_aclspv_ctx_t			h_ctx,
+		const aclspv_id_t			c_val,
+		const aclspv_id_t			c_val_ty,
+		const aclutil_ltrlmask_t			c_masklit,
+		const aclutil_literal* ae2f_restrict	rd_literal_to_assign,
+		aclutil_literal*	ae2f_restrict		r_literal_opt
+		);
+
+/** 1 when failed */
+aclspv_bool_t aclcursor_vardecl_phi_reserve(
+		aclspv_wrdcount_t	c_num_cursor,
+		const h_aclcursor_t	wr_cursor,
+		const h_aclspv_ctx_t	h_ctx,
+		const aclspv_wrd_t	c_idx,
+		const CXCursor		c_child
 		);
 
 #endif

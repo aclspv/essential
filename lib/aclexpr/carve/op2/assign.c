@@ -27,7 +27,7 @@ aclexpr_carve_lbl_t aclexpr_carve_op2_assign(
 		return c_lbl_err;
 	}
 
-	ae2f_ifezerr(*rdwr_prv_idval = aclutil_assign_cursor_lval(
+	ae2f_ifezerr(*rdwr_prv_idval = aclcursor_vardecl_assign(
 			C, rdwr_data->m_ctx
 			, rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_END + 1]
 			, rdwr_lst_extra[1].m_type_original

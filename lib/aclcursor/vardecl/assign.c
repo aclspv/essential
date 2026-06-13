@@ -6,16 +6,7 @@
 #include <ae2f/cgoto.h>
 #include <.aclspv/util/mkname.h>
 
-ae2f_inline_f ae2f_ccconst static aclspv_bool_t s_is_lval(const enum CXCursorKind	c_cursorkind) {
-	switch((uint_leastenum_t)c_cursorkind) {
-		default: return 0;
-		case CXCursor_VariableRef:
-		case CXCursor_VarDecl:
-			return 1;
-	}
-}
-
-aclspv_id_t aclutil_assign_cursor_lval(
+aclspv_id_t aclcursor_vardecl_assign(
 		x_aclcursor* ae2f_restrict const wr_cursor,
 		const h_aclspv_ctx_t			h_ctx,
 		const aclspv_id_t			c_val,
@@ -33,7 +24,7 @@ aclspv_id_t aclutil_assign_cursor_lval(
 				, (*wr_cursor).m_data.m_vardecl.m_type_id));
 	
 
-	unless(s_is_lval(wr_cursor->m_cursor.kind)) {
+	unless(aclcursor_is_vardecl(wr_cursor)) {
 		err_prefix(a);
 		err_call(fprintf, (stderr, "wr_cursor is not left-value %d\n", (int)wr_cursor->m_cursor.kind));
 		h_ctx->m_err = ACLSPV_COMPILE_ASSIGN_ON_NON_LVAL;
@@ -42,7 +33,7 @@ aclspv_id_t aclutil_assign_cursor_lval(
 
 	if(r_literal_opt) *r_literal_opt = (*wr_cursor).m_data.m_vardecl.m_literal;
 	if(rd_literal_to_assign && (c_masklit & ACLUTIL_LITERAL_LITERAL)) {
-		(*wr_cursor).m_data.m_vardecl.m_mask |= 3 | ACLUTIL_CURSOR_VAR_PREDICTABLE;
+		(*wr_cursor).m_data.m_vardecl.m_mask |= 3 | ACLCURSOR_VARDECL_PREDICTABLE;
 
 		switch(aclexpr_arithmetic_cast_literal(
 					c_val_ty
@@ -76,8 +67,8 @@ aclspv_id_t aclutil_assign_cursor_lval(
 	if(c_val) {
 		dbg_prefix(a);
 		dbg_call((void), fprintf(stderr, "[assign] c_val %u\n", (unsigned)c_val));
-		(*wr_cursor).m_data.m_vardecl.m_mask	|= ACLUTIL_CURSOR_VAR_PREDICTABLE;
-		(*wr_cursor).m_data.m_vardecl.m_mask	&= ~((aclspv_wrd_t)ACLUTIL_CURSOR_VAR_LITERAL);
+		(*wr_cursor).m_data.m_vardecl.m_mask	|= ACLCURSOR_VARDECL_PREDICTABLE;
+		(*wr_cursor).m_data.m_vardecl.m_mask	&= ~((aclspv_wrd_t)ACLCURSOR_VARDECL_LITERAL);
 		switch(aclexpr_arithmetic_cast_non_literal(
 					c_val
 					, c_val_ty
@@ -97,7 +88,7 @@ aclspv_id_t aclutil_assign_cursor_lval(
 
 			case ACLEXPR_RET_SUCCESS:
 				dbg_prefix();
-				dbg_call(, fprintf(stderr, "[assign] c_val casted %u\n"
+				dbg_call((void), fprintf(stderr, "[assign] c_val casted %u\n"
 							, (unsigned)wr_cursor->m_data.m_vardecl.m_init_val
 							));
 				ae2f_ifezerr(wr_cursor->m_data.m_vardecl.m_init_val)
@@ -106,12 +97,12 @@ aclspv_id_t aclutil_assign_cursor_lval(
 		}
 	}
 
-	if((*wr_cursor).m_data.m_vardecl.m_mask & ACLUTIL_CURSOR_VAR_PREDICTABLE) {
+	if((*wr_cursor).m_data.m_vardecl.m_mask & ACLCURSOR_VARDECL_PREDICTABLE) {
 		return (*wr_cursor).m_data.m_vardecl.m_init_val;
 	}
 
-	wr_cursor->m_data.m_vardecl.m_mask	 |= ACLUTIL_CURSOR_VAR_PREDICTABLE;
-	wr_cursor->m_data.m_vardecl.m_mask &= ~(aclspv_wrd_t)ACLUTIL_CURSOR_VAR_LITERAL;
+	wr_cursor->m_data.m_vardecl.m_mask	 |= ACLCURSOR_VARDECL_PREDICTABLE;
+	wr_cursor->m_data.m_vardecl.m_mask &= ~(aclspv_wrd_t)ACLCURSOR_VARDECL_LITERAL;
 	ae2f_expected_but_else(h_ctx->m_count.m_fnimpl = aclutil_emitx_4(
 				&h_ctx->m_section.m_fnimpl
 				, h_ctx->m_count.m_fnimpl

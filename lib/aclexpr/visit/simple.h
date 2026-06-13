@@ -172,13 +172,13 @@ ae2f_inline_f static aclexpr_visit_lbl_t aclexpr_visit_op0_val(
 				*rwr_literal = DECL_INFO.m_data.m_vardecl.m_literal;
 
 				dbg_prefix();
-				dbg_call(, fprintf(stderr, "[visit0::val] lval cache check %u value %u idx %u before\n"
+				dbg_call((void), fprintf(stderr, "[visit0::val] lval cache check %u value %u idx %u before\n"
 							, (unsigned)!!(DECL_INFO.m_data.m_vardecl.m_mask 
-								& (aclspv_wrd_t)ACLUTIL_CURSOR_VAR_PREDICTABLE)
+								& (aclspv_wrd_t)ACLCURSOR_VARDECL_PREDICTABLE)
 							, (unsigned)*wr_newid
 							, (unsigned)DECL_IDX));
 
-				ae2f_ifezerr(*wr_newid = aclutil_assign_cursor_lval(
+				ae2f_ifezerr(*wr_newid = aclcursor_vardecl_assign(
 							&DECL_INFO, h_ctx
 							, 0, 0
 							, 3, 0
@@ -186,13 +186,13 @@ ae2f_inline_f static aclexpr_visit_lbl_t aclexpr_visit_op0_val(
 					return c_lbl_fail;
 
 				dbg_prefix();
-				dbg_call(, fprintf(stderr, "[visit0::val] lval cache check %u value %u idx %u\n"
+				dbg_call((void), fprintf(stderr, "[visit0::val] lval cache check %u value %u idx %u\n"
 							, (unsigned)!!(DECL_INFO.m_data.m_vardecl.m_mask 
-								& (aclspv_wrd_t)ACLUTIL_CURSOR_VAR_PREDICTABLE)
+								& (aclspv_wrd_t)ACLCURSOR_VARDECL_PREDICTABLE)
 							, (unsigned)*wr_newid
 							, (unsigned)DECL_IDX));
 
-				rdwr_extra->m_mask_literal = ((aclspv_wrd_t)(ACLUTIL_CURSOR_VAR_LITERAL) & DECL_INFO.m_data.m_vardecl.m_mask);
+				rdwr_extra->m_mask_literal = ((aclspv_wrd_t)(ACLCURSOR_VARDECL_LITERAL) & DECL_INFO.m_data.m_vardecl.m_mask);
 				return c_lbl_success;
 #undef	DECL_INFO
 			}

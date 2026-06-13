@@ -5,6 +5,22 @@
 
 #include <.aclspv/util/u32_to_hex8.h>
 
+aclspv_bool_t	ae2f_ccpure aclcursor_is_vardecl(
+		const h_aclcursor_t	rd_cursor
+		) {
+	return rd_cursor->m_kind == ACLCURSOR_VARDECL;
+}
+
+CXCursor	aclcursor_get_vardecl_from_ref(
+		const CXCursor		c_cur,
+		const h_aclspv_ctx_t	h_ctx
+		) {
+	(void)h_ctx;
+	switch((uint_leastenum_t)c_cur.kind) {
+		default: return clang_getCursorReferenced(c_cur);
+	}
+}
+
 enum ACLSPV_COMPILE_ aclcursor_vardecl_evuclbl(
 		const aclspv_wrdcount_t c_num_cursor, 
 		x_aclcursor* ae2f_restrict const wr_cursor, 
@@ -12,11 +28,11 @@ enum ACLSPV_COMPILE_ aclcursor_vardecl_evuclbl(
 		uintmax_t	c_cursor_lvl
 		) {
 	aclspv_wrdcount_t	IDX = c_num_cursor;
-	assert(wr_cursor || !c_num_cursor);
-	{ ae2f_assume(wr_cursor || !c_num_cursor); }
+	ae2fpat_assertassume_strict(wr_cursor);
+	
 	ae2f_expected_if(wr_cursor) while(IDX--) {
 #define	CURSORDATA	wr_cursor[IDX].m_data.m_vardecl
-		unless(wr_cursor[IDX].m_cursor.kind == CXCursor_VarDecl)
+		unless(aclcursor_is_vardecl(wr_cursor + IDX))
 			continue;
 
 		dbg_prefix();
@@ -27,9 +43,9 @@ enum ACLSPV_COMPILE_ aclcursor_vardecl_evuclbl(
 		if(wr_cursor[IDX].m_data.m_vardecl.m_stage_lvl >= c_cursor_lvl)
 			continue;
 
-		if((CURSORDATA.m_mask & (ACLUTIL_CURSOR_VAR_ALLOCATED | ACLUTIL_CURSOR_VAR_OCCUPIED))
-				== (ACLUTIL_CURSOR_VAR_ALLOCATED | ACLUTIL_CURSOR_VAR_OCCUPIED)) {
-			if(CURSORDATA.m_mask & ACLUTIL_CURSOR_VAR_PREDICTABLE &&
+		if((CURSORDATA.m_mask & (ACLCURSOR_VARDECL_ALLOCATED | ACLCURSOR_VARDECL_OCCUPIED))
+				== (ACLCURSOR_VARDECL_ALLOCATED | ACLCURSOR_VARDECL_OCCUPIED)) {
+			if(CURSORDATA.m_mask & ACLCURSOR_VARDECL_PREDICTABLE &&
 					(CURSORDATA.m_init_val && !ae2f_expected(
 										 h_ctx->m_count.m_fnimpl = aclutil_emitx_3(
 											 &h_ctx->m_section.m_fnimpl
@@ -43,14 +59,14 @@ enum ACLSPV_COMPILE_ aclcursor_vardecl_evuclbl(
 
 			dbg_prefix(); dbg_call((void), fprintf(stderr
 						, "tell cursor label %u %u\n"
-						, IDX, (unsigned)CURSORDATA.m_mask & ACLUTIL_CURSOR_VAR_PREDICTABLE
+						, IDX, (unsigned)CURSORDATA.m_mask & ACLCURSOR_VARDECL_PREDICTABLE
 						));
 
-			CURSORDATA.m_mask &= ~(aclspv_wrd_t)ACLUTIL_CURSOR_VAR_PREDICTABLE;
+			CURSORDATA.m_mask &= ~(aclspv_wrd_t)ACLCURSOR_VARDECL_PREDICTABLE;
 		}
-		else if(CURSORDATA.m_mask & ACLUTIL_CURSOR_VAR_OWNER) {
-			CURSORDATA.m_mask |= ACLUTIL_CURSOR_VAR_ALLOCATED;
-			CURSORDATA.m_mask &= ~(aclspv_wrd_t)(ACLUTIL_CURSOR_VAR_PREDICTABLE);
+		else if(CURSORDATA.m_mask & ACLCURSOR_VARDECL_OWNER) {
+			CURSORDATA.m_mask |= ACLCURSOR_VARDECL_ALLOCATED;
+			CURSORDATA.m_mask &= ~(aclspv_wrd_t)(ACLCURSOR_VARDECL_PREDICTABLE);
 
 			ae2f_expected_but_else(h_ctx->m_count.m_fndef = util_emitx_variable(
 						&h_ctx->m_section.m_fndef
@@ -148,7 +164,7 @@ aclspv_wrdcount_t aclcursor_vardecl_find_stagedval(
 		if(C.m_data.m_vardecl.m_stage_lvl <= c_stage)
 			continue;
 
-		if(C.m_data.m_vardecl.m_mask & ACLUTIL_CURSOR_VAR_OCCUPIED)
+		if(C.m_data.m_vardecl.m_mask & ACLCURSOR_VARDECL_OCCUPIED)
 			continue;
 
 		return CURI;

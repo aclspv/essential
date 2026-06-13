@@ -43,8 +43,6 @@ static enum ACLEXPR_RET_ s_non_literal_novec(
 		return ACLEXPR_RET_FAILURE;
 	}
 
-	dbg_puts(("Arithmetic cast: non-literal"));
-
 	/** two are same */
 	if(c_old_type == c_new_type) {
 		const uint_fastenum_t	CND = c_flag_literal & ACLUTIL_LITERAL_CONSTANT;
@@ -58,15 +56,11 @@ static enum ACLEXPR_RET_ s_non_literal_novec(
 				, ACLEXPR_RET_SUCCESS);
 	}
 
-	/** down here, two types are different */
-	dbg_puts("two are not same");
-
 	unless(aclid_is_vectorisable(c_old_type) && aclid_is_vectorisable(c_new_type))
 		return ACLEXPR_RET_NOT_THE_CASE;
 
 	/** two are float */
 	if (aclid_is_float(c_old_type) && aclid_is_float(c_new_type)) {
-		dbg_puts("two are float");
 		if(c_flag_literal & ACLUTIL_LITERAL_CONSTANT) {
 			ae2f_expected_but_else(h_ctx->m_count.m_types
 					= aclutil_emitx_5(
@@ -181,8 +175,6 @@ static enum ACLEXPR_RET_ s_non_literal_novec(
 
 		ae2f_unreachable();
 	}
-
-	dbg_puts("two are different");
 
 	if(c_new_type == ACLSPV_ID_BOOL && (aclid_is_int(c_old_type) | aclid_is_float(c_old_type))) {
 		aclspv_id_t		V0;
@@ -334,11 +326,16 @@ static enum ACLEXPR_RET_ s_non_literal_vec(
 				, h_ctx
 				);
 
+
 		struct aclutil_mk_constant_repvec_t	REPVEC = aclutil_mk_constant_repvec_id(
 				VECTYID, c_old_id, c_flag_literal, h_ctx
 				);
 
-		dbg_puts("\trepvec");
+		dbg_prefix();
+		dbg_call((void), fprintf(stderr, "[arithmetic_cast::vec::repvec] %u -> type %u mask %u\n"
+					, (unsigned)c_flag_literal
+					, (unsigned)REPVEC.m_id
+					, (unsigned)REPVEC.m_literal_mask));
 
 		ae2f_ifezerr(REPVEC.m_id) {
 			h_ctx->m_err = ACLSPV_COMPILE_ALLOC_FAILED;
@@ -588,7 +585,7 @@ enum ACLEXPR_RET_ aclexpr_arithmetic_cast_literal(
 
 		default:
 		err_prefix();
-		err_call(, fprintf(stderr, "Type not found %u\n", (unsigned)c_new_type));
+		err_call((void), fprintf(stderr, "Type not found %u\n", (unsigned)c_new_type));
 		return ACLEXPR_RET_FAILURE;
 	}
 
@@ -608,6 +605,8 @@ enum ACLEXPR_RET_ aclexpr_arithmetic_cast(
 		const h_aclspv_ctx_t	h_ctx
 		)
 {
+	enum ACLEXPR_RET_	R;
+
 	ae2fpat_assertassume(r_newid);
 	ae2fpat_assertassume(h_ctx);
 
@@ -629,27 +628,25 @@ enum ACLEXPR_RET_ aclexpr_arithmetic_cast(
 	(void)aclid_mk_default_id(c_new_type, h_ctx);
 	(void)aclid_mk_default_id(c_old_type, h_ctx);
 
-	if(c_flag_literal & ACLUTIL_LITERAL_LITERAL) {
-		const enum ACLEXPR_RET_ R = aclexpr_arithmetic_cast_literal(
-				c_old_type
-				, c_old_literal
-				, r_newid
-				, c_new_type
-				, wr_new_literal_opt
-				, h_ctx);
+	dbg_prefix();
+	dbg_call((void), fprintf(stderr, "[arithmetic_cast] (%u : %u) -> (? : %u)\n"
+				, (unsigned) c_old_id
+				, (unsigned) c_old_type
+				, (unsigned) c_new_type
+				));
 
-		return R == ACLEXPR_RET_NOT_THE_CASE ? aclexpr_arithmetic_cast_non_literal(
-			c_old_id
-			, c_old_type
-			, c_flag_literal, r_newid
-			, c_new_type, h_ctx
-			) : R;
-	}
-
-	return aclexpr_arithmetic_cast_non_literal(
-			c_old_id
-			, c_old_type
-			, c_flag_literal, r_newid
-			, c_new_type, h_ctx
-			);
+	return  (R = ((c_flag_literal & ACLUTIL_LITERAL_LITERAL) ? aclexpr_arithmetic_cast_literal(
+					c_old_type
+					, c_old_literal
+					, r_newid
+					, c_new_type
+					, wr_new_literal_opt
+					, h_ctx
+					) : ACLEXPR_RET_NOT_THE_CASE)) == ACLEXPR_RET_NOT_THE_CASE
+		? aclexpr_arithmetic_cast_non_literal(
+				c_old_id
+				, c_old_type
+				, c_flag_literal, r_newid
+				, c_new_type, h_ctx
+				) : R;
 }

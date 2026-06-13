@@ -279,22 +279,17 @@ aclexpr_carve_lbl_t aclexpr_carve_op2_arithmetic(
 	ae2f_ifezerr(rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_RESTYID]) {
 		err_puts("[carve2::arithmetic] no result type");
 		err_prefix(0);
-		err_call(, fprintf(stderr, "[carve2::arithmetic] opcode: %u %u\n"
+		err_call((void), fprintf(stderr, "[carve2::arithmetic] opcode: %u %u\n"
 					, (unsigned)rdwr_lst_extra[0].m_type_original
 					, (unsigned)rdwr_lst_extra[1].m_type_original));
 		return c_lbl_err;
-	}
-
-	if(aclid_is_float(aclutil_cxtp_get_veccfg(rdwr_prv_extra->m_type_original, rdwr_data->m_ctx).m_ty_elm)) {
-		fixme_puts("this is float. make sure we can do it constantly with Kernel capability.");
-		rdwr_prv_extra->m_mask_literal &= ~(aclspv_wrd_t)ACLUTIL_LITERAL_CONSTANT;
 	}
 
 	rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_RESID]	= *rdwr_prv_idval = CTX(rdwr_data)->m_id++;
 
 #define	OPITER(NUM_OPRND) \
 	{										\
-		if(rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_RESTYID] != rdwr_lst_extra[NUM_OPRND].m_type_original) {	\
+		{	\
 			const aclutil_literal OLD_LITERAL = rdwr_lst_extra[NUM_OPRND].m_literal;			\
 			aclspv_id_t OLD_ID 									\
 			= rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_END + NUM_OPRND];					\
@@ -346,6 +341,13 @@ aclexpr_carve_lbl_t aclexpr_carve_op2_arithmetic(
 	OPITER(1u);
 	OPITER(0u);
 
+	if(
+			aclid_is_float(aclutil_cxtp_get_veccfg(rdwr_prv_extra[0].m_type_original, rdwr_data->m_ctx).m_ty_elm)
+			|| aclid_is_float(aclutil_cxtp_get_veccfg(rdwr_prv_extra[1].m_type_original, rdwr_data->m_ctx).m_ty_elm)
+			) {
+		fixme_puts("this is float. make sure we can do it constantly with Kernel capability.");
+		rdwr_prv_extra->m_mask_literal &= ~(aclspv_wrd_t)ACLUTIL_LITERAL_CONSTANT;
+	}
 
 	ae2f_ifezerr(rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_OPCODE] = s_op_to_spv(
 				ACLEXPR_OPBINCFG_RESTYID[rdwr_lst_scale_buf]
@@ -463,7 +465,7 @@ aclexpr_carve_lbl_t aclexpr_carve_op2_arithmetic(
 				return c_lbl_err;
 
 			dbg_prefix();
-			dbg_call(, fprintf(stderr
+			dbg_call((void), fprintf(stderr
 						, "[carve2::arithmetic] check two id: %u %u\n"
 						, (unsigned)rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_END]
 						, (unsigned)rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_END + 1]
@@ -509,6 +511,8 @@ aclexpr_carve_lbl_t aclexpr_carve_op2_arithmetic(
 
 		x_aclcursor* ae2f_restrict PC = &((x_aclcursor* ae2f_restrict)rdwr_data->m_ctx->m_cursors.m_p)[IDX];
 
+		aclspv_wrd_t	CLVAL;
+
 		dbg_puts("[carve2::arithmetic] assign mode");
 
 		ae2f_ifnezerr_strict(IDX >= rdwr_data->m_ctx->m_num_cursor) {
@@ -516,7 +520,7 @@ aclexpr_carve_lbl_t aclexpr_carve_op2_arithmetic(
 			return c_lbl_err;
 		}
 
-		aclspv_wrd_t	CLVAL = aclutil_assign_cursor_lval(
+		CLVAL = aclcursor_vardecl_assign(
 				PC
 				, rdwr_data->m_ctx, *rdwr_prv_idval
 				, rdwr_prv_extra->m_type_original
@@ -531,7 +535,7 @@ aclexpr_carve_lbl_t aclexpr_carve_op2_arithmetic(
 			return c_lbl_err;
 		}
 
-		dbg_call(, fprintf(stderr, "[carve2::arithmetic] assigned %u\n", CLVAL));
+		dbg_call((void), fprintf(stderr, "[carve2::arithmetic] assigned %u\n", CLVAL));
 	}
 	return c_lbl_success;
 }}

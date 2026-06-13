@@ -76,8 +76,14 @@ struct aclutil_mk_constant_repvec_t	aclutil_mk_constant_repvec_id(
 		aclutil_get_wrd_of_vec(P_VEC)[ANCHOUR + 3 + VEC_COUNT] = c_val;
 	}
 
+	C->m_repvec_literal_mask = c_literal & ~(aclspv_wrd_t)ACLUTIL_LITERAL_LITERAL;
+
+	if(c_literal & ACLUTIL_LITERAL_LITERAL) {
+		C->m_repvec_literal_mask |= ACLUTIL_LITERAL_CONSTANT;
+	}
+
 	return s_mkret(
 			C->m_repvec
-			, C->m_repvec_literal_mask = c_literal & ~(aclspv_id_t)(ACLUTIL_LITERAL_LITERAL)
-			);
+			, C->m_repvec_literal_mask
+		      );
 }

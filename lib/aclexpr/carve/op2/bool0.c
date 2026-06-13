@@ -272,7 +272,7 @@ aclexpr_carve_lbl_t aclexpr_carve_op2_bool0(
 	ae2f_ifezerr(rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_RESTYID]) {
 		err_puts("[carve2::bool] no result type");
 		err_prefix(0);
-		err_call(, fprintf(stderr, "[carve2::bool] opcode: %u %u\n"
+		err_call((void), fprintf(stderr, "[carve2::bool] opcode: %u %u\n"
 					, (unsigned)rdwr_lst_extra[0].m_type_original
 					, (unsigned)rdwr_lst_extra[1].m_type_original));
 		return c_lbl_err;
@@ -430,7 +430,7 @@ aclexpr_carve_lbl_t aclexpr_carve_op2_bool0(
 				, clang_getCursorReferenced(CASSIGN)
 				);
 
-		aclspv_wrd_t	CLVAL = aclutil_assign_cursor_lval(
+		aclspv_wrd_t	CLVAL = aclcursor_vardecl_assign(
 				&((x_aclcursor* ae2f_restrict)rdwr_data->m_ctx->m_cursors.m_p)[IDX]
 				, rdwr_data->m_ctx, *rdwr_prv_idval, rdwr_prv_extra->m_type_original
 				, rdwr_prv_extra->m_mask_literal

@@ -125,8 +125,6 @@ enum CXChildVisitResult aclexpr_visit(
 
 	dbg_puts("[visit] CGSWTCH");
 	cgswtch(OP2_ARITHMETIC) {
-		aclspv_wrd_t	N_OPRND_TMP;
-
 		cgcsdef(OP_FAIL):
 		{
 			err_puts("[visit] OP_FAIL");
@@ -140,9 +138,6 @@ enum CXChildVisitResult aclexpr_visit(
 
 		cgcsdef(OP_RECURSE):
 		{
-			dbg_prefix();
-			dbg_call(, fprintf(stderr, "[visit] OP_RECURSE(%u)\n", N_OPRND_TMP));
-
 			{
 				size_t NEWSZ = CMDCOUNTERSTCK.m_sz;
 				while(
@@ -208,7 +203,7 @@ enum CXChildVisitResult aclexpr_visit(
 				}
 
 				dbg_prefix();
-				dbg_call(, fprintf(stderr
+				dbg_call((void), fprintf(stderr
 							, "[visit] carve: depth %u prvidx %u (before)\n"
 							, (unsigned)NUM_CMDCOUNTERSTCK - 1u
 							, (unsigned)GETLASTEL_CMDCOUNTERSTCK_PRV(a).m_count_oprnd));
@@ -234,7 +229,7 @@ enum CXChildVisitResult aclexpr_visit(
 				(void)--NUM_CMDCOUNTERSTCK;
 
 				dbg_prefix();
-				dbg_call(, fprintf(stderr
+				dbg_call((void), fprintf(stderr
 							, "[visit] carve: depth %u prvidx %u (after)\n"
 							, (unsigned)NUM_CMDCOUNTERSTCK - 1u
 							, (unsigned)GETLASTEL_CMDCOUNTERSTCK(a).m_count_oprnd));
@@ -258,7 +253,6 @@ enum CXChildVisitResult aclexpr_visit(
 		cgcsdef(OP2_ARITHMETIC): 
 		{
 			dbg_puts("[visit] OP2_ARITHMETIC");
-			N_OPRND_TMP = 2;
 			cgjmp(aclexpr_visit_op2_arithmetic(
 						h_cur, CTX
 						, &CMDSTCK_SCALE
@@ -271,7 +265,6 @@ enum CXChildVisitResult aclexpr_visit(
 		cgcsdef(OP2_BOOL0):
 		{
 			dbg_puts("[visit] OP2_BOOL0");
-			N_OPRND_TMP = 2;
 			cgjmp(aclexpr_visit_op2_bool0(
 						h_cur, CTX
 						, &CMDSTCK_SCALE
@@ -284,7 +277,6 @@ enum CXChildVisitResult aclexpr_visit(
 		cgcsdef(OP2_ASSIGN):
 		{
 			dbg_puts("[visit] OP2_ASSIGN");
-			N_OPRND_TMP = 2;
 			cgjmp(aclexpr_visit_op2_assign(
 						h_cur, CTX
 						, &CMDSTCK_SCALE
@@ -297,7 +289,6 @@ enum CXChildVisitResult aclexpr_visit(
 		cgcsdef(OP1_ARITHMETIC_CAST):
 		{
 			dbg_puts("[visit] OP1_ARITHMETIC_CAST");
-			N_OPRND_TMP = 1;
 			cgjmp(aclexpr_visit_op1_arithmetic_cast(
 						h_cur, CTX
 						, &CMDSTCK_SCALE
@@ -310,7 +301,6 @@ enum CXChildVisitResult aclexpr_visit(
 		cgcsdef(OP1_INCR):
 		{
 			dbg_puts("[visit] OP1_INCR");
-			N_OPRND_TMP = 1;
 			cgjmp(aclexpr_visit_op1_incr(
 						h_cur, CTX
 						, &CMDSTCK_SCALE
@@ -335,9 +325,10 @@ enum CXChildVisitResult aclexpr_visit(
 
 		cgdefault(OP_FALL):
 		{
-			dbg_puts("[visit] OP_FALL");
 			CXString SPELL = clang_getCursorSpelling(h_cur);
 			CXString KINDSPELL = clang_getCursorKindSpelling(h_cur.kind);
+
+			dbg_puts("[visit] OP_FALL");
 
 			warn_prefix(i);
 			warn_call(fprintf, (stderr, "[visit] OP_FALL::spell(%s)::kind(%s)\n"

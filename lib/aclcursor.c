@@ -1,13 +1,11 @@
 /** @file cursor.c */
 
+#include "./aclcursor.h"
+
 #include <ae2f/bll.h>
 #include <ae2f/cc/memset.h>
 
-#include "./aclcursor.h"
-
 #include <util/emitx.h>
-#include <assert.h>
-
 
 aclspv_wrdcount_t aclutil_find_cursor(
 		const aclspv_wrdcount_t			c_num_cursor, 

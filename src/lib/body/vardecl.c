@@ -85,9 +85,9 @@ ae2f_MAC((L, )) aclemit_body_vardecl(CXCursor h_cur, aclutil_fnctx* ae2f_restric
 
 	L$$PCURSOR->m_data.m_vardecl.m_ptr_type_id = L$$TYPE_PTR;
 	L$$PCURSOR->m_data.m_vardecl.m_id = L$$CTX->m_id++;
-
 	L$$PCURSOR->m_data.m_vardecl.m_mask = 0;
 	L$$PCURSOR->m_data.m_vardecl.m_stage_lvl = h_fnctx->m_var_stage;
+	L$$PCURSOR->m_kind			= ACLCURSOR_VARDECL;
 
 	dbg_call((void), fprintf(stderr, "[vardecl] ptr %u ty %u ety %u\n"
 				, (unsigned)L$$PCURSOR->m_data.m_vardecl.m_ptr_type_id
@@ -106,19 +106,19 @@ ae2f_MAC((L, )) aclemit_body_vardecl(CXCursor h_cur, aclutil_fnctx* ae2f_restric
 		dbg_puts("we will find owner");
 
 		if(L$$STAGEDIDX < L$$ORIGIN_CURSORS_NUM) {
-			L$$PCURSOR->m_data.m_vardecl.m_mask &= ~(aclspv_wrd_t)ACLUTIL_CURSOR_VAR_OWNER;
+			L$$PCURSOR->m_data.m_vardecl.m_mask &= ~(aclspv_wrd_t)ACLCURSOR_VARDECL_OWNER;
 			L$$PCURSOR->m_data.m_vardecl.m_id
 				= L$$PCURSOR[L$$STAGEDIDX - L$$IDX].m_data.m_vardecl.m_id;
-			L$$PCURSOR[L$$STAGEDIDX - L$$IDX].m_data.m_vardecl.m_mask |= ACLUTIL_CURSOR_VAR_OCCUPIED;
+			L$$PCURSOR[L$$STAGEDIDX - L$$IDX].m_data.m_vardecl.m_mask |= ACLCURSOR_VARDECL_OCCUPIED;
 		} else {
-			L$$PCURSOR->m_data.m_vardecl.m_mask |= ACLUTIL_CURSOR_VAR_OWNER;
+			L$$PCURSOR->m_data.m_vardecl.m_mask |= ACLCURSOR_VARDECL_OWNER;
 			dbg_puts("is the owner");
 		}
 
-		L$$PCURSOR->m_data.m_vardecl.m_mask |= ACLUTIL_CURSOR_VAR_OCCUPIED;
+		L$$PCURSOR->m_data.m_vardecl.m_mask |= ACLCURSOR_VARDECL_OCCUPIED;
 	}
 
-	L$$PCURSOR->m_data.m_vardecl.m_mask &= ~(aclspv_wrd_t)ACLUTIL_CURSOR_VAR_PREDICTABLE;
+	L$$PCURSOR->m_data.m_vardecl.m_mask &= ~(aclspv_wrd_t)ACLCURSOR_VARDECL_PREDICTABLE;
 	L$$PCURSOR->m_data.m_vardecl.m_init_val = 0;
 
 	if(aclid_is_vectorisable(L$$PCURSOR->m_data.m_vardecl.m_type_id))
@@ -160,14 +160,12 @@ ae2f_MAC((L, )) aclemit_body_vardecl(CXCursor h_cur, aclutil_fnctx* ae2f_restric
 						break;
 
 					case ACLEXPR_RET_FAILURE:
+					case ACLEXPR_RET_SUCCESS:
 						goto L$$LBL_END;
-
 
 					case ACLEXPR_RET_SUCCESS_CONSTANT:
 						L$$PCURSOR->m_data.m_vardecl.m_mask |= ACLUTIL_LITERAL_CONSTANT;
-						ae2f_fallthrough;
-					case ACLEXPR_RET_SUCCESS:
-						L$$PCURSOR->m_data.m_vardecl.m_mask |= ACLUTIL_CURSOR_VAR_PREDICTABLE;
+						L$$PCURSOR->m_data.m_vardecl.m_mask |= ACLCURSOR_VARDECL_PREDICTABLE;
 				}
 
 				goto L$$LBL_END;
@@ -196,7 +194,7 @@ ae2f_MAC((L, )) aclemit_body_vardecl(CXCursor h_cur, aclutil_fnctx* ae2f_restric
 					}
 
 					L$$PCURSOR->m_data.m_vardecl.m_mask |= ACLUTIL_LITERAL_CONSTANT;
-					L$$PCURSOR->m_data.m_vardecl.m_mask |= ACLUTIL_CURSOR_VAR_PREDICTABLE;
+					L$$PCURSOR->m_data.m_vardecl.m_mask |= ACLCURSOR_VARDECL_PREDICTABLE;
 
 					ae2f_ifezerr(L$$PCURSOR->m_data.m_vardecl.m_init_val = aclutil_mk_specconstant_val_by_enum(L$$SPECID
 							, L$$PCURSOR->m_data.m_vardecl.m_literal.m_api_uintmax
@@ -214,7 +212,7 @@ ae2f_MAC((L, )) aclemit_body_vardecl(CXCursor h_cur, aclutil_fnctx* ae2f_restric
 	{
 		CXCursor	L$$VAR_INIT = clang_Cursor_getVarDeclInitializer(h_cur);
 		if(clang_Cursor_isNull(L$$VAR_INIT)) {
-			L$$PCURSOR->m_data.m_vardecl.m_mask &= ~(aclspv_wrd_t)ACLUTIL_CURSOR_VAR_PREDICTABLE;
+			L$$PCURSOR->m_data.m_vardecl.m_mask &= ~(aclspv_wrd_t)ACLCURSOR_VARDECL_PREDICTABLE;
 			L$$PCURSOR->m_data.m_vardecl.m_init_val = 0;
 			goto L$$LBL_END;
 		}
@@ -248,14 +246,12 @@ ae2f_MAC((L, )) aclemit_body_vardecl(CXCursor h_cur, aclutil_fnctx* ae2f_restric
 
 				case ACLEXPR_RET_SUCCESS_LITERAL:
 					L$$PCURSOR->m_data.m_vardecl.m_mask |= ACLUTIL_LITERAL_LITERAL;
-					dbg_puts(("Constructor is literal."));
 					ae2f_fallthrough;
 				case ACLEXPR_RET_SUCCESS_CONSTANT:
-					dbg_puts(("Constructor may be constant."));
 					L$$PCURSOR->m_data.m_vardecl.m_mask |= ACLUTIL_LITERAL_CONSTANT;
 					ae2f_fallthrough;
 				case ACLEXPR_RET_SUCCESS:
-					L$$PCURSOR->m_data.m_vardecl.m_mask |= ACLUTIL_CURSOR_VAR_PREDICTABLE;
+					L$$PCURSOR->m_data.m_vardecl.m_mask |= ACLCURSOR_VARDECL_PREDICTABLE;
 					break;
 			}
 		}

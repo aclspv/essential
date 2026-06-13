@@ -77,14 +77,14 @@ aclspv_bool_t aclexpr_carve(
 #endif
 
 	dbg_prefix();
-	dbg_call(, fprintf(stderr, "[aclexpr::carve] oprnd %u opcode %u\n"
+	dbg_call((void), fprintf(stderr, "[aclexpr::carve] oprnd %u opcode %u\n"
 				, (unsigned)LST_SCALE_BUF[ACLEXPR_OPBINCFG_NUMOPRND]
 				, (unsigned)LST_SCALE_BUF[ACLEXPR_OPBINCFG_OPCODE]));
 
 	cgswtch(OP2_) {
 		cgdefault(OP_FAILURE):
 			err_prefix();
-		err_call(, fprintf(stderr, "something from somewhere %u\n", (unsigned)LST_SCALE_BUF[0]));
+		err_call((void), fprintf(stderr, "something from somewhere %u\n", (unsigned)LST_SCALE_BUF[0]));
 		rdwr_data->m_ctx->m_err = rdwr_data->m_ctx->m_err ? rdwr_data->m_ctx->m_err : ACLSPV_COMPILE_UNHANDLED_CARVE;
 		return 1;
 
