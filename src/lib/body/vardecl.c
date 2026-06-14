@@ -188,7 +188,7 @@ ae2f_MAC((L, )) aclemit_body_vardecl(CXCursor h_cur, aclutil_fnctx* ae2f_restric
 								, L$$PCURSOR->m_data.m_vardecl.m_type_id
 								, L$$VAR_INIT
 								, &L$$PCURSOR->m_data.m_vardecl.m_literal
-								, L$$CTX)) {
+								, h_fnctx)) {
 						L$$CTX->m_err = ACLSPV_COMPILE_MET_INVAL;
 						goto L$$LBL_END;
 					}
@@ -233,7 +233,7 @@ ae2f_MAC((L, )) aclemit_body_vardecl(CXCursor h_cur, aclutil_fnctx* ae2f_restric
 						, L$$PCURSOR->m_data.m_vardecl.m_type_id
 						, L$$VAR_INIT
 						, &L$$PCURSOR->m_data.m_vardecl.m_literal
-						, L$$CTX))
+						, h_fnctx))
 			{
 				case ACLEXPR_RET_NOT_THE_CASE:
 					L$$CTX->m_err = ACLSPV_COMPILE_NOIMPL;

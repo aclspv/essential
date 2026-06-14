@@ -3,6 +3,6 @@
 
 #include <aclexpr/carve/api.h>
 
-aclexpr_carve_api_t	aclexpr_carve_op2_arithmetic;
+aclexpr_carve_api_t	aclexpr_carve2_arithmetic;
 
 #endif

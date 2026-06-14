@@ -12,9 +12,15 @@ ae2f_inline_f static ae2f_ccconst aclspv_wrd_t	s_opcvrt(const aclspv_wrd_t c_op)
 		case ACLEXPR_OP2_AND:
 			return SpvOpBitwiseAnd;
 
+		case ACLEXPR_OP2_AND_L:
+			return SpvOpLogicalAnd;
+
 		case ACLEXPR_OP2_OR_A:
 		case ACLEXPR_OP2_OR:
 			return SpvOpBitwiseOr;
+
+		case ACLEXPR_OP2_OR_L:
+			return SpvOpLogicalOr;
 
 		case ACLEXPR_OP2_XOR_A:
 		case ACLEXPR_OP2_XOR:
@@ -233,7 +239,7 @@ ae2f_inline_f static ae2f_ccconst struct aclutil_ltrl_eval_t	s_eval2_ltrl(
 #undef	EXPR_TWO
 }
 
-aclexpr_carve_lbl_t aclexpr_carve_op2_bool0(
+aclexpr_carve_lbl_t aclexpr_carve2_bool0(
 		struct aclexpr_visit_data* const ae2f_restrict	rdwr_data,
 		aclspv_wrd_t* const ae2f_restrict		rdwr_prv_idval,
 		aclexpr_opbincfg_extra* const ae2f_restrict	rdwr_prv_extra,
@@ -254,6 +260,9 @@ aclexpr_carve_lbl_t aclexpr_carve_op2_bool0(
 				, (rdwr_data)->m_ctx
 				), s_is_logical(rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_OPCODE])
 			, rdwr_data->m_ctx);
+
+	if(s_is_logical(rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_OPCODE]) && TY_OPRND == ACLSPV_ID_BOOL)
+		return c_lbl_continue;
 
 	rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_RESID] = *rdwr_prv_idval = (rdwr_data)->m_ctx->m_id++;
 

@@ -252,7 +252,7 @@ static aclspv_wrd_t s_decide_cast(const enum ACLSPV_ID_ c_id0, const enum ACLSPV
 			, (B_id_default_t) c_id0 , (B_id_default_t) c_id1);
 }
 
-aclexpr_carve_lbl_t aclexpr_carve_op2_arithmetic(
+aclexpr_carve_lbl_t aclexpr_carve2_arithmetic(
 		struct aclexpr_visit_data* const ae2f_restrict	rdwr_data,
 		aclspv_wrd_t* const ae2f_restrict		rdwr_prv_idval,
 		aclexpr_opbincfg_extra* const ae2f_restrict	rdwr_prv_extra,

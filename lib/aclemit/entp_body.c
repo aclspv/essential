@@ -46,10 +46,8 @@ enum CXChildVisitResult aclemit_entp_body(CXCursor h_cur, ae2f_unused CXCursor h
 			if(FNCTX->m_state0 & (uint_leastenum_t)(ACLUTIL_FNCTX_STATE0_LBL_DO_SOMETHING)) {
 				aclcursor_vardecl_evuclbl(CTX->m_num_cursor, CTX->m_cursors.m_p
 						, CTX, FNCTX->m_var_stage + 1);
-			} else {
-				CTX->m_count.m_fnimpl	= FNCTX->m_lbl_snapshot;
-				CTX->m_count.m_name	= FNCTX->m_name_snapshot;
-			}
+			} else
+				_aclutil_fnctx_sync(*FNCTX, *FNCTX, ACLUTIL_FNCTX_SNAPS_LBL);
 
 			FNCTX->m_state0 |= ACLUTIL_FNCTX_STATE0_FNRET;
 			FNCTX->m_state0 &= ~(uint_leastenum_t)(ACLUTIL_FNCTX_STATE0_LBL_DO_SOMETHING);
@@ -73,7 +71,7 @@ enum CXChildVisitResult aclemit_entp_body(CXCursor h_cur, ae2f_unused CXCursor h
 							, FNCTX->m_retid
 							, CURSORCHILD
 							, 0
-							, CTX)) {
+							, FNCTX)) {
 					case ACLEXPR_RET_NOT_THE_CASE:
 					case ACLEXPR_RET_FAILURE:
 					default:
@@ -98,22 +96,19 @@ enum CXChildVisitResult aclemit_entp_body(CXCursor h_cur, ae2f_unused CXCursor h
 						, SpvOpReturn, 0
 						)) goto LBL_FAIL;
 
-			FNCTX->m_lbl_snapshot = CTX->m_count.m_fnimpl;
-			FNCTX->m_name_snapshot = CTX->m_count.m_name;
+			_aclutil_fnctx_snap(*FNCTX, *FNCTX, ACLUTIL_FNCTX_SNAPS_LBL);
 
 			ae2f_ifezerr_strict(CTX->m_count.m_fnimpl = aclutil_emitx_2(
 						&CTX->m_section.m_fnimpl
 						, CTX->m_count.m_fnimpl
 						, SpvOpLabel
-						, CTX->m_id++
+						, FNCTX->m_branch = CTX->m_id++
 						)) goto LBL_FAIL;
 			goto LBL_DONE;
 
 		case CXCursor_LabelStmt:
-			unless(FNCTX->m_state0 & (uint_leastenum_t)(ACLUTIL_FNCTX_STATE0_LBL_DO_SOMETHING)) {
-				CTX->m_count.m_fnimpl = FNCTX->m_lbl_snapshot;
-				CTX->m_count.m_name = FNCTX->m_name_snapshot;
-			}
+			unless(FNCTX->m_state0 & (uint_leastenum_t)(ACLUTIL_FNCTX_STATE0_LBL_DO_SOMETHING))
+				_aclutil_fnctx_snap(*FNCTX, *FNCTX, ACLUTIL_FNCTX_SNAPS_LBL);
 
 			ae2f_unexpected_but_if(CTX->m_err = aclcursor_vardecl_evuclbl(
 						CTX->m_num_cursor
@@ -150,7 +145,7 @@ enum CXChildVisitResult aclemit_entp_body(CXCursor h_cur, ae2f_unused CXCursor h
 							&CTX->m_section.m_fnimpl
 							, CTX->m_count.m_fnimpl
 							, SpvOpLabel
-							, CURSOR.m_data.m_goto_lbl.m_id
+							, FNCTX->m_branch = CURSOR.m_data.m_goto_lbl.m_id
 							)) goto LBL_FAIL;
 
 				_aclutil_mkname_dbg(L, CURSOR.m_data.m_goto_lbl.m_id, SPELL.data, *CTX, CTX->m_tmp.m_v0);
@@ -192,9 +187,7 @@ enum CXChildVisitResult aclemit_entp_body(CXCursor h_cur, ae2f_unused CXCursor h
 					++CTX->m_num_cursor;
 				}
 
-				/** snapshot */
-				FNCTX->m_lbl_snapshot	= CTX->m_count.m_fnimpl;
-				FNCTX->m_name_snapshot	= CTX->m_count.m_name;
+				_aclutil_fnctx_snap(*FNCTX, *FNCTX, ACLUTIL_FNCTX_SNAPS_LBL);
 
 				if(FNCTX->m_state0 & (uint_leastenum_t)(ACLUTIL_FNCTX_STATE0_LBL_DO_SOMETHING)) {
 					aclcursor_vardecl_evuclbl(CTX->m_num_cursor, CTX->m_cursors.m_p
@@ -216,7 +209,7 @@ enum CXChildVisitResult aclemit_entp_body(CXCursor h_cur, ae2f_unused CXCursor h
 							&CTX->m_section.m_fnimpl
 							, CTX->m_count.m_fnimpl
 							, SpvOpLabel
-							, CTX->m_id++
+							, FNCTX->m_branch = CTX->m_id++
 							)) goto LBL_FAIL;
 
 				FNCTX->m_state0 &= ~(uint_leastenum_t)(ACLUTIL_FNCTX_STATE0_LBL_DO_SOMETHING);
@@ -252,7 +245,7 @@ enum CXChildVisitResult aclemit_entp_body(CXCursor h_cur, ae2f_unused CXCursor h
 							, 0
 							, h_cur
 							, 0
-							, CTX))
+							, FNCTX))
 					goto LBL_FAIL;
 			}
 			ae2f_cgoto2_strict(ae2f_expected_strict(!CTX->m_err), LBL_DONE, LBL_FAIL);
@@ -290,7 +283,7 @@ enum CXChildVisitResult aclemit_entp_body(CXCursor h_cur, ae2f_unused CXCursor h
 						&CTX->m_section.m_fnimpl
 						, CTX->m_count.m_fnimpl
 						, SpvOpLabel
-						, CTX->m_id++
+						, FNCTX->m_branch = CTX->m_id++
 						)) goto LBL_FAIL;
 
 			FNCTX->m_state0 &= ~(uint_leastenum_t)(ACLUTIL_FNCTX_STATE0_LBL_DO_SOMETHING);
@@ -321,7 +314,7 @@ enum CXChildVisitResult aclemit_entp_body(CXCursor h_cur, ae2f_unused CXCursor h
 						&CTX->m_section.m_fnimpl
 						, CTX->m_count.m_fnimpl
 						, SpvOpLabel
-						, CTX->m_id++
+						, FNCTX->m_branch = CTX->m_id++
 						)) goto LBL_FAIL;
 
 			FNCTX->m_state0 &= ~(uint_leastenum_t)(ACLUTIL_FNCTX_STATE0_LBL_DO_SOMETHING);

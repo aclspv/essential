@@ -56,7 +56,7 @@ ae2f_MAC((L, )) aclemit_body_if(CXCursor h_cur, aclutil_fnctx * ae2f_restrict h_
 				, ACLSPV_ID_BOOL
 				, L$$IFPART.m_parts[0]
 				, &L$$LTLR
-				, (h_fnctx->m_ctx)))
+				, (h_fnctx)))
 	{
 		case ACLEXPR_RET_NOT_THE_CASE:
 		case ACLEXPR_RET_FAILURE:
@@ -161,16 +161,18 @@ ae2f_MAC((L, )) aclemit_body_if(CXCursor h_cur, aclutil_fnctx * ae2f_restrict h_
 					, L$$IFPART.m_b_true
 					)) goto L$$LBL_END;
 
-		L$$FNCTX_NEW.m_lbl_snapshot = (h_fnctx->m_ctx)->m_count.m_fnimpl;
+		_aclutil_fnctx_snap(L$$FNCTX_NEW, *h_fnctx, ACLUTIL_FNCTX_SNAPS_LBL);
+
+		L$$FNCTX_NEW.m_branch		= L$$IFPART.m_b_true;
 
 		aclutil_visitfromroot(L$$IFPART.m_parts[1]
 				, aclemit_entp_body
 				, &L$$FNCTX_NEW
 				);
 
-		ae2f_unexpected_but_if((h_fnctx->m_ctx)->m_err) goto L$$LBL_END;
+		ae2f_unexpected_but_if(((h_fnctx)->m_ctx)->m_err) goto L$$LBL_END;
 
-		h_fnctx->m_state0		|= L$$FNCTX_NEW.m_state0;
+		(h_fnctx)->m_state0		|= L$$FNCTX_NEW.m_state0;
 
 		ae2f_unexpected_but_if((h_fnctx->m_ctx)->m_err = aclcursor_vardecl_evuclbl(
 					(h_fnctx->m_ctx)->m_num_cursor
@@ -185,6 +187,8 @@ ae2f_MAC((L, )) aclemit_body_if(CXCursor h_cur, aclutil_fnctx * ae2f_restrict h_
 						, SpvOpBranch
 						, L$$IFPART.m_b_default
 						)) goto L$$LBL_END;
+
+			(h_fnctx)->m_branch = L$$IFPART.m_b_default;
 		}
 
 		aclutil_mkname_dbg_fn(
@@ -210,7 +214,9 @@ ae2f_MAC((L, )) aclemit_body_if(CXCursor h_cur, aclutil_fnctx * ae2f_restrict h_
 					, L$$IFPART.m_b_false
 					)) goto L$$LBL_END;
 
-		L$$FNCTX_NEW.m_lbl_snapshot = (h_fnctx->m_ctx)->m_count.m_fnimpl;
+		_aclutil_fnctx_snap(L$$FNCTX_NEW, *h_fnctx, ACLUTIL_FNCTX_SNAPS_LBL);
+
+		L$$FNCTX_NEW.m_branch		= L$$IFPART.m_b_false;
 		++L$$FNCTX_NEW.m_var_stage;
 
 		aclutil_visitfromroot(
@@ -260,6 +266,8 @@ ae2f_MAC((L, )) aclemit_body_if(CXCursor h_cur, aclutil_fnctx * ae2f_restrict h_
 				, SpvOpLabel
 				, L$$IFPART.m_b_default
 				)) goto L$$LBL_END;
+
+	(h_fnctx)->m_branch = L$$IFPART.m_b_default;
 
 	L$$LBL_END: (void)0;
 } 

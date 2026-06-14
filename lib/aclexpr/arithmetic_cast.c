@@ -177,8 +177,8 @@ static enum ACLEXPR_RET_ s_non_literal_novec(
 	}
 
 	if(c_new_type == ACLSPV_ID_BOOL && (aclid_is_int(c_old_type) | aclid_is_float(c_old_type))) {
-		aclspv_id_t		V0;
-		aclspv_wrd_t		OPCODE = ae2f_bll_sel_bool1(aclspv_wrd_t, aclid_is_int(c_old_type), SpvOpINotEqual, SpvOpFOrdNotEqual);
+		aclspv_id_t	V0;
+		aclspv_wrd_t	OPCODE = ae2f_bll_sel_bool1(aclspv_wrd_t, aclid_is_int(c_old_type), SpvOpINotEqual, SpvOpFOrdNotEqual);
 		
 		ae2f_expected_but_else(V0 = aclutil_mk_constant_val_by_enum(0, h_ctx, (enum ACLSPV_ID_) c_old_type))
 			return ACLEXPR_RET_FAILURE;
@@ -191,7 +191,7 @@ static enum ACLEXPR_RET_ s_non_literal_novec(
 						, SpvOpSpecConstantOp
 						, TYEVAL_NEW
 						, *r_newid = h_ctx->m_id++
-						,OPCODE 
+						,OPCODE
 						, c_old_id, V0))
 				return ACLEXPR_RET_FAILURE;
 
@@ -215,10 +215,10 @@ static enum ACLEXPR_RET_ s_non_literal_novec(
 	if((aclid_is_int(c_new_type)) && c_old_type == ACLSPV_ID_BOOL) {
 		aclspv_id_t		V0, V1;
 
-		ae2f_expected_but_else(V0 = aclutil_mk_constant_val_by_enum(0, h_ctx, (enum ACLSPV_ID_) c_old_type))
+		ae2f_expected_but_else(V0 = aclutil_mk_constant_val_by_enum(0, h_ctx, (enum ACLSPV_ID_) c_new_type))
 			return ACLEXPR_RET_FAILURE;
 
-		ae2f_expected_but_else(V1 = aclutil_mk_constant_val_by_enum(1, h_ctx, (enum ACLSPV_ID_) c_old_type))
+		ae2f_expected_but_else(V1 = aclutil_mk_constant_val_by_enum(1, h_ctx, (enum ACLSPV_ID_) c_new_type))
 			return ACLEXPR_RET_FAILURE;
 
 
@@ -240,7 +240,7 @@ static enum ACLEXPR_RET_ s_non_literal_novec(
 					= aclutil_emitx_6(
 						&h_ctx->m_section.m_fnimpl
 						, h_ctx->m_count.m_fnimpl
-						, SpvOpINotEqual
+						, SpvOpSelect
 						, TYEVAL_NEW
 						, *r_newid = h_ctx->m_id++
 						, c_old_id

@@ -16,6 +16,8 @@
 #include "./visit/op2/assign.h"
 #include "./visit/op2/bool0.h"
 
+#include "./beforevisit.h"
+
 enum {
 	OP2_ARITHMETIC,
 	OP2_BOOL0,
@@ -26,7 +28,8 @@ enum {
 	OP0_VAL,
 	OP_FAIL,
 	OP_FALL,
-	OP_RECURSE
+	OP_RECURSE,
+	OP_ENTRY_POINT
 };
 
 enum CXChildVisitResult aclexpr_visit(
@@ -124,7 +127,7 @@ enum CXChildVisitResult aclexpr_visit(
 #endif
 
 	dbg_puts("[visit] CGSWTCH");
-	cgswtch(OP2_ARITHMETIC) {
+	cgswtch(OP_ENTRY_POINT) {
 		cgcsdef(OP_FAIL):
 		{
 			err_puts("[visit] OP_FAIL");
@@ -138,28 +141,26 @@ enum CXChildVisitResult aclexpr_visit(
 
 		cgcsdef(OP_RECURSE):
 		{
+			size_t NEWSZ = CMDCOUNTERSTCK.m_sz;
+			while(
+					((size_t)NUM_CMDCOUNTERSTCK > NEWSZ / sizeof(cmdcounterstckelm)) 
+					&& ((NEWSZ <<= 1)) > CMDCOUNTERSTCK.m_sz);
+
+			ae2f_ifezerr(NEWSZ > CMDCOUNTERSTCK.m_sz / sizeof(cmdcounterstckelm)) {
+				CTX->m_err = ACLSPV_COMPILE_TOO_BIG;
+				return CXChildVisit_Break;
+			}
+
+			_aclspv_grow_vec_with_copy(
+					_aclspv_malloc,  _aclspv_free, _aclspv_memcpy
+					, dest, CMDCOUNTERSTCK
+					, NEWSZ
+					);
+
+			ae2f_ifezerr(CMDCOUNTERSTCK.m_p)
 			{
-				size_t NEWSZ = CMDCOUNTERSTCK.m_sz;
-				while(
-						((size_t)NUM_CMDCOUNTERSTCK > NEWSZ / sizeof(cmdcounterstckelm)) 
-						&& ((NEWSZ <<= 1)) > CMDCOUNTERSTCK.m_sz);
-
-				ae2f_ifezerr(NEWSZ > CMDCOUNTERSTCK.m_sz / sizeof(cmdcounterstckelm)) {
-					CTX->m_err = ACLSPV_COMPILE_TOO_BIG;
-					return CXChildVisit_Break;
-				}
-
-				_aclspv_grow_vec_with_copy(
-						_aclspv_malloc,  _aclspv_free, _aclspv_memcpy
-						, dest, CMDCOUNTERSTCK
-						, NEWSZ
-						);
-
-				ae2f_ifezerr(CMDCOUNTERSTCK.m_p)
-				{
-					CTX->m_err = ACLSPV_COMPILE_ALLOC_FAILED_EXPR;
-					return CXChildVisit_Break;
-				}
+				CTX->m_err = ACLSPV_COMPILE_ALLOC_FAILED_EXPR;
+				return CXChildVisit_Break;
 			}
 
 			(void)++NUM_CMDCOUNTERSTCK;
@@ -185,7 +186,7 @@ enum CXChildVisitResult aclexpr_visit(
 			while(LST_SCALE->m_id && GETLASTEL_CMDCOUNTERSTCK().m_count_oprnd == LST_SCALE_BUF[ACLEXPR_OPBINCFG_NUMOPRND]) {
 				aclspv_wrd_t	IDVAL_PRV = 0;
 				aclexpr_opbincfg_extra PRV_EXTRA;
-				
+
 				ae2fcc_memset(&PRV_EXTRA, 0, sizeof(PRV_EXTRA));
 
 				LST_SCALE		= get_last_scale_from_vec(&CMDSTCK_SCALE);
@@ -248,6 +249,16 @@ enum CXChildVisitResult aclexpr_visit(
 			}
 
 			return ae2f_expected_not(CTX->m_err) ? CXChildVisit_Break : CXChildVisit_Continue;
+		}
+
+		cgcsdef(OP_ENTRY_POINT):
+		{
+			dbg_puts("[visit] OP_ENTRY_POINT");
+			cgjmp(
+					aclexpr_beforevisit(rdwr_data, GETLASTEL_CMDCOUNTERSTCK(a).m_count_oprnd)
+					? cgcase(OP_FAIL)
+					: cgcase(OP2_ARITHMETIC)
+					);
 		}
 
 		cgcsdef(OP2_ARITHMETIC): 

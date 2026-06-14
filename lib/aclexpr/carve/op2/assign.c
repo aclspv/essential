@@ -2,7 +2,7 @@
 #include <util/iddef.h>
 #include <aclcursor.h>
 
-aclexpr_carve_lbl_t aclexpr_carve_op2_assign(
+aclexpr_carve_lbl_t aclexpr_carve2_assign(
 		struct aclexpr_visit_data* const ae2f_restrict	rdwr_data,
 		aclspv_wrd_t* const ae2f_restrict		rdwr_prv_idval,
 		aclexpr_opbincfg_extra* const ae2f_restrict	rdwr_prv_extra,

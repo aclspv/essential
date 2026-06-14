@@ -5,6 +5,7 @@
 #include "./carve/op2/arithmetic.h"
 #include "./carve/op2/assign.h"
 #include "./carve/op2/bool0.h"
+#include "./carve/op2/bool1.h"
 
 #include <aclexpr.h>
 #include <aclcursor.h>
@@ -21,6 +22,7 @@ enum {
 	OP2_,
 	OP2_ARITHMETIC,
 	OP2_BOOL0,
+	OP2_BOOL1,
 	OP2_ASSIGN,
 	OP1_,
 	OP1_ARITHMETIC_CAST,
@@ -96,7 +98,7 @@ aclspv_bool_t aclexpr_carve(
 
 		cgcsdef(OP2_ARITHMETIC):
 			dbg_puts("[carve] OP2_ARITHMETIC");
-		cgjmp(aclexpr_carve_op2_arithmetic(
+		cgjmp(aclexpr_carve2_arithmetic(
 					rdwr_data
 					, rdwr_prv_idval
 					, rdwr_prv_extra
@@ -111,7 +113,22 @@ aclspv_bool_t aclexpr_carve(
 
 		cgcsdef(OP2_BOOL0):
 			dbg_puts("[carve] OP2_BOOL0");
-		cgjmp(aclexpr_carve_op2_bool0(
+		cgjmp(aclexpr_carve2_bool0(
+					rdwr_data
+					, rdwr_prv_idval
+					, rdwr_prv_extra
+					, LST_SCALE
+					, LST_SCALE_BUF
+					, LST_EXTRA
+					, RET_LITERAL
+					, cgcase(OP2_BOOL1)
+					, cgcase(OP_SUCCESS)
+					, cgcase(OP_FAILURE)
+					));
+
+		cgcsdef(OP2_BOOL1):
+			dbg_puts("[carve] OP2_BOOL0");
+		cgjmp(aclexpr_carve2_bool1(
 					rdwr_data
 					, rdwr_prv_idval
 					, rdwr_prv_extra
@@ -126,7 +143,7 @@ aclspv_bool_t aclexpr_carve(
 
 		cgcsdef(OP2_ASSIGN):
 			dbg_puts("[carve] OP2_ASSIGN");
-		cgjmp(aclexpr_carve_op2_assign(
+		cgjmp(aclexpr_carve2_assign(
 					rdwr_data
 					, rdwr_prv_idval
 					, rdwr_prv_extra
@@ -144,7 +161,7 @@ aclspv_bool_t aclexpr_carve(
 
 		cgcsdef(OP1_ARITHMETIC_CAST):
 			dbg_puts("[carve] OP1_ARITHMETIC_CAST");
-		cgjmp(aclexpr_carve_op1_arithmetic_cast(
+		cgjmp(aclexpr_carve1_arithmetic_cast(
 					rdwr_data
 					, rdwr_prv_idval
 					, rdwr_prv_extra
@@ -159,7 +176,7 @@ aclspv_bool_t aclexpr_carve(
 
 		cgcsdef(OP1_INCR):
 			dbg_puts("[carve] OP1_INCR");
-		cgjmp(aclexpr_carve_op1_incr(
+		cgjmp(aclexpr_carve1_incr(
 					rdwr_data
 					, rdwr_prv_idval
 					, rdwr_prv_extra

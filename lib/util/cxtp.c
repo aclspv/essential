@@ -20,6 +20,7 @@ ae2f_ccconst aclspv_id_t aclutil_mk_cxtp_by_type(const CXType c_ty) {
 
 		case CXType_SChar:
 		VECCASE(CXType_Char_S		, ACLSPV_ID_I8);
+		VECCASE(CXType_Bool		, ACLSPV_ID_BOOL);
 
 		case CXType_UChar:
 		VECCASE(CXType_Char_U		, ACLSPV_ID_U8);

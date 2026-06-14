@@ -21,7 +21,7 @@ ae2f_inline_f	ae2f_ccconst static aclspv_bool_t	s_check(aclspv_wrd_t	c_op) {
 	}
 }
 
-aclexpr_carve_lbl_t aclexpr_carve_op1_incr(
+aclexpr_carve_lbl_t aclexpr_carve1_incr(
 		struct aclexpr_visit_data* const ae2f_restrict	rdwr_data,
 		aclspv_wrd_t* const ae2f_restrict rdwr_prv_idval,
 		aclexpr_opbincfg_extra* const ae2f_restrict rdwr_prv_extra,

@@ -52,7 +52,8 @@
  * 		could be defined with `#define`
  * */
 #ifndef	aclspv_wrd_t
-#define	aclspv_wrd_t	uint_least32_t
+typedef uint_least32_t	aclspv_wrd_t;
+#define	aclspv_wrd_t	aclspv_wrd_t
 #endif
 
 #define	aclspv_ver_spv(c_mjr, c_mnr)	\

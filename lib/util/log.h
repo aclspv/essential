@@ -40,10 +40,10 @@
 #define	err_call(a, b)
 #endif
 
-#define	dbg_prefix(a)	dbg_call(fputs, ("<-> ", stderr))
-#define	fixme_prefix(a)	fixme_call(fputs, ("</> ", stderr))
-#define	warn_prefix(a)	warn_call(fputs, ("[?] ", stderr))
-#define err_prefix(a)	err_call(fputs, ("[X] ", stderr))
+#define	dbg_prefix(a)	dbg_call(fprintf	, (stderr, "\n" __FILE__ " %d\n<-> ", __LINE__))
+#define	fixme_prefix(a)	fixme_call(fprintf	, (stderr, "\n" __FILE__ " %d\n</> ", __LINE__))
+#define	warn_prefix(a)	warn_call(fprintf	, (stderr, "\n" __FILE__ " %d\n[?] ", __LINE__))
+#define err_prefix(a)	err_call(fprintf	, (stderr, "\n" __FILE__ " %d\n[X] ", __LINE__))
 
 #define	dbg_puts(a)	{ \
 	dbg_prefix(); dbg_call(fputs, (a, stderr)); \

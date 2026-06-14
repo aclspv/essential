@@ -96,12 +96,14 @@ ae2f_MAC((L, )) aclemit_body_while(CXCursor h_cur, aclutil_fnctx * ae2f_restrict
 			break;
 		}
 
+		(h_fnctx)->m_branch = L$$LOOPCHECK;
+
 		switch(aclexpr_eval(
 					&L$$LOOPCND
 					, ACLSPV_ID_BOOL
 					, L$$CUR[0]
 					, &L$$LITERAL
-					, (h_fnctx)->m_ctx
+					, (h_fnctx)
 				      )) {
 			default:
 			case ACLEXPR_RET_FAILURE:
@@ -186,7 +188,9 @@ ae2f_MAC((L, )) aclemit_body_while(CXCursor h_cur, aclutil_fnctx * ae2f_restrict
 						, L$$LOOPSTART
 						)) goto L$$ERR;
 
-			L$$FNCTX_NEW.m_lbl_snapshot = (h_fnctx->m_ctx)->m_count.m_fnimpl;
+			_aclutil_fnctx_snap(L$$FNCTX_NEW, *h_fnctx, ACLUTIL_FNCTX_SNAPS_LBL);
+
+			(h_fnctx)->m_branch = L$$LOOPSTART;
 			(void)++L$$FNCTX_NEW.m_var_stage;
 
 			aclutil_visitfromroot(
@@ -233,6 +237,7 @@ ae2f_MAC((L, )) aclemit_body_while(CXCursor h_cur, aclutil_fnctx * ae2f_restrict
 			(h_fnctx)->m_ctx->m_err = ACLSPV_COMPILE_ALLOC_FAILED;
 			break;
 		}
+		(h_fnctx)->m_branch = L$$LOOPCONTINUE;
 
 		ae2f_ifezerr((h_fnctx)->m_ctx->m_count.m_fnimpl = aclutil_emitx_2(
 					&(h_fnctx)->m_ctx->m_section.m_fnimpl
@@ -253,6 +258,8 @@ ae2f_MAC((L, )) aclemit_body_while(CXCursor h_cur, aclutil_fnctx * ae2f_restrict
 			(h_fnctx)->m_ctx->m_err = ACLSPV_COMPILE_ALLOC_FAILED;
 			break;
 		}
+
+		(h_fnctx)->m_branch = L$$LOOPEND;
 
 		aclutil_mkname_dbg_fn(
 				L$$LOOPCHECK

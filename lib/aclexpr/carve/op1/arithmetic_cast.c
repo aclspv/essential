@@ -4,7 +4,7 @@
 
 #define CHECK unless(rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_OPCODE] == (aclspv_wrd_t)ACLEXPR_OP1_EXPLICIT_CAST) return c_lbl_continue
 
-aclexpr_carve_lbl_t aclexpr_carve_op1_arithmetic_cast(
+aclexpr_carve_lbl_t aclexpr_carve1_arithmetic_cast(
 		struct aclexpr_visit_data* const ae2f_restrict	rdwr_data,
 		aclspv_wrd_t* const ae2f_restrict rdwr_prv_idval,
 		aclexpr_opbincfg_extra* const ae2f_restrict rdwr_prv_extra,

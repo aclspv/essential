@@ -3,6 +3,7 @@
 #ifndef	aclexpr_h
 #define	aclexpr_h
 #include <util/literal.h>
+#include <util/fnctx.h>
 
 enum ACLEXPR_RET_ {
 	ACLEXPR_RET_FAILURE,
@@ -56,7 +57,7 @@ typedef enum ACLEXPR_RET_ fn_aclspv_get_expr_t(
 		, const aclspv_id_t c_type_req
 		, const CXCursor c_cur
 		, aclutil_literal* ae2f_restrict	wr_literal_opt
-		, h_aclspv_ctx_t h_ctx
+		, aclutil_fnctx* ae2f_restrict h_fnctx
 		);
 
 enum ACLEXPR_RET_ aclexpr_eval_btcast(
@@ -64,7 +65,7 @@ enum ACLEXPR_RET_ aclexpr_eval_btcast(
 		, const aclspv_id_t c_type_req
 		, const CXCursor c_cur
 		, aclutil_literal* ae2f_restrict	wr_literal_opt
-		, h_aclspv_ctx_t h_ctx
+		, aclutil_fnctx* ae2f_restrict h_fnctx
 		);
 
 enum ACLEXPR_RET_ aclexpr_eval(
@@ -72,7 +73,7 @@ enum ACLEXPR_RET_ aclexpr_eval(
 		, const aclspv_id_t c_type_req
 		, const CXCursor c_cur
 		, aclutil_literal* ae2f_restrict	wr_literal_opt
-		, h_aclspv_ctx_t h_ctx
+		, aclutil_fnctx* ae2f_restrict h_fnctx
 		);
 
 enum ACLEXPR_RET_ aclspv_get_expr2(
@@ -80,17 +81,18 @@ enum ACLEXPR_RET_ aclspv_get_expr2(
 		, aclspv_id_t* ae2f_restrict const r_type_opt
 		, const CXCursor c_cur
 		, aclutil_literal* ae2f_restrict	wr_literal_opt
-		, h_aclspv_ctx_t h_ctx
+		, aclutil_fnctx* ae2f_restrict h_fnctx
 		);
 
 struct aclexpr_visit_data {
-	h_aclspv_ctx_t		m_ctx;
-	aclspv_wrdcount_t	m_exprcount;
-	aclspv_id_t		m_id_ret;
-	aclspv_wrd_t		m_literal_flag;
-	aclspv_id_t		m_tyid_current;
-	aclspv_id_t		m_num_cmdcounter;
-	aclutil_literal		m_ret_literal;
+	h_aclspv_ctx_t			m_ctx;
+	aclutil_fnctx* ae2f_restrict	m_fnctx;
+	aclspv_wrdcount_t		m_exprcount;
+	aclspv_id_t			m_id_ret;
+	aclspv_wrd_t			m_literal_flag;
+	aclspv_id_t			m_tyid_current;
+	aclspv_id_t			m_num_cmdcounter;
+	aclutil_literal			m_ret_literal;
 };
 
 enum CXChildVisitResult aclexpr_visit(

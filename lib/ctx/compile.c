@@ -106,7 +106,7 @@ ACLSPV_ABI_IMPL enum ACLSPV_COMPILE_ aclspv_ctx_compile(h_aclspv_ctx_t h_ctx, CX
 						&(*h_ctx).m_section.m_fndef
 						, (*h_ctx).m_count.m_fndef
 						, SpvOpLabel
-						, (*h_ctx).m_id++)) {
+						, FNCTX.m_branch = (*h_ctx).m_id++)) {
 				return (*h_ctx).m_err = ACLSPV_COMPILE_ALLOC_FAILED;
 			}
 
@@ -150,7 +150,7 @@ ACLSPV_ABI_IMPL enum ACLSPV_COMPILE_ aclspv_ctx_compile(h_aclspv_ctx_t h_ctx, CX
 					, &FNCTX);
 
 			unless(FNCTX.m_state0 & ACLUTIL_FNCTX_STATE0_LBL_DO_SOMETHING) {
-				(*h_ctx).m_count.m_fnimpl = FNCTX.m_lbl_snapshot;
+				_aclutil_fnctx_sync(FNCTX, FNCTX, ACLUTIL_FNCTX_SNAPS_LBL);
 			}
 
 			ae2f_ifnezerr(h_ctx->m_err)	return h_ctx->m_err;

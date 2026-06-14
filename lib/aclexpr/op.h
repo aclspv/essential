@@ -51,8 +51,13 @@ typedef struct {
 	aclspv_wrd_t	m_mask_literal;
 	aclutil_literal	m_literal;
 	CXCursor	m_cursor;
-
 	aclspv_wrd_t	m_state0;
+
+	union {
+		struct {
+			aclspv_id_t	m_parent;
+		} m_bool1;
+	} m_extra;
 } aclexpr_opbincfg_extra;
 
 enum ACLEXPR_OPCFGX_STATE0_ {
