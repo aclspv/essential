@@ -3,7 +3,7 @@
 #include "./cxtp.h"
 
 #include <ae2f/bll.h>
-#include <ae2f/cc/memset.h>
+#include <ae2f/pat/dbg.h>
 
 aclspv_id_t aclutil_mkvec(
 		aclspv_wrd_t				c_num_elm,

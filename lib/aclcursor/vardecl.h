@@ -5,6 +5,7 @@
 
 #include <util/wrd.h>
 #include <util/literal.h>
+#include <util/fnctx.h>
 
 enum	ACLCURSOR_VARDECL_ {
 	ACLCURSOR_VARDECL_LITERAL	= 0x3,
@@ -71,20 +72,20 @@ enum ACLSPV_COMPILE_ aclcursor_vardecl_evuclbl(
 		);
 
 aclspv_id_t aclcursor_vardecl_find_stagedval(
-		const aclspv_wrdcount_t		c_num_cursor,
+		const aclspv_wrdcount_t			c_num_cursor,
 		const x_aclspv_vec* const ae2f_restrict h_cursors,
-		const umax c_stage, 
-		const aclspv_id_t c_ty
+		const umax				c_stage, 
+		const aclspv_id_t			c_ty
 		);
 
 aclspv_id_t aclcursor_vardecl_assign(
 		const h_aclcursor_t			wr_cursor,
-		const h_aclspv_ctx_t			h_ctx,
+		const aclutil_fnctx* ae2f_restrict	h_fnctx,
 		const aclspv_id_t			c_val,
 		const aclspv_id_t			c_val_ty,
-		const aclutil_ltrlmask_t			c_masklit,
+		const aclutil_ltrlmask_t		c_masklit,
 		const aclutil_literal* ae2f_restrict	rd_literal_to_assign,
-		aclutil_literal*	ae2f_restrict		r_literal_opt
+		aclutil_literal*	ae2f_restrict	r_literal_opt
 		);
 
 /** 1 when failed */

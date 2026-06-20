@@ -5,7 +5,7 @@
 #include "./cxtp/vec.h"
 #include "./capability.h"
 
-#include <assert.h>
+#include <ae2f/pat/dbg.h>
 
 ae2f_ccconst aclspv_bool_t aclid_is_castable(const B_id_default_t c_id, const h_aclspv_ctx_t h_ctx) {
 	return aclid_is_arithmetic(c_id, h_ctx);

@@ -4,6 +4,7 @@
 #include <util/emitx.h>
 
 #include <.aclspv/util/u32_to_hex8.h>
+#include <ae2f/pat/dbg.h>
 
 aclspv_bool_t	ae2f_ccpure aclcursor_is_vardecl(
 		const h_aclcursor_t	rd_cursor

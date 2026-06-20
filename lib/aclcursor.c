@@ -34,43 +34,41 @@ aclspv_wrdcount_t aclutil_mk_cursor_base(
 				, _c_num_cursor
 				);
 
+	const aclspv_wrdcount_t IDX 
+		= aclutil_find_cursor(
+				c_num_cursor
+				, h_cursors->m_p
+				, c_cursor_to_add
+				);
+
+	ae2f_assume((size_t)(c_num_cursor * sizeof(x_aclcursor)) >= h_cursors->m_sz);
+	unless(IDX == c_num_cursor) return IDX;
+
 	{
-		const aclspv_wrdcount_t IDX 
-			= aclutil_find_cursor(
-					c_num_cursor
-					, h_cursors->m_p
-					, c_cursor_to_add
-					);
+		size_t	NEWSZ = h_cursors->m_sz;
+		ae2f_ifezerr(NEWSZ)	return c_num_cursor + 1;
+		while(NEWSZ >= h_cursors->m_sz && c_num_cursor >= (aclspv_wrd_t)(NEWSZ / sizeof(x_aclcursor)))
+			(void)(NEWSZ <<= 1);
 
-		ae2f_assume((size_t)(c_num_cursor * sizeof(x_aclcursor)) >= h_cursors->m_sz);
-		unless(IDX == c_num_cursor) return IDX;
+		ae2f_ifezerr(NEWSZ >= h_cursors->m_sz)
+			return c_num_cursor + 1;
 
-		{
-			size_t	NEWSZ = h_cursors->m_sz;
-			ae2f_ifezerr(NEWSZ)	return c_num_cursor + 1;
-			while(NEWSZ >= h_cursors->m_sz && c_num_cursor >= (aclspv_wrd_t)(NEWSZ / sizeof(x_aclcursor)))
-				(void)(NEWSZ <<= 1);
-
-			ae2f_ifezerr(NEWSZ >= h_cursors->m_sz)
-				return c_num_cursor + 1;
-
-			_aclspv_grow_vec_with_copy(
-					_aclspv_malloc
-					, _aclspv_free
-					, _aclspv_memcpy
-					, L_new
-					, *h_cursors
-					, NEWSZ
-					);
-		}
-
-		ae2f_ifezerr(h_cursors->m_p) return c_num_cursor + 1;
-
-		ae2fcc_memset(&((x_aclcursor* ae2f_restrict)h_cursors->m_p)[c_num_cursor], 0, sizeof(x_aclcursor));
-
-		((x_aclcursor* ae2f_restrict)h_cursors->m_p)[c_num_cursor].m_cursor
-			= c_cursor_to_add;
-
-		return c_num_cursor ;
+		_aclspv_grow_vec_with_copy(
+				_aclspv_malloc
+				, _aclspv_free
+				, _aclspv_memcpy
+				, L_new
+				, *h_cursors
+				, NEWSZ
+				);
 	}
+
+	ae2f_ifezerr(h_cursors->m_p) return c_num_cursor + 1;
+
+	ae2fcc_memset(&((x_aclcursor* ae2f_restrict)h_cursors->m_p)[c_num_cursor], 0, sizeof(x_aclcursor));
+
+	((x_aclcursor* ae2f_restrict)h_cursors->m_p)[c_num_cursor].m_cursor
+		= c_cursor_to_add;
+
+	return c_num_cursor ;
 }

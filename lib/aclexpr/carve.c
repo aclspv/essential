@@ -14,6 +14,7 @@
 #include <util/scale.h>
 
 #include <ae2f/cgoto.h>
+#include <ae2f/pat/dbg.h>
 
 enum {
 	OP_FAILURE,

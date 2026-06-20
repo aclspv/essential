@@ -4,6 +4,7 @@
 #include <aclexpr/op.h>
 
 #include <ae2f/bll.h>
+#include <ae2f/pat/dbg.h>
 
 #include <util/scale.h>
 #include <util/emitx.h>

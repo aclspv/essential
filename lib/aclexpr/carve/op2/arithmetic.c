@@ -6,6 +6,7 @@
 #include <util/wrdemit.h>
 #include <.aclspv/vec.h>
 #include <ae2f/cc/switchctl.h>
+#include <ae2f/pat/dbg.h>
 #include <util/constant.h>
 
 enum S_ARITHMETIC_ {
@@ -522,7 +523,7 @@ aclexpr_carve_lbl_t aclexpr_carve2_arithmetic(
 
 		CLVAL = aclcursor_vardecl_assign(
 				PC
-				, rdwr_data->m_ctx, *rdwr_prv_idval
+				, rdwr_data->m_fnctx, *rdwr_prv_idval
 				, rdwr_prv_extra->m_type_original
 				, rdwr_prv_extra->m_mask_literal
 				, &rdwr_prv_extra->m_literal

@@ -3,7 +3,7 @@
 
 #include "./aclspv.h"
 #include <ae2f/bll.h>
-#include <ae2f/c90/StdInt/enum.h>
+#include <ae2f/c90/stdint/enum.h>
 #include <ae2f/Cxx/Constexpr.h>
 
 namespace aclspv {

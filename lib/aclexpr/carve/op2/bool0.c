@@ -3,6 +3,7 @@
 #include "./bool0.h"
 #include <util/constant.h>
 #include <util/wrdemit.h>
+#include <ae2f/pat/dbg.h>
 
 #include <aclcursor.h>
 
@@ -441,7 +442,7 @@ aclexpr_carve_lbl_t aclexpr_carve2_bool0(
 
 		aclspv_wrd_t	CLVAL = aclcursor_vardecl_assign(
 				&((x_aclcursor* ae2f_restrict)rdwr_data->m_ctx->m_cursors.m_p)[IDX]
-				, rdwr_data->m_ctx, *rdwr_prv_idval, rdwr_prv_extra->m_type_original
+				, rdwr_data->m_fnctx, *rdwr_prv_idval, rdwr_prv_extra->m_type_original
 				, rdwr_prv_extra->m_mask_literal
 				, &rdwr_prv_extra->m_literal
 				, 0

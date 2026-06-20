@@ -6,6 +6,7 @@
 #include "../cxtp.h"
 #include "../wrdemit.h"
 #include "../literal.h"
+#include <ae2f/pat/dbg.h>
 
 ae2f_inline_f static struct aclutil_mk_constant_repvec_t ae2f_ccconst s_mkret(const aclspv_wrd_t c_id, const aclspv_wrd_t c_mask) {
 	struct aclutil_mk_constant_repvec_t R;

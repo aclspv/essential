@@ -59,7 +59,7 @@ aclexpr_carve_lbl_t aclexpr_carve1_incr(
 	*rdwr_prv_extra = *rdwr_lst_extra;
 
 
-	V = aclcursor_vardecl_assign(C, rdwr_data->m_ctx, 0, 0, 0
+	V = aclcursor_vardecl_assign(C, rdwr_data->m_fnctx, 0, 0, 0
 			, 0, &LTRL);
 
 	if(rdwr_lst_extra->m_mask_literal & (aclspv_wrd_t)ACLUTIL_LITERAL_LITERAL) {
@@ -81,7 +81,7 @@ aclexpr_carve_lbl_t aclexpr_carve1_incr(
 		}
 
 		ae2f_ifezerr(*rdwr_prv_idval = aclcursor_vardecl_assign(
-					C, rdwr_data->m_ctx, 0
+					C, rdwr_data->m_fnctx, 0
 					, rdwr_lst_extra->m_type_original
 					, ACLUTIL_LITERAL_LITERAL
 					, &LTRL, 0
@@ -170,7 +170,7 @@ aclexpr_carve_lbl_t aclexpr_carve1_incr(
 		}
 
 		ae2f_ifnezerr_strict(VP != aclcursor_vardecl_assign(
-					C, rdwr_data->m_ctx
+					C, rdwr_data->m_fnctx
 					, VP, rdwr_lst_extra->m_type_original
 					, LM
 					, 0, 0))

@@ -19,7 +19,7 @@ int main(void) {
 				    | ACLSPV_CTX_FLAG0_OGL
 				    | ACLSPV_CTX_FLAG0_LOGICAL
 				    | ACLSPV_CTX_FLAG0_DUMP_DIAGNOSTICS
-			, aclspv::ver_spv(1, 0) /** spir-v 1.2 */
+			, aclspv::ver_spv(1, 0) /** spir-v 1.0 */
 	);
 
 	aclspv_wrd_t *spirv0;

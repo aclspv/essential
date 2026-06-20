@@ -12,6 +12,7 @@
 #include <util/extension.h>
 
 #include <aclspv.h>
+#include <ae2f/pat/dbg.h>
 
 #define	wrd_caps	h_ctx->m_section.m_capability 
 #define wrd_caps_count	h_ctx->m_count.m_capability

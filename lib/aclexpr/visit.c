@@ -325,7 +325,7 @@ enum CXChildVisitResult aclexpr_visit(
 		{
 			dbg_puts("[visit] OP0_VAL");
 			cgjmp(aclexpr_visit_op0_val(
-						h_cur, CTX
+						h_cur, BASE->m_fnctx
 						, &LST_EXTRA[GETLASTEL_CMDCOUNTERSTCK(a).m_count_oprnd]
 						, &ID_REQ
 						, cgcase(OP0_)
