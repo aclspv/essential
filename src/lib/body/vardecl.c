@@ -198,7 +198,7 @@ ae2f_MAC((L, )) aclemit_body_vardecl(CXCursor h_cur, aclutil_fnctx* ae2f_restric
 
 					ae2f_ifezerr(L$$PCURSOR->m_data.m_vardecl.m_init_val = aclutil_mk_specconstant_val_by_enum(L$$SPECID
 							, L$$PCURSOR->m_data.m_vardecl.m_literal.m_api_uintmax
-							, L$$CTX, L$$PCURSOR->m_data.m_vardecl.m_type_id)) {
+							, L$$CTX, (int_leastenum_t) L$$PCURSOR-> m_data.m_vardecl.m_type_id)) {
 						L$$CTX->m_err = ACLSPV_COMPILE_MET_INVAL;
 						goto L$$LBL_END;
 					}

@@ -43,7 +43,7 @@ ae2f_inline_f static ae2f_ccconst aclspv_bool_t s_is_assign(aclspv_wrd_t c_opcod
 }
 
 ae2f_inline_f static ae2f_ccpure aclspv_opcode_t s_op_to_spv(
-		const aclspv_id_t c_id, 
+		const aclspv_id_t c_id,
 		const aclspv_wrd_t c_op2,
 		const h_aclspv_ctx_t	h_ctx
 		)
@@ -244,7 +244,7 @@ static aclspv_wrd_t s_decide_cast(const enum ACLSPV_ID_ c_id0, const enum ACLSPV
 	if(aclid_is_float((B_id_default_t) c_id0) != aclid_is_float((B_id_default_t) c_id1))
 		return ae2f_bll_sel_bool1(B_id_default_t, aclid_is_float((B_id_default_t) c_id0), (B_id_default_t) c_id0, (B_id_default_t)c_id1);
 
-	if(aclid_is_int(c_id0) && aclid_is_int(c_id1) && aclid_is_sint(c_id0) != aclid_is_sint(c_id1))
+	if(aclid_is_int((aclspv_wrd_t) c_id0) && aclid_is_int((aclspv_wrd_t)c_id1) && aclid_is_sint((aclspv_wrd_t)c_id0) != aclid_is_sint((aclspv_wrd_t)c_id1))
 		return ae2f_bll_sel_bool1(aclspv_wrd_t, aclid_is_sint((aclspv_wrd_t)c_id0), (aclspv_wrd_t)c_id0, (aclspv_wrd_t)c_id1);
 
 	return ae2f_bll_sel_bool1(
@@ -369,10 +369,10 @@ aclexpr_carve_lbl_t aclexpr_carve2_arithmetic(
 		return c_lbl_err;
 
 	switch(rdwr_prv_extra->m_mask_literal) {
-		case ACLUTIL_LITERAL_MASK_LITERAL: 
+		case ACLUTIL_LITERAL_MASK_LITERAL:
 		case ACLUTIL_LITERAL_LITERAL:
 			{
-				struct aclutil_ltrl_eval_t EVAL_LIT 
+				struct aclutil_ltrl_eval_t EVAL_LIT
 					= s_eval2_ltrl(
 							rdwr_lst_extra[0].m_literal
 							, rdwr_lst_extra[1].m_literal
@@ -387,7 +387,7 @@ aclexpr_carve_lbl_t aclexpr_carve2_arithmetic(
 
 
 					ae2f_ifezerr(*rdwr_prv_idval = aclutil_mk_constant_val_by_enum(EVAL_LIT.m_ret.m_api_uintmax, rdwr_data->m_ctx
-								, rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_RESTYID])) {
+								, (int_leastenum_t)rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_RESTYID])) {
 						err_puts("[carve2::arithmetic] aclutil_mk_constant_val_by_enum");
 						return c_lbl_err;
 					}
@@ -406,7 +406,7 @@ aclexpr_carve_lbl_t aclexpr_carve2_arithmetic(
 
 		case ACLUTIL_LITERAL_MASK_RT:
 #define	XORSWAP(a, b)	{ (a) ^= (b); (b) ^= (a); (a) ^= (b); }
-			/** 
+			/**
 			 * here, operation is not constant.
 			 *
 			 * current
@@ -423,7 +423,7 @@ aclexpr_carve_lbl_t aclexpr_carve2_arithmetic(
 			 * [4] result id
 			 * */
 
-			/** 
+			/**
 			 * swap [2] and [4]
 			 *
 			 * after this will
@@ -449,7 +449,7 @@ aclexpr_carve_lbl_t aclexpr_carve2_arithmetic(
 			XORSWAP(rdwr_lst_scale_buf[3], rdwr_lst_scale_buf[4]);
 #undef	XORSWAP
 			ae2f_fallthrough;
-		case ACLUTIL_LITERAL_MASK_CONSTANT: 
+		case ACLUTIL_LITERAL_MASK_CONSTANT:
 
 #define		TMPL_SECTION	(*((rdwr_prv_extra->m_mask_literal) == ACLUTIL_LITERAL_RT \
 			? &(rdwr_data)->m_ctx->m_section.m_fnimpl		\

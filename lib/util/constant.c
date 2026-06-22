@@ -15,7 +15,7 @@ aclutil_constant*  aclutil_mk_constant_node(
 		h_aclspv_ctx_t	h_ctx
 		)
 {
-	const aclspv_wrdcount_t	COUNT = h_ctx 
+	const aclspv_wrdcount_t	COUNT = h_ctx
 		? (aclspv_wrd_t)(h_ctx->m_num_constant_cache)
 		: (aclspv_wrd_t)0;
 
@@ -47,7 +47,7 @@ aclutil_constant*  aclutil_mk_constant_node(
 
 		while(LEFT < RIGHT) {
 			const aclspv_wrdcount_t	MIDDLE	= LEFT + ((RIGHT - LEFT) >> 1);
-			const uint_least64_t	KEY_MADE = 
+			const uint_least64_t	KEY_MADE =
 				(u64_least)(((p_aclutil_constant_t)h_ctx->m_constant_cache.m_p)
 						[MIDDLE].m_key_0)
 				| ((u64_least)((p_aclutil_constant_t)h_ctx->m_constant_cache.m_p)
@@ -72,8 +72,8 @@ aclutil_constant*  aclutil_mk_constant_node(
 				_aclspv_malloc, _aclspv_free
 				, _aclspv_memcpy
 				, L_new, h_ctx->m_constant_cache
-				, h_ctx->m_constant_cache.m_sz 
-				? h_ctx->m_constant_cache.m_sz << 1 
+				, h_ctx->m_constant_cache.m_sz
+				? h_ctx->m_constant_cache.m_sz << 1
 				: (size_t)(COUNT + 1) * sizeof(aclutil_constant)
 				);
 
@@ -94,9 +94,9 @@ aclutil_constant*  aclutil_mk_constant_node(
 
 	/** sanity check for future possibility of having more elements */
 	ae2fcc_memset(&((p_aclutil_constant_t)(h_ctx->m_constant_cache.m_p))[LEFT], 0, sizeof(aclutil_constant));
-	((p_aclutil_constant_t)(h_ctx->m_constant_cache.m_p))[LEFT].m_key_0 
+	((p_aclutil_constant_t)(h_ctx->m_constant_cache.m_p))[LEFT].m_key_0
 		= (u32_least)(c_key & 0xFFFFFFFF);
-	((p_aclutil_constant_t)(h_ctx->m_constant_cache.m_p))[LEFT].m_key_1 
+	((p_aclutil_constant_t)(h_ctx->m_constant_cache.m_p))[LEFT].m_key_1
 		= (u32_least)(c_key >> 32) & 0xFFFFFFFF;
 
 	++h_ctx->m_num_constant_cache;
@@ -204,7 +204,7 @@ aclutil_specconstant_val_t aclutil_mk_specconstant_val_id(
 		return ZERO;
 
 	if(C->m_spec_constant.m_val)
-		return C->m_spec_constant.m_ty == MAP[c_idx_ty][c_idx_nbyte] ? C->m_spec_constant : ZERO;
+		return C->m_spec_constant.m_ty == (aclspv_id_t) MAP[c_idx_ty][c_idx_nbyte] ? C->m_spec_constant : ZERO;
 
 	if(c_idx_nbyte == ACLUTIL_CV_NBYTE_8) {
 		ae2f_expected_but_else(h_ctx->m_count.m_types = aclutil_emitx_5(
@@ -227,7 +227,7 @@ aclutil_specconstant_val_t aclutil_mk_specconstant_val_id(
 					)) return ZERO;
 	}
 
-	C->m_spec_constant.m_ty		= MAP[c_idx_ty][c_idx_nbyte];
+	C->m_spec_constant.m_ty		= (aclspv_id_t) MAP[c_idx_ty][c_idx_nbyte];
 	C->m_spec_constant.m_val	= h_ctx->m_id++;
 
 	return C->m_spec_constant;

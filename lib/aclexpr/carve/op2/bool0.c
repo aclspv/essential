@@ -331,7 +331,7 @@ aclexpr_carve_lbl_t aclexpr_carve2_bool0(
 
 
 					ae2f_ifezerr(*rdwr_prv_idval = aclutil_mk_constant_val_by_enum(EVAL_LIT.m_ret.m_api_uintmax, rdwr_data->m_ctx
-								, rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_RESTYID])) {
+								,(int_leastenum_t)rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_RESTYID])) {
 						err_puts("[carve2::bool] aclutil_mk_constant_val_by_enum");
 						return c_lbl_err;
 					}
