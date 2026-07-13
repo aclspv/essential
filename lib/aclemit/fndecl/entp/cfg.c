@@ -13,10 +13,9 @@ aclutil_entp_t aclemit_fndecl_entp_cfg(CXCursor h_parent, h_aclspv_ctx_t CTX) {
 	struct	aclattr_wrkgroup_prm	XYZ;
 	enum SpvExecutionModel_	EXEC_MODEL = SpvExecutionModelMax;
 	aclutil_entp_t		THIS_ENTRY_POINT;
+	aclspv_wrdcount_t	POS = CTX->m_count.m_entp;
 
 	ae2fcc_memset(&THIS_ENTRY_POINT, 0, sizeof(THIS_ENTRY_POINT));
-
-	aclspv_wrdcount_t	POS = CTX->m_count.m_entp;
 
 	ae2f_ifnezerr(CTX->m_err) return THIS_ENTRY_POINT;
 	CTX->m_err = ACLSPV_COMPILE_ALLOC_FAILED;
