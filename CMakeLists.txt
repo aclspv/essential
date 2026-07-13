@@ -62,8 +62,6 @@ endif()
 
 file(GLOB aclspv-inc ${PROJECT_SOURCE_DIR}/inc/*)
 
-ae2f_Macro_init(1 30 30)
-
 file(GLOB_RECURSE aclspv-src ${PROJECT_SOURCE_DIR}/lib/*)
 
 ae2f_CoreLibTentConfigCustom(

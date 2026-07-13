@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.10)
 project(aclspvCore VERSION 0)
 
-ae2f_Macro_init(1 30 30)
+ae2f_Macro_init(1 100 100)
 ae2f_Macro_Lib_V2_REL(
 	ae3f aclspvCore INTERFACE
 	${PROJECT_SOURCE_DIR}/lib "__NOTHING"

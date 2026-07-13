@@ -134,13 +134,19 @@ typedef enum ACLSPV_COMPILE_ {
 	ACLSPV_COMPILE_UNHANDLED_CARVE,
 
 	ACLSPV_COMPILE_DIAG_FTAL,
-	ACLSPV_COMPILE_DIAG_ERR
+	ACLSPV_COMPILE_DIAG_ERR,
+
+	ACLSPV_COMPILE_NOT_INIT_STATE,
+	ACLSPV_COMPILE_PUSHCONSTANT_TOO_BIG
 } e_aclspv_compile_t;
 
 typedef struct {
 	void* ae2f_restrict 	m_p;
 	size_t	m_sz;
 } x_aclspv_vec;
+
+#undef	__ENUM
+#undef	__X
 
 #define	__ENUM()			\
 	__X(SYMBOL),			\
@@ -222,12 +228,6 @@ typedef struct a_aclspv_ctx {
 	 * */
 	aclspv_id_t		m_id;
 
-	/** 
-	 * @var m_scale_vars 
-	 * @see util_bind 
-	 * */
-	x_aclspv_vec            m_scale_vars;
-
 	/** cache for elements related to unsigned integer constants [lib_build_constant] */
 	x_aclspv_vec		m_constant_cache;
 
@@ -253,8 +253,6 @@ typedef struct a_aclspv_ctx {
 	x_aclspv_vec		m_type_uniques;
 
 	struct {
-		aclspv_wrd_t	m_w0, m_w1, m_w2, m_w3;
-
 		/** 
 		 * [*]		general-purpose true temporary vector
 		 * */
@@ -332,6 +330,13 @@ typedef struct a_aclspv_ctx {
 	}			m_section;
 
 	aclspv_id_t		m_id_defaults[ACLSPV_ID_END];
+	aclspv_wrd_t		m_max_push_size;
+	aclspv_wrd_t		m_max_push_size_limit;
+	aclspv_id_t		m_push_size_id;
+	aclspv_wrd_t		m_push_size_ty_pad;
+
+	CXCursorVisitor		m_work_nxt;
+	CXClientData		m_work_data;
 } x_aclspv_ctx;
 
 

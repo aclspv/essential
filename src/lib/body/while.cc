@@ -16,7 +16,7 @@
 #include <.aclspv/util/mkname.h>
 
 #include <ae2f/pat/macrofunc.h>
-#include <aclemit/entp_body.h>
+#include <aclemit/body.h>
 
 ae2f_MAC((L, )) aclemit_body_while(CXCursor h_cur, aclutil_fnctx * ae2f_restrict h_fnctx) { do {
 	CXCursor			L$$CUR[2];

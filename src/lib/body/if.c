@@ -7,7 +7,7 @@
 #include <aclexpr.h>
 #include <aclcursor.h>
 
-#include <aclemit/entp_body.h>
+#include <aclemit/body.h>
 
 #include <util/emitx.h>
 #include <util/fnctx.h>

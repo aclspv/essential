@@ -12,7 +12,6 @@ ACLSPV_ABI_IMPL void aclspv_fini_ctx(
 	_aclspv_stop_vec(_aclspv_free, d_ctx->m_constant_cache);
 	_aclspv_stop_vec(_aclspv_free, d_ctx->m_type_uniques);
 	_aclspv_stop_vec(_aclspv_free, d_ctx->m_cursors);
-	_aclspv_stop_vec(_aclspv_free, d_ctx->m_scale_vars);
 
 	_aclspv_stop_vec(_aclspv_free, d_ctx->m_fnlist.m_entp);
 	_aclspv_stop_vec(_aclspv_free, d_ctx->m_fnlist.m_fn);
@@ -37,6 +36,8 @@ ACLSPV_ABI_IMPL void aclspv_fini_ctx(
 	d_ctx->m_err = E;
 }
 
+#include <aclemit/root.h>
+
 ACLSPV_ABI_IMPL enum ACLSPV_COMPILE_ aclspv_init_ctx(
 		const h_aclspv_ctx_t	i_ctx,
 		const aclspv_wrd_t	c_init_size_exp,
@@ -50,13 +51,14 @@ ACLSPV_ABI_IMPL enum ACLSPV_COMPILE_ aclspv_init_ctx(
 	i_ctx->m_id		= ACLSPV_ID_END;
 	i_ctx->m_flag0		|= c_init_flag0;
 	i_ctx->m_spirv_ver	|= c_spirv_ver;
+	i_ctx->m_work_nxt	= aclemit_root;
+	i_ctx->m_work_data	= 0;
 
 #define	ISZEXP2	ae2f_bll_sel_bool_naive1(size_t, c_init_size_exp, c_init_size_exp, 10)
 #define	INITSZ	((size_t)(1 << ISZEXP2))
 
 	_aclspv_grow_vec(_aclspv_malloc, _aclspv_free, i_ctx->m_constant_cache		, INITSZ);
 	_aclspv_grow_vec(_aclspv_malloc, _aclspv_free, i_ctx->m_type_uniques		, INITSZ);
-	_aclspv_grow_vec(_aclspv_malloc, _aclspv_free, i_ctx->m_scale_vars		, INITSZ);
 	_aclspv_grow_vec(_aclspv_malloc, _aclspv_free, i_ctx->m_cursors			, INITSZ);
 
 	_aclspv_grow_vec(_aclspv_malloc, _aclspv_free, i_ctx->m_fnlist.m_fn		, INITSZ);
@@ -77,11 +79,6 @@ ACLSPV_ABI_IMPL enum ACLSPV_COMPILE_ aclspv_init_ctx(
 	_aclspv_grow_vec(_aclspv_malloc, _aclspv_free, i_ctx->m_tmp.m_v2		, INITSZ);
 
 #undef	ISZEXP2
-
-	ae2f_ifezerr(init_scale(&i_ctx->m_scale_vars, 0)) {
-		aclspv_fini_ctx(i_ctx);
-		return i_ctx->m_err = ACLSPV_COMPILE_ALLOC_FAILED;
-	}
 
 	return ae2f_unexpected(i_ctx->m_err)
 		? i_ctx->m_err

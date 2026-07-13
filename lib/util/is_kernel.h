@@ -5,13 +5,13 @@
 
 #include <ae2f/Keys.h>
 #include <aclattr/execmodel.h>
-#include "./wrd.h"
+#include <aclspv.h>
 
 
-ae2f_inline_f static u32_least aclutil_is_kernel(const CXCursor h_fndecl) {
+ae2f_inline_f static aclspv_wrd_t s_aclutil_is_kernel(const CXCursor h_fndecl) {
 	enum SpvExecutionModel_ MODEL = SpvExecutionModelMax;
 	clang_visitChildren(h_fndecl, s_attr_execmodel, &MODEL);
-	return (u32_least)(MODEL ^ SpvExecutionModelMax);
+	return (aclspv_wrd_t)(MODEL ^ SpvExecutionModelMax);
 }
 
 #endif

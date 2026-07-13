@@ -18,7 +18,7 @@
 
 enum ACLCURSOR_ {
 	ACLCURSOR_VARDECL,
-	ACLCURSOR_PHI
+	ACLCURSOR_PHI,
 };
 
 typedef struct a_aclcursor {
