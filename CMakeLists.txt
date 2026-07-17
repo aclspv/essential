@@ -33,6 +33,7 @@ ae2f_CoreLibFetchX(ae2f Pat	master)
 ae2f_CoreLibFetchX_DNS(KhronosGroup KhronosGroup SPIRV-Headers main https://github.com/)
 
 find_package(Clang)
+find_library(Clang_FOUND clang)
 message(STATUS ${Clang_FOUND})
 
 if(Clang_FOUND)
