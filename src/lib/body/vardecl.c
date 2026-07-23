@@ -73,7 +73,7 @@ ae2f_MAC((L, )) aclemit_body_vardecl(CXCursor h_cur, aclutil_fnctx* ae2f_restric
 					, (const char*)L$$NAME.data
 					);
 			);
-		L$$CTX->m_err = ACLSPV_COMPILE_MET_INVAL;
+		L$$CTX->m_err = ACLSPV_COMPILE_MET_INVAL_TYPE_NOT_KNOWN;
 		clang_disposeString(L$$NAME);
 		goto L$$LBL_END;
 	}
@@ -189,7 +189,7 @@ ae2f_MAC((L, )) aclemit_body_vardecl(CXCursor h_cur, aclutil_fnctx* ae2f_restric
 								, L$$VAR_INIT
 								, &L$$PCURSOR->m_data.m_vardecl.m_literal
 								, h_fnctx)) {
-						L$$CTX->m_err = ACLSPV_COMPILE_MET_INVAL;
+						L$$CTX->m_err = ACLSPV_COMPILE_MET_INVAL_BODY_VARDECL_GET_EXPR;
 						goto L$$LBL_END;
 					}
 
@@ -198,7 +198,8 @@ ae2f_MAC((L, )) aclemit_body_vardecl(CXCursor h_cur, aclutil_fnctx* ae2f_restric
 
 					ae2f_ifezerr(L$$PCURSOR->m_data.m_vardecl.m_init_val = aclutil_mk_specconstant_val_by_enum(L$$SPECID
 							, L$$PCURSOR->m_data.m_vardecl.m_literal.m_api_uintmax
-							, L$$CTX, (int_leastenum_t) L$$PCURSOR-> m_data.m_vardecl.m_type_id)) {
+							, L$$CTX
+							, (int_leastenum_t) L$$PCURSOR-> m_data.m_vardecl.m_type_id)) {
 						L$$CTX->m_err = ACLSPV_COMPILE_MET_INVAL;
 						goto L$$LBL_END;
 					}
@@ -223,7 +224,10 @@ ae2f_MAC((L, )) aclemit_body_vardecl(CXCursor h_cur, aclutil_fnctx* ae2f_restric
 			{
 				int L$$IS_BTCAST = 0;
 				clang_visitChildren(h_cur, aclattr_btcast, &L$$IS_BTCAST);
-				if(L$$IS_BTCAST) L$$FN_GETEXPR = aclexpr_eval_btcast;
+				if(L$$IS_BTCAST) {
+					dbg_puts("btcast");
+					L$$FN_GETEXPR = aclexpr_eval_btcast;
+				}
 			}
 
 			dbg_puts(("Variable has constructor."));
@@ -241,7 +245,8 @@ ae2f_MAC((L, )) aclemit_body_vardecl(CXCursor h_cur, aclutil_fnctx* ae2f_restric
 
 				default:
 				case ACLEXPR_RET_FAILURE:
-					L$$CTX->m_err = ACLSPV_COMPILE_MET_INVAL;
+					unless(L$$CTX->m_err)
+						L$$CTX->m_err = ACLSPV_COMPILE_MET_INVAL_BODY_VARDECL_GET_EXPR;
 					break;
 
 				case ACLEXPR_RET_SUCCESS_LITERAL:

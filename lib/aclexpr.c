@@ -105,9 +105,6 @@ enum ACLEXPR_RET_ aclexpr_eval_btcast(
 	DATA.m_tyid_current	= 0;				/* type casted */
 	DATA.m_num_cmdcounter	= 1;				/* count for operand */
 
-	ae2f_expected_but_else(CTX->m_tmp.m_v1.m_p)
-		return ACLEXPR_RET_FAILURE;
-
 	ae2f_expected_but_else(init_scale(&CTX->m_tmp.m_v1
 				, aclutil_count_to_sz(ACLEXPR_OPBINCFG_END) + sizeof(aclspv_wrd_t)
 				+ sizeof(aclexpr_opbincfg_extra)
@@ -130,7 +127,12 @@ enum ACLEXPR_RET_ aclexpr_eval_btcast(
 
 #undef	INIT_EXTRA
 
-	((umax* ae2f_restrict)CTX->m_tmp.m_v2.m_p)[0] = 0;
+	ae2f_ifnezerr(s_aclmem_cgrow2(
+				&CTX->m_tmp.m_v2
+				, 1, sizeof(aclspv_wrd_t)
+				, ACLSPV_COMPILE_ALLOC_FAILED_EXPR))
+		return ACLEXPR_RET_FAILURE;
+	((aclspv_wrd_t* ae2f_restrict)CTX->m_tmp.m_v2.m_p)[0] = 0;
 
 	dbg_prefix(a);
 	dbg_call(fprintf
@@ -283,9 +285,6 @@ enum ACLEXPR_RET_ aclexpr_eval(
 	DATA.m_tyid_current	= 0;				/* type casted */
 	DATA.m_num_cmdcounter	= 1;				/* count for operand */
 
-	ae2f_expected_but_else(CTX->m_tmp.m_v1.m_p)
-		return ACLEXPR_RET_FAILURE;
-
 	ae2f_expected_but_else(init_scale(&CTX->m_tmp.m_v1
 				, aclutil_count_to_sz(ACLEXPR_OPBINCFG_END) + sizeof(aclspv_wrd_t)
 				+ sizeof(aclexpr_opbincfg_extra)
@@ -308,7 +307,13 @@ enum ACLEXPR_RET_ aclexpr_eval(
 
 #undef	INIT_EXTRA
 
-	((umax* ae2f_restrict)CTX->m_tmp.m_v2.m_p)[0] = 0;
+	ae2f_ifnezerr(s_aclmem_cgrow2(
+				&CTX->m_tmp.m_v2
+				, 1, sizeof(aclspv_wrd_t)
+				, ACLSPV_COMPILE_ALLOC_FAILED_EXPR))
+		return ACLEXPR_RET_FAILURE;
+
+	((aclspv_wrd_t* ae2f_restrict)CTX->m_tmp.m_v2.m_p)[0] = 0;
 
 	dbg_prefix(a);
 	dbg_call(fprintf

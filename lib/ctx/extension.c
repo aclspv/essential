@@ -107,7 +107,6 @@ LBL_NOT_FOUND:
 					&h_ctx->m_section.m_ext
 					, h_ctx->m_count.m_ext
 					, SpvOpExtension | (WCEXT << 16))) {
-			h_ctx->m_err = ACLSPV_COMPILE_ALLOC_FAILED;
 			return 0;
 		}
 
@@ -115,7 +114,6 @@ LBL_NOT_FOUND:
 					&h_ctx->m_section.m_ext
 					, h_ctx->m_count.m_ext
 					, c_ext)) {
-			h_ctx->m_err = ACLSPV_COMPILE_ALLOC_FAILED;
 			return 0;
 		}
 		return 1;
@@ -128,7 +126,6 @@ LBL_NOT_FOUND:
 				&h_ctx->m_section.m_ext
 				, h_ctx->m_count.m_ext + WCEXT - 1
 				, 0)) {
-		h_ctx->m_err = ACLSPV_COMPILE_ALLOC_FAILED;
 		return 0;
 	}
 

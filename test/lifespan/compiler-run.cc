@@ -27,7 +27,7 @@ int main(void) {
 
 	acltestcfg();
 
-	printf("flag0: %u\n", static_cast<unsigned>(CTX.me().m_flag0));
+	printf("flag0: %u\n", static_cast<unsigned>(CTX.me().m_usrcfg.m_flag0));
 
 	files[0].Contents = s_src0;
 	files[0].Filename = "main.cl";

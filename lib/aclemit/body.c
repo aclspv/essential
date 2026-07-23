@@ -26,7 +26,7 @@ enum CXChildVisitResult aclemit_entp_body(CXCursor h_cur, ae2f_unused CXCursor h
 	const CXString SPELL		= clang_getCursorSpelling(h_cur);
 
 	ae2f_expected_but_else(KIND)	{
-		CTX->m_err = ACLSPV_COMPILE_MET_INVAL;
+		CTX->m_err = ACLSPV_COMPILE_MET_INVAL_BODY_NOKIND;
 		goto LBL_FAIL;
 	}
 
@@ -168,7 +168,7 @@ enum CXChildVisitResult aclemit_entp_body(CXCursor h_cur, ae2f_unused CXCursor h
 
 					clang_disposeString(CURSORSPL);
 
-					jmpfail(ACLSPV_COMPILE_MET_INVAL);
+					jmpfail(ACLSPV_COMPILE_MET_INVAL_GOTO_NOT_LABEL);
 				}
 
 				IDX = aclutil_mk_cursor_base(

@@ -5,15 +5,15 @@
 
 
 #include <ae2f/c90/lmts.h>
-#include <stddef.h>
 #include <aclspv.h>
-#include <.aclspv/vec.h>
+#include <aclmem.h>
+
 #include <.aclspv/util/vcopr.h>
 
 #include "./wrd.h"
+#include "./log.h"
 
 #include <assert.h>
-#include <string.h>
 
 #include <ae2f/bll.h>
 
@@ -54,17 +54,16 @@ static ae2f_inline aclspv_sz_t aclutil_emit_wrd(
 {
 	aclspv_wrd_t	DUMMY;
 	uptr		CND;
- 
 
-	while(c_wrdcount + 1 && c_wrdcount >= aclutil_sz_to_count(h_wrds->m_sz)) {
-		const size_t	NEWSIZE = h_wrds->m_sz ? (h_wrds->m_sz) << 1 : (size_t)aclutil_count_to_sz(c_wrdcount + 1);
-		_aclspv_grow_vec_with_copy(
-				_aclspv_malloc, _aclspv_free, _aclspv_memcpy 
-				, L_new, *h_wrds
-				, NEWSIZE
-				);
 
-		ae2f_ifezerr(h_wrds->m_p) return 0;
+	ae2f_ifnezerr_strict(s_aclmem_cgrow2(
+			h_wrds
+			, c_wrdcount + 1
+			, sizeof(aclspv_wrd_t)
+			, ACLSPV_COMPILE_ALLOC_FAILED_EMIT_WRD
+			)) {
+		err_puts("failed");
+		return 0;
 	}
 
 	CND = ae2f_bll_from_bool1(uptr, ae2f_expected(h_wrds->m_p && (aclutil_sz_to_count(h_wrds->m_sz) <= UINT_MAX)));
@@ -99,6 +98,8 @@ static ae2f_inline aclspv_sz_t aclutil_emit_wrd(
 	(cr_wrd) = opcode_to_wrd((cr_wrd & ACLSPV_MASK_OPCODE), ((aclspv_num_opprm_t)(c_num_opprm)))
 
 
+#include <string.h>
+
 /**
  * @fn		emit_str
  * @brief	emit string with word size padded.
@@ -117,14 +118,17 @@ ae2f_inline static aclspv_sz_t aclutil_emit_str(
 
 	ae2f_expected_but_else(len)		return 0;
 
-	_aclspv_grow_vec_with_copy(_aclspv_malloc, _aclspv_free, _aclspv_memcpy, L_new
-			, *h_wrds, (size_t)aclutil_count_to_sz(pad_wrds + c_wrdcount));
+	ae2f_ifnezerr_strict(s_aclmem_cgrow2(
+			h_wrds
+			, pad_wrds + c_wrdcount
+			, sizeof(aclspv_wrd_t)
+			, ACLSPV_COMPILE_ALLOC_FAILED_EMIT_WRD
+			)) return 0;
 
-	ae2f_expected_but_else(h_wrds->m_p)	return 0;
 	assert(aclutil_count_to_sz(pad_wrds + c_wrdcount) <= (aclspv_sz_t)h_wrds->m_sz);
 
-	memset(&aclutil_get_wrd_of_vec(h_wrds)[c_wrdcount], 0, (size_t)aclutil_count_to_sz(pad_wrds));
-	_aclspv_memcpy(&aclutil_get_wrd_of_vec(h_wrds)[c_wrdcount], rd_str, len);
+	aclmemzero(&aclutil_get_wrd_of_vec(h_wrds)[c_wrdcount], aclutil_count_to_sz(pad_wrds));
+	aclmemcpy(&aclutil_get_wrd_of_vec(h_wrds)[c_wrdcount], rd_str, len);
 
 	return c_wrdcount + pad_wrds;
 }

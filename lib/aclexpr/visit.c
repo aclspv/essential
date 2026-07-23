@@ -2,6 +2,8 @@
 
 #include <util/emitx.h>
 #include <util/scale.h>
+
+#include <aclmem.h>
 #include <aclexpr/op.h>
 
 #include <ae2f/cc/memset.h>
@@ -141,27 +143,12 @@ enum CXChildVisitResult aclexpr_visit(
 
 		cgcsdef(OP_RECURSE):
 		{
-			size_t NEWSZ = CMDCOUNTERSTCK.m_sz;
-			while(
-					((size_t)NUM_CMDCOUNTERSTCK > NEWSZ / sizeof(cmdcounterstckelm)) 
-					&& ((NEWSZ <<= 1)) > CMDCOUNTERSTCK.m_sz);
-
-			ae2f_ifezerr(NEWSZ > CMDCOUNTERSTCK.m_sz / sizeof(cmdcounterstckelm)) {
-				CTX->m_err = ACLSPV_COMPILE_TOO_BIG;
-				return CXChildVisit_Break;
-			}
-
-			_aclspv_grow_vec_with_copy(
-					_aclspv_malloc,  _aclspv_free, _aclspv_memcpy
-					, dest, CMDCOUNTERSTCK
-					, NEWSZ
-					);
-
-			ae2f_ifezerr(CMDCOUNTERSTCK.m_p)
-			{
-				CTX->m_err = ACLSPV_COMPILE_ALLOC_FAILED_EXPR;
-				return CXChildVisit_Break;
-			}
+			ae2f_ifnezerr_strict(s_aclmem_cgrow2(
+					&CMDCOUNTERSTCK
+					, NUM_CMDCOUNTERSTCK + 1
+					, sizeof(cmdcounterstckelm)
+					, ACLSPV_COMPILE_ALLOC_FAILED_EXPR
+				       )) return CXChildVisit_Break;
 
 			(void)++NUM_CMDCOUNTERSTCK;
 			GETLASTEL_CMDCOUNTERSTCK(a).m_count_oprnd = 0;

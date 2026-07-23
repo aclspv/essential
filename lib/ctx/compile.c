@@ -37,7 +37,7 @@ ae2f_extern ACLSPV_ABI_DECL enum ACLSPV_COMPILE_ aclspv_ctx_compile1(
 	ae2f_ifezerr(h_tu)	return ACLSPV_COMPILE_ERR_CXTU;
 
 	CXTU_IDX_ERR = clang_getNumDiagnostics(h_tu);
-	if(h_ctx->m_flag0 & ACLSPV_CTX_FLAG0_DUMP_DIAGNOSTICS) while(CXTU_IDX_ERR-- && !h_ctx->m_err) {
+	if(h_ctx->m_usrcfg.m_flag0 & ACLSPV_CTX_FLAG0_DUMP_DIAGNOSTICS) while(CXTU_IDX_ERR-- && !h_ctx->m_err) {
 		const CXDiagnostic DIAG = clang_getDiagnostic(h_tu, CXTU_IDX_ERR);
 		enum CXDiagnosticSeverity SEVERITY = clang_getDiagnosticSeverity(DIAG);
 
@@ -50,7 +50,7 @@ ae2f_extern ACLSPV_ABI_DECL enum ACLSPV_COMPILE_ aclspv_ctx_compile1(
 				dbg_puts("NOTE");
 				break;
 			case CXDiagnostic_Error:
-				if(h_ctx->m_flag0 & ACLSPV_CTX_FLAG0_KILL_ON_DIAGNOSTICS) 
+				if(h_ctx->m_usrcfg.m_flag0 & ACLSPV_CTX_FLAG0_KILL_ON_DIAGNOSTICS) 
 					h_ctx->m_err = ACLSPV_COMPILE_DIAG_ERR;
 				dbg_puts("_ERR");
 				break;
@@ -63,7 +63,7 @@ ae2f_extern ACLSPV_ABI_DECL enum ACLSPV_COMPILE_ aclspv_ctx_compile1(
 				break;
 
 			case CXDiagnostic_Fatal:
-				if(h_ctx->m_flag0 & ACLSPV_CTX_FLAG0_KILL_ON_DIAGNOSTICS)
+				if(h_ctx->m_usrcfg.m_flag0 & ACLSPV_CTX_FLAG0_KILL_ON_DIAGNOSTICS)
 					h_ctx->m_err = ACLSPV_COMPILE_DIAG_FTAL;
 				dbg_puts("FTAL");
 				break;

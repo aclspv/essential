@@ -1,7 +1,7 @@
 #include "../../lib/util/scale.h"
-#include <.aclspv/vec.h>
 
 #include <assert.h>
+#include <string.h>
 
 typedef struct {
 	char* m_name;
@@ -9,8 +9,14 @@ typedef struct {
 } evknd;
 
 int main(void) {
+	x_aclspv_ctx	ctx;
 	x_aclspv_vec	alloc;
-	_aclspv_init_vec(alloc);
+
+	aclspv_usrcfg_t	usrcfg;
+	memset(&usrcfg, 0, sizeof(usrcfg));
+
+	aclspv_init_ctx(&ctx, &usrcfg);
+	aclmem_init(&alloc, &ctx);
 	assert(init_scale(&alloc, 0));
 
 	assert(mk_scale_from_vec(&alloc, 0));
@@ -27,7 +33,7 @@ int main(void) {
 	assert(get_scale_from_vec(&alloc, 2));
 	assert(get_scale_from_vec(&alloc, 3));
 
-	_aclspv_stop_vec(_aclspv_free, alloc);
-
+	aclmem_fini(&alloc);
+	aclspv_fini_ctx(&ctx);
 	return 0;
 }

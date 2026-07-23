@@ -1,9 +1,12 @@
 #include "./vardecl.h"
 
+#include <aclmem.h>
 #include <aclcursor.h>
 #include <util/emitx.h>
 
 #include <.aclspv/util/u32_to_hex8.h>
+#include <.aclspv/util/mkname.h>
+
 #include <ae2f/pat/dbg.h>
 
 aclspv_bool_t	ae2f_ccpure aclcursor_is_vardecl(
@@ -88,48 +91,20 @@ enum ACLSPV_COMPILE_ aclcursor_vardecl_evuclbl(
 						)
 			  ) return ACLSPV_COMPILE_ALLOC_FAILED_CURSOR;
 
-			if(h_ctx->m_flag0 & ACLSPV_CTX_FLAG0_SYMBOL)
+			if(h_ctx->m_usrcfg.m_flag0 & ACLSPV_CTX_FLAG0_SYMBOL)
 			{
-				const aclspv_wrd_t POS	= h_ctx->m_count.m_name;
 				CXString SPELL	= clang_getCursorSpelling(wr_cursor[IDX].m_cursor);
 
-				_aclspv_grow_vec(_aclspv_malloc, _aclspv_free	
-						, h_ctx->m_tmp.m_v0, strlen(SPELL.data) + 10
+
+				aclutil_mkname_dbg_fn(
+						CURSORDATA.m_id
+						, SPELL.data
+						, h_ctx
+						, &h_ctx->m_tmp.m_v0
 						);
-				ae2f_expected_but_else(h_ctx->m_tmp.m_v0.m_p)
-					goto LBL_FAIL;
-				((char* ae2f_restrict)h_ctx->m_tmp.m_v0.m_p)[8] = ':';
-				((char* ae2f_restrict)h_ctx->m_tmp.m_v0.m_p)[9] = '\0';
-				_util_u32_to_hex8((CURSORDATA.m_id)
-						, ((char* ae2f_restrict)h_ctx->m_tmp.m_v0.m_p));
-				strcat(h_ctx->m_tmp.m_v0.m_p, SPELL.data);
-				ae2f_expected_but_else((h_ctx->m_count.m_name = emit_opcode(
-								&h_ctx->m_section.m_name
-								, h_ctx->m_count.m_name
-								, SpvOpName, 0))
-						) goto LBL_FAIL;	
-				ae2f_expected_but_else((h_ctx->m_count.m_name = aclutil_emit_wrd(
-								&h_ctx->m_section.m_name
-								, h_ctx->m_count.m_name
-								, CURSORDATA.m_id
-								)))	
-					goto LBL_FAIL;	
-				ae2f_expected_but_else((h_ctx->m_count.m_name = aclutil_emit_str(
-								&h_ctx->m_section.m_name	
-								, h_ctx->m_count.m_name	
-								, h_ctx->m_tmp.m_v0.m_p
-								)))
-					goto LBL_FAIL;
-				set_oprnd_count_for_opcode(aclutil_get_wrd_of_vec(
-							&h_ctx->m_section.m_name)[POS]
-						, h_ctx->m_count.m_name - POS - 1);
 
 				clang_disposeString(SPELL);
-				continue;
-				ae2f_unreachable();
-LBL_FAIL:
-				clang_disposeString(SPELL);
-				return ACLSPV_COMPILE_ALLOC_FAILED_CURSOR;
+				if(h_ctx->m_err) return h_ctx->m_err;
 			}
 
 		} else {

@@ -1,9 +1,12 @@
 #include "./norm.h"
+
 #include <util/fnctx.h>
 #include <util/fn.h>
 #include <util/cxtp.h>
-#include <acldbg/mallocfree.h>
-#include <.aclspv/vec.h>
+
+
+#include <aclmem.h>
+
 #include <aclemit/fndecl/body.h>
 #include <aclemit/root.h>
 
@@ -36,18 +39,12 @@ enum CXChildVisitResult aclemit_fndecl_norm(
 	goto OUT;
 
 OUT:
-	_aclspv_grow_vec_with_copy(
-			_aclspv_malloc
-			, _aclspv_free
-			, _aclspv_memcpy
-			, L_new
-			, ctx->m_fnlist.m_fn
-			, (ctx->m_fnlist.m_num_fn + 1) * sizeof(fn));
-
-	ae2f_ifezerr(ctx->m_fnlist.m_fn.m_p) {
-		ctx->m_err = ACLSPV_COMPILE_ALLOC_FAILED;
-		return CXChildVisit_Break;
-	}
+	ae2f_ifnezerr_strict(s_aclmem_cgrow2(
+			&ctx->m_fnlist.m_fn
+			, ctx->m_fnlist.m_num_fn + 1
+			, sizeof(fn)
+			, ACLSPV_COMPILE_ALLOC_FAILED_FUNCTION
+		       )) return CXChildVisit_Break;
 
 	((aclutil_fn_t* ae2f_restrict)ctx->m_fnlist.m_fn.m_p)
 		[ctx->m_fnlist.m_num_fn++] = fn;

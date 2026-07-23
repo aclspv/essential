@@ -46,15 +46,12 @@ enum CXChildVisitResult	aclemit_fndecl_bodycfg(
 	ae2f_ifnezerr(h_ctx->m_err)	return CXChildVisit_Break;
 
 	if(h_ctx->m_count.m_fnimpl) {
-		_aclspv_grow_vec_with_copy(_aclspv_malloc, _aclspv_free, _aclspv_memcpy, L_new
-				, h_ctx->m_section.m_fndef
-				, (size_t)aclutil_count_to_sz(h_ctx->m_count.m_fndef + h_ctx->m_count.m_fnimpl)
-				);
-
-		ae2f_ifezerr(h_ctx->m_section.m_fndef.m_p) {
-			h_ctx->m_err = ACLSPV_COMPILE_ALLOC_FAILED;
-			return CXChildVisit_Break;
-		}
+		ae2f_ifnezerr_strict(s_aclmem_cgrow2(
+				&h_ctx->m_section.m_fndef
+				, h_ctx->m_count.m_fndef + h_ctx->m_count.m_fnimpl
+				, sizeof(aclspv_wrd_t)
+				, ACLSPV_COMPILE_ALLOC_FAILED
+			       )) return CXChildVisit_Break;
 
 		memcpy(
 				aclutil_get_wrd_of_vec(&h_ctx->m_section.m_fndef) + h_ctx->m_count.m_fndef

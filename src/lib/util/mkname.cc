@@ -10,14 +10,12 @@
 #include <util/emitx.h>
 #include <string.h>
 
-#include <.aclspv/vec.h>
-
-
 #include <ae2f/pat/macrofunc.h>
+#include <aclmem.h>
 
 /** @brief it produces error on h_ctx */
 ae2f_MAC((L, )) aclutil_mkname_dbg(const aclspv_id_t c_id, const char* const c_name, x_aclspv_ctx& cr_ctx, x_aclspv_vec& h_vec) {
-	if((cr_ctx).m_flag0 & ACLSPV_CTX_FLAG0_SYMBOL) {
+	if((cr_ctx).m_usrcfg.m_flag0 & ACLSPV_CTX_FLAG0_SYMBOL) {
 		const size_t L$$STRLEN_ORIG = strlen(c_name);	/** string len */
 		const aclspv_wrdcount_t L$$STRLEN = (L$$STRLEN_ORIG & 0xFFFFFFFFu);
 		const aclspv_wrd_t L$$POS = (cr_ctx).m_count.m_name;
@@ -27,13 +25,12 @@ ae2f_MAC((L, )) aclutil_mkname_dbg(const aclspv_id_t c_id, const char* const c_n
 			goto L$$LBL_DONE;
 		}
 
-		_aclspv_grow_vec(_aclspv_malloc, _aclspv_free
-				, h_vec, strlen(c_name) + 10
-				);
-
-		ae2f_expected_but_else((h_vec).m_p) {
+		ae2f_ifnezerr_strict(s_aclmem_calloc2(
+					&h_vec
+					, 1
+					, (aclspv_wrd_t)strlen(c_name) + 10
+					, ACLSPV_COMPILE_ALLOC_FAILED))
 			goto L$$LBL_FAIL;
-		}
 
 		ae2f_reinterpret_cast(char* ae2f_restrict, (h_vec).m_p)[8] = ':';
 		ae2f_reinterpret_cast(char* ae2f_restrict, (h_vec).m_p)[9] = '\0';

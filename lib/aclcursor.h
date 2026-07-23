@@ -14,11 +14,11 @@
 #include <util/wrd.h>
 #include <util/bind.h>
 #include <util/literal.h>
-#include <.aclspv/vec.h>
 
 enum ACLCURSOR_ {
 	ACLCURSOR_VARDECL,
-	ACLCURSOR_PHI
+	ACLCURSOR_PHI,
+	ACLCURSOR_PARENTP
 };
 
 typedef struct a_aclcursor {

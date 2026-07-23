@@ -18,7 +18,6 @@ aclutil_entp_t aclemit_fndecl_entp_cfg(CXCursor h_parent, h_aclspv_ctx_t CTX) {
 	ae2fcc_memset(&THIS_ENTRY_POINT, 0, sizeof(THIS_ENTRY_POINT));
 
 	ae2f_ifnezerr(CTX->m_err) return THIS_ENTRY_POINT;
-	CTX->m_err = ACLSPV_COMPILE_ALLOC_FAILED;
 
 	clang_visitChildren(h_parent, s_attr_execmodel, &EXEC_MODEL);
 
@@ -45,19 +44,17 @@ aclutil_entp_t aclemit_fndecl_entp_cfg(CXCursor h_parent, h_aclspv_ctx_t CTX) {
 			} else {								\
 				ae2f_ifezerr(XYZ.m_##K_idx = aclutil_mk_constant_spec_id(	\
 							XYZ.m_##K_idx, 1, CTX)) {		\
-					CTX->m_err = ACLSPV_COMPILE_ALLOC_FAILED;		\
 					goto LBL_ABRT;						\
 				}								\
 			}									\
 		} else ae2f_ifezerr(aclutil_mk_constant_val_id(					\
 					(uint_least64_t)XYZ.m_0					\
 					, CTX)) {						\
-			CTX->m_err = ACLSPV_COMPILE_ALLOC_FAILED;				\
 			goto LBL_ABRT;								\
 		}
 
 		if(XYZ.m_flag_specid) {
-			ae2f_ifnezerr(CTX->m_spirv_ver < aclspv_ver_spv(1, 2)) {
+			ae2f_ifnezerr(CTX->m_usrcfg.m_spirv_ver < aclspv_ver_spv(1, 2)) {
 				CTX->m_err = ACLSPV_COMPILE_NOIMPL_V_WRKGROUP_SIZE;
 				err_puts("workgroup size id is for spirv 1.2");
 				goto LBL_ABRT;

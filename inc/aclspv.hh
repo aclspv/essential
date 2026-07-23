@@ -14,6 +14,8 @@ namespace aclspv {
 		return aclspv_ver_spv(c_mjr, c_mnr);
 	}
 
+	struct usrcfg_t : public aclspv_usrcfg_t {};
+
 	struct ctx_base : protected a_aclspv_ctx {
 		public:
 			ae2f_inline_f const a_aclspv_ctx& ae2f_ccconst me() const {
@@ -111,11 +113,9 @@ namespace aclspv {
 
 	struct ctx : public ctx_base {
 		public:
-			ae2f_inline_f ctx(const wrd_t c_init_size_exp,
-					const wrd_t c_init_flag0,
-					const wrd_t c_spirv_version) {
+			ae2f_inline_f ctx(const usrcfg_t cfg) {
 				e_aclspv_compile_t A = aclspv_init_ctx(
-						this, c_init_size_exp, c_init_flag0, c_spirv_version);
+						this, &cfg);
 
 				this->m_err = this->m_err ? this->m_err : A;
 			}

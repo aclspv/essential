@@ -66,6 +66,8 @@ typedef uint_least32_t	aclspv_wrd_t;
  * */
 typedef	aclspv_wrd_t	aclspv_wrdcount_t;
 
+typedef struct a_aclspv_ctx* ae2f_restrict h_aclspv_ctx_t;
+
 /**
  * @typedef	aclpsv_id_t
  * @brief	represents id in spir-v
@@ -74,7 +76,6 @@ typedef	aclspv_wrd_t	aclspv_id_t;
 typedef aclspv_wrd_t	aclspv_bool_t;
 
 typedef int ACLSPV_WRD_CHECK[sizeof(aclspv_wrd_t) >= 4 ? 1 : -1];
-
 
 typedef enum ACLSPV_COMPILE_ {
 	ACLSPV_COMPILE_OK,
@@ -86,6 +87,7 @@ typedef enum ACLSPV_COMPILE_ {
 	ACLSPV_COMPILE_NOIMPL_EXTENSION,
 
 	ACLSPV_COMPILE_ALLOC_FAILED,
+	ACLSPV_COMPILE_ALLOC_FAILED_EMIT_WRD,
 	ACLSPV_COMPILE_ALLOC_FAILED_CURSOR,
 	ACLSPV_COMPILE_ALLOC_FAILED_CFG,
 	ACLSPV_COMPILE_ALLOC_FAILED_EXPR,
@@ -95,11 +97,20 @@ typedef enum ACLSPV_COMPILE_ {
 	ACLSPV_COMPILE_ALLOC_FAILED_ASM,
 	ACLSPV_COMPILE_ALLOC_FAILED_CAPABILITY,
 	ACLSPV_COMPILE_ALLOC_FAILED_CXTP,
+	ACLSPV_COMPILE_ALLOC_FAILED_ENTP,
+	ACLSPV_COMPILE_ALLOC_FAILED_ENTP_ARGS,
+	ACLSPV_COMPILE_ALLOC_FAILED_FUNCTION,
+	ACLSPV_COMPILE_ALLOC_FAILED_CONSTANT,
 
 	ACLSPV_COMPILE_MET_INVAL,
 	ACLSPV_COMPILE_MET_INVAL_BRK,
 	ACLSPV_COMPILE_MET_INVAL_CONTINUE,
 	ACLSPV_COMPILE_MET_INVAL_UNREACHABLE,
+	ACLSPV_COMPILE_MET_INVAL_ENTP_ARGS,
+	ACLSPV_COMPILE_MET_INVAL_BODY_NOKIND,
+	ACLSPV_COMPILE_MET_INVAL_GOTO_NOT_LABEL,
+	ACLSPV_COMPILE_MET_INVAL_TYPE_NOT_KNOWN,
+	ACLSPV_COMPILE_MET_INVAL_BODY_VARDECL_GET_EXPR,
 
 	ACLSPV_COMPILE_ERR_CLANG,
 	ACLSPV_COMPILE_ERR_CXIDX,
@@ -141,8 +152,15 @@ typedef enum ACLSPV_COMPILE_ {
 } e_aclspv_compile_t;
 
 typedef struct {
+	/** should be used */
 	void* ae2f_restrict 	m_p;
-	size_t	m_sz;
+
+	/** should be freed */
+	void* ae2f_restrict 	m_base;
+
+	aclspv_wrd_t		m_sz, m_sz_real;
+
+	h_aclspv_ctx_t		m_ctx;
 } x_aclspv_vec;
 
 #undef	__ENUM
@@ -192,14 +210,24 @@ enum ACLSPV_ID_ {
 	ACLSPV_ID_END
 };
 
-typedef struct a_aclspv_ctx* ae2f_restrict h_aclspv_ctx_t;
+typedef struct {
+	void*	m_usrdata;
 
+	/** 
+	 * r_mem could be used. 
+	 * */
+	void*	(*m_malloc)	(
+			aclspv_wrd_t c_sz,
+			aclspv_wrd_t* ae2f_restrict r_sz_real,
+			void* ae2f_restrict *	r_mem,
+			void*	h_usr
+			);
+	void	(*m_free)	(void* fini_mem, aclspv_wrd_t c_sz, void* h_usr);
 
-typedef struct a_aclspv_ctx {
+	aclspv_wrd_t		m_max_push_size_limit;
+
 	/** @brief see `ACLSPV_CTX_FLAG0_` */
 	uint_leastenum_t	m_flag0;
-
-	e_aclspv_compile_t	m_err;
 
 	/**
 	 * @brief
@@ -207,6 +235,10 @@ typedef struct a_aclspv_ctx {
 	 * Use `aclspv_ver_spv` to specify it
 	 * */
 	aclspv_wrd_t		m_spirv_ver;
+} aclspv_usrcfg_t;	/** user can configurate this */
+
+typedef struct a_aclspv_ctx {
+	e_aclspv_compile_t	m_err;
 
 	/** 
 	 * @brief
@@ -331,12 +363,13 @@ typedef struct a_aclspv_ctx {
 
 	aclspv_id_t		m_id_defaults[ACLSPV_ID_END];
 	aclspv_wrd_t		m_max_push_size;
-	aclspv_wrd_t		m_max_push_size_limit;
 	aclspv_id_t		m_push_size_id;
 	aclspv_wrd_t		m_push_size_ty_pad;
 
 	CXCursorVisitor		m_work_nxt;
 	CXClientData		m_work_data;
+
+	aclspv_usrcfg_t		m_usrcfg;
 } x_aclspv_ctx;
 
 
@@ -345,10 +378,8 @@ typedef struct a_aclspv_ctx {
  *		`i_ctx` must be released by `aclspv_fini_ctx`.
  * */
 ae2f_extern ACLSPV_ABI_DECL enum ACLSPV_COMPILE_ aclspv_init_ctx(
-		const h_aclspv_ctx_t	i_ctx,
-		const aclspv_wrd_t	c_init_size_exp,
-		const aclspv_wrd_t	c_init_flag0,
-		const aclspv_wrd_t	c_spirv_version
+		const h_aclspv_ctx_t			init_ctx,
+		const aclspv_usrcfg_t*	ae2f_restrict	rd_usrcfg_opt
 		);
 
 /** 

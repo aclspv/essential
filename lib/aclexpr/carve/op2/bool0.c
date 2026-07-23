@@ -6,6 +6,7 @@
 #include <ae2f/pat/dbg.h>
 
 #include <aclcursor.h>
+#include <aclmem.h>
 
 ae2f_inline_f static ae2f_ccconst aclspv_wrd_t	s_opcvrt(const aclspv_wrd_t c_op) {
 	switch(c_op) {
@@ -331,7 +332,7 @@ aclexpr_carve_lbl_t aclexpr_carve2_bool0(
 
 
 					ae2f_ifezerr(*rdwr_prv_idval = aclutil_mk_constant_val_by_enum(EVAL_LIT.m_ret.m_api_uintmax, rdwr_data->m_ctx
-								,(int_leastenum_t)rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_RESTYID])) {
+								,(enum ACLSPV_ID_)rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_RESTYID])) {
 						err_puts("[carve2::bool] aclutil_mk_constant_val_by_enum");
 						return c_lbl_err;
 					}
@@ -403,19 +404,13 @@ aclexpr_carve_lbl_t aclexpr_carve2_bool0(
 			: &(rdwr_data)->m_ctx->m_count.m_types))
 
 			dbg_puts("[carve2::arithmetic] vec_with_copy");
-			_aclspv_grow_vec_with_copy(
-					_aclspv_malloc
-					, _aclspv_free
-					, _aclspv_memcpy
-					, L_new
-					, TMPL_SECTION
-					, (size_t)aclutil_count_to_sz(TMPL_COUNT + 6u - (aclspv_wrd_t)(rdwr_prv_extra->m_mask_literal == (aclspv_wrd_t)ACLUTIL_LITERAL_RT))
-					);
 
-			ae2f_ifezerr(TMPL_SECTION.m_p) {
-				(rdwr_data)->m_ctx->m_err = ACLSPV_COMPILE_ALLOC_FAILED_EXPR;
-				return c_lbl_err;
-			}
+			ae2f_ifnezerr_strict(s_aclmem_cgrow2(
+					&TMPL_SECTION
+					, TMPL_COUNT + 6u - (aclspv_wrd_t)(rdwr_prv_extra->m_mask_literal == (aclspv_wrd_t)ACLUTIL_LITERAL_RT)
+					, sizeof(aclspv_wrd_t)
+					, ACLSPV_COMPILE_ALLOC_FAILED_EXPR
+				       )) return c_lbl_err;
 
 			{
 				aclspv_wrd_t	CI = 6 - (!rdwr_prv_extra->m_mask_literal);
@@ -450,7 +445,7 @@ aclexpr_carve_lbl_t aclexpr_carve2_bool0(
 
 		ae2f_ifezerr_strict(CLVAL) {
 			err_puts("[carve] aclutil_assign_cursor_lval has been failed.");
-			rdwr_data->m_ctx->m_err = ACLSPV_COMPILE_UNHANDLED_VISIT;
+			rdwr_data->m_ctx->m_err = ACLSPV_COMPILE_UNHANDLED_CARVE;
 			return c_lbl_err;
 		}
 	}

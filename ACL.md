@@ -142,7 +142,9 @@ aclspv_bratio(weight_true_branch, weight_false_branch)
 
 # Restriction
 > Some statements / extensions may not be planned to be supported for now.
-- `VK_KHR_relaxed_block_layout` behaviour (free alignment)
-- Non plain-old-data types
-- `OpenCL` memory model
-- `Simple` memory model
+
+`VK_KHR_relaxed_block_layout` behaviour (free alignment)  
+Non plain-old-data types  
+`OpenCL` memory model  
+`Simple` memory model  
+`function-scoped variable` shadowing function parameter  

@@ -1,8 +1,8 @@
 #include "./args.h"
 
-#include <aclspv.h>
 #include <ae2f/bll.h>
 #include <ae2f/pat/dbg.h>
+
 #include <util/scale.h>
 #include <util/bind.h>
 #include <util/cxtp.h>
@@ -10,6 +10,9 @@
 #include <util/constant.h>
 #include <util/emitx.h>
 #include <util/iddef.h>
+
+#include <aclspv.h>
+#include <aclmem.h>
 #include <aclcursor.h>
 
 #include <aclattr/storage_class.h>
@@ -75,9 +78,16 @@ enum CXChildVisitResult aclemit_fndecl_entp_arg(CXCursor h_cur, CXCursor h_paren
 	unless((PARAM_TY.kind == CXType_Pointer) | (PARAM_TY.kind == CXType_ConstantArray)) {
 		INFO.m_unified.m_var_id		= (aclspv_wrd_t)PSH_CONSTANT_ID;
 		INFO.m_pshconst.m_pad		= (aclspv_wrd_t)PUSH_SIZE;
-		INFO.m_pshconst.m_size		= aclutil_sz_to_count(clang_Type_getSizeOf(PARAM_TY));
+		/** get type size by calculating one by one */
+		PUSH_SIZE += INFO.m_pshconst.m_size
+			= aclutil_sz_to_count(clang_Type_getSizeOf(PARAM_TY));
 
-		PUSH_SIZE += INFO.m_pshconst.m_size;
+		dbg_prefix(a);
+		dbg_call((void), fprintf(stderr, "PUSHINFO: %u %u %u\n"
+				, INFO.m_unified.m_var_id
+				, INFO.m_pshconst.m_pad
+				, PUSH_SIZE));
+
 		return CXChildVisit_Continue;
 	}
 
@@ -89,17 +99,17 @@ enum CXChildVisitResult aclemit_fndecl_entp_arg(CXCursor h_cur, CXCursor h_paren
 	INFO.m_bindable.m_binding		= (aclspv_wrd_t)BIND_IDX;
 
 	/** FETCH BIND END */
-	if(CTX->m_flag0 & ACLSPV_CTX_FLAG0_SYMBOL) {
+	if(CTX->m_usrcfg.m_flag0 & ACLSPV_CTX_FLAG0_SYMBOL) {
 		CXString	PARAM_NAME, FUNC_NAME;
 		FUNC_NAME	= clang_getCursorSpelling(h_parent);
 		PARAM_NAME	= clang_getCursorSpelling(h_cur);
 
-		_aclspv_grow_vec(_aclspv_malloc, _aclspv_free
-				, CTX->m_tmp.m_v0
-				, strlen(FUNC_NAME.data) + strlen(PARAM_NAME.data) + 3
-				);
 
-		ae2f_ifezerr(CTX->m_tmp.m_v0.m_p) {
+		ae2f_ifnezerr_strict(aclmem_calloc(
+					&CTX->m_tmp.m_v0
+					, (aclspv_wrd_t)(strlen(FUNC_NAME.data) + strlen(PARAM_NAME.data) + 3)))
+		{
+			CTX->m_err = ACLSPV_COMPILE_ALLOC_FAILED_ENTP_ARGS;
 			clang_disposeString(FUNC_NAME);
 			clang_disposeString(PARAM_NAME);
 			return CXChildVisit_Break;
@@ -114,7 +124,7 @@ enum CXChildVisitResult aclemit_fndecl_entp_arg(CXCursor h_cur, CXCursor h_paren
 
 			unless(NAME_MERGE) {
 LBL_ABRT_NALLOC:
-				CTX->m_err = ACLSPV_COMPILE_ALLOC_FAILED;
+				CTX->m_err = ACLSPV_COMPILE_ALLOC_FAILED_ENTP_ARGS;
 				clang_disposeString(FUNC_NAME);
 				clang_disposeString(PARAM_NAME);
 				return CXChildVisit_Break;
@@ -182,7 +192,6 @@ LBL_ABRT_NALLOC:
 				case SpvStorageClassUniform:
 				INFO.m_unified.m_var_type_id = aclutil_mk_constant_ptr_uniform_id(1, CTX);
 				ae2f_expected_but_else(INFO.m_unified.m_var_type_id)  {
-					CTX->m_err = ACLSPV_COMPILE_ALLOC_FAILED;
 					return CXChildVisit_Break;
 				}
 			}
@@ -194,8 +203,6 @@ LBL_ABRT_NALLOC:
 					, s_attr_set
 					, &INFO.m_bindable.m_set
 					);
-
-			CTX->m_err = ACLSPV_COMPILE_ALLOC_FAILED;
 
 			ae2f_ifezerr(CTX->m_count.m_decorate = aclutil_emitx_4(
 						/** Decorations::Descriptorsets */
@@ -232,7 +239,7 @@ LBL_ABRT_NALLOC:
 			PARAM_TY_NAME	= clang_getTypeSpelling(PARAM_TY);
 			unless(strstr(PARAM_TY_NAME.data, "local")) {
 				clang_disposeString(PARAM_TY_NAME);
-				CTX->m_err = ACLSPV_COMPILE_MET_INVAL;
+				CTX->m_err = ACLSPV_COMPILE_MET_INVAL_ENTP_ARGS;
 				return CXChildVisit_Break;
 			} clang_disposeString(PARAM_TY_NAME);
 
@@ -265,7 +272,7 @@ LBL_ABRT_NALLOC:
 						);
 
 				ae2f_expected_but_else(NUM_ARR) {
-					CTX->m_err = ACLSPV_COMPILE_MET_INVAL;
+					CTX->m_err = ACLSPV_COMPILE_MET_INVAL_ENTP_ARGS;
 					return CXChildVisit_Break;
 				}
 
@@ -282,7 +289,7 @@ LBL_ABRT_NALLOC:
 								);
 
 					ae2f_expected_but_else(SPECIDSPIRV) {
-						CTX->m_err = ACLSPV_COMPILE_MET_INVAL;
+						CTX->m_err = ACLSPV_COMPILE_MET_INVAL_ENTP_ARGS;
 						return CXChildVisit_Break; 
 					}
 
@@ -348,7 +355,7 @@ LBL_ABRT_NALLOC:
 				CTX->m_id	+= 6;
 				CTX->m_err	 = ACLSPV_COMPILE_OK;
 
-				if(CTX->m_flag0 & ACLSPV_CTX_FLAG0_SYMBOL) {
+				if(CTX->m_usrcfg.m_flag0 & ACLSPV_CTX_FLAG0_SYMBOL) {
 					((aclspv_wrd_t* ae2f_restrict)CTX->m_section.m_name.m_p)[POS_FOR_LOCAL]
 						= INFO.m_unified.m_var_id;
 				}
@@ -418,18 +425,16 @@ LBL_ABRT_NALLOC:
 						, INFO.m_unified.m_storage_class
 						)) return CXChildVisit_Break;
 
-			if(CTX->m_flag0 & ACLSPV_CTX_FLAG0_SYMBOL) {
+			if(CTX->m_usrcfg.m_flag0 & ACLSPV_CTX_FLAG0_SYMBOL) {
 				aclutil_get_wrd_of_vec(&CTX->m_section.m_name)[POS_FOR_LOCAL] = INFO.m_unified.m_var_id;
 			}
 
-
-			_aclspv_grow_vec_with_copy(
-					_aclspv_malloc
-					, _aclspv_free
-					, _aclspv_memcpy
-					, L_new
-					, CTX->m_section.m_entp
-					, aclutil_count_to_sz(CTX->m_count.m_entp + 1));
+			ae2f_ifnezerr_strict(s_aclmem_cgrow2(
+					&CTX->m_section.m_entp
+					, CTX->m_count.m_entp + 1
+					, sizeof(aclspv_wrd_t)
+					, ACLSPV_COMPILE_ALLOC_FAILED_ENTP_ARGS))
+				return CXChildVisit_Break;
 
 			((aclspv_wrd_t* ae2f_restrict)CTX->m_section.m_entp.m_p)[CTX->m_count.m_entp++]
 				= INFO.m_unified.m_var_id;
@@ -462,8 +467,19 @@ LBL_ABRT_NALLOC:
 			return CXChildVisit_Break;
 		}
 
+		dbg_prefix();
+		dbg_call((void), fprintf(stderr
+					, "fndecl::entp::args::decl %u\n"
+					, CURSOR_IDX));
+
 		CTX->m_num_cursor
 			= CURSOR_IDX == CTX->m_num_cursor;
+
+		CURSOR_IDX[(x_aclcursor* ae2f_restrict)CTX->m_cursors.m_p]
+			.m_cursor = INFO.m_unified.m_cursor;
+
+		CURSOR_IDX[(x_aclcursor* ae2f_restrict)CTX->m_cursors.m_p]
+			.m_kind = ACLCURSOR_PARENTP;
 
 		CURSOR_IDX[(x_aclcursor* ae2f_restrict)CTX->m_cursors.m_p]
 			.m_data.m_prm_decl.m_info = INFO;

@@ -2,7 +2,6 @@
 #define aclutil_cxtp_implutil_h
 
 #include "./common.h"
-#include <.aclspv/vec.h>
 #include <string.h>
 
 ae2f_inline_f static aclspv_bool_t s_ndeq(
@@ -57,6 +56,9 @@ ae2f_inline_f static aclspv_wrdcount_t s_find_node(
 
 #define	__get_type_uniques(h_ctx) ((aclutil_cxtp* ae2f_restrict)h_ctx->m_type_uniques.m_p)
 
+
+#include <aclmem.h>
+
 ae2f_inline_f static struct __ret {
 	aclspv_id_t		m_id;
 	aclspv_bool_t		m_isfirst;
@@ -65,6 +67,7 @@ ae2f_inline_f static struct __ret {
 	aclspv_wrdcount_t	IDX = s_find_node(rd_cxtp, h_ctx);
 	struct	__ret		RET;
 
+
 #define	_return(c_id, c_is_first)	{ RET.m_id = c_id; RET.m_isfirst = c_is_first; return RET; }
 
 	ae2f_ifezerr_strict(IDX == 0xFFFFFFFF)
@@ -72,21 +75,12 @@ ae2f_inline_f static struct __ret {
 
 	IDX = h_ctx->m_num_type_uniques;
 
-	{
-		size_t NEWSIZE = (h_ctx)->m_type_uniques.m_sz;
-		while((IDX) >= NEWSIZE / sizeof(aclutil_cxtp) && (NEWSIZE <<= 1));
-		ae2f_ifezerr(NEWSIZE) _return(0, 1);
-
-		_aclspv_grow_vec_with_copy(_aclspv_malloc, _aclspv_free, _aclspv_memcpy
-				, L_new, h_ctx->m_type_uniques, NEWSIZE);
-
-		ae2f_ifezerr(h_ctx->m_type_uniques.m_p) {
-			h_ctx->m_err = ACLSPV_COMPILE_ALLOC_FAILED_CXTP;
-			err_puts("[cxtp::s_ret] allocation has failed.");
-			_return(0, 1);
-		}
-
-	}
+	ae2f_ifnezerr_strict(s_aclmem_cgrow2(
+			&h_ctx->m_type_uniques
+			, h_ctx->m_num_type_uniques + 1
+			, sizeof(aclutil_cxtp)
+			, ACLSPV_COMPILE_ALLOC_FAILED_CXTP
+			)) _return(0, 1);
 
 	(void)++h_ctx->m_num_type_uniques;
 

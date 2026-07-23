@@ -115,7 +115,7 @@ aclspv_id_t aclcursor_vardecl_assign(
 		return 0;
 	}
 
-	if(h_fnctx->m_ctx->m_flag0 & ACLSPV_CTX_FLAG0_SYMBOL) {
+	if(h_fnctx->m_ctx->m_usrcfg.m_flag0 & ACLSPV_CTX_FLAG0_SYMBOL) {
 		CXString SPL = clang_getCursorSpelling((wr_cursor)->m_cursor);
 
 		if(SPL.data) {

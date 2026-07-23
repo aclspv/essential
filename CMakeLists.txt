@@ -29,6 +29,7 @@ endif()
 
 ae2f_CoreLibFetchX(ae2f Core	main)
 ae2f_CoreLibFetchX(ae2f Pat	master)
+ae2f_CoreLibFetchX(ae2f Sys	main)
 
 ae2f_CoreLibFetchX_DNS(KhronosGroup KhronosGroup SPIRV-Headers main https://github.com/)
 
@@ -88,6 +89,7 @@ add_library(aclspv::aclspv	ALIAS ae3f-aclspv)
 target_link_libraries(ae3f-aclspv-common
 	INTERFACE	libclang
 	INTERFACE	ae2f::Core
+	INTERFACE	ae2f::Sys
 	INTERFACE	$<BUILD_INTERFACE:SPIRV-Headers::SPIRV-Headers>
 	)
 

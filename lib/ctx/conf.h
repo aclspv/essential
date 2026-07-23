@@ -32,12 +32,12 @@ ae2f_inline_f static e_aclspv_compile_t aclspv_ctx_conf(
 	ae2f_expected_but_else(aclutil_add_capability_by_flag(h_ctx, SpvCapabilityShader))
 		return ACLSPV_COMPILE_ALLOC_FAILED_CFG;
 
-	unless(h_ctx->m_flag0 & ACLSPV_CTX_FLAG0_LOGICAL) {
+	unless(h_ctx->m_usrcfg.m_flag0 & ACLSPV_CTX_FLAG0_LOGICAL) {
 		ae2f_expected_but_else(aclutil_add_capability_by_flag(h_ctx, SpvCapabilityAddresses))
 			return ACLSPV_COMPILE_ALLOC_FAILED_CFG;
 	}
 
-	unless(h_ctx->m_flag0 & ACLSPV_CTX_FLAG0_OGL) {
+	unless(h_ctx->m_usrcfg.m_flag0 & ACLSPV_CTX_FLAG0_OGL) {
 		ae2f_expected_but_else(aclutil_add_capability_by_flag(h_ctx, SpvCapabilityVulkanMemoryModel))
 			return ACLSPV_COMPILE_ALLOC_FAILED_CFG;
 
@@ -60,9 +60,9 @@ ae2f_inline_f static e_aclspv_compile_t aclspv_ctx_conf(
 				&h_ctx->m_section.m_memmodel
 				, 0
 				, SpvOpMemoryModel
-				, h_ctx->m_flag0 & ACLSPV_CTX_FLAG0_LOGICAL ? SpvAddressingModelLogical
-				: h_ctx->m_flag0 & ACLSPV_CTX_FLAG0_BUF64 ? SpvAddressingModelPhysical64 : SpvAddressingModelPhysical32 
-				, h_ctx->m_flag0 & ACLSPV_CTX_FLAG0_OGL ? SpvMemoryModelGLSL450 : SpvMemoryModelVulkan))
+				, h_ctx->m_usrcfg.m_flag0 & ACLSPV_CTX_FLAG0_LOGICAL ? SpvAddressingModelLogical
+				: h_ctx->m_usrcfg.m_flag0 & ACLSPV_CTX_FLAG0_BUF64 ? SpvAddressingModelPhysical64 : SpvAddressingModelPhysical32 
+				, h_ctx->m_usrcfg.m_flag0 & ACLSPV_CTX_FLAG0_OGL ? SpvMemoryModelGLSL450 : SpvMemoryModelVulkan))
 		return ACLSPV_COMPILE_ALLOC_FAILED_CFG;
 
 	return ACLSPV_COMPILE_OK;

@@ -34,7 +34,15 @@ int main(void) {
 	puts(files[1].Contents);
 	puts("opencl-c-base.h::::::::::::::::::");
 
-	RET = dbg_aclspv_compile(files, 2, ARG, 1, &spirv_count, &spirv0, ae2f_NIL);
+	RET = dbg_aclspv_compile(
+			files
+			, 2
+			, ARG
+			, 1
+			, &spirv_count
+			, &spirv0
+			, ae2f_NIL
+			);
 
 	printf("aclspv_compile: %d\n", (int) RET);
 	printf("output spirv: %p, %u\n", (void *)spirv0, spirv_count);

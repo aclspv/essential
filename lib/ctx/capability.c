@@ -66,7 +66,7 @@ ACLSPV_ABI_IMPL aclspv_bool_t aclspv_add_capability_from_ctx(
 	LEFT	= 0;
 	RIGHT	= COUNT;
 
-	if(BASE) while(LEFT < RIGHT) {
+	ae2f_ifneznrm(BASE) while(LEFT < RIGHT) {
 		const aclspv_wrd_t	MID = LEFT + ((RIGHT - LEFT) >> 1);
 		if(BASE[(MID << 1) + 1] == KEY)	return	1;
 		LR[BASE[(MID << 1) + 1] < KEY] = MID + (BASE[(MID << 1) + 1] < KEY);

@@ -5,6 +5,7 @@
 
 #include <aclspv.h>
 #include <stdio.h>
+#include <string.h>
 #include <ae2f/bll.h>
 
 /**
@@ -23,7 +24,9 @@ ae2f_unused static e_aclspv_compile_t  dbg_aclspv_compile(
 		enum CXErrorCode* ae2f_restrict				rwr_cxerr_opt
 		)
 {
-	x_aclspv_ctx	CTX; 
+	x_aclspv_ctx	CTX;
+	aclspv_usrcfg_t	usrcfg;
+
 #define	STATE_VAL	CTX.m_err
 
 	if(rwr_output_count_opt)	*rwr_output_count_opt	= 0;
@@ -35,11 +38,12 @@ ae2f_unused static e_aclspv_compile_t  dbg_aclspv_compile(
 		goto LBL_ERRCLEANUP;
 	}
 
+	memset(&usrcfg, 0, sizeof(usrcfg));
+	usrcfg.m_flag0 = ACLSPV_CTX_FLAG0_OGL | ACLSPV_CTX_FLAG0_LOGICAL | ACLSPV_CTX_FLAG0_DUMP_DIAGNOSTICS | ACLSPV_CTX_FLAG0_SYMBOL;
+
 	ae2f_ifnezerr(aclspv_init_ctx(
 				&CTX
-				, 10
-				, ACLSPV_CTX_FLAG0_OGL | ACLSPV_CTX_FLAG0_LOGICAL | ACLSPV_CTX_FLAG0_DUMP_DIAGNOSTICS | ACLSPV_CTX_FLAG0_SYMBOL
-				, 0x10000
+				, &usrcfg
 				)) return CTX.m_err;
 
 	ae2f_ifeznrm(aclspv_ctx_compile3(

@@ -54,6 +54,7 @@ aclspv_id_t aclutil_mk_cxtp_vec(
 		)
 {
 	aclutil_cxtp            TAR;
+	ae2f_ifnezerr(h_ctx->m_err) return 0;
 
 	memset(&TAR, 0, sizeof(TAR));
 

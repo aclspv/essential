@@ -3,12 +3,9 @@
 #include "./emitx.h"
 #include "./iddef.h"
 
-#include <string.h>
 #include <ae2f/pat/dbg.h>
 #include <ae2f/cc/memset.h>
-
-#include <stdio.h>
-
+#include <aclmem.h>
 
 aclutil_constant*  aclutil_mk_constant_node(
 		const u64_least	c_key,
@@ -23,14 +20,13 @@ aclutil_constant*  aclutil_mk_constant_node(
 
 	ae2fpat_assertassume_strict(h_ctx);
 
-	_aclspv_grow_vec_with_copy(
-			_aclspv_malloc, _aclspv_free
-			, _aclspv_memcpy
-			, L_new, h_ctx->m_constant_cache
-			, (size_t)COUNT * sizeof(aclutil_constant)
-			);
-
-	ae2f_expected_but_else(h_ctx->m_constant_cache.m_p) return ae2f_NIL;
+	if(COUNT)
+	ae2f_ifnezerr_strict(s_aclmem_cgrow2(
+			&h_ctx->m_constant_cache
+			, COUNT
+			, sizeof(aclutil_constant)
+			, ACLSPV_COMPILE_ALLOC_FAILED_CONSTANT
+			)) return 0;
 
 #define	LEFT	LR[1]
 #define	RIGHT	LR[0]
@@ -67,18 +63,11 @@ aclutil_constant*  aclutil_mk_constant_node(
 #undef	KEY_MADE_L
 	}
 
-	while((size_t)(COUNT + 1) >= (h_ctx->m_constant_cache.m_sz) / sizeof(aclutil_constant)) {
-		_aclspv_grow_vec_with_copy(
-				_aclspv_malloc, _aclspv_free
-				, _aclspv_memcpy
-				, L_new, h_ctx->m_constant_cache
-				, h_ctx->m_constant_cache.m_sz
-				? h_ctx->m_constant_cache.m_sz << 1
-				: (size_t)(COUNT + 1) * sizeof(aclutil_constant)
-				);
-
-		ae2f_expected_but_else(h_ctx->m_constant_cache.m_p) return 0;
-	}
+	ae2f_ifnezerr_strict(s_aclmem_cgrow2(
+				&h_ctx->m_constant_cache
+				, COUNT + 1
+				, sizeof(aclutil_constant), ACLSPV_COMPILE_ALLOC_FAILED_CONSTANT))
+		return 0;
 
 	if(COUNT > LEFT) {
 		aclspv_wrd_t		C = COUNT - LEFT;
@@ -114,7 +103,7 @@ aclspv_id_t aclutil_mk_constant_bool_id(
 		h_aclspv_ctx_t h_ctx
 		) {
 	aclutil_constant* ae2f_restrict const C = aclutil_mk_constant_node((u64_least)c_val, h_ctx);
-	ae2f_expected_but_else(C) return 0;
+	ae2f_ifezerr(C) return 0;
 	if(C->m_const_val_bool) return C->m_const_val_bool;
 
 	ae2f_expected_but_else(aclid_mk_default_id(ACLSPV_ID_BOOL, h_ctx))
@@ -177,8 +166,9 @@ aclutil_specconstant_val_t ae2f_ccpure aclutil_get_specconstant_val_id(
 		h_aclspv_ctx_t		h_ctx,
 		aclspv_wrd_t		c_idx_specconst
 		) {
+	aclutil_specconstant_val_t	DUMMY = {0, 0};
 	aclutil_constant* ae2f_restrict const C = aclutil_mk_constant_node(c_idx_specconst, h_ctx);
-	return C->m_spec_constant;
+	return ae2f_expected(C) ? C->m_spec_constant : DUMMY;
 }
 
 aclutil_specconstant_val_t aclutil_mk_specconstant_val_id(
