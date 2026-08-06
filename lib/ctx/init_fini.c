@@ -50,10 +50,10 @@ static void* s_malloc(aclspv_wrd_t c_sz,
 #ifdef	_ae2fsys_pgalloc_algnup
 
 	void*	R;
+	ae2fsys_pgsz_t	szreal;
 
 	dbg_puts("[aclspv::malloc]");
 
-	ae2fsys_pgsz_t	szreal;
 	_ae2fsys_pgalloc_algnup(
 			L, void*, R, 0, szreal
 			, (ae2fsys_pgsz_t)c_sz
@@ -103,6 +103,9 @@ ACLSPV_ABI_IMPL enum ACLSPV_COMPILE_ aclspv_init_ctx(
 
 	unless(i_ctx->m_usrcfg.m_max_push_size_limit)
 		i_ctx->m_usrcfg.m_max_push_size_limit = 0x1000;
+
+	unless(i_ctx->m_usrcfg.m_byte_size_type)
+		i_ctx->m_usrcfg.m_byte_size_type = 4;
 
 	unless(i_ctx->m_usrcfg.m_spirv_ver)
 		i_ctx->m_usrcfg.m_spirv_ver = aclspv_ver_spv(1, 0);

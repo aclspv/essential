@@ -14,13 +14,14 @@ int main(void) {
 	struct CXUnsavedFile files[2];
 	const char *ARG[] = {"main.cl"};
 	enum ACLSPV_COMPILE_ RET;
-	aclspv::ctx CTX(0,
-				    ACLSPV_CTX_FLAG0_SYMBOL
+
+
+	aclspv::ctx CTX;
+
+	CTX.me().m_usrcfg.m_flag0 = ACLSPV_CTX_FLAG0_SYMBOL
 				    | ACLSPV_CTX_FLAG0_OGL
 				    | ACLSPV_CTX_FLAG0_LOGICAL
-				    | ACLSPV_CTX_FLAG0_DUMP_DIAGNOSTICS
-			, aclspv::ver_spv(1, 0) /** spir-v 1.0 */
-	);
+				    | ACLSPV_CTX_FLAG0_DUMP_DIAGNOSTICS;
 
 	aclspv_wrd_t *spirv0;
 	aclspv_wrdcount_t spirv_count;

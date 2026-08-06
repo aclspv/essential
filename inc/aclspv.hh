@@ -14,11 +14,13 @@ namespace aclspv {
 		return aclspv_ver_spv(c_mjr, c_mnr);
 	}
 
-	struct usrcfg_t : public aclspv_usrcfg_t {};
-
 	struct ctx_base : protected a_aclspv_ctx {
 		public:
-			ae2f_inline_f const a_aclspv_ctx& ae2f_ccconst me() const {
+			ae2f_inline_f a_aclspv_ctx& ae2f_ccconst me() {
+				return *this;
+			}
+
+			ae2f_inline_f const a_aclspv_ctx& ae2f_ccconst c_me() const {
 				return *this;
 			}
 
@@ -110,10 +112,18 @@ namespace aclspv {
 	};
 
 	typedef enum ACLSPV_CTX_FLAG0_ CTX_FLAG0_;
+	typedef aclspv_usrcfg_t	usrcfg_t;
 
 	struct ctx : public ctx_base {
 		public:
-			ae2f_inline_f ctx(const usrcfg_t cfg) {
+			ae2f_inline_f ctx(const usrcfg_t& cfg) {
+				e_aclspv_compile_t A = aclspv_init_ctx(
+						this, &cfg);
+
+				this->m_err = this->m_err ? this->m_err : A;
+			}
+
+			ae2f_inline_f ctx(const usrcfg_t&& cfg) {
 				e_aclspv_compile_t A = aclspv_init_ctx(
 						this, &cfg);
 

@@ -15,6 +15,8 @@ aclspv_id_t aclutil_mk_cxtp_fn(
 	ae2fcc_memset(&TAR, 0, sizeof(TAR));
 	TAR.m_class				= ACLUTIL_CXTYPE_FUNC_NOPRM;
 	TAR.m_info.m_fn_no_proto.m_ret_id	= c_ret_id;
+	TAR.m_sizeof.m_id		= 0;
+	TAR.m_sizeof.m_lit.m_wrd	= 0;
 
 	(void)(aclid_mk_default_id(c_ret_id, h_ctx));
 

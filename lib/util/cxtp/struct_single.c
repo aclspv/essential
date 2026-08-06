@@ -14,13 +14,12 @@ aclspv_id_t aclutil_mk_cxtp_struct_single(
 		)
 {
 	aclutil_cxtp		TAR;
-
 	ae2fcc_memset(&TAR, 0, sizeof(TAR));
 
-	TAR.m_class						= ACLUTIL_CXTYPE_STRUCT_SINGLE;
-	TAR.m_info.m_struct_single.m_mem_id			= c_type_member;
-	TAR.m_info.m_struct_single.m_decoration.m_field0	= c_decorate_field0;
-	TAR.m_info.m_struct_single.m_mem_decoration.m_offset	= c_memdecorate_offset;
+	TAR.m_class					= ACLUTIL_CXTYPE_STRUCT;
+	TAR.m_info.m_struct.m_mem_id			= c_type_member;
+	TAR.m_info.m_struct.m_decoration.m_field0	= c_decorate_field0;
+	TAR.m_info.m_struct.m_mem_decoration.m_offset	= c_memdecorate_offset;
 
 	(void)(aclid_mk_default_id(c_type_member, h_ctx));
 

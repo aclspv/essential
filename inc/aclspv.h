@@ -50,10 +50,19 @@
  * @typedef	aclspv_wrd_t
  * @brief	integer as word.
  * 		could be defined with `#define`
+ * 		32-bits unsigned.
  * */
 #ifndef	aclspv_wrd_t
 typedef uint_least32_t	aclspv_wrd_t;
 #define	aclspv_wrd_t	aclspv_wrd_t
+#endif
+
+/**
+ * 64-bits unsigned.
+ * */
+#ifndef	aclspv_dwrd_t
+typedef	uint_least64_t	aclspv_wrd2_t;
+#define	aclspv_wrd2_t	aclspv_wrd2_t
 #endif
 
 #define	aclspv_ver_spv(c_mjr, c_mnr)	\
@@ -119,9 +128,13 @@ typedef enum ACLSPV_COMPILE_ {
 	ACLSPV_COMPILE_TOO_BIG,
 	ACLSPV_COMPILE_TOO_BIG_EXPRVISIT,
 
+	ACLSPV_COMPILE_CXTP_ZERO,
+	ACLSPV_COMPILE_CXTP_STRUCT_MBR_NUM_IS_LYING,
+
+	ACLSPV_COMPILE_CXTP_TYINVL_STRUCT_DCR,
+
 	ACLSPV_COMPILE_WORKGROUP_MUST_BE_CONSTANT_ARRAY,
 	ACLSPV_COMPILE_WORKGROUP_SIZE_NO_INT,
-	ACLSPV_COMPILE_CXTP_ZERO,
 	ACLSPV_COMPILE_STORAGE_CLASS_UNDEFINED,
 	ACLSPV_COMPILE_BTCAST_NON_NUMBER,
 	ACLSPV_COMPILE_CURSOR_NOT_FOUND,
@@ -157,10 +170,9 @@ typedef struct {
 
 	/** should be freed */
 	void* ae2f_restrict 	m_base;
+	h_aclspv_ctx_t		m_ctx;
 
 	aclspv_wrd_t		m_sz, m_sz_real;
-
-	h_aclspv_ctx_t		m_ctx;
 } x_aclspv_vec;
 
 #undef	__ENUM
@@ -174,7 +186,8 @@ typedef struct {
 	__X(DUMP_DIAGNOSTICS),		\
 	__X(KILL_ON_DIAGNOSTICS),	\
 	__X(EXPLICIT_CAPABILITY),	\
-	__X(EXPLICIT_EXTENSION)
+	__X(EXPLICIT_EXTENSION),	\
+	__X(ISOC_MATCH_SIZE_AND_ALIGNMENT)
 
 #define	__X(A)	ACLSPV_CTX_FLAGPAD0_##A
 
@@ -210,6 +223,10 @@ enum ACLSPV_ID_ {
 	ACLSPV_ID_END
 };
 
+enum ACLSPV_LAYOUT_ {
+	ACLSPV_LAYOUT_STD430
+};
+
 typedef struct {
 	void*	m_usrdata;
 
@@ -235,6 +252,12 @@ typedef struct {
 	 * Use `aclspv_ver_spv` to specify it
 	 * */
 	aclspv_wrd_t		m_spirv_ver;
+
+	/** see enum ACLSPV_LAYOUT_ */
+	aclspv_wrd_t		m_layout;
+
+	/** byte size of sizeof() operation */
+	aclspv_wrd_t		m_byte_size_type;
 } aclspv_usrcfg_t;	/** user can configurate this */
 
 typedef struct a_aclspv_ctx {
@@ -371,7 +394,6 @@ typedef struct a_aclspv_ctx {
 
 	aclspv_usrcfg_t		m_usrcfg;
 } x_aclspv_ctx;
-
 
 /**
  * @brief	initialisse `i_ctx` with `c_init_flag0` and `c_spirv_version`.

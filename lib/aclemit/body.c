@@ -39,7 +39,11 @@ enum CXChildVisitResult aclemit_entp_body(CXCursor h_cur, ae2f_unused CXCursor h
 
 	switch((uintmax_t)KIND) {
 		case CXCursor_VarDecl:
-			_aclemit_body_vardecl(VDCL, h_cur, FNCTX);
+			_aclemit_body_vardecl(
+					VDCL
+					, h_cur
+					, FNCTX
+					);
 			ae2f_cgoto2_strict(ae2f_expected_strict(!CTX->m_err), LBL_DONE, LBL_FAIL);
 
 		case CXCursor_ReturnStmt:

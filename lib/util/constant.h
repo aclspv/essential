@@ -12,6 +12,19 @@
 enum ACLUTIL_CV_NBYTE_ { ACLUTIL_CV_NBYTE_1, ACLUTIL_CV_NBYTE_2, ACLUTIL_CV_NBYTE_4, ACLUTIL_CV_NBYTE_8, ACLUTIL_CV_NBYTE_MAX };
 enum ACLUTIL_CV_TY_ { ACLUTIL_CV_TY_SIGNED, ACLUTIL_CV_TY_UNSIGNED, ACLUTIL_CV_TY_FLT, ACLUTIL_CV_TY_MAX };
 
+ae2f_ccconst static ae2f_inline_f enum ACLSPV_ID_ s_aclutil_cvty(
+		enum ACLUTIL_CV_TY_ c_ty,
+		enum ACLUTIL_CV_NBYTE_ c_nby
+		) {
+	const enum ACLSPV_ID_ MAP[ACLUTIL_CV_TY_MAX][ACLUTIL_CV_NBYTE_MAX] = {
+		{ ACLSPV_ID_I8, ACLSPV_ID_I16, ACLSPV_ID_I32, ACLSPV_ID_I64 },
+		{ ACLSPV_ID_U8, ACLSPV_ID_U16, ACLSPV_ID_U32, ACLSPV_ID_U64 },
+		{ 0, ACLSPV_ID_F16, ACLSPV_ID_F32, ACLSPV_ID_F64 }
+	};
+
+	return MAP[c_ty][c_nby];
+}
+
 typedef struct {
 	aclspv_id_t	m_val, m_ty;
 } aclutil_specconstant_val_t;

@@ -16,13 +16,15 @@ enum ACLUTIL_LITERAL_ {
 	ACLUTIL_LITERAL_LITERAL
 };
 
+#include <ae2f/c90/stdint.h>
+
 typedef aclspv_wrd_t	aclutil_ltrlmask_t;
 typedef union {
 	int		m_api_int;
 	intmax_t	m_api_intmax;
 	uintmax_t	m_api_uintmax;
 
-	u64_least	m_u64;
+	uint_least64_t	m_u64;
 	double		m_dbl;
 	float		m_flt;
 } aclutil_literal;

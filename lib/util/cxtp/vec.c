@@ -47,6 +47,9 @@
 
 	ae2f_unreachable();
 }
+
+#include <aclconst/align.h>
+
 aclspv_id_t aclutil_mk_cxtp_vec(
 		const aclspv_id_t       c_type_elm,
 		const aclspv_wrd_t      c_num_arr,
@@ -61,6 +64,13 @@ aclspv_id_t aclutil_mk_cxtp_vec(
 	TAR.m_class = ACLUTIL_CXTYPE_VECTOR;
 	TAR.m_info.m_vec.m_num = c_num_arr;
 	TAR.m_info.m_vec.m_type = c_type_elm;
+	TAR.m_alignof		= aclconst_align_from_size2(
+			aclutil_cxtp_alignof(c_type_elm, h_ctx) * c_num_arr
+			, h_ctx
+			).m_id;
+
+	TAR.m_sizeof.m_lit.m_wrd	= TAR.m_alignof;
+	TAR.m_sizeof.m_id		= 0;
 
 	/** when 0, 1 arrnum is no needed or not possible */
 	unless(c_num_arr >> 1) {

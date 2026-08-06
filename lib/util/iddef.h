@@ -4,8 +4,8 @@
 #define aclutil_iddef_h
 
 
-#include "./id.h"
-#include "./wrd.h"
+
+#include <aclspv.h>
 
 /**
  * @brief type alias for `enum ID_DEFAULT_`
