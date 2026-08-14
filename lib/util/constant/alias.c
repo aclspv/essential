@@ -41,15 +41,29 @@ aclspv_id_t	aclutil_mk_constant_arr16_id(const u64_least c_arrcount, h_aclspv_ct
 		: 0;
 }
 
+#include <ae2f/pat/dbg.h>
+
 aclspv_id_t	aclutil_mk_constant_arr32_id(const u64_least c_arrcount, h_aclspv_ctx_t h_ctx)
 {
 	const aclspv_id_t	VAL = c_arrcount <= 0xFFFFFFFF 
 		? aclutil_mk_constant_val_id((aclspv_wrd_t)c_arrcount, h_ctx)
 		: aclutil_mk_constant_val64_id(c_arrcount, h_ctx);
 
-	return aclid_mk_default_id(ACLSPV_ID_I32, h_ctx) && VAL
-		? aclutil_mk_cxtp_arr2(ACLSPV_ID_I32, VAL, 4, h_ctx)
-		: 0;
+	ae2fpat_assertassumeunless(VAL) {
+		return 0;
+	}
+
+	{
+		const aclspv_id_t id = aclid_mk_default_id(ACLSPV_ID_I32, h_ctx) && VAL
+			? aclutil_mk_cxtp_arr2(ACLSPV_ID_I32, VAL, 4, h_ctx)
+			: 0;
+
+		ae2fpat_assertassumeunless(id) {
+			return 0;
+		}
+
+		return id;
+	}
 }
 
 aclspv_id_t	aclutil_mk_constant_arr128_id(const u64_least c_arrcount, h_aclspv_ctx_t h_ctx)
@@ -66,11 +80,15 @@ aclspv_id_t	aclutil_mk_constant_arr128_id(const u64_least c_arrcount, h_aclspv_c
 
 aclspv_id_t	aclutil_mk_constant_struct_id(const aclspv_wrd_t c_arrcount, h_aclspv_ctx_t h_ctx) {
 	const aclspv_id_t ID_ARR32 = aclutil_mk_constant_arr32_id(c_arrcount, h_ctx);
-
-	return ID_ARR32 ? aclutil_mk_cxtp_struct_single(
+	const aclspv_id_t R = ID_ARR32 ? aclutil_mk_cxtp_struct_single(
 			ID_ARR32
 			, ACLSPV_CXTP_STRUCT_DECORATION_FIELD0_BLOCK
 			, 0, h_ctx) : 0;
+
+	assert(ID_ARR32);
+	assert(R);
+
+	return R;
 }
 
 aclspv_id_t	aclutil_mk_constant_struct128_id(const aclspv_wrd_t c_arrcount, h_aclspv_ctx_t h_ctx) {

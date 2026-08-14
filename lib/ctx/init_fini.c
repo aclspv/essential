@@ -52,7 +52,7 @@ static void* s_malloc(aclspv_wrd_t c_sz,
 	void*	R;
 	ae2fsys_pgsz_t	szreal;
 
-	dbg_puts("[aclspv::malloc]");
+	/** dbg_puts("[aclspv::malloc]"); */
 
 	_ae2fsys_pgalloc_algnup(
 			L, void*, R, 0, szreal
@@ -81,7 +81,7 @@ static void s_free(void* fini_mem, aclspv_wrd_t c_sz, ae2f_unused void* h_usr) {
 #ifdef	_ae2fsys_pgfree
 	ae2f_unused enum AE2FSYS_PGALLOC_ e;
 
-	dbg_puts("[aclspv::free]");
+	/** dbg_puts("[aclspv::free]"); */
 	if(fini_mem) _ae2fsys_pgfree(L, void*, e, fini_mem, c_sz);
 #endif
 }

@@ -6,13 +6,19 @@
 #include "../constant.h"
 #include "../cxtp.h"
 
+#include <ae2f/pat/dbg.h>
 
 aclspv_id_t	aclutil_mk_constant_ptr_psh_id(const aclspv_wrd_t c_wrdcount, const h_aclspv_ctx_t h_ctx) {
 
 	const aclspv_id_t ELM = aclutil_mk_constant_struct_id(c_wrdcount, h_ctx);
-	return ELM 
-		? aclutil_mk_cxtp_ptr(ELM, SpvStorageClassPushConstant, h_ctx) 
+	const aclspv_id_t R = ELM 
+		? aclutil_mk_cxtp_ptr(ELM, SpvStorageClassPushConstant, h_ctx)
 		: 0;
+
+	assert(ELM);
+	assert(R);
+
+	return R;
 }
 
 aclspv_id_t	aclutil_mk_constant_ptr_storage_id(const aclspv_wrd_t c_wrdcount, h_aclspv_ctx_t h_ctx) {

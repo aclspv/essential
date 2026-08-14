@@ -34,7 +34,7 @@ typedef struct {
 	aclspv_wrd_t		m_key_1;
 
 	/** @brief @see UTIL_CV_TY_, UTIL_CV_NBYTE_ */
-	aclspv_id_t		m_const_ids[ACLUTIL_CV_NBYTE_MAX][ACLUTIL_CV_TY_MAX];
+	aclspv_id_t		m_const_ids[ACLUTIL_CV_TY_MAX][ACLUTIL_CV_NBYTE_MAX];
 
 	aclspv_id_t		m_const_val_bool;
 

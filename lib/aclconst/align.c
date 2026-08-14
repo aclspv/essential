@@ -21,6 +21,36 @@
 	(r).m_id = 0;		\
 	(r).m_lit.m_wrd = (c_x).m_lit.m_wrd | (c_y).m_lit.m_wrd;	\
 }
+#define AND(r, c_x, c_y) {	\
+	(r).m_id = 0;		\
+	(r).m_lit.m_wrd = (c_x).m_lit.m_wrd & (c_y).m_lit.m_wrd;	\
+}
+
+
+
+#define NOT(r, c) {				\
+	(r).m_id = 0;				\
+	(r).m_lit.m_max = ~(c).m_lit.m_max;	\
+}
+
+
+aclconst_specsz	aclconst_alignup(
+		aclconst_specsz	c,
+		aclconst_specsz	c_algn,
+		h_aclspv_ctx_t	h_ctx
+		) {
+	aclconst_specsz algn1, v1, n_algn1, vadd, ret;
+
+	v1.m_id = 0;
+	v1.m_lit.m_wrd = 1;
+
+	_aclconst_specsize_op2(L, algn1, c_algn, v1, SpvOpISub, SUB, h_ctx);
+	_aclconst_specsize_op2(L, vadd, algn1, c, SpvOpIAdd, ADD, h_ctx);
+	_aclconst_specsize_op1(L, n_algn1, algn1, SpvOpSNegate, NOT, h_ctx);
+	_aclconst_specsize_op2(L, ret, n_algn1, vadd, SpvOpBitwiseAnd, AND, h_ctx);
+
+	return ret;
+}
 
 aclconst_specsz	aclconst_align_from_size(
 		aclconst_specsz	c,

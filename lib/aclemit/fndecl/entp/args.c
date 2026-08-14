@@ -461,7 +461,7 @@ LBL_ABRT_NALLOC:
 					uint_fastenum_t
 					, CTX->m_err
 					, (uint_fastenum_t) CTX-> m_err
-					, ACLSPV_COMPILE_UNHANDLED
+					, ACLSPV_COMPILE_UNHANDLED_ARGS
 					);
 
 			return CXChildVisit_Break;

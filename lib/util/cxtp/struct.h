@@ -11,9 +11,9 @@ aclspv_id_t aclutil_mk_cxtp_struct_single(
 		);
 
 /** STRUCT DECORATION */
-aclutil_cxtp* aclutil_cxtp_struct_dcr_cfg(aclutil_cxtp* ae2f_restrict rdwr_struct, SpvDecoration c_decor, h_aclspv_ctx_t h_ctx);
-aclutil_cxtp* aclutil_cxtp_struct_dcr_cfg2(aclspv_id_t c_id, SpvDecoration c_decor, h_aclspv_ctx_t h_ctx);
-aclutil_cxtp* aclutil_cxtp_get_dcr(aclutil_cxtp* ae2f_restrict rd_dcr, aclspv_wrd_t c_decor, h_aclspv_ctx_t h_ctx);
+
+aclspv_id_t aclutil_cxtp_struct_cfg(h_aclspv_ctx_t h_ctx);
+aclutil_cxtp* aclutil_cxtp_struct_build(aclspv_id_t c_id, h_aclspv_ctx_t h_ctx);
 
 
 

@@ -62,8 +62,10 @@ enum CXChildVisitResult aclemit_fndecl_entp(ae2f_unused CXCursor h_cur, CXCursor
 				);
 
 		ae2f_ifezerr(PSH_PTR_ID) {
-			unless(ctx->m_err)
+			unless(ctx->m_err) {
+				err_puts("unhandled");
 				ctx->m_err = ACLSPV_COMPILE_UNHANDLED;
+			}
 
 			return CXChildVisit_Break;
 		}

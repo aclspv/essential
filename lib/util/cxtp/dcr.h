@@ -1,0 +1,22 @@
+#ifndef	aclutil_cxtp_dcr_h
+#define aclutil_cxtp_dcr_h
+
+#include "../cxtp.h"
+ae2f_ccpure aclutil_cxtp* aclutil_cxtp_get_dcr(
+		aclutil_cxtp* ae2f_restrict rd_dcr,
+		aclspv_wrd_t c_decor,
+		h_aclspv_ctx_t h_ctx
+		);
+ae2f_ccpure aclspv_bool_t aclutil_cxtp_is_dcr_same(
+		aclutil_cxtp* ae2f_restrict rd0,
+		aclutil_cxtp* ae2f_restrict rd1,
+		h_aclspv_ctx_t		h_ctx
+		);
+
+void aclutil_cxtp_free_dcr(aclutil_cxtp* ae2f_restrict fini, h_aclspv_ctx_t h_ctx);
+
+/** 0 on success */
+aclspv_bool_t aclutil_cxtp_build_dcr(const aclutil_cxtp* ae2f_restrict rd, aclspv_id_t c_id, h_aclspv_ctx_t h_ctx);
+aclspv_bool_t aclutil_cxtp_build_mem_dcr(const aclutil_cxtp* ae2f_restrict rd, aclspv_id_t c_id, aclspv_wrd_t c_idx, h_aclspv_ctx_t h_ctx);
+
+#endif

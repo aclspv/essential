@@ -17,7 +17,7 @@ enum ACLUTIL_CXTYPE_ {
 	ACLUTIL_CXTYPE_ARRAY,
 	ACLUTIL_CXTYPE_PTR,
 	ACLUTIL_CXTYPE_STRUCT,
-	ACLUTIL_CXTYPE_STRUCT_DCR,
+	ACLUTIL_CXTYPE_DCR,
 	ACLUTIL_CXTYPE_STRUCT_MBR
 };
 
@@ -37,25 +37,15 @@ typedef struct {
 } aclspv_cxtp_struct_memdecoration;
 
 enum {
-	MAX_ACLTYPE_OPRND	= 5
+	MAX_ACLCXTP_DCR_OPRND	= 5
 };
 
 typedef struct {
-	aclspv_id_t		m_type_id;
-
-	/** constant value id */
-	aclconst_specsz		m_sizeof;
-
-	/** constant value */
-	aclspv_wrd_t		m_alignof;
-
-	enum ACLUTIL_CXTYPE_ 	m_class;
-
 	union {
 		struct {
 			aclspv_id_t	m_type;
 			aclspv_id_t	m_num_id;
-			aclspv_id_t	m_decorate_stride;
+			aclspv_wrd_t	m_dcr, m_num_dcr;
 		} m_arr;
 
 		struct {
@@ -78,17 +68,14 @@ typedef struct {
 		} m_fn_no_proto;
 
 		struct {
-			aclspv_id_t				m_mem_id;
-			aclspv_cxtp_struct_decoration		m_decoration;
-			aclspv_cxtp_struct_memdecoration	m_mem_decoration;
-
-			aclspv_wrd_t				m_dcr, m_mbr, m_num_mbr;
-			aclspv_wrd_t				m_num_dcr;
-			aclspv_wrd_t				m_mem_idx;
-			aclspv_wrd_t				m_mem_num;
+			aclspv_wrd_t	m_dcr, m_mbr, m_num_mbr;
+			aclspv_wrd_t	m_num_dcr;
+			aclspv_wrd_t	m_mem_idx;
+			aclspv_wrd_t	m_mem_num;
 		} m_struct;
 
 		struct {
+			aclconst_specsz	m_pad;
 			aclspv_id_t	m_id_mbr;
 			aclspv_wrd_t	m_idx;
 			aclspv_wrd_t	m_nxt;
@@ -98,9 +85,19 @@ typedef struct {
 		struct {
 			/** doublely linked list since i am lazy */
 			aclspv_wrd_t	m_nxt, m_prv, m_op, m_num_oprnd;
-			aclspv_wrd_t	m_oprnd[MAX_ACLTYPE_OPRND];
-		} m_struct_decor, m_struct_mem_dcr;
+			aclspv_wrd_t	m_oprnd[MAX_ACLCXTP_DCR_OPRND];
+		} m_dcr;
 	} m_info;	/** must be plain old buffer (pob) */
+
+	/** constant value id */
+	aclconst_specsz		m_sizeof;
+
+	aclspv_id_t		m_type_id;
+
+	/** constant value */
+	aclspv_wrd_t		m_alignof;
+
+	enum ACLUTIL_CXTYPE_ 	m_class;
 } aclutil_cxtp;
 
 #endif
