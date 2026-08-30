@@ -10,9 +10,4 @@ aclspv_id_t aclutil_mk_cxtp_by_cursor(
 		const h_aclspv_ctx_t	h_ctx
 		);
 
-aclspv_id_t aclutil_mk_cxtp_by_cursor2(
-		const CXCursor		c_cursor,
-		const h_aclspv_ctx_t	h_ctx
-		);
-
 #endif

@@ -26,11 +26,7 @@ aclspv_id_t aclutil_mk_cxtp_arr3(
 		return 0;
 	}
 
-	if(c_decorate_stride == 0xFFFFFFFF) {
-		c_decorate_stride = arr->m_alignof;
-	}
-
-	{
+	if(c_decorate_stride != 0xFFFFFFFF) {
 		p_cxtp_t arr_stride = aclutil_cfg_cxtp_arr_dcr(
 				arr
 				, SpvDecorationArrayStride

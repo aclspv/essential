@@ -1,20 +1,15 @@
 #include <aclspv.h>
-#include <aclcursor.h>
 
-#include <util/entp.h>
-#include <util/fn.h>
-#include <util/fnctx.h>
-#include <util/iddef.h>
-#include <util/scale.h>
-#include <util/cxtp.h>
-#include <util/emitx.h>
+#include <util/log.h>
+#include <util/cxtp/struct.h>
 
 #include <aclemit/root.h>
-
 #include <aclattr/main.h>
 
 ACLSPV_ABI_IMPL enum ACLSPV_COMPILE_ aclspv_ctx_compile(h_aclspv_ctx_t h_ctx, CXCursor c_cur_root) {
 	h_ctx->m_work_data = h_ctx;
+
+	aclutil_cxtp_struct_cfg(h_ctx);
 
 	ae2f_ifezerr(h_ctx)	return ACLSPV_COMPILE_PRM_INVAL_NIL;
 	ae2f_ifnezerr(h_ctx->m_err) return h_ctx->m_err;

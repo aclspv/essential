@@ -389,6 +389,8 @@ typedef struct a_aclspv_ctx {
 	aclspv_id_t		m_id_defaults[ACLSPV_ID_END];
 	aclspv_wrd_t		m_max_push_size;
 	aclspv_id_t		m_push_size_id;
+
+	/** push constant should be singleton. */
 	aclspv_wrd_t		m_push_size_ty_pad;
 
 	CXCursorVisitor		m_work_nxt;

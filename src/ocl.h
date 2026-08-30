@@ -37,6 +37,8 @@ typedef	u32 uptr;typedef i32 iptr;
 #define	__global	global
 #define	constant	storage_class(2)	constant
 #define	__constant	constant
+#define	local		storage_class(4)	local
+#define	__local		local
 
 #define	btcast		aclattr("aclspv_btcast")
 #define specid(a)	aclattr("aclspv_specid( " #a " )")

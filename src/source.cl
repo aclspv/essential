@@ -24,7 +24,7 @@ void NON_KERNEL2(int a) {
 #endif
 
 #if 1
-kernel_raw(0) void KERNEL(int aaaa) {
+kernel_raw(0) void KERNEL(int aaaa, int a2) {
 	goto K;
 	double4    c, c1, c2;
 	float    cc = 1;
@@ -58,7 +58,7 @@ __attribute__((annotate("reqd_work_group_size(3, 4, 2)"))) /** work group size s
 kernel_raw(5) void N_KERNEL_0(
 		__constant uintptr_t* consti32, 
 		storage_class(3) const uint* u32out,
-		int i32aaaa
+		local float i32aaaa[3]
 		) {
 
 	struct {

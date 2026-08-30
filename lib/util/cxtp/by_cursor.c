@@ -25,12 +25,13 @@ typedef struct {
 
 static enum CXChildVisitResult s_field_visit(CXCursor c, CXCursor c_par, CXClientData h);
 
-aclspv_id_t aclutil_mk_cxtp_by_cursor2(
+static aclspv_id_t s_helper2(
 		const CXCursor		c_cursor,
+		const CXType		c_ty,
 		const h_aclspv_ctx_t	h_ctx
 		) {
-	const CXCursor	TYPEDEF	= clang_getTypeDeclaration(clang_getCursorType(c_cursor));
-	const CXType	TYPE = clang_getCanonicalType((clang_getCursorType(c_cursor)));
+	const CXCursor	TYPEDEF	= clang_getTypeDeclaration(c_ty);
+	const CXType	TYPE = clang_getCanonicalType((c_ty));
 
 	{
 		const aclspv_id_t D = aclutil_mk_cxtp_by_type2(TYPE, h_ctx);
@@ -40,7 +41,7 @@ aclspv_id_t aclutil_mk_cxtp_by_cursor2(
 	dbg_prefix();
 	dbg_call((void), fprintf(stderr, "cxtp_by_cursor2 tykind %u\n", (unsigned)TYPE.kind));
 
-	switch((uint_leastenum_t)TYPE.kind) {
+	switch((uint_leastenum_t) TYPE.kind) {
 		case CXType_Record:
 			{
 				field_visit_t	VST;
@@ -150,7 +151,16 @@ aclspv_id_t aclutil_mk_cxtp_by_cursor2(
 							, h_ctx);
 				}
 
+				{
+					aclconst_specsz C;
+					C.m_id = 0;
+					C.m_lit.m_max = ELMCOUNT;
+					return aclutil_mk_cxtp_arr3(ELMID, C, 0xFFFFFFFF, h_ctx);
+				}
+
+#if	0
 				return aclutil_mk_cxtp_arr(ELMID, ELMCOUNT, h_ctx);
+#endif
 			}
 
 		default:
@@ -160,16 +170,18 @@ aclspv_id_t aclutil_mk_cxtp_by_cursor2(
 	ae2f_unreachable();
 }
 
-aclspv_id_t aclutil_mk_cxtp_by_cursor(
+static aclspv_id_t s_helper(
 		const CXCursor		c_cursor,
 		const CXType		c_ty,
 		const h_aclspv_ctx_t	h_ctx
 		)
 {
-	const aclspv_id_t R0	= aclutil_mk_cxtp_by_cursor2(c_cursor, h_ctx);
-	const aclspv_id_t R1	= R0 ? R0 : aclutil_mk_cxtp_by_cursor2(clang_getCanonicalCursor(c_cursor), h_ctx);
-	const aclspv_id_t R	= R1 ? R1 : aclutil_mk_cxtp_by_cursor2(clang_getTypeDeclaration(c_ty), h_ctx);
-	return R;
+	{
+		const aclspv_id_t R0	= s_helper2(c_cursor, c_ty, h_ctx);
+		const aclspv_id_t R1	= R0 ? R0 : s_helper2(clang_getCanonicalCursor(c_cursor), c_ty, h_ctx);
+		const aclspv_id_t R	= R1 ? R1 : s_helper2(clang_getTypeDeclaration(c_ty), c_ty, h_ctx);
+		return R;
+	}
 }
 
 static enum CXChildVisitResult s_field_visit(CXCursor c, ae2f_unused CXCursor c_par, CXClientData ae2f_restrict h) {
@@ -189,4 +201,12 @@ static enum CXChildVisitResult s_field_visit(CXCursor c, ae2f_unused CXCursor c_
 
 	h_visit->mfn_add_mbr(FIELD_PTR, TYID, h_visit->m_ctx);
 	return CXChildVisit_Continue;
+}
+
+aclspv_id_t aclutil_mk_cxtp_by_cursor(
+		const CXCursor		c_cursor,
+		const CXType		c_type,
+		const h_aclspv_ctx_t	h_ctx
+		) {
+	return s_helper(c_cursor, c_type, h_ctx);
 }

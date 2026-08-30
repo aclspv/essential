@@ -45,9 +45,8 @@ aclspv_id_t	aclutil_mk_constant_arr16_id(const u64_least c_arrcount, h_aclspv_ct
 
 aclspv_id_t	aclutil_mk_constant_arr32_id(const u64_least c_arrcount, h_aclspv_ctx_t h_ctx)
 {
-	const aclspv_id_t	VAL = c_arrcount <= 0xFFFFFFFF 
-		? aclutil_mk_constant_val_id((aclspv_wrd_t)c_arrcount, h_ctx)
-		: aclutil_mk_constant_val64_id(c_arrcount, h_ctx);
+	const aclspv_id_t	VAL_TY = aclid_getty_uint(h_ctx->m_usrcfg.m_byte_size_type << 3);
+	const aclspv_id_t	VAL = aclutil_mk_constant_val_by_enum(c_arrcount, h_ctx, VAL_TY);
 
 	ae2fpat_assertassumeunless(VAL) {
 		return 0;

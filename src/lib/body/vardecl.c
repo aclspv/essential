@@ -44,7 +44,7 @@ ae2f_MAC((L, )) aclemit_body_vardecl(CXCursor h_cur, aclutil_fnctx* ae2f_restric
 
 	L$$CTX->m_num_cursor += L$$IDX == L$$CTX->m_num_cursor;
 
-	ae2f_ifneznrm((L$$PCURSOR->m_data.m_vardecl.m_type_id = aclutil_mk_cxtp_by_cursor2(h_cur, L$$CTX))) {
+	ae2f_ifneznrm((L$$PCURSOR->m_data.m_vardecl.m_type_id = aclutil_mk_cxtp_by_cursor(h_cur, L$$TYPE, L$$CTX))) {
 		L$$TYPE_PTR = aclutil_mk_cxtp_ptr(
 				L$$PCURSOR->m_data.m_vardecl.m_type_id
 				, SpvStorageClassFunction
@@ -199,7 +199,7 @@ ae2f_MAC((L, )) aclemit_body_vardecl(CXCursor h_cur, aclutil_fnctx* ae2f_restric
 					ae2f_ifezerr(L$$PCURSOR->m_data.m_vardecl.m_init_val = aclutil_mk_specconstant_val_by_enum(L$$SPECID
 							, L$$PCURSOR->m_data.m_vardecl.m_literal.m_api_uintmax
 							, L$$CTX
-							, (int_leastenum_t) L$$PCURSOR-> m_data.m_vardecl.m_type_id)) {
+							, (enum ACLSPV_ID_) L$$PCURSOR-> m_data.m_vardecl.m_type_id)) {
 						L$$CTX->m_err = ACLSPV_COMPILE_MET_INVAL;
 						goto L$$LBL_END;
 					}

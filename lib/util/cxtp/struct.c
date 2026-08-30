@@ -180,3 +180,109 @@ aclutil_cxtp* aclutil_cxtp_struct_build(aclspv_id_t c_id, h_aclspv_ctx_t h_ctx) 
 
 	return cxtp;
 }
+
+#include "./struct/mbr.h"
+
+aclspv_id_t aclutil_cxtp_struct_cfg2(h_aclspv_ctx_t h_ctx, aclspv_id_t c) {
+	typedef aclutil_cxtp* ae2f_restrict p_cxtp_t;
+
+	const aclspv_id_t	NEWID = aclutil_cxtp_struct_cfg(h_ctx);
+	p_cxtp_t ORIG = aclutil_find_cxtp(c, h_ctx), NEW;
+
+	ae2f_ifezerr(ORIG)	return 0;
+	ae2f_ifezerr(NEWID)	return 0;
+	ae2f_ifezerr(c)		return NEWID;
+	ae2f_ifnezerr_strict(ORIG->m_class != ACLUTIL_CXTYPE_STRUCT)
+		return 0;
+
+	NEW = aclutil_find_cxtp(NEWID, h_ctx);
+
+	ae2f_assume_strict(NEW);
+	ae2f_assume_strict(NEW->m_class == ACLUTIL_CXTYPE_STRUCT);
+
+	/** decorator */
+	if(ORIG->m_info.m_struct.m_dcr) {
+		aclspv_wrd_t	IDX_DCR = ORIG->m_info.m_struct.m_dcr;
+		while(IDX_DCR) {
+			p_cxtp_t
+				DCR = &__get_type_uniques(h_ctx)[IDX_DCR];
+			p_cxtp_t
+				DCR_DST = aclutil_cxtp_struct_dcr_cfg2(
+					NEWID
+					, DCR->m_info.m_dcr.m_op
+					, h_ctx
+					);
+
+			ae2f_ifezerr(DCR_DST)
+				return 0;
+
+			DCR = &__get_type_uniques(h_ctx)[IDX_DCR];
+
+			_aclutil_vcopr(L0, =
+					, DCR_DST->m_info.m_dcr.m_oprnd
+					, DCR->m_info.m_dcr.m_oprnd
+					, MAX_ACLCXTP_DCR_OPRND);
+
+			IDX_DCR = DCR->m_info.m_dcr.m_nxt;
+		}
+
+		ORIG	= aclutil_find_cxtp(c, h_ctx);
+		NEW	= aclutil_find_cxtp(NEWID, h_ctx);
+	}
+
+	/** member */
+	if(ORIG->m_info.m_struct.m_mbr) {
+		aclspv_wrd_t	IDX_MBR = ORIG->m_info.m_struct.m_mbr;
+		while(IDX_MBR) {
+			p_cxtp_t MBR, MBR_DST;
+
+			MBR = &__get_type_uniques(h_ctx)[IDX_MBR];
+
+			ae2f_ifezerr(MBR_DST = aclutil_cxtp_struct_add_mbr(
+						NEW
+						, MBR->m_info.m_struct_mbr.m_id_mbr
+						, h_ctx)) return 0;
+
+			MBR = &__get_type_uniques(h_ctx)[IDX_MBR];
+			MBR_DST->m_info.m_struct_mbr.m_pad = MBR->m_info.m_struct_mbr.m_pad;
+
+			/** member decorator */
+			if(MBR->m_info.m_struct_mbr.m_dcr) {
+				const aclspv_id_t	MBRID = MBR_DST->m_type_id;
+				aclspv_wrd_t	IDX_DCR = MBR->m_info.m_struct_mbr.m_dcr;
+
+				while(IDX_DCR) {
+					p_cxtp_t
+						DCR = &__get_type_uniques(h_ctx)[IDX_DCR];
+					p_cxtp_t
+						DCR_DST = aclutil_cxtp_struct_mbr_dcr_cfg2(
+								MBRID
+								, DCR->m_info.m_dcr.m_op
+								, h_ctx
+								);
+
+					ae2f_ifezerr(DCR_DST)
+						return 0;
+
+					DCR = &__get_type_uniques(h_ctx)[IDX_DCR];
+
+					_aclutil_vcopr(L1, =
+							, DCR_DST->m_info.m_dcr.m_oprnd
+							, DCR->m_info.m_dcr.m_oprnd
+							, MAX_ACLCXTP_DCR_OPRND);
+
+					IDX_DCR = DCR->m_info.m_dcr.m_nxt;
+				}
+
+				MBR = &__get_type_uniques(h_ctx)[IDX_MBR];
+				NEW	= aclutil_find_cxtp(NEWID, h_ctx);
+			}
+
+			IDX_MBR = MBR->m_info.m_struct_mbr.m_nxt;
+		}
+
+		ORIG	= aclutil_find_cxtp(c, h_ctx);
+	}
+
+	return NEWID;
+}

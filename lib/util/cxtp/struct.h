@@ -13,8 +13,10 @@ aclspv_id_t aclutil_mk_cxtp_struct_single(
 /** STRUCT DECORATION */
 
 aclspv_id_t aclutil_cxtp_struct_cfg(h_aclspv_ctx_t h_ctx);
+aclspv_id_t aclutil_cxtp_struct_cfg2(h_aclspv_ctx_t h_ctx, aclspv_id_t c);
 aclutil_cxtp* aclutil_cxtp_struct_build(aclspv_id_t c_id, h_aclspv_ctx_t h_ctx);
 
-
+#include "./struct/mbr.h"
+#include "./struct/dcr.h"
 
 #endif
