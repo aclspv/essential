@@ -12,6 +12,7 @@ enum ACLUTIL_CXTYPE_ {
 	ACLUTIL_CXTYPE_RESERVED = 0,
 	ACLUTIL_CXTYPE_UNIT,
 	ACLUTIL_CXTYPE_FUNC,
+	ACLUTIL_CXTYPE_FUNC_ARG,
 	ACLUTIL_CXTYPE_FUNC_NOPRM,
 	ACLUTIL_CXTYPE_VECTOR,
 	ACLUTIL_CXTYPE_ARRAY,
@@ -27,14 +28,6 @@ enum ACLSPV_CXTP_STRUCT_DECORATION_FIELD0 {
 
 /** @see enum ACLSPV_CXTP_STRUCT_DECORATION_FIELD0 */
 typedef aclspv_wrd_t B_aclspv_cxtp_struct_decoration_field0_t;
-
-typedef struct {
-	B_aclspv_cxtp_struct_decoration_field0_t	m_field0;
-} aclspv_cxtp_struct_decoration;
-
-typedef struct {
-	aclspv_wrdcount_t	m_offset;
-} aclspv_cxtp_struct_memdecoration;
 
 enum {
 	MAX_ACLCXTP_DCR_OPRND	= 5
@@ -59,13 +52,16 @@ typedef struct {
 		} m_ptr;
 
 		struct {
-			CXType			m_type;
-			CXCursor		m_cursor;
+			aclspv_id_t	m_ret_id;
+			aclspv_wrd_t	m_num_dcr, m_dcr;
+			aclspv_wrd_t	m_num_arg, m_arg;
 		} m_fn;
 
 		struct {
-			aclspv_id_t	m_ret_id;
-		} m_fn_no_proto;
+			aclspv_id_t	m_prm_id;
+			aclspv_wrd_t	m_nxt;
+			aclspv_wrd_t	m_idx;
+		} m_fn_arg;
 
 		struct {
 			aclspv_wrd_t	m_dcr, m_mbr, m_num_mbr;
@@ -93,7 +89,6 @@ typedef struct {
 	aclconst_specsz		m_sizeof;
 
 	aclspv_id_t		m_type_id;
-
 	/** constant value */
 	aclspv_wrd_t		m_alignof;
 

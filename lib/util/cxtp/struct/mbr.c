@@ -26,7 +26,7 @@ aclutil_cxtp* aclutil_cxtp_struct_mbr_dcr_cfg2(aclspv_id_t c_id, SpvDecoration c
 	return ae2f_expected(cxtp) ? aclutil_cxtp_struct_mbr_dcr_cfg(cxtp, c_decor, h_ctx) : 0;
 }
 
-aclutil_cxtp* aclutil_cxtp_struct_get_mbr(
+ae2f_ccpure aclutil_cxtp* aclutil_cxtp_struct_get_mbr(
 		aclutil_cxtp* ae2f_restrict rdwr_struct,
 		aclspv_wrd_t c_idx,
 		h_aclspv_ctx_t h_ctx) {
@@ -56,6 +56,7 @@ aclutil_cxtp* aclutil_cxtp_struct_get_mbr(
 
 aclutil_cxtp* aclutil_cxtp_struct_add_mbr(aclutil_cxtp* ae2f_restrict rdwr_struct, aclspv_id_t c_id, h_aclspv_ctx_t h_ctx) {
 	aclutil_cxtp* ae2f_restrict r, * ae2f_restrict r2;
+	const aclspv_wrd_t	pad = (aclspv_wrd_t)(rdwr_struct - __get_type_uniques(h_ctx));
 
 	ae2fpat_assertassumeunless(rdwr_struct) {
 		h_ctx->m_err = ACLSPV_COMPILE_CXTP_ZERO;
@@ -68,8 +69,9 @@ aclutil_cxtp* aclutil_cxtp_struct_add_mbr(aclutil_cxtp* ae2f_restrict rdwr_struc
 	}
 
 	{
-		struct __ret ID;
-		aclutil_cxtp TAR;
+		struct __ret	ID;
+		aclutil_cxtp	TAR;
+
 		ae2fcc_memset(&TAR, 0, sizeof(TAR));
 
 		TAR.m_class				= ACLUTIL_CXTYPE_STRUCT_MBR;
@@ -77,8 +79,10 @@ aclutil_cxtp* aclutil_cxtp_struct_add_mbr(aclutil_cxtp* ae2f_restrict rdwr_struc
 		TAR.m_info.m_struct_mbr.m_idx		= rdwr_struct->m_info.m_struct.m_num_mbr++;
 
 		ID = s_ret_new(h_ctx, &TAR, h_ctx->m_id++, 0);
+		rdwr_struct = &__get_type_uniques(h_ctx)[pad];
+
 		ae2f_ifezerr(ID.m_id) {
-			--rdwr_struct->m_info.m_struct.m_num_mbr;
+			(void)--rdwr_struct->m_info.m_struct.m_num_mbr;
 			return 0;
 		}
 
@@ -109,6 +113,7 @@ aclutil_cxtp* aclutil_cxtp_struct_add_mbr(aclutil_cxtp* ae2f_restrict rdwr_struc
 
 aclutil_cxtp* aclutil_cxtp_struct_mbr_dcr_cfg(aclutil_cxtp* ae2f_restrict rdwr_mbr, SpvDecoration c_decor, h_aclspv_ctx_t h_ctx) {
 	aclutil_cxtp*	r = 0;
+	aclspv_wrd_t pad = (aclspv_wrd_t)(rdwr_mbr - __get_type_uniques(h_ctx));
 
 	ae2fpat_assertassumeunless(rdwr_mbr) {
 		h_ctx->m_err = ACLSPV_COMPILE_CXTP_ZERO;
@@ -139,6 +144,8 @@ aclutil_cxtp* aclutil_cxtp_struct_mbr_dcr_cfg(aclutil_cxtp* ae2f_restrict rdwr_m
 		TAR.m_info.m_dcr.m_nxt		= 0;
 
 		ID = s_ret_new(h_ctx, &TAR, h_ctx->m_id++, 0);
+		rdwr_mbr = &__get_type_uniques(h_ctx)[pad];
+
 		unless(ID.m_id)	return 0;
 		r = aclutil_find_cxtp(ID.m_id, h_ctx);
 	}
@@ -179,6 +186,7 @@ aclutil_cxtp* aclutil_cxtp_struct_add_mbr_grow(
 		aclspv_id_t c_id,
 		h_aclspv_ctx_t h_ctx) {
 	aclutil_cxtp* ae2f_restrict mbr;
+	aclspv_wrd_t pad = (aclspv_wrd_t)(__get_type_uniques(h_ctx) - rdwr_struct);
 
 	aclspv_wrd_t new_algn = aclutil_cxtp_alignof(c_id, h_ctx);
 	aclconst_specsz new_sz = aclutil_cxtp_sizeof(c_id, h_ctx);
@@ -191,6 +199,8 @@ aclutil_cxtp* aclutil_cxtp_struct_add_mbr_grow(
 	rdwr_struct->m_sizeof = aclconst_alignup1(rdwr_struct->m_sizeof, rdwr_struct->m_alignof, h_ctx);
 	ae2f_ifezerr(mbr = aclutil_cxtp_struct_add_mbr(rdwr_struct, c_id, h_ctx))
 		return 0;
+
+	rdwr_struct = &__get_type_uniques(h_ctx)[pad];
 
 	mbr->m_info.m_struct_mbr.m_pad = rdwr_struct->m_sizeof;
 
@@ -270,6 +280,8 @@ aclutil_cxtp* aclutil_cxtp_struct_add_mbr_un(
 		ae2f_ifezerr(mbr = aclutil_cxtp_struct_add_mbr(rdwr_struct, c_id, h_ctx))
 			return 0;
 
+#define	rdwr_struct
+
 		ae2f_ifezerr(mbr_offset = aclutil_cxtp_struct_mbr_dcr_cfg(mbr, SpvDecorationOffset, h_ctx))
 			return 0;
 
@@ -278,6 +290,8 @@ aclutil_cxtp* aclutil_cxtp_struct_add_mbr_un(
 
 		mbr_offset->m_info.m_dcr.m_num_oprnd = 1;
 		mbr_offset->m_info.m_dcr.m_oprnd[0] = 0x0;
+
+#undef	rdwr_struct
 
 		return mbr;
 	}

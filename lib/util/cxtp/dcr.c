@@ -91,7 +91,7 @@ aclspv_bool_t aclutil_cxtp_build_dcr(const aclutil_cxtp* ae2f_restrict rd, aclsp
 		}
 
 
-		((aclspv_wrd_t* ae2f_restrict)h_ctx->m_section.m_decorate.m_p)[pad + 0] = opcode_to_wrd(SpvOpDecorate, rd->m_info.m_dcr.m_num_oprnd + 2);
+		((aclspv_wrd_t* ae2f_restrict)h_ctx->m_section.m_decorate.m_p)[pad + 0] = aclspv_opcode_to_wrd(SpvOpDecorate, rd->m_info.m_dcr.m_num_oprnd + 2);
 		((aclspv_wrd_t* ae2f_restrict)h_ctx->m_section.m_decorate.m_p)[pad + 1] = c_id;
 		((aclspv_wrd_t* ae2f_restrict)h_ctx->m_section.m_decorate.m_p)[pad + 2] = rd->m_info.m_dcr.m_op;
 
@@ -119,7 +119,7 @@ aclspv_bool_t aclutil_cxtp_build_mem_dcr(const aclutil_cxtp* ae2f_restrict rd, a
 		}
 
 
-		((aclspv_wrd_t* ae2f_restrict)h_ctx->m_section.m_decorate.m_p)[pad + 0] = opcode_to_wrd(SpvOpMemberDecorate, rd->m_info.m_dcr.m_num_oprnd + 3);
+		((aclspv_wrd_t* ae2f_restrict)h_ctx->m_section.m_decorate.m_p)[pad + 0] = aclspv_opcode_to_wrd(SpvOpMemberDecorate, rd->m_info.m_dcr.m_num_oprnd + 3);
 		((aclspv_wrd_t* ae2f_restrict)h_ctx->m_section.m_decorate.m_p)[pad + 1] = c_id;
 		((aclspv_wrd_t* ae2f_restrict)h_ctx->m_section.m_decorate.m_p)[pad + 2] = c_idx;
 		((aclspv_wrd_t* ae2f_restrict)h_ctx->m_section.m_decorate.m_p)[pad + 3] = rd->m_info.m_dcr.m_op;

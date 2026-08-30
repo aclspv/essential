@@ -82,20 +82,24 @@ static ae2f_inline aclspv_sz_t aclutil_emit_wrd(
 			);
 }
 
-#define	mk_noprnds(c_num_opprm)	\
+#define	aclspv_mk_noprnds(c_num_opprm)	\
 	((((aclspv_wrd_t)((c_num_opprm) + 1)) << 16) & (aclspv_wrd_t)ACLSPV_MASK_NOPRNDS)
 
-#define	opcode_to_wrd(c_opcode, c_num_opprm)	\
-	((aclspv_wrd_t)(((aclspv_wrd_t)(c_opcode) & ACLSPV_MASK_OPCODE) | mk_noprnds(c_num_opprm)))
+#define	aclspv_opcode_to_wrd(c_opcode, c_num_opprm)	\
+	((aclspv_wrd_t)(((aclspv_wrd_t)(c_opcode) & ACLSPV_MASK_OPCODE) | aclspv_mk_noprnds(c_num_opprm)))
 /**
  * @def		emit_opcode
  * @brief	try emit opcode with num_opprm
  * */
 #define	emit_opcode(h_wrds, c_wrdcount, c_opcode, c_num_opprm_opt)	\
-	(aclutil_emit_wrd(h_wrds, c_wrdcount, opcode_to_wrd(c_opcode, c_num_opprm_opt)))
+	(aclutil_emit_wrd(h_wrds, c_wrdcount, aclspv_opcode_to_wrd(c_opcode, c_num_opprm_opt)))
+
+
+#define aclspv_get_oprnd_count_for_opcode(c_wrd)	\
+	(((c_wrd) >> 16) & 0xFFFF)
 
 #define set_oprnd_count_for_opcode(cr_wrd, c_num_opprm)	\
-	(cr_wrd) = opcode_to_wrd((cr_wrd & ACLSPV_MASK_OPCODE), ((aclspv_num_opprm_t)(c_num_opprm)))
+	(cr_wrd) = aclspv_opcode_to_wrd((cr_wrd & ACLSPV_MASK_OPCODE), ((aclspv_num_opprm_t)(c_num_opprm)))
 
 
 #include <string.h>

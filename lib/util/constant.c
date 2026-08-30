@@ -21,12 +21,12 @@ aclutil_constant*  aclutil_mk_constant_node(
 	ae2fpat_assertassume_strict(h_ctx);
 
 	if(COUNT)
-	ae2f_ifnezerr_strict(s_aclmem_cgrow2(
-			&h_ctx->m_constant_cache
-			, COUNT
-			, sizeof(aclutil_constant)
-			, ACLSPV_COMPILE_ALLOC_FAILED_CONSTANT
-			)) return 0;
+		ae2f_ifnezerr_strict(s_aclmem_cgrow2(
+					&h_ctx->m_constant_cache
+					, COUNT
+					, sizeof(aclutil_constant)
+					, ACLSPV_COMPILE_ALLOC_FAILED_CONSTANT
+					)) return 0;
 
 #define	LEFT	LR[1]
 #define	RIGHT	LR[0]
@@ -35,12 +35,6 @@ aclutil_constant*  aclutil_mk_constant_node(
 	RIGHT	= COUNT;
 
 	if(COUNT && h_ctx->m_constant_cache.m_p) {
-#define	KEY_MADE_L \
-		((u64_least)(((p_aclutil_constant_t)h_ctx->m_constant_cache.m_p)	\
-			[LEFT].m_key_0)							\
-			| ((u64_least)((p_aclutil_constant_t)h_ctx->m_constant_cache.m_p)	\
-				[LEFT].m_key_1) << 32)
-
 		while(LEFT < RIGHT) {
 			const aclspv_wrdcount_t	MIDDLE	= LEFT + ((RIGHT - LEFT) >> 1);
 			const uint_least64_t	KEY_MADE =
@@ -54,32 +48,27 @@ aclutil_constant*  aclutil_mk_constant_node(
 
 
 			/** is `KEY_MAKE < c_key ? (LEFT = MIDDLE + 1) : (RIGHT = MIDDLE)` */
-			LR[KEY_MADE < c_key] = MIDDLE + (KEY_MADE < c_key);
+			LR[KEY_MADE < c_key] = ((KEY_MADE < c_key) ? MIDDLE + 1 : MIDDLE);
 		}
-
-		if(KEY_MADE_L == c_key)
-			return &((p_aclutil_constant_t)h_ctx->m_constant_cache.m_p)[LEFT];
-
-#undef	KEY_MADE_L
 	}
 
 	ae2f_ifnezerr_strict(s_aclmem_cgrow2(
 				&h_ctx->m_constant_cache
 				, COUNT + 1
-				, sizeof(aclutil_constant), ACLSPV_COMPILE_ALLOC_FAILED_CONSTANT))
+				, sizeof(aclutil_constant)
+				, ACLSPV_COMPILE_ALLOC_FAILED_CONSTANT))
 		return 0;
 
-	if(COUNT > LEFT) {
-		aclspv_wrd_t		C = COUNT - LEFT;
-		p_aclutil_constant_t	BASE = &((p_aclutil_constant_t)(h_ctx->m_constant_cache.m_p))[COUNT - 1];
 
-		ae2fpat_assertassume_strict(COUNT - LEFT <= COUNT);
+	if(LEFT < COUNT) {
+		aclspv_wrd_t		C = COUNT - LEFT;
+		p_aclutil_constant_t	BASE = &((p_aclutil_constant_t)(h_ctx->m_constant_cache.m_p))[COUNT];
 
 		while( C --> 0 ) {
-			BASE[1] = BASE[0];
+			BASE[0] = BASE[-1];
 			(void)--BASE;
 		}
-	}
+	} 
 
 	/** sanity check for future possibility of having more elements */
 	ae2fcc_memset(&((p_aclutil_constant_t)(h_ctx->m_constant_cache.m_p))[LEFT], 0, sizeof(aclutil_constant));
@@ -135,6 +124,15 @@ aclspv_id_t aclutil_mk_constant_val_id1(
 
 #if	1
 	aclutil_constant* ae2f_restrict const C = aclutil_mk_constant_node(c_val, h_ctx);
+
+	if(c_idx_nbyte <= ACLUTIL_CV_NBYTE_4 && c_val >> 32) {
+		return aclutil_mk_constant_val_id1(
+				c_val & 0xFFFFFFFF
+				, h_ctx
+				, c_idx_nbyte
+				, c_idx_ty);
+	}
+
 	ae2f_ifezerr(C)	return 0;
 	ae2f_ifezerr(aclid_mk_default_id((B_id_default_t) MAP[c_idx_ty][c_idx_nbyte], h_ctx))
 		return 0;

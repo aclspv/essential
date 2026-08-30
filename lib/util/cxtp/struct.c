@@ -154,7 +154,7 @@ aclutil_cxtp* aclutil_cxtp_struct_build(aclspv_id_t c_id, h_aclspv_ctx_t h_ctx) 
 
 		}
 
-		aclutil_get_wrd_of_vec(&h_ctx->m_section.m_types)[pad + 0] = opcode_to_wrd(SpvOpTypeStruct, cxtp->m_info.m_struct.m_num_mbr + 1);
+		aclutil_get_wrd_of_vec(&h_ctx->m_section.m_types)[pad + 0] = aclspv_opcode_to_wrd(SpvOpTypeStruct, cxtp->m_info.m_struct.m_num_mbr + 1);
 		aclutil_get_wrd_of_vec(&h_ctx->m_section.m_types)[pad + 1] = cxtp->m_type_id;
 	}
 

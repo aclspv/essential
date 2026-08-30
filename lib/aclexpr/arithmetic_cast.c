@@ -7,8 +7,10 @@
 #include <util/emitx.h>
 #include <util/constant.h>
 #include <util/cxtp.h>
+#include <util/wrdemit.h>
 
 #include <aclexpr.h>
+#include <aclconst/specop.h>
 
 static enum ACLEXPR_RET_ s_non_literal_novec(
 		const aclspv_id_t	c_old_id,
@@ -62,15 +64,15 @@ static enum ACLEXPR_RET_ s_non_literal_novec(
 	/** two are float */
 	if (aclid_is_float(c_old_type) && aclid_is_float(c_new_type)) {
 		if(c_flag_literal & ACLUTIL_LITERAL_CONSTANT) {
-			ae2f_expected_but_else(h_ctx->m_count.m_types
-					= aclutil_emitx_5(
-						&h_ctx->m_section.m_types
-						, h_ctx->m_count.m_types
-						, SpvOpSpecConstantOp
-						, TYEVAL_NEW
-						, *r_newid = h_ctx->m_id++
-						, SpvOpFConvert
-						, c_old_id))
+			aclspv_wrd_t buf[5];
+			buf[0] = aclspv_opcode_to_wrd(SpvOpSpecConstantOp, 4);
+			buf[1] = TYEVAL_NEW;
+			buf[3] = SpvOpFConvert;
+			buf[4] = c_old_id;
+
+			ae2f_ifezerr(*r_newid = aclconst_specop(
+						&buf[0]
+						, 5, h_ctx))
 				return ACLEXPR_RET_FAILURE;
 
 			return ACLEXPR_RET_SUCCESS_CONSTANT;
@@ -115,16 +117,15 @@ static enum ACLEXPR_RET_ s_non_literal_novec(
 			}
 
 			if(c_flag_literal & ACLUTIL_LITERAL_CONSTANT) {
-				ae2f_expected_but_else(h_ctx->m_count.m_types
-						= aclutil_emitx_6(
-							&h_ctx->m_section.m_types
-							, h_ctx->m_count.m_types
-							, SpvOpSpecConstantOp
-							, TYEVAL_NEW
-							, *r_newid = h_ctx->m_id++
-							, SpvOpBitwiseOr 
-							, c_old_id
-							, VAL_ZERO))
+				aclspv_wrd_t buf[6];
+				buf[0] = aclspv_opcode_to_wrd(SpvOpSpecConstantOp, 5);
+				buf[1] = TYEVAL_NEW;
+
+				buf[3] = SpvOpBitwiseOr;
+				buf[4] = c_old_id;
+				buf[5] = VAL_ZERO;
+
+				ae2f_ifezerr(*r_newid = aclconst_specop(buf, 6, h_ctx))
 					return ACLEXPR_RET_FAILURE;
 
 				return ACLEXPR_RET_SUCCESS_CONSTANT;
@@ -147,15 +148,14 @@ static enum ACLEXPR_RET_ s_non_literal_novec(
 		}
 
 		if(c_flag_literal & ACLUTIL_LITERAL_CONSTANT) {
-			ae2f_expected_but_else(h_ctx->m_count.m_types
-					= aclutil_emitx_5(
-						&h_ctx->m_section.m_types
-						, h_ctx->m_count.m_types
-						, SpvOpSpecConstantOp
-						, TYEVAL_NEW
-						, *r_newid = h_ctx->m_id++
-						, OPCODE 
-						, c_old_id))
+			aclspv_wrd_t buf[5];
+			buf[0] = aclspv_opcode_to_wrd(SpvOpSpecConstantOp, 4);
+			buf[1] = TYEVAL_NEW;
+
+			buf[3] = OPCODE;
+			buf[4] = c_old_id;
+
+			ae2f_ifezerr(*r_newid = aclconst_specop(buf, 5, h_ctx))
 				return ACLEXPR_RET_FAILURE;
 
 			return ACLEXPR_RET_SUCCESS_CONSTANT;
@@ -184,15 +184,15 @@ static enum ACLEXPR_RET_ s_non_literal_novec(
 			return ACLEXPR_RET_FAILURE;
 
 		if(c_flag_literal & ACLUTIL_LITERAL_CONSTANT) {
-			ae2f_expected_but_else(h_ctx->m_count.m_types
-					= aclutil_emitx_6(
-						&h_ctx->m_section.m_types
-						, h_ctx->m_count.m_types
-						, SpvOpSpecConstantOp
-						, TYEVAL_NEW
-						, *r_newid = h_ctx->m_id++
-						,OPCODE
-						, c_old_id, V0))
+			aclspv_wrd_t buf[6];
+			buf[0] = aclspv_opcode_to_wrd(SpvOpSpecConstantOp, 5);
+			buf[1] = TYEVAL_NEW;
+
+			buf[3] = OPCODE;
+			buf[4] = c_old_id;
+			buf[5] = V0;
+
+			ae2f_ifezerr(aclconst_specop(buf, 6, h_ctx))
 				return ACLEXPR_RET_FAILURE;
 
 			return ACLEXPR_RET_SUCCESS_CONSTANT;
@@ -223,15 +223,17 @@ static enum ACLEXPR_RET_ s_non_literal_novec(
 
 
 		if(c_flag_literal & ACLUTIL_LITERAL_CONSTANT) {
-			ae2f_expected_but_else(h_ctx->m_count.m_types
-					= aclutil_emitx_7(
-						&h_ctx->m_section.m_types
-						, h_ctx->m_count.m_types
-						, SpvOpSpecConstantOp
-						, TYEVAL_NEW
-						, *r_newid = h_ctx->m_id++
-						, SpvOpSelect
-						, c_old_id, V1, V0))
+			aclspv_wrd_t buf[7];
+			buf[0] = aclspv_opcode_to_wrd(SpvOpSpecConstantOp, 6);
+			buf[1] = TYEVAL_NEW;
+
+			buf[3] = SpvOpSelect;
+			buf[4] = c_old_id;
+			buf[5] = V1;
+			buf[6] = V0;
+
+
+			ae2f_ifezerr(*r_newid = aclconst_specop(buf, 7, h_ctx))
 				return ACLEXPR_RET_FAILURE;
 
 			return ACLEXPR_RET_SUCCESS_CONSTANT;

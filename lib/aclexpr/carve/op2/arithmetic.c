@@ -434,7 +434,7 @@ aclexpr_carve_lbl_t aclexpr_carve2_arithmetic(
 			XORSWAP(rdwr_lst_scale_buf[2], rdwr_lst_scale_buf[4]);
 
 			/** we have four operands (including opcode) */
-			rdwr_lst_scale_buf[2] |= mk_noprnds(4);
+			rdwr_lst_scale_buf[2] |= aclspv_mk_noprnds(4);
 
 			/**
 			 * swap [3] and [4].

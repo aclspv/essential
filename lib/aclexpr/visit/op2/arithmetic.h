@@ -103,7 +103,7 @@ ae2f_inline_f static aclexpr_visit_lbl_t aclexpr_visit_op2_arithmetic(
 
 
 		VEC[ACLEXPR_OPBINCFG_NUMOPRND] = 2;				/** number of operands */
-		VEC[ACLEXPR_OPBINCFG_SPECCONSTANTOP] = opcode_to_wrd(SpvOpSpecConstantOp, 5);
+		VEC[ACLEXPR_OPBINCFG_SPECCONSTANTOP] = aclspv_opcode_to_wrd(SpvOpSpecConstantOp, 5);
 		VEC[ACLEXPR_OPBINCFG_OPCODE] = (aclspv_wrd_t) OPCODE;
 
 		ae2fcc_memset(&VEC[ACLEXPR_OPBINCFG_END + 2], 0, sizeof(aclexpr_opbincfg_extra) << 1);

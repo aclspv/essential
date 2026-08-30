@@ -2,6 +2,8 @@
 #include "./arr.h"
 #include "./implutil.h"
 
+#include <aclexpr.h>
+
 #include <util/emitx.h>
 #include <util/iddef.h>
 #include <util/constant.h>
@@ -10,7 +12,6 @@
 #include <ae2f/pat/dbg.h>
 
 #include <.aclspv/const/spec.h>
-
 
 aclspv_id_t aclutil_mk_cxtp_arr3(
 		const aclspv_id_t	c_type_elm,
@@ -208,7 +209,7 @@ aclutil_cxtp* aclutil_cfg_cxtp_arr(
 		const aclconst_specsz	c_num_arr,
 		const h_aclspv_ctx_t	h_ctx
 		) {
-	aclutil_cxtp            tar, * ae2f_restrict p;
+	aclutil_cxtp            tar;
 	aclconst_specsz		size_elm;
 	aclspv_id_t		size_ty = aclid_mk_default_id(
 			aclid_getty_uint(
@@ -235,9 +236,9 @@ aclutil_cxtp* aclutil_cfg_cxtp_arr(
 		return 0;
 	}
 
-	tar.m_class = ACLUTIL_CXTYPE_ARRAY;
-	tar.m_info.m_arr.m_type			= c_type_elm;
-	tar.m_alignof				= aclutil_cxtp_alignof(c_type_elm, h_ctx);
+	tar.m_class		= ACLUTIL_CXTYPE_ARRAY;
+	tar.m_info.m_arr.m_type	= c_type_elm;
+	tar.m_alignof		= aclutil_cxtp_alignof(c_type_elm, h_ctx);
 
 	size_elm = aclconst_alignup1(
 			aclutil_cxtp_sizeof(c_type_elm, h_ctx)
@@ -245,7 +246,7 @@ aclutil_cxtp* aclutil_cfg_cxtp_arr(
 			, h_ctx
 			);
 
-#define	__MUL(r, c_x, c_y)								\
+#define	__MUL(r, c_x, c_y)							\
 	{									\
 		(r).m_id = 0;							\
 		(r).m_lit.m_max = (c_x).m_lit.m_max * (c_y).m_lit.m_max;	\
@@ -266,8 +267,7 @@ aclutil_cxtp* aclutil_cfg_cxtp_arr(
 		const struct __ret ID = s_ret_new(h_ctx, &tar, 0, 1);
 		ae2f_ifezerr(ID.m_id)		return 0;
 
-		p = aclutil_find_cxtp(ID.m_id, h_ctx);
-		return p;
+		return aclutil_find_cxtp(ID.m_id, h_ctx);
 	}
 }
 #endif

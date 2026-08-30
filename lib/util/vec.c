@@ -18,7 +18,7 @@ aclspv_id_t aclutil_mkvec(
 			, SpvOpSpecConstantComposite
 			, SpvOpCompositeConstruct);
 
-	const aclspv_wrd_t	OPCODE = opcode_to_wrd(OPCODE_PURE, c_num_elm + 2);
+	const aclspv_wrd_t	OPCODE = aclspv_opcode_to_wrd(OPCODE_PURE, c_num_elm + 2);
 
 	x_aclspv_vec* ae2f_restrict const P_VEC =
 			c_literal & (ACLUTIL_LITERAL_CONSTANT | ACLUTIL_LITERAL_LITERAL)

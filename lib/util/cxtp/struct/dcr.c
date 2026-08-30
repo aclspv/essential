@@ -36,15 +36,19 @@ aclutil_cxtp* aclutil_cxtp_struct_dcr_cfg(aclutil_cxtp* ae2f_restrict rdwr_struc
 	}
 
 	{
-		struct __ret ID;
-		aclutil_cxtp TAR;
-		ae2fcc_memset(&TAR, 0, sizeof(TAR));
+		struct __ret	ID;
+		aclutil_cxtp	TAR;
+		ptrdiff_t	pad = rdwr_struct - __get_type_uniques(h_ctx);
+
+		aclmemzero(&TAR, sizeof(TAR));
 
 		TAR.m_class	= ACLUTIL_CXTYPE_DCR;
 		TAR.m_info.m_dcr.m_op		= (aclspv_wrd_t)c_decor;
 		TAR.m_info.m_dcr.m_nxt		= 0;
 
 		ID = s_ret_new(h_ctx, &TAR, h_ctx->m_id++, 0);
+		rdwr_struct = &__get_type_uniques(h_ctx)[pad];
+
 		unless(ID.m_id)	return 0;
 
 		r = aclutil_find_cxtp(ID.m_id, h_ctx);

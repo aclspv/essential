@@ -11,6 +11,18 @@ typedef vector(4) long long4;
 typedef vector(4) int int4;
 typedef vector(4) _Bool bool4;
 
+#if	1
+void NON_KERNEL(int a) {
+	int A;
+	A += 3;
+}
+
+void NON_KERNEL2(int a) {
+	int A = 3;
+	A += 3;
+}
+#endif
+
 #if 1
 kernel_raw(0) void KERNEL(int aaaa) {
 	goto K;
@@ -45,9 +57,19 @@ kernel_raw(0) void BOOLEAN(float4 float4_boolean) {
 __attribute__((annotate("reqd_work_group_size(3, 4, 2)"))) /** work group size should be specified on constant time. */
 kernel_raw(5) void N_KERNEL_0(
 		__constant uintptr_t* consti32, 
-		storage_class(3) const uint* u32out
-
+		storage_class(3) const uint* u32out,
+		int i32aaaa
 		) {
+
+	struct {
+		int a;
+		long d;
+		struct {
+			u32 low;
+			u32 hgh;
+		} group;
+	};
+
 	btcast float a0 = 1078774989;
 	int a1 specid(0) = 3;
 	int a2 = a0 + (a0 += a1);

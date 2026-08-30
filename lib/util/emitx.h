@@ -15,7 +15,7 @@ ae2f_inline static aclspv_sz_t	aclutil_emitx_2(
 	ae2f_expected_but_else(aclutil_emit_wrd(h_wrds, c_wrdcount + 1, c_oprand))
 		return 0;
 
-	aclutil_get_wrd_of_vec(h_wrds)[c_wrdcount]	= opcode_to_wrd(c_opcode, 1);
+	aclutil_get_wrd_of_vec(h_wrds)[c_wrdcount]	= aclspv_opcode_to_wrd(c_opcode, 1);
 
 	return c_wrdcount + 2;
 }
@@ -32,7 +32,7 @@ ae2f_inline static aclspv_sz_t	aclutil_emitx_3(
 		return 0;
 
 	aclutil_get_wrd_of_vec(h_wrds)[c_wrdcount + 1]	= c_opr_0;
-	aclutil_get_wrd_of_vec(h_wrds)[c_wrdcount]	= opcode_to_wrd(c_opcode, 2);
+	aclutil_get_wrd_of_vec(h_wrds)[c_wrdcount]	= aclspv_opcode_to_wrd(c_opcode, 2);
 
 	return c_wrdcount + 3;
 }
@@ -51,7 +51,7 @@ ae2f_inline static aclspv_sz_t	aclutil_emitx_4(
 
 	aclutil_get_wrd_of_vec(h_wrds)[c_wrdcount + 2] 	= c_opr_1;
 	aclutil_get_wrd_of_vec(h_wrds)[c_wrdcount + 1]	= c_opr_0;
-	aclutil_get_wrd_of_vec(h_wrds)[c_wrdcount]	= opcode_to_wrd(c_opcode, 3); 
+	aclutil_get_wrd_of_vec(h_wrds)[c_wrdcount]	= aclspv_opcode_to_wrd(c_opcode, 3); 
 
 	return c_wrdcount + 4;
 }
@@ -72,7 +72,7 @@ ae2f_inline static aclspv_sz_t	aclutil_emitx_5(
 	aclutil_get_wrd_of_vec(h_wrds)[c_wrdcount + 3] 	= c_opr_2;
 	aclutil_get_wrd_of_vec(h_wrds)[c_wrdcount + 2] 	= c_opr_1;
 	aclutil_get_wrd_of_vec(h_wrds)[c_wrdcount + 1]	= c_opr_0;
-	aclutil_get_wrd_of_vec(h_wrds)[c_wrdcount]	= opcode_to_wrd(c_opcode, 4);
+	aclutil_get_wrd_of_vec(h_wrds)[c_wrdcount]	= aclspv_opcode_to_wrd(c_opcode, 4);
 
 	return c_wrdcount + 5;
 }
@@ -95,7 +95,7 @@ ae2f_inline static aclspv_sz_t	aclutil_emitx_6(
 	aclutil_get_wrd_of_vec(h_wrds)[c_wrdcount + 3] 	= c_opr_2;
 	aclutil_get_wrd_of_vec(h_wrds)[c_wrdcount + 2] 	= c_opr_1;
 	aclutil_get_wrd_of_vec(h_wrds)[c_wrdcount + 1]	= c_opr_0;
-	aclutil_get_wrd_of_vec(h_wrds)[c_wrdcount]	= opcode_to_wrd(c_opcode, 5);
+	aclutil_get_wrd_of_vec(h_wrds)[c_wrdcount]	= aclspv_opcode_to_wrd(c_opcode, 5);
 
 	return c_wrdcount + 6;
 }
@@ -120,7 +120,7 @@ ae2f_inline static aclspv_sz_t	aclutil_emitx_7(
 	aclutil_get_wrd_of_vec(h_wrds)[c_wrdcount + 3] 	= c_opr_2;
 	aclutil_get_wrd_of_vec(h_wrds)[c_wrdcount + 2] 	= c_opr_1;
 	aclutil_get_wrd_of_vec(h_wrds)[c_wrdcount + 1]	= c_opr_0;
-	aclutil_get_wrd_of_vec(h_wrds)[c_wrdcount]	= opcode_to_wrd(c_opcode, 6);
+	aclutil_get_wrd_of_vec(h_wrds)[c_wrdcount]	= aclspv_opcode_to_wrd(c_opcode, 6);
 
 	return c_wrdcount + 7;
 }
@@ -147,7 +147,7 @@ ae2f_inline static aclspv_sz_t	aclutil_emitx_8(
 	aclutil_get_wrd_of_vec(h_wrds)[c_wrdcount + 3] 	= c_opr_2;
 	aclutil_get_wrd_of_vec(h_wrds)[c_wrdcount + 2] 	= c_opr_1;
 	aclutil_get_wrd_of_vec(h_wrds)[c_wrdcount + 1]	= c_opr_0;
-	aclutil_get_wrd_of_vec(h_wrds)[c_wrdcount]	= opcode_to_wrd(c_opcode, 7);
+	aclutil_get_wrd_of_vec(h_wrds)[c_wrdcount]	= aclspv_opcode_to_wrd(c_opcode, 7);
 
 	return c_wrdcount + 8;
 }

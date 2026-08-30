@@ -4,6 +4,7 @@
 #include "./common.h"
 #include <string.h>
 
+#if	1
 /** 1 when same */
 ae2f_inline_f ae2f_ccpure static aclspv_bool_t s_ndeq(
 		const aclutil_cxtp* const ae2f_restrict A,
@@ -13,13 +14,6 @@ ae2f_inline_f ae2f_ccpure static aclspv_bool_t s_ndeq(
 	if(A->m_class != B->m_class) return 0;
 	switch(A->m_class) {
 		case ACLUTIL_CXTYPE_FUNC:
-			return clang_equalTypes(
-					A->m_info.m_fn.m_type
-					, B->m_info.m_fn.m_type
-					) && clang_equalCursors(
-						A->m_info.m_fn.m_cursor
-						, B->m_info.m_fn.m_cursor);
-
 		case ACLUTIL_CXTYPE_PTR:
 		case ACLUTIL_CXTYPE_VECTOR:
 		case ACLUTIL_CXTYPE_ARRAY:
@@ -27,6 +21,7 @@ ae2f_inline_f ae2f_ccpure static aclspv_bool_t s_ndeq(
 		case ACLUTIL_CXTYPE_STRUCT:
 		case ACLUTIL_CXTYPE_DCR:
 		case ACLUTIL_CXTYPE_STRUCT_MBR:
+		case ACLUTIL_CXTYPE_FUNC_ARG:
 		default:
 			return !memcmp(&A->m_info, &B->m_info, sizeof(A->m_info));
 
@@ -69,7 +64,6 @@ struct __ret {
 	aclspv_id_t		m_id;
 	aclspv_bool_t		m_isfirst;
 };
-
 
 ae2f_inline_f static struct __ret s_ret_new(const h_aclspv_ctx_t h_ctx, const aclutil_cxtp* ae2f_restrict rd_cxtp, aclspv_id_t c_id, aclspv_bool_t c_can_use_zero) {
 #define	_return(c_id, c_is_first)	{ RET.m_id = c_id; RET.m_isfirst = c_is_first; return RET; }
@@ -129,5 +123,7 @@ ae2f_inline_f static struct __ret s_ret(const h_aclspv_ctx_t h_ctx, const acluti
 
 	return s_ret_new(h_ctx, rd_cxtp, 0, 1);
 }
+
+#endif
 
 #endif

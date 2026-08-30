@@ -31,7 +31,7 @@ struct aclutil_mk_constant_repvec_t	aclutil_mk_constant_repvec_id(
 			, SpvOpSpecConstantComposite
 			, SpvOpCompositeConstruct);
 
-	const aclspv_wrd_t	OPCODE = opcode_to_wrd(OPCODE_PURE, VEC_COUNT + 2);
+	const aclspv_wrd_t	OPCODE = aclspv_opcode_to_wrd(OPCODE_PURE, VEC_COUNT + 2);
 
 
 	x_aclspv_vec* ae2f_restrict const P_VEC =
