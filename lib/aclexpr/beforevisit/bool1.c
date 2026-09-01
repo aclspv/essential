@@ -37,7 +37,7 @@ aclspv_bool_t aclexpr_beforevisit2_bool1(
 
 	unless(c_opidx)		return 0;
 
-	V = aclutil_cxtp_get_veccfg(
+	V = aclty_get_veccfg(
 			LST_EXTRA[0].m_type_original
 			, rdwr_data->m_ctx
 			);

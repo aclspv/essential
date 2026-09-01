@@ -16,14 +16,11 @@
  * aclspv_wrd_t* ae2f_restrict wr_storage_class
  * )
  * */
-static enum CXChildVisitResult	s_attr_storage_class(CXCursor h_cur, CXCursor h_parent, CXClientData ae2f_restrict wr_storage_class) {
+static enum CXChildVisitResult	s_attr_storage_class(CXCursor h_cur, ae2f_unused CXCursor h_un, CXClientData ae2f_restrict wr_storage_class) {
 	CXString TEXT;
 	enum CXChildVisitResult RES = CXChildVisit_Break;
 	const char* NEEDLE;
 	unsigned INP = 0;
-
-	if(*((aclspv_wrd_t* ae2f_restrict)wr_storage_class) != SpvStorageClassMax)
-		return CXChildVisit_Break;
 
 	unless(h_cur.kind == CXCursor_AnnotateAttr)
 		return CXChildVisit_Recurse;
@@ -42,7 +39,6 @@ LBL_FINI:
 	clang_disposeString(TEXT);
 	return RES;
 
-	(void)h_parent;
 }
 
 #endif

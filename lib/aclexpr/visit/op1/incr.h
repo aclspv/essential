@@ -1,16 +1,15 @@
 #ifndef	aclexpr_visit_op1_incr_h
 #define	aclexpr_visit_op1_incr_h
 
+#include "../../op.h"
+#include "../api.h"
+
 #include <util/constant.h>
 #include <util/scale.h>
-#include <util/cxtp.h>
 #include <util/wrdemit.h>
 
-#include <aclexpr.h>
-#include <aclexpr/visit/api.h>
-#include <aclexpr/op.h>
-
-#include <ae2f/cc/memset.h>
+#include <aclty.h>
+#include <aclmem.h>
 
 ae2f_inline_f static aclexpr_visit_lbl_t aclexpr_visit_op1_incr(
 		const CXCursor				c_cur,
@@ -71,7 +70,7 @@ ae2f_inline_f static aclexpr_visit_lbl_t aclexpr_visit_op1_incr(
 	VEC[ACLEXPR_OPBINCFG_OPCODE]		= OPCODE;
 	VEC[ACLEXPR_OPBINCFG_END]		= 0;
 
-	ae2fcc_memset(&VEC[ACLEXPR_OPBINCFG_END + 1], 0, sizeof(aclexpr_opbincfg_extra));
+	aclmemzero(&VEC[ACLEXPR_OPBINCFG_END + 1], sizeof(aclexpr_opbincfg_extra));
 
 	return c_lbl_success;
 }

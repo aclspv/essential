@@ -1,8 +1,8 @@
 #include "./incr.h"
 
+#include <aclty.h>
 #include <aclcursor.h>
 
-#include <util/cxtp.h>
 #include <util/constant.h>
 #include <util/emitx.h>
 
@@ -51,7 +51,7 @@ aclexpr_carve_lbl_t aclexpr_carve1_incr(
 		return c_lbl_err;
 	}
 
-	ae2f_ifezerr(aclid_is_int(aclutil_cxtp_get_veccfg(rdwr_lst_extra->m_type_original, rdwr_data->m_ctx).m_ty_elm)) {
+	ae2f_ifezerr(aclid_is_int(aclty_get_veccfg(rdwr_lst_extra->m_type_original, rdwr_data->m_ctx).m_ty_elm)) {
 		err_puts("[carve1::incr] no integer detected.");
 		return c_lbl_err;
 	}
@@ -95,7 +95,7 @@ aclexpr_carve_lbl_t aclexpr_carve1_incr(
 		const aclspv_wrd_t	LM = rdwr_lst_extra->m_mask_literal;
 		aclspv_wrd_t		RO;
 
-		const struct aclutil_cxtp_veccfg_t VCFG = aclutil_cxtp_get_veccfg(
+		const struct aclutil_cxtp_veccfg_t VCFG = aclty_get_veccfg(
 				rdwr_lst_extra->m_type_original
 				, rdwr_data->m_ctx);
 

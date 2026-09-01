@@ -48,7 +48,7 @@ ae2f_inline_f static ae2f_ccpure aclspv_opcode_t s_op_to_spv(
 		const h_aclspv_ctx_t	h_ctx
 		)
 {
-	aclspv_id_t	ID = aclid_is_vectorisable(c_id) ? c_id : aclutil_cxtp_get_veccfg(c_id, h_ctx).m_ty_elm;
+	aclspv_id_t	ID = aclid_is_vectorisable(c_id) ? c_id : aclty_get_veccfg(c_id, h_ctx).m_ty_elm;
 
 	switch((enum S_ARITHMETIC_)c_op2) {
 		default:
@@ -225,18 +225,18 @@ static aclspv_wrd_t s_decide_cast(const enum ACLSPV_ID_ c_id0, const enum ACLSPV
 	unless(aclid_is_arithmetic((B_id_default_t) c_id0, h_ctx) & aclid_is_arithmetic((B_id_default_t) c_id1, h_ctx))
 		return 0;
 
-	if(aclutil_cxtp_get_veccfg((B_id_default_t) c_id0, h_ctx).m_num ^ aclutil_cxtp_get_veccfg((B_id_default_t) c_id1, h_ctx).m_num) {
-		unless(aclutil_cxtp_get_veccfg((B_id_default_t) c_id0, h_ctx).m_num >> 1) {
+	if(aclty_get_veccfg((B_id_default_t) c_id0, h_ctx).m_num ^ aclty_get_veccfg((B_id_default_t) c_id1, h_ctx).m_num) {
+		unless(aclty_get_veccfg((B_id_default_t) c_id0, h_ctx).m_num >> 1) {
 			return (B_id_default_t) c_id1;
-		} else unless(aclutil_cxtp_get_veccfg((B_id_default_t) c_id1, h_ctx).m_num >> 1) {
+		} else unless(aclty_get_veccfg((B_id_default_t) c_id1, h_ctx).m_num >> 1) {
 			return (B_id_default_t) c_id0;
 		} return 0;
 	}
 
 	unless(aclid_is_vectorisable((B_id_default_t) c_id0)) {
 		return ae2f_bll_sel_bool1(B_id_default_t, s_decide_cast(
-				(enum ACLSPV_ID_) aclutil_cxtp_get_veccfg((B_id_default_t) c_id0, h_ctx).m_ty_elm
-					, (enum ACLSPV_ID_) aclutil_cxtp_get_veccfg((B_id_default_t) c_id1, h_ctx).m_ty_elm
+				(enum ACLSPV_ID_) aclty_get_veccfg((B_id_default_t) c_id0, h_ctx).m_ty_elm
+					, (enum ACLSPV_ID_) aclty_get_veccfg((B_id_default_t) c_id1, h_ctx).m_ty_elm
 					, h_ctx
 					), (B_id_default_t) c_id0, (B_id_default_t) c_id1);
 	}
@@ -343,8 +343,8 @@ aclexpr_carve_lbl_t aclexpr_carve2_arithmetic(
 	OPITER(0u);
 
 	if(
-			aclid_is_float(aclutil_cxtp_get_veccfg(rdwr_prv_extra[0].m_type_original, rdwr_data->m_ctx).m_ty_elm)
-			|| aclid_is_float(aclutil_cxtp_get_veccfg(rdwr_prv_extra[1].m_type_original, rdwr_data->m_ctx).m_ty_elm)
+			aclid_is_float(aclty_get_veccfg(rdwr_prv_extra[0].m_type_original, rdwr_data->m_ctx).m_ty_elm)
+			|| aclid_is_float(aclty_get_veccfg(rdwr_prv_extra[1].m_type_original, rdwr_data->m_ctx).m_ty_elm)
 			) {
 		fixme_puts("this is float. make sure we can do it constantly with Kernel capability.");
 		rdwr_prv_extra->m_mask_literal &= ~(aclspv_wrd_t)ACLUTIL_LITERAL_CONSTANT;

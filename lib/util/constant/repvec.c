@@ -3,9 +3,11 @@
  * */
 
 #include "../constant.h"
-#include "../cxtp.h"
-#include "../wrdemit.h"
-#include "../literal.h"
+
+#include <aclty.h>
+#include <util/wrdemit.h>
+#include <util/literal.h>
+
 #include <ae2f/pat/dbg.h>
 
 ae2f_inline_f static struct aclutil_mk_constant_repvec_t ae2f_ccconst s_mkret(const aclspv_wrd_t c_id, const aclspv_wrd_t c_mask) {
@@ -23,7 +25,7 @@ struct aclutil_mk_constant_repvec_t	aclutil_mk_constant_repvec_id(
 	const u64_fast KEY = (u64_fast)(c_id_ty) | (((u64_fast)(c_val)) << (u64_fast)32);
 	aclutil_constant* C = aclutil_mk_constant_node(KEY, h_ctx);
 
-	aclspv_id_t	VEC_COUNT = aclutil_cxtp_get_veccfg(c_id_ty, h_ctx).m_num;
+	aclspv_id_t	VEC_COUNT = aclty_get_veccfg(c_id_ty, h_ctx).m_num;
 
 	const aclspv_wrd_t	OPCODE_PURE = ae2f_bll_sel_bool_naive1(
 			aclspv_wrd_t

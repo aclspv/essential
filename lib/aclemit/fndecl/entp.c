@@ -4,6 +4,7 @@
 #include "./body.h"
 
 #include <aclmem.h>
+#include <aclty.h>
 
 #include <util/fnctx.h>
 #include <util/constant.h>
@@ -11,7 +12,6 @@
 #include <util/emitx.h>
 #include <util/entp.h>
 #include <util/scale.h>
-#include <util/cxtp.h>
 #include <util/log.h>
 
 #include <ae2f/pat/dbg.h>
@@ -94,7 +94,7 @@ enum CXChildVisitResult aclemit_fndecl_entp(ae2f_unused CXCursor h_cur, CXCursor
 LBL_HOLLOW_ENTP:
 
 	{
-		const aclspv_id_t	id_void_func = aclutil_mk_cxtp_fn(
+		const aclspv_id_t	id_void_func = aclty_mk_fn(
 				aclid_mk_default_id(
 					ACLSPV_ID_VOID
 					, ctx

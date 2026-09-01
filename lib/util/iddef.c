@@ -2,8 +2,9 @@
 
 #include "./iddef.h"
 #include "./emitx.h"
-#include "./cxtp/vec.h"
 #include "./capability.h"
+
+#include <aclty.h>
 
 #include <ae2f/pat/dbg.h>
 
@@ -232,7 +233,7 @@ aclspv_bool_t	aclid_is_arithmetic(const aclspv_id_t c_id, const h_aclspv_ctx_t h
 {
 	ae2fpat_assertassume(h_ctx);
 
-	if(aclutil_cxtp_get_veccfg(c_id, h_ctx).m_num > 1)
+	if(aclty_get_veccfg(c_id, h_ctx).m_num > 1)
 		return 1;
 
 	return aclid_is_vectorisable(c_id);

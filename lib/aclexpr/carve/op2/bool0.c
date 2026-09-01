@@ -82,18 +82,18 @@ static aclspv_wrd_t s_decide_cast(const enum ACLSPV_ID_ c_id0, const enum ACLSPV
 	unless(aclid_is_arithmetic((B_id_default_t) c_id0, h_ctx) & aclid_is_arithmetic((B_id_default_t) c_id1, h_ctx))
 		return 0;
 
-	if(aclutil_cxtp_get_veccfg((B_id_default_t) c_id0, h_ctx).m_num ^ aclutil_cxtp_get_veccfg((B_id_default_t) c_id1, h_ctx).m_num) {
-		unless(aclutil_cxtp_get_veccfg((B_id_default_t) c_id0, h_ctx).m_num >> 1) {
+	if(aclty_get_veccfg((B_id_default_t) c_id0, h_ctx).m_num ^ aclty_get_veccfg((B_id_default_t) c_id1, h_ctx).m_num) {
+		unless(aclty_get_veccfg((B_id_default_t) c_id0, h_ctx).m_num >> 1) {
 			return (B_id_default_t) c_id1;
-		} else unless(aclutil_cxtp_get_veccfg((B_id_default_t) c_id1, h_ctx).m_num >> 1) {
+		} else unless(aclty_get_veccfg((B_id_default_t) c_id1, h_ctx).m_num >> 1) {
 			return (B_id_default_t) c_id0;
 		} return 0;
 	}
 
 	unless(aclid_is_vectorisable((B_id_default_t) c_id0)) {
 		return ae2f_bll_sel_bool1(B_id_default_t, s_decide_cast(
-					(enum ACLSPV_ID_) aclutil_cxtp_get_veccfg((B_id_default_t) c_id0, h_ctx).m_ty_elm
-					, (enum ACLSPV_ID_) aclutil_cxtp_get_veccfg((B_id_default_t) c_id1, h_ctx).m_ty_elm
+					(enum ACLSPV_ID_) aclty_get_veccfg((B_id_default_t) c_id0, h_ctx).m_ty_elm
+					, (enum ACLSPV_ID_) aclty_get_veccfg((B_id_default_t) c_id1, h_ctx).m_ty_elm
 					, h_ctx
 					), (B_id_default_t) c_id0, (B_id_default_t) c_id1);
 	}
@@ -169,7 +169,7 @@ static aclspv_id_t	s_ty_oprnd(
 		return c_ty_origin; 
 
 	{
-		struct aclutil_cxtp_veccfg_t V = aclutil_cxtp_get_veccfg(c_ty_origin, h_ctx);
+		struct aclutil_cxtp_veccfg_t V = aclty_get_veccfg(c_ty_origin, h_ctx);
 		return aclutil_mk_cxtp_vec(ACLSPV_ID_BOOL, V.m_num, h_ctx);
 	}
 }
@@ -179,7 +179,7 @@ static aclspv_id_t	s_ty_out(
 		aclspv_bool_t	c_is_logical,
 		h_aclspv_ctx_t	h_ctx
 		) { unless(c_is_logical) return c_ty_origin; else {
-	struct aclutil_cxtp_veccfg_t V = aclutil_cxtp_get_veccfg(c_ty_origin, h_ctx);
+	struct aclutil_cxtp_veccfg_t V = aclty_get_veccfg(c_ty_origin, h_ctx);
 	return aclutil_mk_cxtp_vec(ACLSPV_ID_BOOL, V.m_num, h_ctx);
 }}
 

@@ -1,7 +1,7 @@
 #ifndef aclexpr_op_h
 #define aclexpr_op_h
 
-#include <util/cxtp/vec.h>
+#include <aclty/vec.h>
 #include <util/literal.h>
 
 enum ACLEXPR_OPBINCFG_ {

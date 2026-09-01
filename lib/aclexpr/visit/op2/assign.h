@@ -1,16 +1,15 @@
 #ifndef	aclexpr_visit_op2_assign_h
 #define	aclexpr_visit_op2_assign_h
 
+#include "../api.h"
+#include "../../op.h"
+
 #include <util/constant.h>
 #include <util/scale.h>
-#include <util/cxtp.h>
 #include <util/wrdemit.h>
 
-#include <aclexpr.h>
-#include <aclexpr/visit/api.h>
-#include <aclexpr/op.h>
-
-#include <ae2f/cc/memset.h>
+#include <aclty.h>
+#include <aclmem.h>
 
 ae2f_inline_f static aclexpr_visit_lbl_t aclexpr_visit_op2_assign(
 		const CXCursor				c_cur,
@@ -49,7 +48,7 @@ ae2f_inline_f static aclexpr_visit_lbl_t aclexpr_visit_op2_assign(
 	VEC[ACLEXPR_OPBINCFG_NUMOPRND]		= 2;
 	VEC[ACLEXPR_OPBINCFG_OPCODE]		= ACLEXPR_OP2_ASSIGN;
 
-	ae2fcc_memset(&VEC[ACLEXPR_OPBINCFG_END + 2], 0, sizeof(aclexpr_opbincfg_extra) << 1);
+	aclmemzero(&VEC[ACLEXPR_OPBINCFG_END + 2], sizeof(aclexpr_opbincfg_extra) << 1);
 	((aclexpr_opbincfg_extra* ae2f_restrict)(void*)&VEC[ACLEXPR_OPBINCFG_END + 2])->m_state0 = (aclspv_wrd_t)ACLEXPR_OPCFGX_STATE0_VAL_NO_NEED;
 
 	return c_lbl_success;

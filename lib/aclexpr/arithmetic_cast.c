@@ -6,9 +6,9 @@
 #include <util/iddef.h>
 #include <util/emitx.h>
 #include <util/constant.h>
-#include <util/cxtp.h>
 #include <util/wrdemit.h>
 
+#include <aclty.h>
 #include <aclexpr.h>
 #include <aclconst/specop.h>
 
@@ -307,8 +307,8 @@ static enum ACLEXPR_RET_ s_non_literal_vec(
 	}
 
 	/** old and new */
-	VCFG_OLD = aclutil_cxtp_get_veccfg(c_old_type, h_ctx);
-	VCFG_NEW = aclutil_cxtp_get_veccfg(c_new_type, h_ctx);
+	VCFG_OLD = aclty_get_veccfg(c_old_type, h_ctx);
+	VCFG_NEW = aclty_get_veccfg(c_new_type, h_ctx);
 
 	unless(VCFG_OLD.m_num ^ VCFG_NEW.m_num) {
 		dbg_puts("[s_non_literal_vec::s_non_literal_novec]");

@@ -1,6 +1,7 @@
 #include "./vec.h"
-#include "./wrdemit.h"
-#include "./cxtp.h"
+
+#include <util/wrdemit.h>
+#include <aclty.h>
 
 #include <ae2f/bll.h>
 #include <ae2f/pat/dbg.h>

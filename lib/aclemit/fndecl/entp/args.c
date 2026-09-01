@@ -5,12 +5,12 @@
 
 #include <util/scale.h>
 #include <util/bind.h>
-#include <util/cxtp.h>
 #include <util/wrdemit.h>
 #include <util/constant.h>
 #include <util/emitx.h>
 #include <util/iddef.h>
 
+#include <aclty.h>
 #include <aclspv.h>
 #include <aclmem.h>
 #include <aclcursor.h>
@@ -43,7 +43,6 @@ LBL_FINI:
 
 enum CXChildVisitResult aclemit_fndecl_entp_arg(CXCursor h_cur, CXCursor h_parent, CXClientData ae2f_restrict h_data) {
 	ae2f_unused aclspv_wrdcount_t	POS_FOR_LOCAL = 0xFFFFFFFF;
-	CXString	PARAM_TY_NAME;
 	CXType		PARAM_TY;
 	aclutil_bind	INFO;
 	struct aclemit_fndecl_entp_arg_data* ae2f_restrict DATABASE = h_data;
@@ -103,7 +102,6 @@ enum CXChildVisitResult aclemit_fndecl_entp_arg(CXCursor h_cur, CXCursor h_paren
 		FUNC_NAME	= clang_getCursorSpelling(h_parent);
 		PARAM_NAME	= clang_getCursorSpelling(h_cur);
 
-
 		ae2f_ifnezerr_strict(aclmem_calloc(
 					&CTX->m_tmp.m_v0
 					, (aclspv_wrd_t)(strlen(FUNC_NAME.data) + strlen(PARAM_NAME.data) + 3)))
@@ -162,15 +160,7 @@ LBL_ABRT_NALLOC:
 		clang_disposeString(PARAM_NAME);
 	}
 
-	INFO.m_unified.m_storage_class = SpvStorageClassMax;
-
-	PARAM_TY_NAME	= clang_getTypeSpelling(PARAM_TY);
-
-#if	0
-	/** FIXME: we are making them attributes */
-	if(PARAM_TY.kind == CXType_ConstantArray)
-		INFO.m_unified.m_storage_class = SpvStorageClassWorkgroup;
-#endif
+	INFO.m_unified.m_storage_class = SpvStorageClassPushConstant;
 
 	/** Attriburte: storage class */
 	clang_visitChildren(
@@ -179,26 +169,21 @@ LBL_ABRT_NALLOC:
 			, &INFO.m_unified.m_storage_class
 			);
 
-	clang_disposeString(PARAM_TY_NAME);
-
 	switch(INFO.m_unified.m_storage_class) {
+
 		default:
 		case SpvStorageClassMax:
 			CTX->m_err = ACLSPV_COMPILE_STORAGE_CLASS_UNDEFINED;
 			return CXChildVisit_Break;
 
 			/** BINDABLES */
-			ae2f_unexpected_but_if(0) {
-				ae2f_unreachable();
-				case SpvStorageClassUniform:
-				INFO.m_unified.m_var_type_id = aclutil_mk_constant_ptr_uniform_id(1, CTX);
-				ae2f_expected_but_else(INFO.m_unified.m_var_type_id)  {
-					return CXChildVisit_Break;
-				}
+		case SpvStorageClassUniform:
+			INFO.m_unified.m_var_type_id = aclutil_mk_constant_ptr_uniform_id(1, CTX);
+			ae2f_expected_but_else(INFO.m_unified.m_var_type_id) {
+				return CXChildVisit_Break;
 			}
 
 			ae2f_fallthrough;
-
 		case SpvStorageClassStorageBuffer:
 			clang_visitChildren(h_cur
 					, s_attr_set
@@ -245,13 +230,13 @@ LBL_ABRT_NALLOC:
 			{
 				INFO.m_unified.m_storage_class		= SpvStorageClassWorkgroup;
 
-				ae2f_ifezerr(INFO.m_unified.m_var_elm_type_id = aclutil_mk_cxtp_by_cursor(
+				ae2f_ifezerr(INFO.m_unified.m_var_elm_type_id = aclty_mk_by_cursor(
 							h_cur
 							, PARAM_TY
 							, CTX
 							)) return CXChildVisit_Break;
 
-				ae2f_ifezerr(INFO.m_unified.m_var_type_id = aclutil_mk_cxtp_ptr(
+				ae2f_ifezerr(INFO.m_unified.m_var_type_id = aclty_mk_ptr(
 							INFO.m_unified.m_var_elm_type_id
 							, SpvStorageClassWorkgroup
 							, CTX)) return CXChildVisit_Break;
@@ -276,28 +261,25 @@ LBL_ABRT_NALLOC:
 
 			/** LOCATED */
 
-			ae2f_ifnezerr_strict(0) {
-				ae2f_unreachable();
+			/** TODO: those are hard-coded. Should be dynamicly loaded. */
+			ae2f_unreachable();
+		case SpvStorageClassInput:
+		case SpvStorageClassOutput:
+			{
+				const aclspv_id_t I32 = aclid_mk_default_id(ACLSPV_ID_I32, CTX);
+				const aclspv_id_t I32V4 = aclutil_mk_cxtp_vec(
+						ACLSPV_ID_I32
+						, 4, CTX);
 
-				/** TODO: those are hard-coded. Should be dynamicly loaded. */
-				case SpvStorageClassInput:
-				case SpvStorageClassOutput:
-				{
-					const aclspv_id_t I32 = aclid_mk_default_id(ACLSPV_ID_I32, CTX);
-					const aclspv_id_t I32V4 = aclutil_mk_cxtp_vec(
-							ACLSPV_ID_I32
-							, 4, CTX);
-
-					ae2f_expected_but_else(I32V4 && I32) {
-						return CXChildVisit_Break;
-					}
-
-					INFO.m_unified.m_var_type_id = aclutil_mk_cxtp_ptr(
-							I32V4
-							, (enum SpvStorageClass_)INFO.m_unified.m_storage_class
-							, CTX
-							);
+				ae2f_expected_but_else(I32V4 && I32) {
+					return CXChildVisit_Break;
 				}
+
+				INFO.m_unified.m_var_type_id = aclty_mk_ptr(
+						I32V4
+						, (enum SpvStorageClass_)INFO.m_unified.m_storage_class
+						, CTX
+						);
 			}
 
 			INFO.m_io.m_location = 0xFFFFFFFF;

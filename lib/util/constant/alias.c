@@ -6,8 +6,9 @@
  * */
 
 #include "../constant.h"
-#include "../cxtp.h"
 #include "../iddef.h"
+
+#include <aclty.h>
 
 #include <ae2f/bll.h>
 
@@ -26,7 +27,7 @@ aclspv_id_t	aclutil_mk_constant_arr8_id(const u64_least c_arrcount, h_aclspv_ctx
 		: aclutil_mk_constant_val64_id(c_arrcount, h_ctx);
 
 	return aclid_mk_default_id(ACLSPV_ID_I8, h_ctx) && VAL
-		? aclutil_mk_cxtp_arr2(ACLSPV_ID_I8, VAL, 4, h_ctx)
+		? aclty_mk_arr2(ACLSPV_ID_I8, VAL, 4, h_ctx)
 		: 0;
 }
 
@@ -37,7 +38,7 @@ aclspv_id_t	aclutil_mk_constant_arr16_id(const u64_least c_arrcount, h_aclspv_ct
 		: aclutil_mk_constant_val64_id(c_arrcount, h_ctx);
 
 	return aclid_mk_default_id(ACLSPV_ID_I16, h_ctx) && VAL
-		? aclutil_mk_cxtp_arr2(ACLSPV_ID_I16, VAL, 4, h_ctx)
+		? aclty_mk_arr2(ACLSPV_ID_I16, VAL, 4, h_ctx)
 		: 0;
 }
 
@@ -54,7 +55,7 @@ aclspv_id_t	aclutil_mk_constant_arr32_id(const u64_least c_arrcount, h_aclspv_ct
 
 	{
 		const aclspv_id_t id = aclid_mk_default_id(ACLSPV_ID_I32, h_ctx) && VAL
-			? aclutil_mk_cxtp_arr2(ACLSPV_ID_I32, VAL, 4, h_ctx)
+			? aclty_mk_arr2(ACLSPV_ID_I32, VAL, 4, h_ctx)
 			: 0;
 
 		ae2fpat_assertassumeunless(id) {
@@ -73,13 +74,13 @@ aclspv_id_t	aclutil_mk_constant_arr128_id(const u64_least c_arrcount, h_aclspv_c
 		: aclutil_mk_constant_val64_id(c_arrcount, h_ctx);
 
 	return VAL && ID_U32V4
-		? aclutil_mk_cxtp_arr2(ID_U32V4, VAL, 16, h_ctx)
+		? aclty_mk_arr2(ID_U32V4, VAL, 16, h_ctx)
 		: 0;
 }
 
 aclspv_id_t	aclutil_mk_constant_struct_id(const aclspv_wrd_t c_arrcount, h_aclspv_ctx_t h_ctx) {
 	const aclspv_id_t ID_ARR32 = aclutil_mk_constant_arr32_id(c_arrcount, h_ctx);
-	const aclspv_id_t R = ID_ARR32 ? aclutil_mk_cxtp_struct_single(
+	const aclspv_id_t R = ID_ARR32 ? aclty_mk_struct_single(
 			ID_ARR32
 			, ACLSPV_CXTP_STRUCT_DECORATION_FIELD0_BLOCK
 			, 0, h_ctx) : 0;
@@ -92,7 +93,7 @@ aclspv_id_t	aclutil_mk_constant_struct_id(const aclspv_wrd_t c_arrcount, h_aclsp
 
 aclspv_id_t	aclutil_mk_constant_struct128_id(const aclspv_wrd_t c_arrcount, h_aclspv_ctx_t h_ctx) {
 	const aclspv_id_t ID_ARR128 = aclutil_mk_constant_arr128_id(c_arrcount, h_ctx);
-	return ID_ARR128 ? aclutil_mk_cxtp_struct_single(
+	return ID_ARR128 ? aclty_mk_struct_single(
 			ID_ARR128
 			, ACLSPV_CXTP_STRUCT_DECORATION_FIELD0_BLOCK
 			, 0, h_ctx) : 0;
@@ -101,7 +102,7 @@ aclspv_id_t	aclutil_mk_constant_struct128_id(const aclspv_wrd_t c_arrcount, h_ac
 aclspv_id_t	aclutil_mk_constant_structpriv_id(const aclspv_wrd_t c_wrdcount, h_aclspv_ctx_t h_ctx) {
 	const aclspv_id_t ID_ARR32 = aclutil_mk_constant_arr32_id(c_wrdcount, h_ctx);
 
-	return ID_ARR32 ? aclutil_mk_cxtp_struct_single(
+	return ID_ARR32 ? aclty_mk_struct_single(
 			ID_ARR32
 			, 0
 			, 0xFFFFFFFF, h_ctx) : 0;
@@ -123,12 +124,12 @@ aclspv_id_t	aclutil_mk_constant_structprivspec_id(
 		ae2f_expected_but_else(NUM_ID = aclutil_mk_constant_spec64_id(c_key, c_wrdcount, h_ctx))
 		return 0;
 
-	ae2f_expected_but_else(ARR32_SPEC = aclutil_mk_cxtp_arr2(
+	ae2f_expected_but_else(ARR32_SPEC = aclty_mk_arr2(
 				ACLSPV_ID_I32, NUM_ID
 				, 4, h_ctx))
 		return 0;
 
-	return aclutil_mk_cxtp_struct_single(
+	return aclty_mk_struct_single(
 			ARR32_SPEC
 			, 0
 			, 0xFFFFFFFF

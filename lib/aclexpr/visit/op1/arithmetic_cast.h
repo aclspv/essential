@@ -6,14 +6,15 @@
 #ifndef	aclexpr_visit_cast_numeric_h
 #define	aclexpr_visit_cast_numeric_h
 
+#include "../../op.h"
+#include "../api.h"
+
 #include <util/constant.h>
 #include <util/scale.h>
-#include <util/cxtp.h>
 #include <util/wrdemit.h>
 
+#include <aclty.h>
 #include <aclexpr.h>
-#include <aclexpr/visit/api.h>
-#include <aclexpr/op.h>
 
 #include <ae2f/cc/memset.h>
 
@@ -66,7 +67,7 @@ ae2f_inline_f static aclexpr_visit_lbl_t aclexpr_visit_op1_arithmetic_cast(
 
 			ae2fcc_memset(&VEC[ACLEXPR_OPBINCFG_END + 1], 0, sizeof(aclexpr_opbincfg_extra));
 
-			ae2f_ifezerr(VEC[ACLEXPR_OPBINCFG_RESTYID] = aclutil_mk_cxtp_by_cursor(
+			ae2f_ifezerr(VEC[ACLEXPR_OPBINCFG_RESTYID] = aclty_mk_by_cursor(
 						c_cur
 						, clang_getCursorType(c_cur)
 						, h_ctx

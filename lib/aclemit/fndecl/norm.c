@@ -2,7 +2,7 @@
 
 #include <util/fnctx.h>
 #include <util/fn.h>
-#include <util/cxtp.h>
+#include <aclty.h>
 
 
 #include <aclmem.h>
@@ -29,7 +29,7 @@ enum CXChildVisitResult aclemit_fndecl_norm(
 
 	fn.m_fn		= h_parent;
 	fn.m_id		= ctx->m_id++;
-	fn.m_type_id	= aclutil_mk_cxtp_fn1(
+	fn.m_type_id	= aclty_mk_fn1(
 			h_parent
 			, clang_getCursorType(h_parent)
 			, ctx

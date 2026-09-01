@@ -1,7 +1,6 @@
 #ifndef	aclemit_body_vardecl_c
 #define aclemit_body_vardecl_c
 
-#include <util/cxtp.h>
 #include <util/constant.h>
 #include <util/fnctx.h>
 #include <util/log.h>
@@ -11,6 +10,7 @@
 
 #include <aclexpr.h>
 #include <aclcursor.h>
+#include <aclty.h>
 
 #include <ae2f/pat/macrofunc.h>
 #include <ae2f/pat/dbg.h>
@@ -44,14 +44,14 @@ ae2f_MAC((L, )) aclemit_body_vardecl(CXCursor h_cur, aclutil_fnctx* ae2f_restric
 
 	L$$CTX->m_num_cursor += L$$IDX == L$$CTX->m_num_cursor;
 
-	ae2f_ifneznrm((L$$PCURSOR->m_data.m_vardecl.m_type_id = aclutil_mk_cxtp_by_cursor(h_cur, L$$TYPE, L$$CTX))) {
-		L$$TYPE_PTR = aclutil_mk_cxtp_ptr(
+	ae2f_ifneznrm((L$$PCURSOR->m_data.m_vardecl.m_type_id = aclty_mk_by_cursor(h_cur, L$$TYPE, L$$CTX))) {
+		L$$TYPE_PTR = aclty_mk_ptr(
 				L$$PCURSOR->m_data.m_vardecl.m_type_id
 				, SpvStorageClassFunction
 				, L$$CTX
 				);
 
-		L$$PCURSOR->m_data.m_vardecl.m_etype_id = aclutil_cxtp_get_veccfg(L$$PCURSOR->m_data.m_vardecl.m_type_id, L$$CTX).m_ty_elm;
+		L$$PCURSOR->m_data.m_vardecl.m_etype_id = aclty_get_veccfg(L$$PCURSOR->m_data.m_vardecl.m_type_id, L$$CTX).m_ty_elm;
 
 		dbg_prefix(a);
 		dbg_call((void), (fprintf(stderr, "etype: %u type: %u\n"
