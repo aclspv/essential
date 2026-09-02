@@ -56,10 +56,18 @@ ae2f_inline_f static aclspv_bool_t	s_aclmem_calloc2(
 	return 0;
 }
 
-void		aclmem_init(x_aclspv_vec* ae2f_restrict fini, h_aclspv_ctx_t h_ctx);
+ae2f_ccconst ae2f_inline_f aclspv_wrd_t aclmemremaddr(void* c_p, aclspv_wrd_t c_a)
+{
+	return (aclspv_wrd_t)(((aclspv_ptr_t)c_p) & (((aclspv_ptr_t)c_a) - 1));
+}
 
-void		aclmemcpy(void* ae2f_restrict wr, const void* ae2f_restrict rd, aclspv_wrd_t c);
-void		aclmemzero(void* ae2f_restrict wr, aclspv_wrd_t c);
+void aclmem_init(x_aclspv_vec* ae2f_restrict fini, h_aclspv_ctx_t h_ctx);
+
+void aclmemcpy(void* ae2f_restrict wr, const void* ae2f_restrict rd, aclspv_wrd_t c);
+
+#include <ae2f/cc/profiles.h>
+
+void aclmemzero(void* ae2f_restrict wr, aclspv_wrd_t c);
 
 /** when zeroed, this is fine. */
 #define		aclmem_fini(init)	aclmem_init(init, 0)

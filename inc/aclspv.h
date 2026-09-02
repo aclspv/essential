@@ -65,6 +65,11 @@ typedef	uint_least64_t	aclspv_wrd2_t;
 #define	aclspv_wrd2_t	aclspv_wrd2_t
 #endif
 
+#ifndef	aclspv_ptr_t
+typedef intptr_t	aclspv_ptr_t;
+#define aclspv_ptr_t	aclspv_ptr_t
+#endif
+
 #define	aclspv_ver_spv(c_mjr, c_mnr)	\
 	((ae2f_static_cast(aclspv_wrd_t, c_mjr) << ae2f_static_cast(aclspv_wrd_t, 16))	|	\
 	 (ae2f_static_cast(aclspv_wrd_t, c_mnr) << ae2f_static_cast(aclspv_wrd_t, 8)))

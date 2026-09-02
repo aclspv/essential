@@ -15,8 +15,8 @@ aclspv_id_t	aclutil_mk_constant_ptr_psh_id(const aclspv_wrd_t c_wrdcount, const 
 		? aclty_mk_ptr(ELM, SpvStorageClassPushConstant, h_ctx)
 		: 0;
 
-	assert(ELM);
-	assert(R);
+	ae2fpat_assertassume(ELM);
+	ae2fpat_assertassume(R);
 
 	return R;
 }

@@ -15,7 +15,6 @@
 #include <util/log.h>
 
 #include <ae2f/pat/dbg.h>
-#include <ae2f/cc/memset.h>
 
 
 enum CXChildVisitResult aclemit_fndecl_entp(ae2f_unused CXCursor h_cur, CXCursor h_parent, CXClientData h_ctx) {
@@ -26,7 +25,7 @@ enum CXChildVisitResult aclemit_fndecl_entp(ae2f_unused CXCursor h_cur, CXCursor
 
 	ae2fpat_assertassume(ctx);
 
-	ae2fcc_memset(&DATA, 0, sizeof(DATA));
+	aclmemzero(&DATA, sizeof(DATA));
 	DATA.m_ctx = ctx;
 	DATA.m_ctx->m_num_cursor = 0;
 	DATA.m_idx_entp_buf_count = ctx->m_count.m_entp;

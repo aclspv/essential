@@ -36,8 +36,8 @@ enum {
 typedef struct {
 	union {
 		struct {
+			aclconst_specsz	m_num;
 			aclspv_id_t	m_type;
-			aclspv_id_t	m_num_id;
 			aclspv_wrd_t	m_dcr, m_num_dcr;
 		} m_arr;
 

@@ -58,12 +58,12 @@ enum CXChildVisitResult aclemit_fndecl_entp_arg(CXCursor h_cur, CXCursor h_paren
 	ae2f_ifezerr(CTX)		return CXChildVisit_Break;
 	ae2f_ifnezerr(CTX->m_err) 	return CXChildVisit_Break;
 
-	unless(h_cur.kind == CXCursor_ParmDecl) {
+	ae2f_ifnezerr_strict(h_cur.kind != CXCursor_ParmDecl) {
 		return CXChildVisit_Continue;
 	}
 
 	PARAM_TY	= clang_getCursorType(h_cur);
-	ae2f_unexpected_but_if(ARG_IDX > UINT32_MAX) {
+	ae2f_ifnezerr_strict(ARG_IDX > UINT32_MAX) {
 		CTX->m_err = ACLSPV_COMPILE_TOO_BIG;
 		return CXChildVisit_Break;
 	}
@@ -102,7 +102,7 @@ enum CXChildVisitResult aclemit_fndecl_entp_arg(CXCursor h_cur, CXCursor h_paren
 		FUNC_NAME	= clang_getCursorSpelling(h_parent);
 		PARAM_NAME	= clang_getCursorSpelling(h_cur);
 
-		ae2f_ifnezerr_strict(aclmem_calloc(
+		ae2f_ifnezerr(aclmem_calloc(
 					&CTX->m_tmp.m_v0
 					, (aclspv_wrd_t)(strlen(FUNC_NAME.data) + strlen(PARAM_NAME.data) + 3)))
 		{
@@ -119,7 +119,7 @@ enum CXChildVisitResult aclemit_fndecl_entp_arg(CXCursor h_cur, CXCursor h_paren
 			const aclspv_wrdcount_t	POS = CTX->m_count.m_name;
 
 
-			unless(NAME_MERGE) {
+			ae2f_ifezerr(NAME_MERGE) {
 LBL_ABRT_NALLOC:
 				CTX->m_err = ACLSPV_COMPILE_ALLOC_FAILED_ENTP_ARGS;
 				clang_disposeString(FUNC_NAME);
@@ -133,17 +133,17 @@ LBL_ABRT_NALLOC:
 
 
 #define EMIT_POS	CTX->m_count.m_name
-			ae2f_expected_but_else((POS_FOR_LOCAL = EMIT_POS = emit_opcode(
+			ae2f_ifezerr((POS_FOR_LOCAL = EMIT_POS = emit_opcode(
 							&CTX->m_section.m_name
 							, EMIT_POS
 							, SpvOpName, 0))) 
 				goto LBL_ABRT_NALLOC;
-			ae2f_expected_but_else((EMIT_POS = aclutil_emit_wrd(
+			ae2f_ifezerr((EMIT_POS = aclutil_emit_wrd(
 							&CTX->m_section.m_name
 							, EMIT_POS
 							, INFO.m_unified.m_var_id)))
 				goto LBL_ABRT_NALLOC;
-			ae2f_expected_but_else((EMIT_POS = aclutil_emit_str(
+			ae2f_ifezerr((EMIT_POS = aclutil_emit_str(
 							&CTX->m_section.m_name
 							, EMIT_POS
 							, NAME_MERGE))) 
@@ -241,7 +241,7 @@ LBL_ABRT_NALLOC:
 							, SpvStorageClassWorkgroup
 							, CTX)) return CXChildVisit_Break;
 
-				ae2f_expected_but_else(CTX->m_count.m_vars = util_emitx_variable(
+				ae2f_ifezerr(CTX->m_count.m_vars = util_emitx_variable(
 							&CTX->m_section.m_vars
 							, CTX->m_count.m_vars
 							, INFO.m_unified.m_var_type_id
@@ -271,7 +271,7 @@ LBL_ABRT_NALLOC:
 						ACLSPV_ID_I32
 						, 4, CTX);
 
-				ae2f_expected_but_else(I32V4 && I32) {
+				ae2f_ifezerr(I32V4 && I32) {
 					return CXChildVisit_Break;
 				}
 
@@ -293,7 +293,7 @@ LBL_ABRT_NALLOC:
 			INFO.m_unified.m_var_id			= CTX->m_id++;
 			INFO.m_unified.m_var_elm_type_id	= aclutil_mk_constant_vec32_id(4, CTX);
 
-			ae2f_expected_but_else(CTX->m_count.m_decorate = aclutil_emitx_4(
+			ae2f_ifezerr(CTX->m_count.m_decorate = aclutil_emitx_4(
 						&CTX->m_section.m_decorate
 						, CTX->m_count.m_decorate
 						, SpvOpDecorate
@@ -302,7 +302,7 @@ LBL_ABRT_NALLOC:
 						, INFO.m_io.m_location
 						)) return CXChildVisit_Break;
 
-			ae2f_expected_but_else(CTX->m_count.m_vars = util_emitx_variable(
+			ae2f_ifezerr(CTX->m_count.m_vars = util_emitx_variable(
 						&CTX->m_section.m_vars
 						, CTX->m_count.m_vars
 						, INFO.m_unified.m_var_type_id
@@ -341,7 +341,7 @@ LBL_ABRT_NALLOC:
 				, INFO.m_unified.m_cursor
 				);
 
-		ae2f_unexpected_but_if(CURSOR_IDX == CTX->m_num_cursor + 1) {
+		ae2f_ifnezerr_strict(CURSOR_IDX == CTX->m_num_cursor + 1) {
 			CTX->m_err = (enum ACLSPV_COMPILE_)ae2f_bll_sel_bool_naive1(
 					uint_fastenum_t
 					, CTX->m_err

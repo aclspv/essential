@@ -1,13 +1,13 @@
 #include "./arr.h"
 #include "./implutil.h"
 
+#include <aclmem.h>
 #include <aclexpr.h>
 
 #include <util/emitx.h>
 #include <util/iddef.h>
 #include <util/constant.h>
 
-#include <ae2f/cc/memset.h>
 #include <ae2f/pat/dbg.h>
 
 #include <.aclspv/const/spec.h>
@@ -84,7 +84,7 @@ static aclspv_bool_t s_is_same(
 	if(rd0->m_info.m_arr.m_num_dcr != rd1->m_info.m_arr.m_num_dcr)
 		return 0;
 
-	if(rd0->m_info.m_arr.m_num_id != rd1->m_info.m_arr.m_num_id)
+	if(rd0->m_info.m_arr.m_num.m_id != rd1->m_info.m_arr.m_num.m_id)
 		return 0;
 
 	unless(rd0->m_info.m_arr.m_num_dcr)
@@ -124,14 +124,37 @@ aclutil_cxtp* aclty_build_arr(
 		}
 	}
 
-	ae2f_ifezerr(h_ctx->m_count.m_types = aclutil_emitx_4(
-				&h_ctx->m_section.m_types
-				, h_ctx->m_count.m_types
-				, SpvOpTypeArray
-				, rdwr_arr->m_type_id
-				, rdwr_arr->m_info.m_arr.m_type
-				, rdwr_arr->m_info.m_arr.m_num_id
-				)) return 0;
+	if(!rdwr_arr->m_info.m_arr.m_num.m_id && rdwr_arr->m_info.m_arr.m_num.m_lit.m_max) {
+		const aclspv_id_t SIZE_TY = aclid_getty_uint(h_ctx->m_usrcfg.m_byte_size_type << 3);
+		ae2f_ifezerr(SIZE_TY)	return 0;
+
+		ae2f_ifezerr(rdwr_arr->m_info.m_arr.m_num.m_id = aclutil_mk_constant_val_by_enum(
+					rdwr_arr->m_info.m_arr.m_num.m_lit.m_max
+					, h_ctx
+					, (enum ACLSPV_ID_)SIZE_TY))
+			return 0;
+	} else {
+		rdwr_arr->m_info.m_arr.m_num.m_lit.m_max = 0;
+	}
+
+	if(rdwr_arr->m_info.m_arr.m_num.m_id) {
+		ae2f_ifezerr(h_ctx->m_count.m_types = aclutil_emitx_4(
+					&h_ctx->m_section.m_types
+					, h_ctx->m_count.m_types
+					, SpvOpTypeArray
+					, rdwr_arr->m_type_id
+					, rdwr_arr->m_info.m_arr.m_type
+					, rdwr_arr->m_info.m_arr.m_num.m_id
+					)) return 0;
+	} else {
+		ae2f_ifezerr(h_ctx->m_count.m_types = aclutil_emitx_3(
+					&h_ctx->m_section.m_types
+					, h_ctx->m_count.m_types
+					, SpvOpTypeRuntimeArray
+					, rdwr_arr->m_type_id
+					, rdwr_arr->m_info.m_arr.m_type
+					)) return 0;
+	}
 
 	ae2f_ifnezerr_strict(rdwr_arr->m_info.m_arr.m_dcr && aclty_build_dcr(
 				&__get_type_uniques(h_ctx)[rdwr_arr->m_info.m_arr.m_dcr]
@@ -171,7 +194,7 @@ aclutil_cxtp* aclty_cfg_arr_dcr(
 	{
 		struct __ret ID;
 		aclutil_cxtp TAR;
-		ae2fcc_memset(&TAR, 0, sizeof(TAR));
+		aclmemzero(&TAR, sizeof(TAR));
 
 		TAR.m_class	= ACLUTIL_CXTYPE_DCR;
 		TAR.m_info.m_dcr.m_op		= (aclspv_wrd_t)c_dcr;
@@ -213,7 +236,7 @@ aclutil_cxtp* aclty_cfg_arr(
 			, h_ctx
 			);
 
-	ae2fcc_memset(&tar, 0, sizeof(tar));
+	aclmemzero(&tar, sizeof(tar));
 
 	ae2f_ifezerr(size_ty) {
 		err_puts("size_ty is 0");
@@ -221,9 +244,9 @@ aclutil_cxtp* aclty_cfg_arr(
 	}
 
 	if(c_num_arr.m_id) {
-		tar.m_info.m_arr.m_num_id		= c_num_arr.m_id;
+		tar.m_info.m_arr.m_num.m_id		= c_num_arr.m_id;
 	} else ae2f_ifneznrm(c_num_arr.m_lit.m_max) {
-		ae2f_ifezerr(tar.m_info.m_arr.m_num_id = aclutil_mk_constant_val_by_enum(
+		ae2f_ifezerr(tar.m_info.m_arr.m_num.m_id = aclutil_mk_constant_val_by_enum(
 					c_num_arr.m_lit.m_max
 					, h_ctx
 					, (aclspv_id_t)size_ty)) return 0;

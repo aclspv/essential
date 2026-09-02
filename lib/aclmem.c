@@ -109,10 +109,5 @@ void		aclmemcpy(void* ae2f_restrict wr, const void* ae2f_restrict rd, aclspv_wrd
 	}
 }
 
-void		aclmemzero(void* ae2f_restrict wr, aclspv_wrd_t c) {
-	char* ae2f_restrict		wr_ = wr;
 
-	while(c --> 0) {
-		*wr_++ = 0;
-	}
-}
+
