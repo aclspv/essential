@@ -1,118 +1,63 @@
-#include "../aclmem.h"
+#include "./util.h"
 
 #include <ae2f/cc/profiles.h>
 #include <.aclspv/mem/zero.h>
 
-
-#if	(_ae2f_gnuc(!)0 || _ae2f_clang(!)0)
-typedef aclspv_wrd_t b128 __attribute__((vector_size(sizeof(uint32_t) << 2)));
-#define	ZERO	((b128) {0, 0, 0, 0})
-#else
-ae2f_inline_f typedef struct { uint32_t m0, m1; } b128;
-static ae2f_ccconst b128 zero(void) {
-	const b128 Z = { 0, 0, 0, 0 };
-	return Z;
+static ae2f_inline_f void s_mz256(void* ae2f_restrict wr, aclspv_wrd_t c) {
+	b256* ae2f_restrict p = wr;
+	_aclmemzero_duff8(L, aclspv_wrd_t, c, p, ZERO256);
 }
-#define	ZERO	zero()
-#endif
 
-#if	(_ae2f_gnuc(!)0 || _ae2f_clang(!)0)
-static ae2f_inline_f void aclmemzero128(void* ae2f_restrict wr, aclspv_wrd_t c) {
-	ae2f_unused typedef aclspv_wrd_t b128_v[sizeof(b128) == 16 ? 1 : -1];
-	b128* ae2f_restrict p = wr;
-	_aclmemzero_duff8(L, aclspv_wrd_t, c, p, ZERO);
-}
-#else
-static ae2f_inline_f void aclmemzero128(void* ae2f_restrict wr, aclspv_wrd_t c) {
-	typedef aclspv_wrd_t b128 __attribute__((vector_size(sizeof(uint32_t) << 2)));
-	ae2f_unused typedef aclspv_wrd_t b128_v[sizeof(b128) == 16 ? 1 : -1];
-	b128* ae2f_restrict p = wr;
-	_aclmemzero_duff8(L, aclspv_wrd_t, c, p, ((b128) {0, 0, 0, 0}));
-}
-#endif
-
-typedef aclspv_wrd2_t b64;
-typedef aclspv_wrd_t b32;
-
-ae2f_unused typedef aclspv_wrd2_t b64_v[sizeof(aclspv_wrd2_t) == (8) ? 1 : -1];
-ae2f_unused typedef aclspv_wrd_t b32_v[sizeof(aclspv_wrd_t) == (4) ? 1 : -1];
-
-#define	s_case_byte_noskip(c, ptr) case (c): *--(ptr) = 0;
+#define	s_case_bytej(c, ptr, lbl) case (c): *--(ptr) = 0; goto lbl
 #define	s_case_byte(c, ptr) case (c): *--(ptr) = 0; ae2f_fallthrough
-#define	s_case_bulk(c_bit, ptr)	case ((c_bit) >> 3): *((b##c_bit*)(void*)((ptr) -= (c_bit) >> 3)) = 0; break
-#define	s_case_skip(c, c_bit, ptr, lbl)	ae2f_ifnezerr_strict(0)  { ae2f_unreachable(); case c: *((b##c_bit*)(void*)((ptr) -= (c_bit) >> 3)) = 0; } goto lbl
+#define	s_case_bulk(c_bit, ptr)	case ((c_bit) >> 3): *((b##c_bit*)(void*)((ptr) -= (c_bit) >> 3)) = ZERO##c_bit; break
+#define	s_case_skip(c, c_bit, ptr, lbl)	\
+	case c:	\
+		*((b##c_bit*)(void*)((ptr) -= (c_bit) >> 3)) = 0;	\
+		goto lbl
 
 void aclmemzero(void* ae2f_restrict wr, aclspv_wrd_t c) {
 	char* ae2f_restrict		wr_end = (char*)wr + c;
+	aclspv_wrd_t rem256 = aclmemremaddr(wr_end, 32);
 
-	{
-		aclspv_wrd_t rem128 = aclmemremaddr(wr_end, 16);
-
-		if(c > rem128) {
-			c -= rem128;
-#define	BULK_LBL(c)	BULK##c
-			switch(rem128) {
-				s_case_byte(0xF, wr_end);
-				s_case_byte(0xE, wr_end);
-				s_case_byte_noskip(0xD, wr_end);
-				s_case_skip(0xC, 32, wr_end, BULK64);
-
-				s_case_byte(0xB, wr_end);
-				s_case_byte(0xA, wr_end);
-				s_case_byte_noskip(0x9, wr_end);
-
-				BULK64:
-				s_case_bulk(64, wr_end);
-
-				s_case_byte(0x7, wr_end);
-				s_case_byte(0x6, wr_end);
-				s_case_byte(0x5, wr_end);
-				s_case_bulk(32, wr_end);
-
-				s_case_byte(0x3, wr_end);
-				s_case_byte(0x2, wr_end);
-				s_case_byte(0x1, wr_end);
-
-				case 0x0:
-				break;
-
-				default:
-				ae2f_unreachable();
-			}
-		}
+	if(c < rem256) {
+		while(c --> 0) *--wr_end = 0;
+		return;
 	}
 
-	{
-		const aclspv_wrd_t c128 = c & ~((aclspv_wrd_t)0xF);
-		aclmemzero128((wr_end -= (c128)), c128 >> 4);
-		c -= c128;
-	}
-
-	/** wr_end is aligned as 128 bit here guaranteed. */
-
-#undef	BULK_LBL
-#define	BULK_LBL(c)	BULK2##c
-	switch(c) {
-		s_case_byte(0xF, wr_end);
-		s_case_byte(0xE, wr_end);
-		s_case_byte_noskip(0xD, wr_end);
-		s_case_skip(0xC, 32, wr_end, BULK64_2);
-
-		s_case_byte(0xB, wr_end);
-		s_case_byte(0xA, wr_end);
-		s_case_byte_noskip(0x9, wr_end);
-
-BULK64_2:
-		s_case_bulk(64, wr_end);
-
-		s_case_byte(0x7, wr_end);
-		s_case_byte(0x6, wr_end);
-		s_case_byte(0x5, wr_end);
+	c -= rem256;
+	switch(rem256) {
+		s_case_byte(0x1F, wr_end);
+		s_case_byte(0x1E, wr_end);
+		s_case_byte(0x1D, wr_end);
+		s_case_skip(0x1C, 32, wr_end, L192);
+		s_case_byte(0x1B, wr_end);
+		s_case_byte(0x1A, wr_end);
+		s_case_bytej(0x19, wr_end, L192);
+L192:		s_case_skip(0x18, 64, wr_end, L128);
+		s_case_byte(0x17, wr_end);
+		s_case_byte(0x16, wr_end);
+		s_case_byte(0x15, wr_end);
+		s_case_skip(0x14, 32, wr_end, L128);
+		s_case_byte(0x13, wr_end);
+		s_case_byte(0x12, wr_end);
+		s_case_bytej(0x11, wr_end, L128);
+L128:		s_case_bulk(128, wr_end);
+		s_case_byte(0x0F, wr_end);
+		s_case_byte(0x0E, wr_end);
+		s_case_byte(0x0D, wr_end);
+		s_case_skip(0x0C, 32, wr_end, L64);
+		s_case_byte(0x0B, wr_end);
+		s_case_byte(0x0A, wr_end);
+		s_case_bytej(0x09, wr_end, L64);
+L64:		s_case_bulk(64, wr_end);
+		s_case_byte(0x07, wr_end);
+		s_case_byte(0x06, wr_end);
+		s_case_byte(0x05, wr_end);
 		s_case_bulk(32, wr_end);
-
-		s_case_byte(0x3, wr_end);
-		s_case_byte(0x2, wr_end);
-		s_case_byte(0x1, wr_end);
+		s_case_byte(0x03, wr_end);
+		s_case_byte(0x02, wr_end);
+		s_case_byte(0x01, wr_end);
 
 		case 0x0:
 		break;
@@ -120,6 +65,16 @@ BULK64_2:
 		default:
 		ae2f_unreachable();
 	}
+
+	/** wr_end is aligned as 256 bit here guaranteed. */
+
+	{
+		const aclspv_wrd_t c256 = c & ~((aclspv_wrd_t)0x1F);
+		s_mz256((wr_end -= (c256)), c256 >> 5);
+		c -= c256;
+	}
+
+	while(c --> 0) *--wr_end = 0;
 }
 
 #undef	s_case_byte

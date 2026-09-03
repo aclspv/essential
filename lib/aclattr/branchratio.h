@@ -15,11 +15,9 @@ static enum CXChildVisitResult	s_aclattr_bratio(
 		CXCursor h_cur,
 		ae2f_unused CXCursor h_parent,
 		CXClientData ae2f_restrict wr_ratio) {
-	CXString	ATTR_KIND;
+	const CXString	ATTR_KIND = clang_getCursorSpelling(h_cur);
 	const char*	NIDDLE;
 
-
-	ATTR_KIND = clang_getCursorSpelling(h_cur);
 	dbg_puts("[s_aclattr_bratio]");
 	dbg_puts(ATTR_KIND.data);
 

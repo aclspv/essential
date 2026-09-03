@@ -1,4 +1,5 @@
 #include <aclspv.h>
+#include <aclmem.h>
 #include <util/wrdemit.h>
 
 #include <.aclspv/util/vcopr.h>
@@ -40,8 +41,13 @@ ACLSPV_ABI_IMPL enum ACLSPV_COMPILE_ aclspv_dump_ctx_output1(
 	ret[3]	=	NUM_RET;
 	ret[4]	=	0;
 
+#if	1
 #define copybinary(k_key, c_buf)	if(h_ctx->m_count.k_key)	\
 	_aclutil_vcopr(k_key, =, c_buf, h_ctx->m_section.k_key.m_p, h_ctx->m_count.k_key)
+#else
+#define	copybinary(k_key, c_buf)	\
+	aclmemcpy(c_buf, h_ctx->m_section.k_key.m_p, h_ctx->m_count.k_key << 2)
+#endif
 
 	copybinary(m_capability,	ret + 5);
 

@@ -99,15 +99,3 @@ void		aclmem_init(
 	fini->m_sz_real	= 0;
 	fini->m_ctx	= h_ctx;
 }
-
-void		aclmemcpy(void* ae2f_restrict wr, const void* ae2f_restrict rd, aclspv_wrd_t c) {
-	char* ae2f_restrict		wr_ = wr;
-	const char* ae2f_restrict	rd_ = rd;
-
-	while(c --> 0) {
-		*wr_++ = *rd_++;
-	}
-}
-
-
-

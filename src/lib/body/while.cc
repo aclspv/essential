@@ -106,6 +106,7 @@ ae2f_MAC((L, )) aclemit_body_while(CXCursor h_cur, aclutil_fnctx * ae2f_restrict
 					, (h_fnctx)
 				      )) {
 			default:
+				ae2f_unreachable();
 			case ACLEXPR_RET_FAILURE:
 			case ACLEXPR_RET_NOT_THE_CASE:
 				goto L$$ERR;
@@ -149,13 +150,14 @@ ae2f_MAC((L, )) aclemit_body_while(CXCursor h_cur, aclutil_fnctx * ae2f_restrict
 		}
 
 		if(L$$WEIGHTS[0] || L$$WEIGHTS[1]) {
+			dbg_puts("while::has weights.");
 			ae2f_ifezerr((h_fnctx)->m_ctx->m_count.m_fnimpl = aclutil_emitx_6(
 						&(h_fnctx)->m_ctx->m_section.m_fnimpl
 						, (h_fnctx)->m_ctx->m_count.m_fnimpl
 						, SpvOpBranchConditional
 						, L$$LOOPCND
-						,  L$$LOOPSTART
-						,  L$$LOOPEND
+						, L$$LOOPSTART
+						, L$$LOOPEND
 						, L$$WEIGHTS[0]
 						, L$$WEIGHTS[1])) {
 				(h_fnctx)->m_ctx->m_err = ACLSPV_COMPILE_ALLOC_FAILED;
@@ -173,6 +175,7 @@ ae2f_MAC((L, )) aclemit_body_while(CXCursor h_cur, aclutil_fnctx * ae2f_restrict
 				(h_fnctx)->m_ctx->m_err = ACLSPV_COMPILE_ALLOC_FAILED;
 				break;
 			}
+
 		}
 
 		{

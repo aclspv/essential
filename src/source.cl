@@ -30,7 +30,8 @@ kernel_raw(0) void KERNEL(int aaaa, int a2) {
 	float    cc = 1;
 	float	bb;
 	float4    d = cc;
-	double4    a = d * cc;
+	double4    a  = d * cc;
+
 K:
 	{
 		double4    c, c1, c2;
@@ -47,7 +48,7 @@ kernel_raw(0) void BOOLEAN(float4 float4_boolean) {
 
 	_Bool OP_OR;
 
-	if(OP_OR) {}
+	if(OP_OR) {  }
 
 	OP_OR		= OP0 || OP1;
 	_Bool OP_AND	= OP0 && OP1;
@@ -60,15 +61,6 @@ kernel_raw(5) void N_KERNEL_0(
 		storage_class(3) const uint* u32out,
 		local float i32aaaa[3]
 		) {
-
-	struct {
-		int a;
-		long d;
-		struct {
-			u32 low;
-			u32 hgh;
-		} group;
-	};
 
 	btcast float a0 = 1078774989;
 	int a1 specid(0) = 3;

@@ -56,7 +56,7 @@ ae2f_inline_f static aclspv_bool_t	s_aclmem_calloc2(
 	return 0;
 }
 
-ae2f_ccconst ae2f_inline_f aclspv_wrd_t aclmemremaddr(void* c_p, aclspv_wrd_t c_a)
+ae2f_ccconst ae2f_inline_f aclspv_wrd_t aclmemremaddr(const void* c_p, aclspv_wrd_t c_a)
 {
 	return (aclspv_wrd_t)(((aclspv_ptr_t)c_p) & (((aclspv_ptr_t)c_a) - 1));
 }

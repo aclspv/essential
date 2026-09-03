@@ -16,6 +16,7 @@ static char s_oclbase[
 	sizeof(OCLBASE_0)
 	+ sizeof(OCLBASE_1) - 1 
 	+ sizeof(OCLBASE_2) - 1
+	+ sizeof(OCLBASE_3) - 1
 ];
 
 #include <string.h>
@@ -30,6 +31,7 @@ static void acltestcfg(void) {
 	strcpy(s_oclbase, OCLBASE_0);
 	strcat(s_oclbase, OCLBASE_1);
 	strcat(s_oclbase, OCLBASE_2);
+	strcat(s_oclbase, OCLBASE_3);
 }
 
 #endif
