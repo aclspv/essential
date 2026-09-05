@@ -9,7 +9,7 @@
 
 /*** STRUCT MEMBER ***/
 
-ae2f_ccpure static aclutil_cxtp* s_get_last_mbr(aclutil_cxtp* ae2f_restrict rd_mbr, h_aclspv_ctx_t h_ctx) {
+ae2f_ccpure static aclty_t* s_get_last_mbr(aclty_t* ae2f_restrict rd_mbr, h_aclspv_ctx_t h_ctx) {
 	while(rd_mbr->m_info.m_struct_mbr.m_nxt)
 	{
 		rd_mbr = &__get_type_uniques(h_ctx)[(rd_mbr->m_info.m_struct_mbr.m_nxt)];
@@ -19,23 +19,23 @@ ae2f_ccpure static aclutil_cxtp* s_get_last_mbr(aclutil_cxtp* ae2f_restrict rd_m
 }
 
 
-aclutil_cxtp* aclty_cfg_struct_mdcr1(aclspv_id_t c_id, SpvDecoration c_decor, h_aclspv_ctx_t h_ctx) {
-	aclutil_cxtp* ae2f_restrict cxtp = aclty_find(c_id, h_ctx);
+aclty_t* aclty_cfg_struct_mdcr1(aclspv_id_t c_id, SpvDecoration c_decor, h_aclspv_ctx_t h_ctx) {
+	aclty_t* ae2f_restrict cxtp = aclty_find(c_id, h_ctx);
 	return ae2f_expected(cxtp) ? aclty_cfg_struct_mdcr(cxtp, c_decor, h_ctx) : 0;
 }
 
-ae2f_ccpure aclutil_cxtp* aclty_get_struct_mbr(
-		aclutil_cxtp* ae2f_restrict rdwr_struct,
+ae2f_ccpure aclty_t* aclty_get_struct_mbr(
+		aclty_t* ae2f_restrict rdwr_struct,
 		aclspv_wrd_t c_idx,
 		h_aclspv_ctx_t h_ctx) {
-	aclutil_cxtp* ae2f_restrict R;
+	aclty_t* ae2f_restrict R;
 
 	ae2f_ifnezerr_strict(rdwr_struct->m_info.m_struct.m_num_mbr <= c_idx)
 		return 0;
 
 	R = &__get_type_uniques(h_ctx)[rdwr_struct->m_info.m_struct.m_mbr];
 
-	while(R->m_class == ACLUTIL_CXTYPE_STRUCT_MBR)
+	while(R->m_class == ACLTY_STRUCT_MBR)
 	{
 		if(R->m_info.m_struct_mbr.m_idx == c_idx)
 			return R;
@@ -52,8 +52,8 @@ ae2f_ccpure aclutil_cxtp* aclty_get_struct_mbr(
 	}
 }
 
-aclutil_cxtp* aclutil_cxtp_struct_add_mbr(aclutil_cxtp* ae2f_restrict rdwr_struct, aclspv_id_t c_id, h_aclspv_ctx_t h_ctx) {
-	aclutil_cxtp* ae2f_restrict r, * ae2f_restrict r2;
+aclty_t* aclty_struct_add_mbr(aclty_t* ae2f_restrict rdwr_struct, aclspv_id_t c_id, h_aclspv_ctx_t h_ctx) {
+	aclty_t* ae2f_restrict r, * ae2f_restrict r2;
 	const aclspv_wrd_t	pad = (aclspv_wrd_t)(rdwr_struct - __get_type_uniques(h_ctx));
 
 	ae2fpat_assertassumeunless(rdwr_struct) {
@@ -61,18 +61,18 @@ aclutil_cxtp* aclutil_cxtp_struct_add_mbr(aclutil_cxtp* ae2f_restrict rdwr_struc
 		return 0;
 	}
 
-	ae2fpat_assertassumeunless(rdwr_struct->m_class == ACLUTIL_CXTYPE_STRUCT) {
+	ae2fpat_assertassumeunless(rdwr_struct->m_class == ACLTY_STRUCT) {
 		h_ctx->m_err = ACLSPV_COMPILE_CXTP_TYINVL_STRUCT_DCR;
 		return 0;
 	}
 
 	{
 		struct __ret	ID;
-		aclutil_cxtp	TAR;
+		aclty_t	TAR;
 
 		aclmemzero(&TAR, sizeof(TAR));
 
-		TAR.m_class				= ACLUTIL_CXTYPE_STRUCT_MBR;
+		TAR.m_class				= ACLTY_STRUCT_MBR;
 		TAR.m_info.m_struct_mbr.m_id_mbr	= c_id;
 		TAR.m_info.m_struct_mbr.m_idx		= rdwr_struct->m_info.m_struct.m_num_mbr++;
 
@@ -109,8 +109,8 @@ aclutil_cxtp* aclutil_cxtp_struct_add_mbr(aclutil_cxtp* ae2f_restrict rdwr_struc
 }
 
 
-aclutil_cxtp* aclty_cfg_struct_mdcr(aclutil_cxtp* ae2f_restrict rdwr_mbr, SpvDecoration c_decor, h_aclspv_ctx_t h_ctx) {
-	aclutil_cxtp*	r = 0;
+aclty_t* aclty_cfg_struct_mdcr(aclty_t* ae2f_restrict rdwr_mbr, SpvDecoration c_decor, h_aclspv_ctx_t h_ctx) {
+	aclty_t*	r = 0;
 	aclspv_wrd_t pad = (aclspv_wrd_t)(rdwr_mbr - __get_type_uniques(h_ctx));
 
 	ae2fpat_assertassumeunless(rdwr_mbr) {
@@ -118,13 +118,13 @@ aclutil_cxtp* aclty_cfg_struct_mdcr(aclutil_cxtp* ae2f_restrict rdwr_mbr, SpvDec
 		return 0;
 	}
 
-	ae2fpat_assertassumeunless(rdwr_mbr->m_class == ACLUTIL_CXTYPE_STRUCT_MBR) {
+	ae2fpat_assertassumeunless(rdwr_mbr->m_class == ACLTY_STRUCT_MBR) {
 		h_ctx->m_err = ACLSPV_COMPILE_CXTP_TYINVL_STRUCT_DCR;
 		return 0;
 	}
 
 	if(rdwr_mbr->m_info.m_struct_mbr.m_dcr) {
-		aclutil_cxtp* g;
+		aclty_t* g;
 		if((g = aclty_get_dcr(
 						&__get_type_uniques(h_ctx)[rdwr_mbr->m_info.m_struct_mbr.m_dcr]
 						, c_decor
@@ -134,10 +134,10 @@ aclutil_cxtp* aclty_cfg_struct_mdcr(aclutil_cxtp* ae2f_restrict rdwr_mbr, SpvDec
 
 	{
 		struct __ret ID;
-		aclutil_cxtp TAR;
+		aclty_t TAR;
 		aclmemzero(&TAR, sizeof(TAR));
 
-		TAR.m_class	= ACLUTIL_CXTYPE_DCR;
+		TAR.m_class	= ACLTY_DCR;
 		TAR.m_info.m_dcr.m_op		= (aclspv_wrd_t)c_decor;
 		TAR.m_info.m_dcr.m_nxt		= 0;
 
@@ -165,29 +165,44 @@ aclutil_cxtp* aclty_cfg_struct_mdcr(aclutil_cxtp* ae2f_restrict rdwr_mbr, SpvDec
 }
 
 
-void aclty_free_struct_mbr(aclutil_cxtp* ae2f_restrict fini, h_aclspv_ctx_t h_ctx) {
+void aclty_free_struct_mbr(aclty_t* ae2f_restrict fini, h_aclspv_ctx_t h_ctx) {
 	do {
-		fini->m_class = ACLUTIL_CXTYPE_RESERVED;
+		fini->m_class = ACLTY_RESERVED;
 		if(fini->m_info.m_struct_mbr.m_dcr)
 			aclty_free_dcr(&__get_type_uniques(h_ctx)[fini->m_info.m_struct_mbr.m_dcr], h_ctx);
 
 		fini = &__get_type_uniques(h_ctx)[fini->m_info.m_struct_mbr.m_nxt];
-	} while(fini->m_class == ACLUTIL_CXTYPE_STRUCT_MBR);
+	} while(fini->m_class == ACLTY_STRUCT_MBR);
 }
 
 #include <aclconst/align.h>
 
 /** grow as struct */
 #if	1
-aclutil_cxtp* aclty_add_struct_mbr_std430(
-		aclutil_cxtp* ae2f_restrict rdwr_struct,
+aclty_t* aclty_add_struct_mbr_std430(
+		aclty_t* ae2f_restrict rdwr_struct,
 		aclspv_id_t c_id,
 		h_aclspv_ctx_t h_ctx) {
-	aclutil_cxtp* ae2f_restrict mbr;
+	aclty_t* ae2f_restrict mbr;
 	aclspv_wrd_t pad = (aclspv_wrd_t)(__get_type_uniques(h_ctx) - rdwr_struct);
 
 	aclspv_wrd_t new_algn = aclty_getalign(c_id, h_ctx);
 	aclconst_specsz new_sz = aclty_getsize(c_id, h_ctx);
+
+	/** opaque type kill */
+	{
+		aclty_t* mbrid = aclty_find(c_id, h_ctx);
+		ae2f_ifezerr(mbrid) return 0;
+		if(mbrid->m_field0 & ACLTY_FIELD0_NOPOD) {
+			ae2f_ifnezerr_strict(rdwr_struct->m_field0 >> ACLTY_FIELD0_OFF_NOPOD & 1) {
+				err_puts("it is already not pod.");
+				return 0;
+			}
+
+			rdwr_struct->m_field0 |= ACLTY_FIELD0_NOPOD;
+		}
+	}
+
 
 	rdwr_struct->m_alignof = rdwr_struct->m_alignof < new_algn
 		? new_algn
@@ -195,7 +210,7 @@ aclutil_cxtp* aclty_add_struct_mbr_std430(
 		;
 
 	rdwr_struct->m_sizeof = aclconst_alignup1(rdwr_struct->m_sizeof, rdwr_struct->m_alignof, h_ctx);
-	ae2f_ifezerr(mbr = aclutil_cxtp_struct_add_mbr(rdwr_struct, c_id, h_ctx))
+	ae2f_ifezerr(mbr = aclty_struct_add_mbr(rdwr_struct, c_id, h_ctx))
 		return 0;
 
 	rdwr_struct = &__get_type_uniques(h_ctx)[pad];
@@ -230,12 +245,21 @@ aclutil_cxtp* aclty_add_struct_mbr_std430(
 #endif
 
 /** non-grow (union) */
-aclutil_cxtp* aclty_add_struct_mbr_un(
-		aclutil_cxtp* ae2f_restrict rdwr_struct,
+aclty_t* aclty_add_struct_mbr_un(
+		aclty_t* ae2f_restrict rdwr_struct,
 		aclspv_id_t c_id,
 		h_aclspv_ctx_t h_ctx) {
 	aclspv_wrd_t new_algn = aclty_getalign(c_id, h_ctx);
 	aclconst_specsz new_sz = (aclty_getsize(c_id, h_ctx));
+
+	{
+		aclty_t* mbrid = aclty_find(c_id, h_ctx);
+		ae2f_ifezerr(mbrid) return 0;
+		if(mbrid->m_field0 & ACLTY_FIELD0_NOPOD) {
+			err_puts("it is already not pod.");
+			return 0;
+		}
+	}
 
 	rdwr_struct->m_alignof = rdwr_struct->m_alignof < new_algn ? new_algn : rdwr_struct->m_alignof;
 
@@ -272,10 +296,10 @@ aclutil_cxtp* aclty_add_struct_mbr_un(
 	rdwr_struct->m_sizeof = aclconst_alignup1(rdwr_struct->m_sizeof, rdwr_struct->m_alignof, h_ctx);
 
 	{
-		typedef aclutil_cxtp* ae2f_restrict pcxtp_t;
+		typedef aclty_t* ae2f_restrict pcxtp_t;
 		pcxtp_t mbr, mbr_offset;
 
-		ae2f_ifezerr(mbr = aclutil_cxtp_struct_add_mbr(rdwr_struct, c_id, h_ctx))
+		ae2f_ifezerr(mbr = aclty_struct_add_mbr(rdwr_struct, c_id, h_ctx))
 			return 0;
 
 #define	rdwr_struct

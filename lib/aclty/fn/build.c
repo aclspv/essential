@@ -6,8 +6,8 @@
 
 /*** helper: are two function types equivalent? */
 static ae2f_ccpure aclspv_bool_t	s_is_fn_same(
-		const aclutil_cxtp* ae2f_restrict rd0,
-		const aclutil_cxtp* ae2f_restrict rd1,
+		const aclty_t* ae2f_restrict rd0,
+		const aclty_t* ae2f_restrict rd1,
 		h_aclspv_ctx_t h_ctx)
 {
 	if(rd0 == rd1) return 0;
@@ -33,14 +33,14 @@ static ae2f_ccpure aclspv_bool_t	s_is_fn_same(
 
 	{
 		aclspv_wrd_t	ia = rd0->m_info.m_fn.m_num_arg;
-		const aclutil_cxtp* a0 = &__get_type_uniques(h_ctx)[rd0->m_info.m_fn.m_arg];
-		const aclutil_cxtp* a1 = &__get_type_uniques(h_ctx)[rd1->m_info.m_fn.m_arg];
+		const aclty_t* a0 = &__get_type_uniques(h_ctx)[rd0->m_info.m_fn.m_arg];
+		const aclty_t* a1 = &__get_type_uniques(h_ctx)[rd1->m_info.m_fn.m_arg];
 
 		while(ia --> 0) {
 			if(!a0 || !a1) return 0;
 
-			if(a0->m_class != ACLUTIL_CXTYPE_FUNC_ARG
-			|| a1->m_class != ACLUTIL_CXTYPE_FUNC_ARG)
+			if(a0->m_class != ACLTY_FN_ARG
+			|| a1->m_class != ACLTY_FN_ARG)
 				return 0;
 
 			if(a0->m_info.m_fn_arg.m_prm_id
@@ -57,7 +57,7 @@ static ae2f_ccpure aclspv_bool_t	s_is_fn_same(
 	return 1;
 }
 
-static void s_free_fn(aclutil_cxtp* fini, h_aclspv_ctx_t h_ctx) {
+static void s_free_fn(aclty_t* fini, h_aclspv_ctx_t h_ctx) {
 	if(fini->m_info.m_fn.m_dcr) {
 		aclty_free_dcr(
 				&__get_type_uniques(h_ctx)[fini->m_info.m_fn.m_dcr]
@@ -65,11 +65,11 @@ static void s_free_fn(aclutil_cxtp* fini, h_aclspv_ctx_t h_ctx) {
 				);
 	}
 
-	fini->m_class = ACLUTIL_CXTYPE_RESERVED;
+	fini->m_class = ACLTY_RESERVED;
 }
 
 aclspv_id_t aclty_build_fn(
-		aclutil_cxtp* ae2f_restrict rdwr_fn,
+		aclty_t* ae2f_restrict rdwr_fn,
 		h_aclspv_ctx_t h_ctx)
 {
 	aclspv_wrd_t	idx, pad, num_arg;
@@ -77,7 +77,7 @@ aclspv_id_t aclty_build_fn(
 
 	ae2f_ifezerr(rdwr_fn) return 0;
 
-	if(rdwr_fn->m_class != ACLUTIL_CXTYPE_FUNC)
+	if(rdwr_fn->m_class != ACLTY_FN)
 		return 0;
 
 	ret_id	= rdwr_fn->m_info.m_fn.m_ret_id;
@@ -88,7 +88,7 @@ aclspv_id_t aclty_build_fn(
 		aclspv_wrd_t	i = h_ctx->m_num_type_uniques;
 
 		while(i --> 0) {
-			aclutil_cxtp* cxtp2 = &__get_type_uniques(h_ctx)[i];
+			aclty_t* cxtp2 = &__get_type_uniques(h_ctx)[i];
 
 			if(s_is_fn_same(rdwr_fn, cxtp2, h_ctx)) {
 				s_free_fn(rdwr_fn, h_ctx);
@@ -111,7 +111,7 @@ aclspv_id_t aclty_build_fn(
 		}
 
 		while(idx --> 0) {
-			aclutil_cxtp* arg = aclty_get_fn_arg(rdwr_fn, idx, h_ctx);
+			aclty_t* arg = aclty_get_fn_arg(rdwr_fn, idx, h_ctx);
 			ae2f_ifezerr(arg) return 0;
 
 			aclutil_get_wrd_of_vec(&h_ctx->m_section.m_types)[pad + idx + 3]

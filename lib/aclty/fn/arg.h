@@ -3,14 +3,14 @@
 
 #include "../common.h"
 
-aclutil_cxtp* aclty_get_fn_arg(
-		aclutil_cxtp* ae2f_restrict rdwr_fn,
+aclty_t* aclty_get_fn_arg(
+		aclty_t* ae2f_restrict rdwr_fn,
 		aclspv_wrd_t c_idx,
 		h_aclspv_ctx_t h_ctx);
 
-aclutil_cxtp* aclty_add_fn_arg(
+aclty_t* aclty_add_fn_arg(
 		aclspv_id_t	c_ret_id,
 		h_aclspv_ctx_t	h_ctx,
-		aclutil_cxtp* ae2f_restrict rdwr_fn
+		aclty_t* ae2f_restrict rdwr_fn
 		);
 #endif

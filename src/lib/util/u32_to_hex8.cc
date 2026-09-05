@@ -23,7 +23,7 @@
 	(a) == 0xD ? 'd' :			\
 	(a) == 0xE ? 'e' : 'f')
 
-ae2f_MAC() util_u32_to_hex8(const unsigned c_u32, char* ret) {
+ae2f_MAC() util_u32_to_hex8(const unsigned c_u32, char (ret)[8]) {
 	(ret)[7] = util_u32_to_hex_lookup(0xF & (c_u32) >> (0 << 2));
 	(ret)[6] = util_u32_to_hex_lookup(0xF & (c_u32) >> (1 << 2));
 	(ret)[5] = util_u32_to_hex_lookup(0xF & (c_u32) >> (2 << 2));

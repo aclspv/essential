@@ -67,7 +67,7 @@ static aclspv_id_t s_helper2(
 						);
 
 				{
-					const aclutil_cxtp* const ae2f_restrict r
+					const aclty_t* const ae2f_restrict r
 					= aclty_build_struct(
 							VST.m_struct
 							, h_ctx);
@@ -188,7 +188,7 @@ static enum CXChildVisitResult s_field_visit(CXCursor c, ae2f_unused CXCursor c_
 	field_visit_t* ae2f_restrict h_visit = h;
 	aclspv_id_t TYID;
 	CXType TY;
-	aclutil_cxtp* ae2f_restrict FIELD_PTR;
+	aclty_t* ae2f_restrict FIELD_PTR;
 
 	ae2f_ifnezerr_strict(clang_getCursorKind(c) != CXCursor_FieldDecl) {
 		return CXChildVisit_Break;

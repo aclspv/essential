@@ -6,24 +6,24 @@
 
 #include <ae2f/pat/dbg.h>
 
-aclutil_cxtp* aclty_cfg_fn_dcr(
-		aclutil_cxtp* ae2f_restrict rdwr_fn,
+aclty_t* aclty_cfg_fn_dcr(
+		aclty_t* ae2f_restrict rdwr_fn,
 		SpvDecoration c_decor,
 		h_aclspv_ctx_t h_ctx) {
-	aclutil_cxtp*	r = 0;
+	aclty_t*	r = 0;
 
 	ae2fpat_assertassumeunless(rdwr_fn) {
 		h_ctx->m_err = ACLSPV_COMPILE_CXTP_ZERO;
 		return 0;
 	}
 
-	ae2fpat_assertassumeunless(rdwr_fn->m_class == ACLUTIL_CXTYPE_FUNC) {
+	ae2fpat_assertassumeunless(rdwr_fn->m_class == ACLTY_FN) {
 		h_ctx->m_err = ACLSPV_COMPILE_CXTP_TYINVL_STRUCT_DCR;
 		return 0;
 	}
 
 	if(rdwr_fn->m_info.m_fn.m_dcr) {
-		aclutil_cxtp* g;
+		aclty_t* g;
 		if((g = aclty_get_dcr(
 						&__get_type_uniques(h_ctx)[rdwr_fn->m_info.m_fn.m_dcr]
 						, c_decor
@@ -33,10 +33,10 @@ aclutil_cxtp* aclty_cfg_fn_dcr(
 
 	{
 		struct __ret ID;
-		aclutil_cxtp TAR;
+		aclty_t TAR;
 		aclmemzero(&TAR, sizeof(TAR));
 
-		TAR.m_class	= ACLUTIL_CXTYPE_DCR;
+		TAR.m_class	= ACLTY_DCR;
 		TAR.m_info.m_dcr.m_op		= (aclspv_wrd_t)c_decor;
 		TAR.m_info.m_dcr.m_nxt		= 0;
 

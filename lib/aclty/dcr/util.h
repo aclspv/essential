@@ -3,7 +3,7 @@
 
 #include "../implutil.h"
 
-static aclutil_cxtp* s_get_insort_dir_dcr(aclutil_cxtp* ae2f_restrict rdwr_dcr, aclspv_wrd_t c_dcr, h_aclspv_ctx_t h_ctx) {
+static aclty_t* s_get_insort_dir_dcr(aclty_t* ae2f_restrict rdwr_dcr, aclspv_wrd_t c_dcr, h_aclspv_ctx_t h_ctx) {
 	do {
 		if(rdwr_dcr->m_info.m_dcr.m_op > (aclspv_wrd_t)c_dcr)
 			return rdwr_dcr;
@@ -16,7 +16,7 @@ static aclutil_cxtp* s_get_insort_dir_dcr(aclutil_cxtp* ae2f_restrict rdwr_dcr, 
 	return 0;
 }
 
-ae2f_ccpure static aclutil_cxtp* s_get_last_decor(aclutil_cxtp* ae2f_restrict rd_dcr, h_aclspv_ctx_t h_ctx) {
+ae2f_ccpure static aclty_t* s_get_last_decor(aclty_t* ae2f_restrict rd_dcr, h_aclspv_ctx_t h_ctx) {
 	while(rd_dcr->m_info.m_dcr.m_nxt)
 	{
 		rd_dcr = &__get_type_uniques(h_ctx)[(rd_dcr->m_info.m_dcr.m_nxt)];
@@ -25,17 +25,17 @@ ae2f_ccpure static aclutil_cxtp* s_get_last_decor(aclutil_cxtp* ae2f_restrict rd
 	return rd_dcr;
 }
 
-static aclutil_cxtp* s_dcr_insert_invoke(
+static aclty_t* s_dcr_insert_invoke(
 		aclspv_wrd_t c_dcr,
-		aclutil_cxtp* const ae2f_restrict rdwr_dcr_new,
-		aclutil_cxtp* ae2f_restrict rdwr_dcr_root,
+		aclty_t* const ae2f_restrict rdwr_dcr_new,
+		aclty_t* ae2f_restrict rdwr_dcr_root,
 		h_aclspv_ctx_t h_ctx
 		) {
-	aclutil_cxtp
+	aclty_t
 		* ae2f_restrict inc = s_get_insort_dir_dcr(rdwr_dcr_root, c_dcr, h_ctx); /***/
 
 	if(inc) {
-		aclutil_cxtp
+		aclty_t
 			* ae2f_restrict Prv = &__get_type_uniques(h_ctx)[inc->m_info.m_dcr.m_prv],
 			* ae2f_restrict Nxt = &__get_type_uniques(h_ctx)[inc->m_info.m_dcr.m_nxt]; /**/
 
@@ -45,7 +45,7 @@ static aclutil_cxtp* s_dcr_insert_invoke(
 		Prv->m_info.m_dcr.m_nxt = (aclspv_wrd_t)(rdwr_dcr_new - __get_type_uniques(h_ctx));
 		rdwr_dcr_new->m_info.m_dcr.m_prv = (aclspv_wrd_t)(rdwr_dcr_new - __get_type_uniques(h_ctx));
 	} else {
-		aclutil_cxtp* ae2f_restrict Lst = s_get_last_decor(rdwr_dcr_root, h_ctx);
+		aclty_t* ae2f_restrict Lst = s_get_last_decor(rdwr_dcr_root, h_ctx);
 
 		Lst->m_info.m_dcr.m_nxt = (aclspv_wrd_t)(rdwr_dcr_new - __get_type_uniques(h_ctx));
 		rdwr_dcr_new->m_info.m_dcr.m_prv = (aclspv_wrd_t)(Lst - __get_type_uniques(h_ctx));

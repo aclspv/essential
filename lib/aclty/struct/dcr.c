@@ -8,26 +8,26 @@
 
 /*** STRUCT DECORATION ***/
 
-aclutil_cxtp* aclty_cfg_struct_dcr1(aclspv_id_t c_id, SpvDecoration c_decor, h_aclspv_ctx_t h_ctx) {
-	aclutil_cxtp* ae2f_restrict cxtp = aclty_find(c_id, h_ctx);
+aclty_t* aclty_cfg_struct_dcr1(aclspv_id_t c_id, SpvDecoration c_decor, h_aclspv_ctx_t h_ctx) {
+	aclty_t* ae2f_restrict cxtp = aclty_find(c_id, h_ctx);
 	return ae2f_expected(cxtp) ? aclty_cfg_struct_dcr(cxtp, c_decor, h_ctx) : 0;
 }
 
-aclutil_cxtp* aclty_cfg_struct_dcr(aclutil_cxtp* ae2f_restrict rdwr_struct, SpvDecoration c_decor, h_aclspv_ctx_t h_ctx) {
-	aclutil_cxtp*	r = 0;
+aclty_t* aclty_cfg_struct_dcr(aclty_t* ae2f_restrict rdwr_struct, SpvDecoration c_decor, h_aclspv_ctx_t h_ctx) {
+	aclty_t*	r = 0;
 
 	ae2fpat_assertassumeunless(rdwr_struct) {
 		h_ctx->m_err = ACLSPV_COMPILE_CXTP_ZERO;
 		return 0;
 	}
 
-	ae2fpat_assertassumeunless(rdwr_struct->m_class == ACLUTIL_CXTYPE_STRUCT) {
+	ae2fpat_assertassumeunless(rdwr_struct->m_class == ACLTY_STRUCT) {
 		h_ctx->m_err = ACLSPV_COMPILE_CXTP_TYINVL_STRUCT_DCR;
 		return 0;
 	}
 
 	if(rdwr_struct->m_info.m_struct.m_dcr) {
-		aclutil_cxtp* g;
+		aclty_t* g;
 		if((g = aclty_get_dcr(
 						&__get_type_uniques(h_ctx)[rdwr_struct->m_info.m_struct.m_dcr]
 						, c_decor
@@ -37,12 +37,12 @@ aclutil_cxtp* aclty_cfg_struct_dcr(aclutil_cxtp* ae2f_restrict rdwr_struct, SpvD
 
 	{
 		struct __ret	ID;
-		aclutil_cxtp	TAR;
+		aclty_t	TAR;
 		ptrdiff_t	pad = rdwr_struct - __get_type_uniques(h_ctx);
 
 		aclmemzero(&TAR, sizeof(TAR));
 
-		TAR.m_class	= ACLUTIL_CXTYPE_DCR;
+		TAR.m_class	= ACLTY_DCR;
 		TAR.m_info.m_dcr.m_op		= (aclspv_wrd_t)c_decor;
 		TAR.m_info.m_dcr.m_nxt		= 0;
 

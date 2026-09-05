@@ -5,33 +5,40 @@
 #include <aclconst/specsize.h>
 #include <util/wrd.h>
 
-enum ACLUTIL_CXTYPE_ {
+enum ACLTY_ {
 	/** 
 	 * SHOULD BE ZERO. 
 	 * */
-	ACLUTIL_CXTYPE_RESERVED = 0,
-	ACLUTIL_CXTYPE_UNIT,
-	ACLUTIL_CXTYPE_FUNC,
-	ACLUTIL_CXTYPE_FUNC_ARG,
-	ACLUTIL_CXTYPE_FUNC_NOPRM,
-	ACLUTIL_CXTYPE_VECTOR,
-	ACLUTIL_CXTYPE_ARRAY,
-	ACLUTIL_CXTYPE_PTR,
-	ACLUTIL_CXTYPE_STRUCT,
-	ACLUTIL_CXTYPE_DCR,
-	ACLUTIL_CXTYPE_STRUCT_MBR
-};
+	ACLTY_RESERVED = 0,
+	ACLTY_FN,
+	ACLTY_FN_ARG,
 
-enum ACLSPV_CXTP_STRUCT_DECORATION_FIELD0 {
-	ACLSPV_CXTP_STRUCT_DECORATION_FIELD0_BLOCK = 1
+	/** vector */
+	ACLTY_SIMD,
+	ACLTY_ARR,
+	ACLTY_PTR,
+	ACLTY_STRUCT,
+	ACLTY_STRUCT_MBR,
+	ACLTY_DCR
 };
-
-/** @see enum ACLSPV_CXTP_STRUCT_DECORATION_FIELD0 */
-typedef aclspv_wrd_t B_aclspv_cxtp_struct_decoration_field0_t;
 
 enum {
 	MAX_ACLCXTP_DCR_OPRND	= 5
 };
+
+enum ACLTY_FIELD0_ {
+	/** 
+	 * it is not plain old data.
+	 * its size could not be known on compile*/
+	ACLTY_FIELD0_NOPOD	= 1
+};
+
+enum ACLTY_FIELD0_OFF_ {
+	ACLTY_FIELD0_OFF_NOPOD
+};
+
+/** see ACLTY_FIELD0_ */
+typedef aclspv_wrd_t	aclty_field0_t;
 
 typedef struct {
 	union {
@@ -92,7 +99,9 @@ typedef struct {
 	/** constant value */
 	aclspv_wrd_t		m_alignof;
 
-	enum ACLUTIL_CXTYPE_ 	m_class;
-} aclutil_cxtp;
+	aclty_field0_t		m_field0;
+
+	enum ACLTY_ 	m_class;
+} aclty_t;
 
 #endif

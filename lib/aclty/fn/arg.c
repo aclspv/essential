@@ -1,18 +1,18 @@
 #include "./arg.h"
 #include "../implutil.h"
 
-aclutil_cxtp* aclty_get_fn_arg(
-		aclutil_cxtp* ae2f_restrict rdwr_fn,
+aclty_t* aclty_get_fn_arg(
+		aclty_t* ae2f_restrict rdwr_fn,
 		aclspv_wrd_t c_idx,
 		h_aclspv_ctx_t h_ctx) {
-	aclutil_cxtp* ae2f_restrict R;
+	aclty_t* ae2f_restrict R;
 
 	ae2f_ifnezerr_strict(rdwr_fn->m_info.m_fn.m_num_arg <= c_idx)
 		return 0;
 
 	R = &__get_type_uniques(h_ctx)[rdwr_fn->m_info.m_fn.m_arg];
 
-	while(R->m_class == ACLUTIL_CXTYPE_FUNC_ARG)
+	while(R->m_class == ACLTY_FN_ARG)
 	{
 		if(R->m_info.m_fn_arg.m_idx == c_idx)
 			return R;
@@ -31,22 +31,22 @@ aclutil_cxtp* aclty_get_fn_arg(
 
 #include <aclty.h>
 
-aclutil_cxtp* aclty_add_fn_arg(
+aclty_t* aclty_add_fn_arg(
 		aclspv_id_t	c_type,
 		h_aclspv_ctx_t	h_ctx,
-		aclutil_cxtp* ae2f_restrict rdwr_fn
+		aclty_t* ae2f_restrict rdwr_fn
 		) {
-	typedef aclutil_cxtp* ae2f_restrict p_cxtp_t;
+	typedef aclty_t* ae2f_restrict p_cxtp_t;
 
-	aclutil_cxtp	cxtp;
+	aclty_t	cxtp;
 	p_cxtp_t	new_p;
 	struct __ret	node;
 
-	ae2f_ifnezerr_strict(rdwr_fn->m_class != ACLUTIL_CXTYPE_FUNC)
+	ae2f_ifnezerr_strict(rdwr_fn->m_class != ACLTY_FN)
 		return 0;
 
 	aclmemzero(&cxtp, sizeof(cxtp));
-	cxtp.m_class = ACLUTIL_CXTYPE_FUNC_ARG;
+	cxtp.m_class = ACLTY_FN_ARG;
 	cxtp.m_info.m_fn_arg.m_idx	= rdwr_fn->m_info.m_fn.m_num_arg;
 	cxtp.m_info.m_fn_arg.m_prm_id	= c_type;
 

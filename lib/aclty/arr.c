@@ -7,6 +7,7 @@
 #include <util/emitx.h>
 #include <util/iddef.h>
 #include <util/constant.h>
+#include <util/capability.h>
 
 #include <ae2f/pat/dbg.h>
 
@@ -18,7 +19,7 @@ aclspv_id_t aclty_mk_arr3(
 		aclspv_wrdcount_t	c_decorate_stride,
 		const h_aclspv_ctx_t	h_ctx
 		) {
-	typedef aclutil_cxtp* ae2f_restrict p_cxtp_t;
+	typedef aclty_t* ae2f_restrict p_cxtp_t;
 	p_cxtp_t arr = aclty_cfg_arr(c_type_elm, c_num_arr, h_ctx), r;
 	ae2f_ifezerr(arr) {
 		err_puts("aclutil_cfg_cxtp_arr has failed");
@@ -72,8 +73,8 @@ aclspv_id_t aclty_mk_arr2(
 #if	1
 
 static aclspv_bool_t s_is_same(
-		const aclutil_cxtp* ae2f_restrict	rd0,
-		const aclutil_cxtp* ae2f_restrict	rd1,
+		const aclty_t* ae2f_restrict	rd0,
+		const aclty_t* ae2f_restrict	rd1,
 		h_aclspv_ctx_t				h_ctx
 		) {
 	if(rd0 == rd1) return 0;
@@ -97,26 +98,26 @@ static aclspv_bool_t s_is_same(
 			);
 }
 
-static void s_free(aclutil_cxtp* ae2f_restrict fini, h_aclspv_ctx_t h_ctx) {
+static void s_free(aclty_t* ae2f_restrict fini, h_aclspv_ctx_t h_ctx) {
 	if(fini->m_info.m_arr.m_dcr) {
 		aclty_free_dcr(&__get_type_uniques(h_ctx)[fini->m_info.m_arr.m_dcr], h_ctx);
 	}
 
-	fini->m_class = ACLUTIL_CXTYPE_RESERVED;
+	fini->m_class = ACLTY_RESERVED;
 }
 
-aclutil_cxtp* aclty_build_arr(
-		aclutil_cxtp* ae2f_restrict	rdwr_arr,
+aclty_t* aclty_build_arr(
+		aclty_t* ae2f_restrict	rdwr_arr,
 		const h_aclspv_ctx_t		h_ctx
 		) {
 	aclspv_wrd_t	i = h_ctx->m_num_type_uniques;
 
 	ae2f_ifezerr(rdwr_arr) return 0;
-	ae2f_ifnezerr_strict(rdwr_arr->m_class != ACLUTIL_CXTYPE_ARRAY)
+	ae2f_ifnezerr_strict(rdwr_arr->m_class != ACLTY_ARR)
 		return 0;
 
 	while(i --> 0) {
-		aclutil_cxtp* cxtp2 = &__get_type_uniques(h_ctx)[i];
+		aclty_t* cxtp2 = &__get_type_uniques(h_ctx)[i];
 		if(s_is_same(rdwr_arr, cxtp2, h_ctx)) {
 			/** failed */
 			s_free(rdwr_arr, h_ctx);
@@ -147,6 +148,12 @@ aclutil_cxtp* aclty_build_arr(
 					, rdwr_arr->m_info.m_arr.m_num.m_id
 					)) return 0;
 	} else {
+#if	__ACLSPV_OpCapabilityShader
+		ae2f_ifezerr(aclutil_add_capability_by_flag(h_ctx, SpvCapabilityShader)) {
+			err_puts("SpvOpTypeRuntimeArray, SpvCapabilityShader");
+			return 0;
+		}
+
 		ae2f_ifezerr(h_ctx->m_count.m_types = aclutil_emitx_3(
 					&h_ctx->m_section.m_types
 					, h_ctx->m_count.m_types
@@ -154,6 +161,11 @@ aclutil_cxtp* aclty_build_arr(
 					, rdwr_arr->m_type_id
 					, rdwr_arr->m_info.m_arr.m_type
 					)) return 0;
+
+		rdwr_arr->m_field0 |= SpvOpTypeRuntimeArray;
+#else
+		return 0;
+#endif
 	}
 
 	ae2f_ifnezerr_strict(rdwr_arr->m_info.m_arr.m_dcr && aclty_build_dcr(
@@ -165,25 +177,25 @@ aclutil_cxtp* aclty_build_arr(
 	return rdwr_arr;
 }
 
-aclutil_cxtp* aclty_cfg_arr_dcr(
-		aclutil_cxtp* ae2f_restrict	rdwr_arr,
+aclty_t* aclty_cfg_arr_dcr(
+		aclty_t* ae2f_restrict	rdwr_arr,
 		const enum SpvDecoration_	c_dcr,
 		const h_aclspv_ctx_t		h_ctx
 		) {
-	aclutil_cxtp* ae2f_restrict r;
+	aclty_t* ae2f_restrict r;
 
 	ae2f_ifezerr(rdwr_arr) {
 		h_ctx->m_err = ACLSPV_COMPILE_CXTP_ZERO;
 		return 0;
 	}
 
-	ae2f_ifnezerr_strict(rdwr_arr->m_class != ACLUTIL_CXTYPE_ARRAY) {
+	ae2f_ifnezerr_strict(rdwr_arr->m_class != ACLTY_ARR) {
 		h_ctx->m_err = ACLSPV_COMPILE_CXTP_TYINVL_ARR_DCR;
 		return 0;
 	}
 
 	if(rdwr_arr->m_info.m_arr.m_dcr) {
-		aclutil_cxtp* g;
+		aclty_t* g;
 		if((g = aclty_get_dcr(
 						&__get_type_uniques(h_ctx)[rdwr_arr->m_info.m_arr.m_dcr]
 						, c_dcr
@@ -193,10 +205,10 @@ aclutil_cxtp* aclty_cfg_arr_dcr(
 
 	{
 		struct __ret ID;
-		aclutil_cxtp TAR;
+		aclty_t TAR;
 		aclmemzero(&TAR, sizeof(TAR));
 
-		TAR.m_class	= ACLUTIL_CXTYPE_DCR;
+		TAR.m_class	= ACLTY_DCR;
 		TAR.m_info.m_dcr.m_op		= (aclspv_wrd_t)c_dcr;
 		TAR.m_info.m_dcr.m_nxt		= 0;
 
@@ -222,12 +234,12 @@ aclutil_cxtp* aclty_cfg_arr_dcr(
 			);
 }
 
-aclutil_cxtp* aclty_cfg_arr(
+aclty_t* aclty_cfg_arr(
 		const aclspv_id_t	c_type_elm,
 		const aclconst_specsz	c_num_arr,
 		const h_aclspv_ctx_t	h_ctx
 		) {
-	aclutil_cxtp            tar;
+	aclty_t            tar;
 	aclconst_specsz		size_elm;
 	aclspv_id_t		size_ty = aclid_mk_default_id(
 			aclid_getty_uint(
@@ -254,7 +266,7 @@ aclutil_cxtp* aclty_cfg_arr(
 		return 0;
 	}
 
-	tar.m_class		= ACLUTIL_CXTYPE_ARRAY;
+	tar.m_class		= ACLTY_ARR;
 	tar.m_info.m_arr.m_type	= c_type_elm;
 	tar.m_alignof		= aclty_getalign(c_type_elm, h_ctx);
 

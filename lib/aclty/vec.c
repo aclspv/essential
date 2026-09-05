@@ -7,12 +7,65 @@
 #include <util/emitx.h>
 #include <ae2f/pat/dbg.h>
 
- struct aclutil_cxtp_veccfg_t	aclty_get_veccfg(
+#include <ae2f/cc/pause.h>
+
+/** 1 when same */
+ae2f_inline_f ae2f_ccpure static aclspv_bool_t s_ndeq(
+		const aclty_t* const ae2f_restrict A,
+		const aclty_t* const ae2f_restrict B
+		)
+{
+	if(B->m_class != ACLTY_SIMD) return 0;
+
+	if(B->m_info.m_vec.m_num != A->m_info.m_vec.m_num)
+		return 0;
+
+	if(B->m_info.m_vec.m_type != A->m_info.m_vec.m_type)
+		return 0;
+
+	return 1;
+}
+
+ae2f_inline_f ae2f_ccpure static aclspv_wrdcount_t s_find_node(
+		const aclty_t* const ae2f_restrict rd_tar,
+		const h_aclspv_ctx_t			h_ctx
+		) {
+	aclspv_wrdcount_t IDX = (h_ctx)->m_num_type_uniques;
+	ae2f_ifezerr(h_ctx->m_type_uniques.m_p)
+		return 0xFFFFFFFF;
+
+	ae2f_ifnezerr((h_ctx)->m_num_type_uniques > (aclspv_wrd_t)(h_ctx->m_type_uniques.m_sz / sizeof(aclty_t)))
+		return 0xFFFFFFFF;
+
+	while(IDX-- 
+			&& !s_ndeq(
+				rd_tar
+				, ((const aclty_t* ae2f_restrict)h_ctx->m_type_uniques.m_p) + IDX))
+	{ ae2fcc_pause(); }
+
+	return IDX;
+}
+
+ae2f_inline_f static struct __ret s_ret(const h_aclspv_ctx_t h_ctx, const aclty_t* ae2f_restrict rd_cxtp)
+{
+	aclspv_wrdcount_t	IDX = s_find_node(rd_cxtp, h_ctx);
+
+	ae2f_ifezerr_strict(IDX == 0xFFFFFFFF) {
+		struct	__ret		RET;
+		RET.m_id	= __get_type_uniques(h_ctx)[IDX].m_type_id;
+		RET.m_isfirst	= 0;
+		return RET;
+	}
+
+	return s_ret_new(h_ctx, rd_cxtp, 0, 1);
+}
+
+struct aclutil_cxtp_veccfg_t	aclty_get_veccfg(
 		const aclspv_id_t	c_ty_vec,
 		const h_aclspv_ctx_t	h_ctx
 		) {
 	aclspv_wrd_t			IDX		= h_ctx->m_num_type_uniques;
-	const aclutil_cxtp* const ae2f_restrict P	= h_ctx->m_type_uniques.m_p;
+	const aclty_t* const ae2f_restrict P	= h_ctx->m_type_uniques.m_p;
 
 	ae2fpat_assertassume(h_ctx);
 	ae2fpat_assertassume(P);
@@ -26,7 +79,7 @@
 	}
 
 	while(IDX--
-			&& ((P[IDX].m_class != ACLUTIL_CXTYPE_VECTOR) || P[IDX].m_type_id != c_ty_vec)) 
+			&& ((P[IDX].m_class != ACLTY_SIMD) || P[IDX].m_type_id != c_ty_vec)) 
 	{}
 
 	dbg_prefix(a);
@@ -56,12 +109,12 @@ aclspv_id_t aclutil_mk_cxtp_vec(
 		const h_aclspv_ctx_t    h_ctx
 		)
 {
-	aclutil_cxtp            TAR;
+	aclty_t            TAR;
 	ae2f_ifnezerr(h_ctx->m_err) return 0;
 
 	memset(&TAR, 0, sizeof(TAR));
 
-	TAR.m_class = ACLUTIL_CXTYPE_VECTOR;
+	TAR.m_class = ACLTY_SIMD;
 	TAR.m_info.m_vec.m_num = c_num_arr;
 	TAR.m_info.m_vec.m_type = c_type_elm;
 	TAR.m_alignof		= aclconst_align_from_size2(

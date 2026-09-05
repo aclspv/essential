@@ -2,13 +2,15 @@
 #include "./implutil.h"
 
 #include <aclmem.h>
+#include <util/capability.h>
+#include <.aclspv/util/u32_to_hex8.h>
 
 /*** STRUCT CONFIGURATION ***/
 aclspv_id_t aclty_cfg_struct(h_aclspv_ctx_t h_ctx) {
-	aclutil_cxtp TAR;
+	aclty_t TAR;
 	aclmemzero(&TAR, sizeof(TAR));
 
-	TAR.m_class	= ACLUTIL_CXTYPE_STRUCT;
+	TAR.m_class	= ACLTY_STRUCT;
 
 	{
 		const struct __ret ID = s_ret_new(h_ctx, &TAR, h_ctx->m_id++, 1);
@@ -21,8 +23,8 @@ aclspv_id_t aclty_cfg_struct(h_aclspv_ctx_t h_ctx) {
 
 /** [WIP] */
 static ae2f_ccpure aclspv_bool_t	s_is_struct_mbr_same(
-		const aclutil_cxtp* ae2f_restrict rd0, 
-		const aclutil_cxtp* ae2f_restrict rd1,
+		const aclty_t* ae2f_restrict rd0, 
+		const aclty_t* ae2f_restrict rd1,
 		h_aclspv_ctx_t h_ctx
 		) {
 	if(rd0->m_info.m_struct_mbr.m_id_mbr != rd1->m_info.m_struct_mbr.m_id_mbr)
@@ -60,8 +62,8 @@ static ae2f_ccpure aclspv_bool_t	s_is_struct_mbr_same(
 }
 
 static ae2f_ccpure aclspv_bool_t	s_is_struct_same(
-		const aclutil_cxtp* ae2f_restrict rd0, 
-		const aclutil_cxtp* ae2f_restrict rd1,
+		const aclty_t* ae2f_restrict rd0, 
+		const aclty_t* ae2f_restrict rd1,
 		h_aclspv_ctx_t h_ctx) {
 	if(rd0 == rd1) return 0;
 	if(rd0->m_class != rd1->m_class) return 0;
@@ -95,8 +97,8 @@ static ae2f_ccpure aclspv_bool_t	s_is_struct_same(
 
 #include "./struct/mbr.h"
 
-static void s_free_struct(aclutil_cxtp* fini, h_aclspv_ctx_t h_ctx) {
-	fini->m_class = ACLUTIL_CXTYPE_RESERVED;
+static void s_free_struct(aclty_t* fini, h_aclspv_ctx_t h_ctx) {
+	fini->m_class = ACLTY_RESERVED;
 
 	if(fini->m_info.m_struct.m_dcr)
 		aclty_free_dcr(
@@ -113,17 +115,17 @@ static void s_free_struct(aclutil_cxtp* fini, h_aclspv_ctx_t h_ctx) {
 
 #include <util/wrdemit.h>
 
-aclutil_cxtp* aclty_build_struct(aclspv_id_t c_id, h_aclspv_ctx_t h_ctx) {
-	aclutil_cxtp* cxtp = aclty_find(c_id, h_ctx);
+aclty_t* aclty_build_struct(aclspv_id_t c_id, h_aclspv_ctx_t h_ctx) {
+	aclty_t* cxtp = aclty_find(c_id, h_ctx);
 	aclspv_wrd_t	i = h_ctx->m_num_type_uniques;
 
 	ae2f_ifezerr(cxtp) return 0;
 
-	if(cxtp->m_class != ACLUTIL_CXTYPE_STRUCT)
+	if(cxtp->m_class != ACLTY_STRUCT)
 		return 0;
 
 	while(i --> 0) {
-		aclutil_cxtp* cxtp2 = &__get_type_uniques(h_ctx)[i];
+		aclty_t* cxtp2 = &__get_type_uniques(h_ctx)[i];
 		if(s_is_struct_same(cxtp, cxtp2, h_ctx)) {
 			s_free_struct(cxtp, h_ctx);
 			return cxtp2;
@@ -131,7 +133,13 @@ aclutil_cxtp* aclty_build_struct(aclspv_id_t c_id, h_aclspv_ctx_t h_ctx) {
 	}
 
 	/*** make an actual type, */
-	{
+
+	ae2f_ifnezerr_strict(aclty_build_dcr(
+			&__get_type_uniques(h_ctx)[cxtp->m_info.m_struct.m_dcr]
+			, cxtp->m_type_id
+			, h_ctx)) return 0;
+
+	if(cxtp->m_info.m_struct.m_num_mbr) { 
 		aclspv_wrd_t	idx = cxtp->m_info.m_struct.m_num_mbr,
 				pad = h_ctx->m_count.m_types;
 
@@ -144,28 +152,57 @@ aclutil_cxtp* aclty_build_struct(aclspv_id_t c_id, h_aclspv_ctx_t h_ctx) {
 		}
 
 		while(idx-->0) {
-			aclutil_cxtp* mbr = aclty_get_struct_mbr(cxtp, idx, h_ctx);
+			aclty_t* mbr = aclty_get_struct_mbr(cxtp, idx, h_ctx);
 			ae2f_ifezerr(mbr) return 0;
 
 			aclutil_get_wrd_of_vec(&h_ctx->m_section.m_types)[pad + idx + 2]
 				= mbr->m_info.m_struct_mbr.m_id_mbr;
-
-
 		}
 
 		aclutil_get_wrd_of_vec(&h_ctx->m_section.m_types)[pad + 0] = aclspv_opcode_to_wrd(SpvOpTypeStruct, cxtp->m_info.m_struct.m_num_mbr + 1);
 		aclutil_get_wrd_of_vec(&h_ctx->m_section.m_types)[pad + 1] = cxtp->m_type_id;
+	} else {
+
+#if	__ACLSPV_OpCapabilityKernel
+		/** opaquexxxxxxxx_t <- 4 words */
+		ae2f_ifneznrm_strict(aclutil_add_capability_by_flag(h_ctx, SpvCapabilityKernel)) {
+			typedef aclspv_wrd_t wrd_t;
+			char hex[8];
+			_util_u32_to_hex8(cxtp->m_type_id, hex);
+
+#define	s_str4_word(a, b, c, d)	(((wrd_t)(a)) | ((wrd_t)(b) << (wrd_t)8) | ((wrd_t)(c) << (wrd_t)16) | ((wrd_t)(d) << (wrd_t)24))
+
+			ae2f_ifezerr(h_ctx->m_count.m_types = aclutil_emitx_6(
+						&h_ctx->m_section.m_types
+						, h_ctx->m_count.m_types
+						, SpvOpTypeOpaque
+						, cxtp->m_type_id
+						, s_str4_word('o', 'p', 'a', 'q')
+						, s_str4_word('u', 'e', hex[0], hex[1])
+						, s_str4_word(hex[2], hex[3], hex[4], hex[5])
+						, s_str4_word(hex[6], hex[7], '_', 't')
+						)) return 0;
+
+#undef	s_str4_word
+
+			cxtp->m_field0 |= ACLTY_FIELD0_NOPOD;
+
+		} else {
+			err_puts("opaque type without OpCapabilityKernel");
+			return 0;
+		}
+#else
+		err_puts("__ACLSPV_OpCapabilityKernel");
+		return 0;
+#endif
+
+		/** nope */
 	}
 
-	ae2f_ifnezerr_strict(aclty_build_dcr(
-			&__get_type_uniques(h_ctx)[cxtp->m_info.m_struct.m_dcr]
-			, cxtp->m_type_id
-			, h_ctx)) return 0;
-
 	{
-		const aclutil_cxtp* ae2f_restrict mbr = &__get_type_uniques(h_ctx)[cxtp->m_info.m_struct.m_mbr];
+		const aclty_t* ae2f_restrict mbr = &__get_type_uniques(h_ctx)[cxtp->m_info.m_struct.m_mbr];
 
-		while(mbr->m_class == ACLUTIL_CXTYPE_STRUCT_MBR) {
+		while(mbr->m_class == ACLTY_STRUCT_MBR) {
 			ae2f_ifnezerr_strict(aclty_build_dcr_mdcr(
 						&__get_type_uniques(h_ctx)[mbr->m_info.m_struct_mbr.m_dcr]
 						, cxtp->m_type_id
@@ -183,7 +220,7 @@ aclutil_cxtp* aclty_build_struct(aclspv_id_t c_id, h_aclspv_ctx_t h_ctx) {
 #include "./struct/mbr.h"
 
 aclspv_id_t aclty_cfg_struct2(h_aclspv_ctx_t h_ctx, aclspv_id_t c) {
-	typedef aclutil_cxtp* ae2f_restrict p_cxtp_t;
+	typedef aclty_t* ae2f_restrict p_cxtp_t;
 
 	const aclspv_id_t	NEWID = aclty_cfg_struct(h_ctx);
 	p_cxtp_t ORIG = aclty_find(c, h_ctx), NEW;
@@ -191,13 +228,13 @@ aclspv_id_t aclty_cfg_struct2(h_aclspv_ctx_t h_ctx, aclspv_id_t c) {
 	ae2f_ifezerr(ORIG)	return 0;
 	ae2f_ifezerr(NEWID)	return 0;
 	ae2f_ifezerr(c)		return NEWID;
-	ae2f_ifnezerr_strict(ORIG->m_class != ACLUTIL_CXTYPE_STRUCT)
+	ae2f_ifnezerr_strict(ORIG->m_class != ACLTY_STRUCT)
 		return 0;
 
 	NEW = aclty_find(NEWID, h_ctx);
 
 	ae2f_assume_strict(NEW);
-	ae2f_assume_strict(NEW->m_class == ACLUTIL_CXTYPE_STRUCT);
+	ae2f_assume_strict(NEW->m_class == ACLTY_STRUCT);
 
 	/** decorator */
 	if(ORIG->m_info.m_struct.m_dcr) {
@@ -237,7 +274,7 @@ aclspv_id_t aclty_cfg_struct2(h_aclspv_ctx_t h_ctx, aclspv_id_t c) {
 
 			MBR = &__get_type_uniques(h_ctx)[IDX_MBR];
 
-			ae2f_ifezerr(MBR_DST = aclutil_cxtp_struct_add_mbr(
+			ae2f_ifezerr(MBR_DST = aclty_struct_add_mbr(
 						NEW
 						, MBR->m_info.m_struct_mbr.m_id_mbr
 						, h_ctx)) return 0;

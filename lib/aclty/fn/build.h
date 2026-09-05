@@ -4,7 +4,7 @@
 #include "../common.h"
 
 aclspv_id_t	aclty_build_fn(
-		aclutil_cxtp* ae2f_restrict rdwr_fn,
+		aclty_t* ae2f_restrict rdwr_fn,
 		h_aclspv_ctx_t h_ctx);
 
 #endif

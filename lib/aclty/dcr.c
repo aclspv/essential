@@ -3,7 +3,7 @@
 
 #include <ae2f/pat/dbg.h>
 
-ae2f_ccpure aclutil_cxtp* aclty_get_dcr(aclutil_cxtp* ae2f_restrict rd_dcr, aclspv_wrd_t c_decor, h_aclspv_ctx_t h_ctx) {
+ae2f_ccpure aclty_t* aclty_get_dcr(aclty_t* ae2f_restrict rd_dcr, aclspv_wrd_t c_decor, h_aclspv_ctx_t h_ctx) {
 	ae2fpat_assertassumeunless(rd_dcr) {
 		h_ctx->m_err = ACLSPV_COMPILE_CXTP_ZERO;
 		return 0;
@@ -22,8 +22,8 @@ ae2f_ccpure aclutil_cxtp* aclty_get_dcr(aclutil_cxtp* ae2f_restrict rd_dcr, acls
 }
 
 ae2f_ccpure static aclspv_bool_t s_same_dcr_help(
-		aclutil_cxtp* ae2f_restrict	rd0,
-		aclutil_cxtp* ae2f_restrict	rd1,
+		aclty_t* ae2f_restrict	rd0,
+		aclty_t* ae2f_restrict	rd1,
 		h_aclspv_ctx_t			h_ctx
 		) {
 	aclspv_wrd_t	i = MAX_ACLCXTP_DCR_OPRND;
@@ -52,16 +52,16 @@ ae2f_ccpure static aclspv_bool_t s_same_dcr_help(
 }
 
 ae2f_ccpure aclspv_bool_t aclty_is_dcr_same(
-		aclutil_cxtp* ae2f_restrict rd0,
-		aclutil_cxtp* ae2f_restrict rd1,
+		aclty_t* ae2f_restrict rd0,
+		aclty_t* ae2f_restrict rd1,
 		h_aclspv_ctx_t		h_ctx
 		) {
 	return s_same_dcr_help(rd0, rd1, h_ctx);
 }
 
-void aclty_free_dcr(aclutil_cxtp* ae2f_restrict fini, h_aclspv_ctx_t h_ctx) {
-	while(fini->m_class == ACLUTIL_CXTYPE_DCR) {
-		fini->m_class = ACLUTIL_CXTYPE_RESERVED;
+void aclty_free_dcr(aclty_t* ae2f_restrict fini, h_aclspv_ctx_t h_ctx) {
+	while(fini->m_class == ACLTY_DCR) {
+		fini->m_class = ACLTY_RESERVED;
 
 		if(fini->m_info.m_dcr.m_nxt)
 			fini = &__get_type_uniques(h_ctx)[fini->m_info.m_dcr.m_nxt];
@@ -72,8 +72,8 @@ void aclty_free_dcr(aclutil_cxtp* ae2f_restrict fini, h_aclspv_ctx_t h_ctx) {
 
 #include <util/wrdemit.h>
 
-aclspv_bool_t aclty_build_dcr(const aclutil_cxtp* ae2f_restrict rd, aclspv_id_t c_id, h_aclspv_ctx_t h_ctx) {
-	while(rd->m_class == ACLUTIL_CXTYPE_DCR) {
+aclspv_bool_t aclty_build_dcr(const aclty_t* ae2f_restrict rd, aclspv_id_t c_id, h_aclspv_ctx_t h_ctx) {
+	while(rd->m_class == ACLTY_DCR) {
 		aclspv_wrd_t	idx = rd->m_info.m_dcr.m_num_oprnd,
 				pad = h_ctx->m_count.m_decorate;
 
@@ -100,8 +100,8 @@ aclspv_bool_t aclty_build_dcr(const aclutil_cxtp* ae2f_restrict rd, aclspv_id_t 
 
 	return 0;
 }
-aclspv_bool_t aclty_build_dcr_mdcr(const aclutil_cxtp* ae2f_restrict rd, aclspv_id_t c_id, aclspv_wrd_t c_idx, h_aclspv_ctx_t h_ctx) {
-	while(rd->m_class == ACLUTIL_CXTYPE_DCR) {
+aclspv_bool_t aclty_build_dcr_mdcr(const aclty_t* ae2f_restrict rd, aclspv_id_t c_id, aclspv_wrd_t c_idx, h_aclspv_ctx_t h_ctx) {
+	while(rd->m_class == ACLTY_DCR) {
 		aclspv_wrd_t	idx = rd->m_info.m_dcr.m_num_oprnd,
 				pad = h_ctx->m_count.m_decorate;
 

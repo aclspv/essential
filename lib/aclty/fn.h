@@ -18,7 +18,7 @@ aclspv_id_t aclty_mk_fn1(
 		);
 
 
-aclutil_cxtp* aclty_cfg_fn(
+aclty_t* aclty_cfg_fn(
 		aclspv_id_t	c_ret_id,
 		h_aclspv_ctx_t	h_ctx
 		);

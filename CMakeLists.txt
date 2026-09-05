@@ -155,3 +155,8 @@ else()
 endif()
 
 ae2f_UltraErrWERROR(ae3f-aclspv PRIVATE)
+
+include(./cmake/predef.cmake)
+
+aclspv_predef_switch(ae3f-aclspv ACLSPV_OpCapabilityKernel 1)
+aclspv_predef_switch(ae3f-aclspv ACLSPV_OpCapabilityShader 1)

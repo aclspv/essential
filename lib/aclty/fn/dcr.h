@@ -3,6 +3,6 @@
 
 #include "../common.h"
 
-aclutil_cxtp* aclty_cfg_fn_dcr(aclutil_cxtp* ae2f_restrict rdwr_fn, SpvDecoration c_decor, h_aclspv_ctx_t h_ctx);
+aclty_t* aclty_cfg_fn_dcr(aclty_t* ae2f_restrict rdwr_fn, SpvDecoration c_decor, h_aclspv_ctx_t h_ctx);
 
 #endif

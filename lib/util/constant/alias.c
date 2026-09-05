@@ -82,7 +82,7 @@ aclspv_id_t	aclutil_mk_constant_struct_id(const aclspv_wrd_t c_arrcount, h_aclsp
 	const aclspv_id_t ID_ARR32 = aclutil_mk_constant_arr32_id(c_arrcount, h_ctx);
 	const aclspv_id_t R = ID_ARR32 ? aclty_mk_struct_single(
 			ID_ARR32
-			, ACLSPV_CXTP_STRUCT_DECORATION_FIELD0_BLOCK
+			, ACLTY_STRUCT_FIELD0_BLOCK
 			, 0, h_ctx) : 0;
 
 	assert(ID_ARR32);
@@ -95,7 +95,7 @@ aclspv_id_t	aclutil_mk_constant_struct128_id(const aclspv_wrd_t c_arrcount, h_ac
 	const aclspv_id_t ID_ARR128 = aclutil_mk_constant_arr128_id(c_arrcount, h_ctx);
 	return ID_ARR128 ? aclty_mk_struct_single(
 			ID_ARR128
-			, ACLSPV_CXTP_STRUCT_DECORATION_FIELD0_BLOCK
+			, ACLTY_STRUCT_FIELD0_BLOCK
 			, 0, h_ctx) : 0;
 }
 

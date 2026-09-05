@@ -1,0 +1,7 @@
+macro(aclspv_predef_switch tar switch defualt)
+	if(DEFINED ${switch})
+		target_compile_definitions(${tar} PRIVATE __${switch} ${switch}})
+	else()
+		target_compile_definitions(${tar} PRIVATE __${switch} ${default})
+	endif()
+endmacro()

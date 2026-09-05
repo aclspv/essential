@@ -29,7 +29,7 @@ ae2f_inline_f static e_aclspv_compile_t aclspv_ctx_conf(
 	ae2fpat_assertassume(h_ctx);
 
 	/*** Shader Capability **/
-	ae2f_expected_but_else(aclutil_add_capability_by_flag(h_ctx, SpvCapabilityShader))
+	ae2f_ifezerr(aclutil_add_capability_by_flag(h_ctx, SpvCapabilityShader))
 		return ACLSPV_COMPILE_ALLOC_FAILED_CFG;
 
 	unless(h_ctx->m_usrcfg.m_flag0 & ACLSPV_CTX_FLAG0_LOGICAL) {
@@ -42,9 +42,9 @@ ae2f_inline_f static e_aclspv_compile_t aclspv_ctx_conf(
 			return ACLSPV_COMPILE_ALLOC_FAILED_CFG;
 
 		POS = wrd_ext_count;
-		unless(wrd_ext_count = emit_opcode(&wrd_ext, wrd_ext_count, SpvOpExtension, 0))
+		ae2f_ifezerr(wrd_ext_count = emit_opcode(&wrd_ext, wrd_ext_count, SpvOpExtension, 0))
 			return ACLSPV_COMPILE_ALLOC_FAILED_CFG;
-		unless(wrd_ext_count = aclutil_emit_str(&wrd_ext, wrd_ext_count
+		ae2f_ifezerr(wrd_ext_count = aclutil_emit_str(&wrd_ext, wrd_ext_count
 					, "SPV_KHR_vulkan_memory_model"))
 			return ACLSPV_COMPILE_ALLOC_FAILED_CFG;
 		set_oprnd_count_for_opcode(aclutil_get_wrd_of_vec(&wrd_ext)[POS], (aclspv_wrd_t)(wrd_ext_count - POS - 1));
@@ -56,7 +56,7 @@ ae2f_inline_f static e_aclspv_compile_t aclspv_ctx_conf(
 
 
 	/*** Memory Model **/
-	ae2f_expected_but_else(h_ctx->m_count.m_memmodel = aclutil_emitx_3(
+	ae2f_ifezerr(h_ctx->m_count.m_memmodel = aclutil_emitx_3(
 				&h_ctx->m_section.m_memmodel
 				, 0
 				, SpvOpMemoryModel

@@ -17,7 +17,7 @@ aclspv_id_t aclty_mk_fn(
 		const h_aclspv_ctx_t	h_ctx
 		)
 {
-	aclutil_cxtp* cxtp = aclty_cfg_fn(c_ret_id, h_ctx);
+	aclty_t* cxtp = aclty_cfg_fn(c_ret_id, h_ctx);
 	ae2f_ifezerr(cxtp)	return 0;
 	return aclty_build_fn(cxtp, h_ctx);
 }
@@ -31,7 +31,7 @@ aclspv_id_t aclty_mk_fn1(
 	int ARGC			= clang_getNumArgTypes(c_type_compound);
 	aclspv_wrd_t	ARGC_IDX	= (aclspv_wrd_t)ARGC;
 	aclspv_id_t	RETID;
-	aclutil_cxtp* fn;
+	aclty_t* fn;
 	aclspv_wrd_t	pad;
 
 	{
