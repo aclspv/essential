@@ -43,9 +43,9 @@ ae2f_MAC((L, )) aclconst_specsize_op3_sel(
 		aclspv_id_t	L$$T = (c_t).m_id, L$$F = (c_f).m_id, L$$v0, L$$C_bool;
 		aclspv_wrd_t	L$$arr[7];
 
-		L$$v0	= aclutil_mk_constant_val_by_enum(0, h_ctx, L$$size_ty);
-		unless(L$$T) L$$T = aclutil_mk_constant_val_by_enum((c_t).m_lit.m_wrd2, h_ctx, L$$size_ty);
-		unless(L$$F) L$$F = aclutil_mk_constant_val_by_enum((c_f).m_lit.m_wrd2, h_ctx, L$$size_ty);
+		L$$v0	= aclutil_mk_constant_val_by_enum(0, h_ctx, (enum ACLSPV_ID_)L$$size_ty);
+		unless(L$$T) L$$T = aclutil_mk_constant_val_by_enum((c_t).m_lit.m_wrd2, h_ctx, (enum ACLSPV_ID_)L$$size_ty);
+		unless(L$$F) L$$F = aclutil_mk_constant_val_by_enum((c_f).m_lit.m_wrd2, h_ctx, (enum ACLSPV_ID_)L$$size_ty);
 
 		L$$arr[0] = aclspv_opcode_to_wrd(SpvOpSpecConstantOp, 5);
 		L$$arr[1] = ACLSPV_ID_BOOL;
@@ -104,17 +104,17 @@ ae2f_MAC((L, )) aclconst_specsize_op2_bool(
 			unless((c_x).m_id) (L$$X).m_id = aclutil_mk_constant_val_by_enum(
 					(L$$X).m_lit.m_wrd2
 					, (h_ctx)
-					, L$$size_ty
+					, (enum ACLSPV_ID_)L$$size_ty
 					);
 
 			unless((c_y).m_id) (L$$Y).m_id = aclutil_mk_constant_val_by_enum(
 					(L$$Y).m_lit.m_wrd2
 					, (h_ctx)
-					, L$$size_ty
+					, (enum ACLSPV_ID_)L$$size_ty
 					);
 
-			L$$v0 = aclutil_mk_constant_val_by_enum(0, h_ctx, L$$size_ty);
-			L$$v1 = aclutil_mk_constant_val_by_enum(1, h_ctx, L$$size_ty);
+			L$$v0 = aclutil_mk_constant_val_by_enum(0, h_ctx, (enum ACLSPV_ID_)L$$size_ty);
+			L$$v1 = aclutil_mk_constant_val_by_enum(1, h_ctx, (enum ACLSPV_ID_)L$$size_ty);
 
 			ae2f_ifezerr(aclid_mk_default_id(ACLSPV_ID_BOOL, h_ctx))
 				break;
@@ -186,13 +186,13 @@ ae2f_MAC((L, )) aclconst_specsize_op2(
 			unless((c_x).m_id) (L$$X).m_id = aclutil_mk_constant_val_by_enum(
 					(L$$X).m_lit.m_wrd2
 					, (h_ctx)
-					, L$$size_ty
+					, (enum ACLSPV_ID_)L$$size_ty
 					);
 
 			unless((c_y).m_id) (L$$Y).m_id = aclutil_mk_constant_val_by_enum(
 					(L$$Y).m_lit.m_wrd2
 					, (h_ctx)
-					, L$$size_ty
+					, (enum ACLSPV_ID_)L$$size_ty
 					);
 
 			ae2f_ifezerr((L$$X).m_id && L$$Y.m_id)
@@ -246,7 +246,7 @@ ae2f_MAC((L, )) aclconst_specsize_op1(
 			unless((c).m_id) (L$$X).m_id = aclutil_mk_constant_val_by_enum(
 					(L$$X).m_lit.m_max
 					, (h_ctx)
-					, L$$size_ty
+					, (enum ACLSPV_ID_)L$$size_ty
 					);
 
 			ae2f_ifezerr((L$$X).m_id)

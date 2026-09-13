@@ -1,4 +1,5 @@
 #ifndef	aclutil_cxtp_struct_h
+#define aclutil_cxtp_struct_h
 
 #include "./common.h"
 

@@ -30,7 +30,7 @@ aclty_t* aclty_cfg_struct_dcr(aclty_t* ae2f_restrict rdwr_struct, SpvDecoration 
 		aclty_t* g;
 		if((g = aclty_get_dcr(
 						&__get_type_uniques(h_ctx)[rdwr_struct->m_info.m_struct.m_dcr]
-						, c_decor
+						, (aclspv_wrd_t)c_decor
 						, h_ctx)))
 			return g;
 	}

@@ -198,7 +198,7 @@ aclty_t* aclty_cfg_arr_dcr(
 		aclty_t* g;
 		if((g = aclty_get_dcr(
 						&__get_type_uniques(h_ctx)[rdwr_arr->m_info.m_arr.m_dcr]
-						, c_dcr
+						, (aclspv_wrd_t)c_dcr
 						, h_ctx)))
 			return g;
 	}
@@ -261,7 +261,7 @@ aclty_t* aclty_cfg_arr(
 		ae2f_ifezerr(tar.m_info.m_arr.m_num.m_id = aclutil_mk_constant_val_by_enum(
 					c_num_arr.m_lit.m_max
 					, h_ctx
-					, (aclspv_id_t)size_ty)) return 0;
+					, (enum ACLSPV_ID_)size_ty)) return 0;
 	} else {
 		return 0;
 	}

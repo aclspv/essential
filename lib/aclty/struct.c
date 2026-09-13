@@ -245,7 +245,7 @@ aclspv_id_t aclty_cfg_struct2(h_aclspv_ctx_t h_ctx, aclspv_id_t c) {
 			p_cxtp_t
 				DCR_DST = aclty_cfg_struct_dcr1(
 					NEWID
-					, DCR->m_info.m_dcr.m_op
+					, (enum SpvDecoration_)DCR->m_info.m_dcr.m_op
 					, h_ctx
 					);
 
@@ -293,7 +293,7 @@ aclspv_id_t aclty_cfg_struct2(h_aclspv_ctx_t h_ctx, aclspv_id_t c) {
 					p_cxtp_t
 						DCR_DST = aclty_cfg_struct_mdcr1(
 								MBRID
-								, DCR->m_info.m_dcr.m_op
+								, (enum SpvDecoration_)DCR->m_info.m_dcr.m_op
 								, h_ctx
 								);
 

@@ -26,7 +26,7 @@ aclty_t* aclty_cfg_fn_dcr(
 		aclty_t* g;
 		if((g = aclty_get_dcr(
 						&__get_type_uniques(h_ctx)[rdwr_fn->m_info.m_fn.m_dcr]
-						, c_decor
+						, (aclspv_wrd_t)c_decor
 						, h_ctx)))
 			return g;
 	}
