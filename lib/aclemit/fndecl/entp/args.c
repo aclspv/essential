@@ -255,8 +255,8 @@ enum CXChildVisitResult aclemit_fndecl_entp_arg(
 	aclspv_wrd_t	bind_idx = 0xFFFFFFFF;
 
 	/** push constant: to access the right argument */
-	aclspv_wrd_t	pc_idx_func;
-	aclspv_wrd_t	pc_idx_arg;
+	aclspv_wrd_t	pc_idx_func = 0;
+	aclspv_wrd_t	pc_idx_arg = 0;
 
 	ae2f_ifezerr(CTX)		return CXChildVisit_Break;
 	ae2f_ifnezerr(CTX->m_err) 	return CXChildVisit_Break;
@@ -325,6 +325,16 @@ enum CXChildVisitResult aclemit_fndecl_entp_arg(
 					/** T[] -> struct { T[] } */
 					case ACLTY_ARR:
 						var_elm_type_id = var_type_id;
+						ae2f_ifezerr(var_elm_type_id = aclty_mk_struct_single_blk(
+									var_elm_type_id
+									, ACLTY_STRUCT_FIELD0_BLOCK
+									, 0
+									, CTX
+									)) {
+							_aclctx_err(DAT->m_ctx, ACLSPV_COMPILE_UNHANDLED_ARGS);
+							return CXChildVisit_Break;
+						}
+
 						break;
 
 						/** 
@@ -345,8 +355,23 @@ enum CXChildVisitResult aclemit_fndecl_entp_arg(
 								aclconst_specsz a;
 								a.m_id = 0;
 								a.m_lit.m_max = 0;
-								var_elm_type_id = aclty_mk_arr3(p_elm->m_type_id, a, 4, CTX);
-								ae2f_ifezerr(var_elm_type_id) {
+
+								ae2f_ifezerr(var_elm_type_id = aclty_mk_arr3(
+											p_elm->m_type_id
+											, a
+											, 4
+											, CTX
+											)) {
+									_aclctx_err(DAT->m_ctx, ACLSPV_COMPILE_UNHANDLED_ARGS);
+									return CXChildVisit_Break;
+								}
+
+								ae2f_ifezerr(var_elm_type_id = aclty_mk_struct_single_blk(
+											var_elm_type_id
+											, ACLTY_STRUCT_FIELD0_BLOCK
+											, 0
+											, CTX
+											)) {
 									_aclctx_err(DAT->m_ctx, ACLSPV_COMPILE_UNHANDLED_ARGS);
 									return CXChildVisit_Break;
 								}
@@ -388,6 +413,48 @@ enum CXChildVisitResult aclemit_fndecl_entp_arg(
 			}
 
 			var_elm_type_id = var_type_id;
+			break;
+
+		case SpvStorageClassInput:
+		case SpvStorageClassOutput:
+			ae2f_ifezerr(var_type_id = aclty_mk_by_cursor_dummy(
+						h_cur
+						, PARAM_TY
+						, CTX
+						)) {
+				_aclctx_err(DAT->m_ctx, ACLSPV_COMPILE_UNHANDLED_ARGS);
+				return CXChildVisit_Break;
+			}
+
+			{
+				aclty_t* ae2f_restrict p_ty = aclty_find(var_type_id, CTX);
+				ae2f_ifezerr(p_ty) {
+					_aclctx_err(DAT->m_ctx, ACLSPV_COMPILE_UNHANDLED_ARGS);
+					return CXChildVisit_Break;
+				}
+
+				ae2f_ifnezerr_strict(p_ty->m_class != ACLTY_PTR) {
+					_aclctx_err(DAT->m_ctx, ACLSPV_COMPILE_UNHANDLED_ARGS);
+					return CXChildVisit_Break;
+				}
+
+				{
+					aclty_t* ae2f_restrict p_elm = aclty_find(p_ty->m_info.m_ptr.m_type, CTX);
+					ae2f_ifnezerr_strict(!p_elm && p_ty->m_info.m_ptr.m_type >= ACLSPV_ID_END) {
+						_aclctx_err(DAT->m_ctx, ACLSPV_COMPILE_UNHANDLED_ARGS);
+						return CXChildVisit_Break;
+					}
+
+					var_elm_type_id = p_ty->m_info.m_ptr.m_type;
+				}
+			}
+
+			ae2f_ifnezerr(aclty_getsize(var_elm_type_id, DAT->m_ctx).m_id) {
+				_aclctx_err(DAT->m_ctx, ACLSPV_COMPILE_UNHANDLED_ARGS);
+				err_puts("is abstract. and is push constant. is shit.\n");
+				return CXChildVisit_Break;
+			}
+
 			break;
 
 			/**
@@ -432,8 +499,6 @@ enum CXChildVisitResult aclemit_fndecl_entp_arg(
 			 **/
 		case SpvStorageClassCrossWorkgroup:
 		case SpvStorageClassWorkgroup:
-		case SpvStorageClassInput:
-		case SpvStorageClassOutput:
 			ae2f_ifezerr(var_type_id = aclty_mk_by_cursor_dummy(
 						h_cur
 						, PARAM_TY
@@ -454,6 +519,16 @@ enum CXChildVisitResult aclemit_fndecl_entp_arg(
 					/** T[] -> struct { T[] } */
 					case ACLTY_ARR:
 						var_elm_type_id = var_type_id;
+						ae2f_ifezerr(var_elm_type_id = aclty_mk_struct_single_blk(
+									var_elm_type_id
+									, ACLTY_STRUCT_FIELD0_BLOCK
+									, 0
+									, CTX
+									)) {
+							_aclctx_err(DAT->m_ctx, ACLSPV_COMPILE_UNHANDLED_ARGS);
+							return CXChildVisit_Break;
+						}
+
 						break;
 
 						/** 
@@ -469,6 +544,15 @@ enum CXChildVisitResult aclemit_fndecl_entp_arg(
 							}
 
 							var_elm_type_id = p_ty->m_info.m_ptr.m_type;
+							ae2f_ifezerr(var_elm_type_id = aclty_mk_struct_single_blk(
+										var_elm_type_id
+										, ACLTY_STRUCT_FIELD0_BLOCK
+										, 0
+										, CTX
+										)) {
+								_aclctx_err(DAT->m_ctx, ACLSPV_COMPILE_UNHANDLED_ARGS);
+								return CXChildVisit_Break;
+							}
 						}
 						break;
 

@@ -13,7 +13,7 @@ enum ACLTY_STRUCT_FIELD0 {
 /** @see enum ACLTY_STRUCT_FIELD0 */
 typedef aclspv_wrd_t aclty_struct_field0_t;
 
-aclspv_id_t aclty_mk_struct_single(
+aclspv_id_t aclty_mk_struct_single_blk(
 		const aclspv_id_t	c_type_member,
 		const aclty_struct_field0_t	
 		c_decorate_field0,

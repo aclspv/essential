@@ -74,22 +74,31 @@ ae2f_inline_f static ae2f_ccconst aclspv_bool_t s_is_logical(const aclspv_wrd_t 
 }
 
 static aclspv_wrd_t s_decide_cast(const enum ACLSPV_ID_ c_id0, const enum ACLSPV_ID_ c_id1, const h_aclspv_ctx_t h_ctx) {
+	dbg_prefix(a);
+	dbg_call(fprintf, (
+				stderr, "s_decide_cast(%lu, %lu)\n"
+				, (unsigned long)c_id0
+				, (unsigned long)c_id1
+				));
+
 	/** one is 0? */
-	unless(c_id0 & c_id1)
+	unless(c_id0 && c_id1)
 		return ae2f_bll_sel_bool_naive1(B_id_default_t, c_id0, (B_id_default_t) c_id0, (B_id_default_t) c_id1);
 
-	unless(c_id0 ^ c_id1)
+	if(c_id0 == c_id1)
 		return (B_id_default_t) c_id0;
 
-	unless(aclid_is_arithmetic((B_id_default_t) c_id0, h_ctx) & aclid_is_arithmetic((B_id_default_t) c_id1, h_ctx))
+	ae2f_ifezerr(aclid_is_arithmetic((B_id_default_t) c_id0, h_ctx) & aclid_is_arithmetic((B_id_default_t) c_id1, h_ctx)) {
+		dbg_puts("s_decide_cast 0\n");
 		return 0;
+	}
 
-	if(aclty_get_veccfg((B_id_default_t) c_id0, h_ctx).m_num ^ aclty_get_veccfg((B_id_default_t) c_id1, h_ctx).m_num) {
+	if(aclty_get_veccfg((B_id_default_t) c_id0, h_ctx).m_num != aclty_get_veccfg((B_id_default_t) c_id1, h_ctx).m_num) {
 		unless(aclty_get_veccfg((B_id_default_t) c_id0, h_ctx).m_num >> 1) {
 			return (B_id_default_t) c_id1;
 		} else unless(aclty_get_veccfg((B_id_default_t) c_id1, h_ctx).m_num >> 1) {
 			return (B_id_default_t) c_id0;
-		} return 0;
+		} { dbg_puts("s_decide_cast 0\n"); return 0; }
 	}
 
 	unless(aclid_is_vectorisable((B_id_default_t) c_id0)) {
@@ -100,9 +109,12 @@ static aclspv_wrd_t s_decide_cast(const enum ACLSPV_ID_ c_id0, const enum ACLSPV
 					), (B_id_default_t) c_id0, (B_id_default_t) c_id1);
 	}
 
-	unless(aclid_is_int((B_id_default_t) c_id0) & aclid_is_int((B_id_default_t) c_id1))
+	unless((c_id0 == ACLSPV_ID_BOOL || aclid_is_int((B_id_default_t) c_id0)) && (c_id1 == ACLSPV_ID_BOOL || aclid_is_int((B_id_default_t) c_id1))) {
+		dbg_puts("s_decide_cast 0\n");
 		return 0;
+	}
 
+	dbg_puts("s_decide_cast sint?");
 	return ae2f_bll_sel_bool1(aclspv_wrd_t, aclid_is_sint((aclspv_wrd_t)c_id0), (aclspv_wrd_t)c_id0, (aclspv_wrd_t)c_id1);
 }
 
@@ -278,6 +290,16 @@ aclexpr_carve_lbl_t aclexpr_carve2_bool0(
 					), s_is_logical(rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_OPCODE])
 				, rdwr_data->m_ctx);
 
+	dbg_prefix(a);
+	dbg_call(fprintf, (stderr, "restyid: %lu ; %lu\n"
+				, (unsigned long)rdwr_prv_extra->m_type_original
+				, (unsigned long)s_decide_cast(
+					(enum ACLSPV_ID_) rdwr_lst_extra[0].m_type_original
+					, (enum ACLSPV_ID_) rdwr_lst_extra[1].m_type_original
+					, (rdwr_data)->m_ctx
+					)
+			  ));
+
 	rdwr_prv_extra->m_mask_literal = rdwr_lst_extra[0].m_mask_literal & rdwr_lst_extra[1].m_mask_literal;
 
 	ae2fpat_assertassume_strict(rdwr_lst_scale_buf);
@@ -353,12 +375,12 @@ aclexpr_carve_lbl_t aclexpr_carve2_bool0(
 		case ACLUTIL_LITERAL_MASK_RT:
 			/** runtime: the operation is a graph node, flushed by aclcur_emit(). */
 			ae2f_ifezerr(*rdwr_prv_idval = aclcur_cfg_op2(
-					rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_RESID]
-					, (enum SpvOp_)OPNATIVE
-					, rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_RESTYID]
-					, rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_END]
-					, rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_END + 1]
-					, rdwr_data->m_ctx))
+						rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_RESID]
+						, (enum SpvOp_)OPNATIVE
+						, rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_RESTYID]
+						, rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_END]
+						, rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_END + 1]
+						, rdwr_data->m_ctx))
 				return c_lbl_err;
 			break;
 
@@ -388,8 +410,8 @@ aclexpr_carve_lbl_t aclexpr_carve2_bool0(
 		}
 
 		ae2f_ifezerr(aclcur_store_reg(
-				REG, *rdwr_prv_idval, rdwr_data->m_ctx
-				)) {
+					REG, *rdwr_prv_idval, rdwr_data->m_ctx
+					)) {
 			err_puts("[carve] aclutil_assign_cursor_lval has been failed.");
 			rdwr_data->m_ctx->m_err = ACLSPV_COMPILE_UNHANDLED_CARVE;
 			return c_lbl_err;

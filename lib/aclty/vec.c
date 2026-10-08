@@ -7,6 +7,8 @@
 #include <util/emitx.h>
 #include <ae2f/pat/dbg.h>
 
+#include <aclmem.h>
+
 #include <ae2f/cc/pause.h>
 
 /** 1 when same */
@@ -70,6 +72,11 @@ struct aclutil_cxtp_veccfg_t	aclty_get_veccfg(
 	ae2fpat_assertassume(h_ctx);
 	ae2fpat_assertassume(P);
 
+	ae2f_ifezerr(c_ty_vec) {
+		struct aclutil_cxtp_veccfg_t	R = {0, 0};
+		return R;
+	}
+
 	if(aclid_is_vectorisable(c_ty_vec)) {
 		struct aclutil_cxtp_veccfg_t	R;
 		R.m_num		= 1;
@@ -103,6 +110,8 @@ struct aclutil_cxtp_veccfg_t	aclty_get_veccfg(
 
 #include <aclconst/align.h>
 
+#include <assert.h>
+
 aclspv_id_t aclty_mk_vec(
 		const aclspv_id_t       c_type_elm,
 		const aclspv_wrd_t      c_num_arr,
@@ -110,9 +119,10 @@ aclspv_id_t aclty_mk_vec(
 		)
 {
 	aclty_t            TAR;
-	ae2f_ifnezerr(h_ctx->m_err) return 0;
+	ae2f_ifnezerr(h_ctx->m_err)	return 0;
+	ae2f_ifezerr(c_num_arr)		return 0;
 
-	memset(&TAR, 0, sizeof(TAR));
+	aclmemzero(&TAR, sizeof(TAR));
 
 	TAR.m_class = ACLTY_SIMD;
 	TAR.m_info.m_vec.m_num = c_num_arr;
@@ -120,10 +130,24 @@ aclspv_id_t aclty_mk_vec(
 	TAR.m_alignof		= aclconst_align_from_size2(
 			aclty_getalign(c_type_elm, h_ctx) * c_num_arr
 			, h_ctx
-			).m_id;
+			).m_lit.m_wrd;
 
 	TAR.m_sizeof.m_lit.m_wrd	= TAR.m_alignof;
 	TAR.m_sizeof.m_id		= 0;
+
+	assert(aclconst_align_from_size2(c_num_arr, h_ctx).m_lit.m_wrd);
+	assert(aclconst_align_from_size2(8 * c_num_arr, h_ctx).m_lit.m_wrd);
+
+	ae2f_ifezerr(TAR.m_alignof) {
+		err_prefix(a);
+		err_call(fprintf, (stderr
+					, "TAR.m_alignof is zero! vector( getalign: %lu, c_num_arr: %lu) -> %lu\n"
+					, (unsigned long)aclty_getalign(c_type_elm, h_ctx)
+					, (unsigned long)c_num_arr
+					, (unsigned long)aclconst_align_from_size2(aclty_getalign(c_type_elm, h_ctx) * c_num_arr, h_ctx).m_lit.m_max
+					));
+		return 0;
+	}
 
 	/** when 0, 1 arrnum is no needed or not possible */
 	unless(c_num_arr >> 1) {
@@ -134,10 +158,10 @@ aclspv_id_t aclty_mk_vec(
 
 	{
 		const struct __ret ID = s_ret(h_ctx, &TAR); 
-		ae2f_expected_but_else(ID.m_id) return 0;
+		ae2f_ifezerr(ID.m_id)		return 0;
 		unless(ID.m_isfirst)            return ID.m_id;
 
-		ae2f_expected_but_else(h_ctx->m_count.m_types = aclutil_emitx_4(
+		ae2f_ifezerr(h_ctx->m_count.m_types = aclutil_emitx_4(
 					&h_ctx->m_section.m_types
 					, h_ctx->m_count.m_types
 					, SpvOpTypeVector

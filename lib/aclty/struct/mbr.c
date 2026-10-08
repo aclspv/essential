@@ -219,13 +219,41 @@ aclty_t* aclty_add_struct_mbr_std430(
 
 	mbr->m_info.m_struct_mbr.m_pad = rdwr_struct->m_sizeof;
 
+#if	1
+	{
+		aclspv_id_t id_mbr = mbr->m_type_id;
+		aclty_t* ae2f_restrict mdcr;
+		ae2f_ifezerr(mdcr = aclty_cfg_struct_mdcr(mbr
+				, mbr->m_info.m_struct_mbr.m_pad.m_id
+				? SpvDecorationOffsetIdEXT
+				: SpvDecorationOffset
+				, h_ctx
+				)) return 0;
+
+		rdwr_struct = &__get_type_uniques(h_ctx)[pad];
+		mbr = aclty_find(id_mbr, h_ctx);
+
+		mdcr->m_info.m_dcr.m_num_oprnd = 1;
+		mdcr->m_info.m_dcr.m_oprnd[0] = mbr->m_info.m_struct_mbr.m_pad.m_id 
+			? mbr->m_info.m_struct_mbr.m_pad.m_id
+			: mbr->m_info.m_struct_mbr.m_pad.m_lit.m_wrd;
+
+		dbg_prefix(a);
+		dbg_call(fprintf, (stderr, "struct %u pad calculation (std430): %u %u\n"
+					, (unsigned)rdwr_struct->m_type_id
+					, (unsigned)mdcr->m_info.m_dcr.m_op
+					, (unsigned)mdcr->m_info.m_dcr.m_oprnd[0]
+					));
+	}
+#endif
+
 	{
 		aclconst_specsz add;
 
 #define	__ADD(r, c_x, c_y)								\
 		{									\
 			(r).m_id = 0;							\
-			(r).m_lit.m_max = (c_x).m_lit.m_max > (c_y).m_lit.m_max;	\
+			(r).m_lit.m_max = (c_x).m_lit.m_max + (c_y).m_lit.m_max;	\
 		}
 
 		_aclconst_specsize_op2(L
@@ -237,6 +265,13 @@ aclty_t* aclty_add_struct_mbr_std430(
 				, h_ctx);
 
 		rdwr_struct->m_sizeof = add;
+
+		dbg_prefix(a);
+		dbg_call(fprintf, (stderr, "struct %u pad recalculated(std430): %u %u\n"
+					, (unsigned)rdwr_struct->m_type_id
+					, (unsigned)rdwr_struct->m_sizeof.m_id
+					, (unsigned)rdwr_struct->m_sizeof.m_lit.m_wrd
+					));
 
 #undef	__ADD
 	}
@@ -304,13 +339,40 @@ aclty_t* aclty_add_struct_mbr_std140(
 
 	mbr->m_info.m_struct_mbr.m_pad = rdwr_struct->m_sizeof;
 
+#if	1
+	{
+		aclspv_id_t id_mbr = mbr->m_type_id;
+		aclty_t* ae2f_restrict mdcr;
+		ae2f_ifezerr(mdcr = aclty_cfg_struct_mdcr(mbr
+				, mbr->m_info.m_struct_mbr.m_pad.m_id ? SpvDecorationOffsetIdEXT : SpvDecorationOffset
+				, h_ctx
+				)) return 0;
+
+		rdwr_struct = &__get_type_uniques(h_ctx)[pad];
+		mbr = aclty_find(id_mbr, h_ctx);
+
+		mdcr->m_info.m_dcr.m_num_oprnd = 1;
+		mdcr->m_info.m_dcr.m_oprnd[0] = mbr->m_info.m_struct_mbr.m_pad.m_id 
+			? mbr->m_info.m_struct_mbr.m_pad.m_id
+			: mbr->m_info.m_struct_mbr.m_pad.m_lit.m_wrd;
+
+
+		dbg_prefix(a);
+		dbg_call(fprintf, (stderr, "struct %u pad calculation (std140): %u %u\n"
+					, (unsigned)rdwr_struct->m_type_id
+					, (unsigned)mdcr->m_info.m_dcr.m_op
+					, (unsigned)mdcr->m_info.m_dcr.m_oprnd[0]
+					));
+	}
+#endif
+
 	{
 		aclconst_specsz add;
 
 #define	__ADD(r, c_x, c_y)								\
 		{									\
 			(r).m_id = 0;							\
-			(r).m_lit.m_max = (c_x).m_lit.m_max > (c_y).m_lit.m_max;	\
+			(r).m_lit.m_max = (c_x).m_lit.m_max + (c_y).m_lit.m_max;	\
 		}
 
 		_aclconst_specsize_op2(L
@@ -322,6 +384,14 @@ aclty_t* aclty_add_struct_mbr_std140(
 				, h_ctx);
 
 		rdwr_struct->m_sizeof = add;
+
+
+		dbg_prefix(a);
+		dbg_call(fprintf, (stderr, "struct %u pad recalculated (std140): %u %u\n"
+					, (unsigned)rdwr_struct->m_type_id
+					, (unsigned)rdwr_struct->m_sizeof.m_id
+					, (unsigned)rdwr_struct->m_sizeof.m_lit.m_wrd
+					));
 
 #undef	__ADD
 	}
@@ -385,6 +455,13 @@ aclty_t* aclty_add_struct_mbr_un(
 
 		rdwr_struct->m_sizeof = gt;
 
+		dbg_prefix(a);
+		dbg_call(fprintf, (stderr, "struct %u pad recalculated (un): %u %u\n"
+					, (unsigned)rdwr_struct->m_type_id
+					, (unsigned)rdwr_struct->m_sizeof.m_id
+					, (unsigned)rdwr_struct->m_sizeof.m_lit.m_wrd
+					));
+
 #undef	__GT
 	}
 
@@ -399,14 +476,16 @@ aclty_t* aclty_add_struct_mbr_un(
 
 #define	rdwr_struct
 
-		ae2f_ifezerr(mbr_offset = aclty_cfg_struct_mdcr(mbr, SpvDecorationOffset, h_ctx))
-			return 0;
-
 		mbr->m_info.m_struct_mbr.m_pad.m_id = 0;
 		mbr->m_info.m_struct_mbr.m_pad.m_lit.m_max = 0;
 
+#if	1
+		ae2f_ifezerr(mbr_offset = aclty_cfg_struct_mdcr(mbr, SpvDecorationOffset, h_ctx))
+			return 0;
+
 		mbr_offset->m_info.m_dcr.m_num_oprnd = 1;
 		mbr_offset->m_info.m_dcr.m_oprnd[0] = 0x0;
+#endif
 
 #undef	rdwr_struct
 

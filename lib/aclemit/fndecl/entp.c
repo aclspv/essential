@@ -93,6 +93,11 @@ enum CXChildVisitResult aclemit_fndecl_entp(
 			return CXChildVisit_Break;
 		}
 
+		ae2f_ifezerr(aclty_cfg_struct_dcr1(id_cfg, SpvDecorationBlock, h_ctx)) {
+			_aclctx_err(ctx, ACLSPV_COMPILE_UNHANDLED);
+			return CXChildVisit_Break;
+		}
+
 		ae2f_ifezerr(p_cfg = aclty_build_struct(id_cfg, h_ctx)) {
 			_aclctx_err(ctx, ACLSPV_COMPILE_UNHANDLED);
 			return CXChildVisit_Break;

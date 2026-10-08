@@ -18,7 +18,7 @@
 aclspv_id_t aclty_mk_arr3(
 		const aclspv_id_t	c_type_elm,
 		const aclconst_specsz	c_num_arr,
-		aclspv_wrdcount_t	c_decorate_stride,
+		aclspv_wrdcount_t	c_stride,
 		const h_aclspv_ctx_t	h_ctx
 		) {
 	typedef aclty_t* ae2f_restrict p_cxtp_t;
@@ -28,7 +28,7 @@ aclspv_id_t aclty_mk_arr3(
 		return 0;
 	}
 
-	if(c_decorate_stride != 0xFFFFFFFF) {
+	if(c_stride != 0xFFFFFFFF) {
 		p_cxtp_t arr_stride = aclty_cfg_arr_dcr(
 				arr
 				, SpvDecorationArrayStride
@@ -48,7 +48,7 @@ aclspv_id_t aclty_mk_arr3(
 			: 0;
 
 		ae2f_ifezerr(stride) return 0;
-		stride = (stride + c_decorate_stride - 1) & ~(c_decorate_stride - 1);
+		stride = (stride + c_stride - 1) & ~(c_stride - 1);
 
 		arr_stride->m_info.m_dcr.m_num_oprnd = 1;
 		arr_stride->m_info.m_dcr.m_oprnd[0] = stride;

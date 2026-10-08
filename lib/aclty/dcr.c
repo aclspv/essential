@@ -107,7 +107,7 @@ aclspv_bool_t aclty_build_dcr_mdcr(const aclty_t* ae2f_restrict rd, aclspv_id_t 
 
 		ae2f_ifezerr(h_ctx->m_count.m_decorate = aclutil_emit_wrd(
 					&h_ctx->m_section.m_decorate
-					, h_ctx->m_count.m_decorate + rd->m_info.m_dcr.m_num_oprnd + 3
+					, pad + idx + 3
 					, 0
 					)) {
 			return 1;

@@ -145,7 +145,7 @@ aclspv_layout(layout_number)
 > specify a variable | type be follows a certain memory layout  
 > see `./lib/aclty/layout.h` to get the layouts  
 
-> without this attribute specified, layout will be std430 (see ./lib/aclattr/layout.h)
+> without this attribute specified, layout will be std430 (see ACLSPV_LAYOUT_)
 
 # Restriction
 > Some statements / extensions may not be planned to be supported for now.

@@ -60,7 +60,7 @@ kernel_raw(5) void N_KERNEL_0(
 		__constant uintptr_t* consti32, 
 		storage_class(3) uint* u32out,
 		__local float i32aaaa[3],
-		__constant float i32aaab[3],
+		layout(1) __constant float i32aaab[3],
 		const int pshconst
 		) {
 
@@ -129,8 +129,8 @@ GOTO:
 		};
 
 		struct L2NEST {
-			union L2ST st;
 			int c;
+			union L2ST st;
 		};
 
 		struct L2VM {
@@ -143,7 +143,7 @@ GOTO:
 
 		/** lane 2: struct aggregate initializers */
 		union L2ST s = { 1 };
-		struct L2NEST t = { { 3, 4.5f }, 9 };
+		struct L2NEST t = { 9, { 3, 4.5f } };
 		struct L2VM vm = { (float4){ 1.f, 2.f, 3.f, 4.f } };
 		struct L2AM am = { { 5, 6, 7 } };
 		struct L2AM am2;

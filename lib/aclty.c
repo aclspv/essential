@@ -23,8 +23,8 @@ ae2f_ccpure	aclty_t* aclty_find(const aclspv_id_t c, const h_aclspv_ctx_t h_ctx)
 aclconst_specsz	aclty_getsize(const aclspv_id_t c, const h_aclspv_ctx_t h_ctx) {
 	aclconst_specsz	r;
 	ae2f_ifneznrm_strict(c >= ACLSPV_ID_END) {
-		aclty_t* ae2f_restrict cxtp	= aclty_find(c, h_ctx);
-		ae2f_ifezerr(cxtp)			{
+		aclty_t* ae2f_restrict cxtp = aclty_find(c, h_ctx);
+		ae2f_ifezerr(cxtp) {
 			r.m_id = 0;
 			r.m_lit.m_wrd = 0;
 			return r;

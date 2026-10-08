@@ -241,6 +241,10 @@ aclspv_id_t aclty_cfg_struct2(h_aclspv_ctx_t h_ctx, aclspv_id_t c) {
 	ae2f_assume_strict(NEW);
 	ae2f_assume_strict(NEW->m_class == ACLTY_STRUCT);
 
+	NEW->m_alignof	= ORIG->m_alignof;
+	NEW->m_sizeof	= ORIG->m_sizeof;
+	NEW->m_field0	= ORIG->m_field0;
+
 	/** decorator */
 	if(ORIG->m_info.m_struct.m_dcr) {
 		aclspv_wrd_t	IDX_DCR = ORIG->m_info.m_struct.m_dcr;
@@ -263,6 +267,7 @@ aclspv_id_t aclty_cfg_struct2(h_aclspv_ctx_t h_ctx, aclspv_id_t c) {
 					, DCR_DST->m_info.m_dcr.m_oprnd
 					, DCR->m_info.m_dcr.m_oprnd
 					, MAX_ACLCXTP_DCR_OPRND);
+			DCR_DST->m_info.m_dcr.m_num_oprnd = DCR->m_info.m_dcr.m_num_oprnd;
 
 			IDX_DCR = DCR->m_info.m_dcr.m_nxt;
 		}
@@ -312,6 +317,7 @@ aclspv_id_t aclty_cfg_struct2(h_aclspv_ctx_t h_ctx, aclspv_id_t c) {
 							, DCR->m_info.m_dcr.m_oprnd
 							, MAX_ACLCXTP_DCR_OPRND);
 
+					DCR_DST->m_info.m_dcr.m_num_oprnd = DCR->m_info.m_dcr.m_num_oprnd;
 					IDX_DCR = DCR->m_info.m_dcr.m_nxt;
 				}
 

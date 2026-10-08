@@ -35,6 +35,7 @@ typedef	u32 uptr;typedef i32 iptr;
 #define	btcast		aclattr("aclspv_btcast")
 #define specid(a)	aclattr("aclspv_specid( " #a " )")
 #define	bratio(t, f)	aclattr("aclspv_bratio ("#t","#f")")
+#define layout(layout)	aclattr("aclspv_layout(" #layout ")")
 
 #if	defined(__OPENCL_VERSION__) && __OPENCL_VERSION__
 #define	__kernel	kernel_raw(5)		__kernel
