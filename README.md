@@ -19,8 +19,7 @@ cmake --build build
 ## dependency
 - cmake >= 3.10
 - c compiler which compiles c90+
--
-
+- libclang
 
 ## license
 - [this project](./LICENSE)
