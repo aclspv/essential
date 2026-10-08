@@ -5,6 +5,7 @@
 #include <aclconst/specsize.h>
 #include <util/wrd.h>
 
+
 enum ACLTY_ {
 	/** 
 	 * SHOULD BE ZERO. 
@@ -101,7 +102,7 @@ typedef struct {
 
 	aclty_field0_t		m_field0;
 
-	enum ACLTY_ 	m_class;
+	enum ACLTY_ 		m_class;
 } aclty_t;
 
 #endif

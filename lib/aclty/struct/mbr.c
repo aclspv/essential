@@ -184,22 +184,24 @@ aclty_t* aclty_add_struct_mbr_std430(
 		aclspv_id_t c_id,
 		h_aclspv_ctx_t h_ctx) {
 	aclty_t* ae2f_restrict mbr;
-	aclspv_wrd_t pad = (aclspv_wrd_t)(__get_type_uniques(h_ctx) - rdwr_struct);
+	aclspv_wrd_t pad = (aclspv_wrd_t)(rdwr_struct - __get_type_uniques(h_ctx));
 
 	aclspv_wrd_t new_algn = aclty_getalign(c_id, h_ctx);
 	aclconst_specsz new_sz = aclty_getsize(c_id, h_ctx);
 
-	/** opaque type kill */
+	/** opaque type kill: builtin ids (< ACLSPV_ID_END) have no type node
+	 * and are never opaque, so the check only applies to dynamic ids. */
 	{
 		aclty_t* mbrid = aclty_find(c_id, h_ctx);
-		ae2f_ifezerr(mbrid) return 0;
-		if(mbrid->m_field0 & ACLTY_FIELD0_NOPOD) {
-			ae2f_ifnezerr_strict(rdwr_struct->m_field0 >> ACLTY_FIELD0_OFF_NOPOD & 1) {
-				err_puts("it is already not pod.");
-				return 0;
-			}
+		ae2f_ifnezerr(mbrid) {
+			if(mbrid->m_field0 & ACLTY_FIELD0_NOPOD) {
+				ae2f_ifnezerr_strict(rdwr_struct->m_field0 >> ACLTY_FIELD0_OFF_NOPOD & 1) {
+					err_puts("it is already not pod.");
+					return 0;
+				}
 
-			rdwr_struct->m_field0 |= ACLTY_FIELD0_NOPOD;
+				rdwr_struct->m_field0 |= ACLTY_FIELD0_NOPOD;
+			}
 		}
 	}
 
@@ -244,6 +246,90 @@ aclty_t* aclty_add_struct_mbr_std430(
 }
 #endif
 
+/** TODO */
+aclty_t* aclty_add_struct_mbr_std140(
+		aclty_t* ae2f_restrict rdwr_struct,
+		aclspv_id_t c_id,
+		h_aclspv_ctx_t h_ctx) {
+	aclty_t* ae2f_restrict mbr;
+	aclspv_wrd_t pad = (aclspv_wrd_t)(rdwr_struct - __get_type_uniques(h_ctx));
+
+	aclspv_wrd_t new_algn = aclty_getalign(c_id, h_ctx);
+	aclconst_specsz new_sz = aclty_getsize(c_id, h_ctx);
+
+	/** opaque type kill: builtin ids (< ACLSPV_ID_END) have no type node
+	 * and are never opaque, so the check only applies to dynamic ids. */
+	{
+		aclty_t* mbrid = aclty_find(c_id, h_ctx);
+		ae2f_ifnezerr(mbrid) {
+			if(mbrid->m_field0 & ACLTY_FIELD0_NOPOD) {
+				ae2f_ifnezerr_strict(rdwr_struct->m_field0 >> ACLTY_FIELD0_OFF_NOPOD & 1) {
+					err_puts("it is already not pod.");
+					return 0;
+				}
+
+				rdwr_struct->m_field0 |= ACLTY_FIELD0_NOPOD;
+			}
+		}
+	}
+
+
+	rdwr_struct->m_alignof = rdwr_struct->m_alignof < new_algn
+		? new_algn
+		: rdwr_struct->m_alignof
+		;
+
+	{
+		aclty_t* ae2f_restrict mbrty = aclty_find(c_id, h_ctx);
+		ae2f_ifezerr(mbrty) return 0;
+		switch((aclspv_wrd_t)mbrty->m_class) {
+			case ACLTY_STRUCT:
+			case ACLTY_SIMD:
+			case ACLTY_ARR:
+				mbrty->m_alignof = mbrty->m_alignof > 16
+					? mbrty->m_alignof
+					: 16;
+				break;
+
+			default:
+				break;
+		}
+	}
+
+	rdwr_struct->m_sizeof = aclconst_alignup1(rdwr_struct->m_sizeof, rdwr_struct->m_alignof, h_ctx);
+	ae2f_ifezerr(mbr = aclty_struct_add_mbr(rdwr_struct, c_id, h_ctx))
+		return 0;
+
+	rdwr_struct = &__get_type_uniques(h_ctx)[pad];
+
+	mbr->m_info.m_struct_mbr.m_pad = rdwr_struct->m_sizeof;
+
+	{
+		aclconst_specsz add;
+
+#define	__ADD(r, c_x, c_y)								\
+		{									\
+			(r).m_id = 0;							\
+			(r).m_lit.m_max = (c_x).m_lit.m_max > (c_y).m_lit.m_max;	\
+		}
+
+		_aclconst_specsize_op2(L
+				, add
+				, new_sz
+				, rdwr_struct->m_sizeof
+				, SpvOpIAdd
+				, __ADD
+				, h_ctx);
+
+		rdwr_struct->m_sizeof = add;
+
+#undef	__ADD
+	}
+
+	rdwr_struct->m_sizeof = aclconst_alignup1(rdwr_struct->m_sizeof, rdwr_struct->m_alignof, h_ctx);
+	return mbr;
+}
+
 /** non-grow (union) */
 aclty_t* aclty_add_struct_mbr_un(
 		aclty_t* ae2f_restrict rdwr_struct,
@@ -254,10 +340,19 @@ aclty_t* aclty_add_struct_mbr_un(
 
 	{
 		aclty_t* mbrid = aclty_find(c_id, h_ctx);
-		ae2f_ifezerr(mbrid) return 0;
-		if(mbrid->m_field0 & ACLTY_FIELD0_NOPOD) {
-			err_puts("it is already not pod.");
-			return 0;
+
+		/** builtin ids (< ACLSPV_ID_END) have no type node and are never
+		 * opaque, so the check only applies to dynamic ids. (mirrors
+		 * aclty_add_struct_mbr_std430) */
+		ae2f_ifnezerr(mbrid) {
+			if(mbrid->m_field0 & ACLTY_FIELD0_NOPOD) {
+				ae2f_ifnezerr_strict(rdwr_struct->m_field0 >> ACLTY_FIELD0_OFF_NOPOD & 1) {
+					err_puts("it is already not pod.");
+					return 0;
+				}
+
+				rdwr_struct->m_field0 |= ACLTY_FIELD0_NOPOD;
+			}
 		}
 	}
 

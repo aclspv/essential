@@ -75,7 +75,7 @@ aclspv_id_t aclutil_mk_cxtp_by_type2(
 
 				const aclspv_id_t	ELMID = aclty_mk_by_type(ELM);
 
-				return aclutil_mk_cxtp_vec(
+				return aclty_mk_vec(
 						ELMID
 						, ELMCOUNT
 						, h_ctx);

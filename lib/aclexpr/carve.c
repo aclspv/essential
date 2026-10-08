@@ -1,14 +1,21 @@
 #include "./carve.h"
 #include "./carve/util.h"
 #include "./carve/op1/arithmetic_cast.h"
+#include "./carve/op1/deref.h"
 #include "./carve/op1/incr.h"
+#include "./carve/op1/memberread.h"
+#include "./carve/op1/subscript.h"
+#include "./carve/opn/initlist.h"
 #include "./carve/op2/arithmetic.h"
+#include "./carve/op2/cmp.h"
+#include "./carve/op2/shift.h"
 #include "./carve/op2/assign.h"
+#include "./carve/op2/derefwrite.h"
+#include "./carve/op2/memberwrite.h"
 #include "./carve/op2/bool0.h"
 #include "./carve/op2/bool1.h"
 
 #include <aclexpr.h>
-#include <aclcursor.h>
 
 #include <util/wrdemit.h>
 #include <util/scale.h>
@@ -22,12 +29,22 @@ enum {
 
 	OP2_,
 	OP2_ARITHMETIC,
+	OP2_CMP,
+	OP2_SHIFT,
 	OP2_BOOL0,
 	OP2_BOOL1,
 	OP2_ASSIGN,
+	OP2_MEMBERWRITE,
+	OP2_DEREFWRITE,
+	OP2_SUBSCRIPT,
+	OP2_SUBSCRIPTWRITE,
 	OP1_,
 	OP1_ARITHMETIC_CAST,
-	OP1_INCR
+	OP1_INCR,
+	OP1_DEREF,
+	OP1_ADDRESS,
+	OP1_MEMBERREAD,
+	OPN_INITLIST
 };
 
 aclspv_bool_t aclexpr_carve(
@@ -84,7 +101,7 @@ aclspv_bool_t aclexpr_carve(
 				, (unsigned)LST_SCALE_BUF[ACLEXPR_OPBINCFG_NUMOPRND]
 				, (unsigned)LST_SCALE_BUF[ACLEXPR_OPBINCFG_OPCODE]));
 
-	cgswtch(OP2_) {
+	cgswtch(OPN_INITLIST) {
 		cgdefault(OP_FAILURE):
 			err_prefix();
 		err_call((void), fprintf(stderr, "something from somewhere %u\n", (unsigned)LST_SCALE_BUF[0]));
@@ -94,12 +111,57 @@ aclspv_bool_t aclexpr_carve(
 		cgcsdef(OP_SUCCESS):
 			return 0;
 
+		cgcsdef(OPN_INITLIST):
+			dbg_puts("[carve] OPN_INITLIST");
+		cgjmp(aclexpr_carve_opn_initlist(
+					rdwr_data
+					, rdwr_prv_idval
+					, rdwr_prv_extra
+					, LST_SCALE
+					, LST_SCALE_BUF
+					, LST_EXTRA
+					, RET_LITERAL
+					, cgcase(OP2_)
+					, cgcase(OP_SUCCESS)
+					, cgcase(OP_FAILURE)
+					));
+
 		cgcsdef(OP2_):
-			cgjmp(LST_SCALE_BUF[ACLEXPR_OPBINCFG_NUMOPRND] == 2 ? cgcase(OP2_ARITHMETIC) : cgcase(OP1_));
+			cgjmp((LST_SCALE_BUF[ACLEXPR_OPBINCFG_NUMOPRND] == 2 ? cgcase(OP2_ARITHMETIC) : cgcase(OP1_)));
 
 		cgcsdef(OP2_ARITHMETIC):
 			dbg_puts("[carve] OP2_ARITHMETIC");
 		cgjmp(aclexpr_carve2_arithmetic(
+					rdwr_data
+					, rdwr_prv_idval
+					, rdwr_prv_extra
+					, LST_SCALE
+					, LST_SCALE_BUF
+					, LST_EXTRA
+					, RET_LITERAL
+					, cgcase(OP2_CMP)
+					, cgcase(OP_SUCCESS)
+					, cgcase(OP_FAILURE)
+					));
+
+		cgcsdef(OP2_CMP):
+			dbg_puts("[carve] OP2_CMP");
+		cgjmp(aclexpr_carve2_cmp(
+					rdwr_data
+					, rdwr_prv_idval
+					, rdwr_prv_extra
+					, LST_SCALE
+					, LST_SCALE_BUF
+					, LST_EXTRA
+					, RET_LITERAL
+					, cgcase(OP2_SHIFT)
+					, cgcase(OP_SUCCESS)
+					, cgcase(OP_FAILURE)
+					));
+
+		cgcsdef(OP2_SHIFT):
+			dbg_puts("[carve] OP2_SHIFT");
+		cgjmp(aclexpr_carve2_shift(
 					rdwr_data
 					, rdwr_prv_idval
 					, rdwr_prv_extra
@@ -152,6 +214,66 @@ aclspv_bool_t aclexpr_carve(
 					, LST_SCALE_BUF
 					, LST_EXTRA
 					, RET_LITERAL
+					, cgcase(OP2_DEREFWRITE)
+					, cgcase(OP_SUCCESS)
+					, cgcase(OP_FAILURE)
+					));
+
+		cgcsdef(OP2_DEREFWRITE):
+			dbg_puts("[carve] OP2_DEREFWRITE");
+		cgjmp(aclexpr_carve2_derefwrite(
+					rdwr_data
+					, rdwr_prv_idval
+					, rdwr_prv_extra
+					, LST_SCALE
+					, LST_SCALE_BUF
+					, LST_EXTRA
+					, RET_LITERAL
+					, cgcase(OP2_SUBSCRIPT)
+					, cgcase(OP_SUCCESS)
+					, cgcase(OP_FAILURE)
+					));
+
+		cgcsdef(OP2_SUBSCRIPT):
+			dbg_puts("[carve] OP2_SUBSCRIPT");
+		cgjmp(aclexpr_carve2_subscript(
+					rdwr_data
+					, rdwr_prv_idval
+					, rdwr_prv_extra
+					, LST_SCALE
+					, LST_SCALE_BUF
+					, LST_EXTRA
+					, RET_LITERAL
+					, cgcase(OP2_SUBSCRIPTWRITE)
+					, cgcase(OP_SUCCESS)
+					, cgcase(OP_FAILURE)
+					));
+
+		cgcsdef(OP2_SUBSCRIPTWRITE):
+			dbg_puts("[carve] OP2_SUBSCRIPTWRITE");
+		cgjmp(aclexpr_carve2_subscriptwrite(
+					rdwr_data
+					, rdwr_prv_idval
+					, rdwr_prv_extra
+					, LST_SCALE
+					, LST_SCALE_BUF
+					, LST_EXTRA
+					, RET_LITERAL
+					, cgcase(OP2_MEMBERWRITE)
+					, cgcase(OP_SUCCESS)
+					, cgcase(OP_FAILURE)
+					));
+
+		cgcsdef(OP2_MEMBERWRITE):
+			dbg_puts("[carve] OP2_MEMBERWRITE");
+		cgjmp(aclexpr_carve2_memberwrite(
+					rdwr_data
+					, rdwr_prv_idval
+					, rdwr_prv_extra
+					, LST_SCALE
+					, LST_SCALE_BUF
+					, LST_EXTRA
+					, RET_LITERAL
 					, cgcase(OP_FAILURE)
 					, cgcase(OP_SUCCESS)
 					, cgcase(OP_FAILURE)
@@ -185,6 +307,51 @@ aclspv_bool_t aclexpr_carve(
 					, LST_SCALE_BUF
 					, LST_EXTRA
 					, RET_LITERAL
+					, cgcase(OP1_DEREF)
+					, cgcase(OP_SUCCESS)
+					, cgcase(OP_FAILURE)
+					));
+
+		cgcsdef(OP1_DEREF):
+			dbg_puts("[carve] OP1_DEREF");
+		cgjmp(aclexpr_carve1_deref(
+					rdwr_data
+					, rdwr_prv_idval
+					, rdwr_prv_extra
+					, LST_SCALE
+					, LST_SCALE_BUF
+					, LST_EXTRA
+					, RET_LITERAL
+					, cgcase(OP1_ADDRESS)
+					, cgcase(OP_SUCCESS)
+					, cgcase(OP_FAILURE)
+					));
+
+		cgcsdef(OP1_ADDRESS):
+			dbg_puts("[carve] OP1_ADDRESS");
+		cgjmp(aclexpr_carve1_address(
+					rdwr_data
+					, rdwr_prv_idval
+					, rdwr_prv_extra
+					, LST_SCALE
+					, LST_SCALE_BUF
+					, LST_EXTRA
+					, RET_LITERAL
+					, cgcase(OP1_MEMBERREAD)
+					, cgcase(OP_SUCCESS)
+					, cgcase(OP_FAILURE)
+					));
+
+		cgcsdef(OP1_MEMBERREAD):
+			dbg_puts("[carve] OP1_MEMBERREAD");
+		cgjmp(aclexpr_carve1_memberread(
+					rdwr_data
+					, rdwr_prv_idval
+					, rdwr_prv_extra
+					, LST_SCALE
+					, LST_SCALE_BUF
+					, LST_EXTRA
+					, RET_LITERAL
 					, cgcase(OP_FAILURE)
 					, cgcase(OP_SUCCESS)
 					, cgcase(OP_FAILURE)
@@ -193,3 +360,4 @@ aclspv_bool_t aclexpr_carve(
 
 	ae2f_unreachable();
 }
+

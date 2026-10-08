@@ -2,7 +2,6 @@
 #define aclutil_literal_h
 
 #include "./iddef.h"
-#include "./log.h"
 
 enum ACLUTIL_LITERAL_MASK_ {
 	ACLUTIL_LITERAL_MASK_RT,

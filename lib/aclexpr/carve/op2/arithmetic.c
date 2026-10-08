@@ -1,7 +1,10 @@
 #include "./arithmetic.h"
 
 #include <aclexpr/carve/util.h>
-#include <aclcursor.h>
+#include <aclexpr/carve/ptr.h>
+#include <aclcur/common.h>
+#include <aclexpr/curreg.h>
+#include <aclconst/specop.h>
 #include <aclmem.h>
 
 #include <util/wrdemit.h>
@@ -119,6 +122,7 @@ ae2f_inline_f static ae2f_ccconst aclspv_bool_t s_checkhelper(const aclspv_wrd_t
 		case ACLEXPR_OP2_DIVASS:
 		case ACLEXPR_OP2_MULASS:
 		case ACLEXPR_OP2_REMASS:
+
 			return 1;
 	}
 }
@@ -156,6 +160,25 @@ ae2f_inline_f static ae2f_ccconst struct aclutil_ltrl_eval_t	s_eval2_ltrl(
 				EXPR_TWO(/, m_api_intmax, SpvOpUDiv); return RET;
 				EXPR_TWO(%, m_api_intmax, SpvOpSRem); return RET;
 
+				case SpvOpSLessThan:
+					RET.m_ret.m_api_intmax = c_oprndA.m_api_intmax < c_oprndB.m_api_intmax;
+					RET.m_found = 1; return RET;
+				case SpvOpSLessThanEqual:
+					RET.m_ret.m_api_intmax = c_oprndA.m_api_intmax <= c_oprndB.m_api_intmax;
+					RET.m_found = 1; return RET;
+				case SpvOpSGreaterThan:
+					RET.m_ret.m_api_intmax = c_oprndA.m_api_intmax > c_oprndB.m_api_intmax;
+					RET.m_found = 1; return RET;
+				case SpvOpSGreaterThanEqual:
+					RET.m_ret.m_api_intmax = c_oprndA.m_api_intmax >= c_oprndB.m_api_intmax;
+					RET.m_found = 1; return RET;
+				case SpvOpIEqual:
+					RET.m_ret.m_api_intmax = c_oprndA.m_api_intmax == c_oprndB.m_api_intmax;
+					RET.m_found = 1; return RET;
+				case SpvOpINotEqual:
+					RET.m_ret.m_api_intmax = c_oprndA.m_api_intmax != c_oprndB.m_api_intmax;
+					RET.m_found = 1; return RET;
+
 				default:
 				RET.m_ret.m_u64 = 0;
 				RET.m_found = 0;
@@ -173,6 +196,25 @@ ae2f_inline_f static ae2f_ccconst struct aclutil_ltrl_eval_t	s_eval2_ltrl(
 				EXPR_TWO(/, m_api_uintmax, SpvOpSDiv); return RET;
 				EXPR_TWO(/, m_api_uintmax, SpvOpUDiv); return RET;
 				EXPR_TWO(%, m_api_uintmax, SpvOpSRem); return RET;
+
+				case SpvOpSLessThan:
+					RET.m_ret.m_api_uintmax = c_oprndA.m_api_uintmax < c_oprndB.m_api_uintmax;
+					RET.m_found = 1; return RET;
+				case SpvOpSLessThanEqual:
+					RET.m_ret.m_api_uintmax = c_oprndA.m_api_uintmax <= c_oprndB.m_api_uintmax;
+					RET.m_found = 1; return RET;
+				case SpvOpSGreaterThan:
+					RET.m_ret.m_api_uintmax = c_oprndA.m_api_uintmax > c_oprndB.m_api_uintmax;
+					RET.m_found = 1; return RET;
+				case SpvOpSGreaterThanEqual:
+					RET.m_ret.m_api_uintmax = c_oprndA.m_api_uintmax >= c_oprndB.m_api_uintmax;
+					RET.m_found = 1; return RET;
+				case SpvOpIEqual:
+					RET.m_ret.m_api_uintmax = c_oprndA.m_api_uintmax == c_oprndB.m_api_uintmax;
+					RET.m_found = 1; return RET;
+				case SpvOpINotEqual:
+					RET.m_ret.m_api_uintmax = c_oprndA.m_api_uintmax != c_oprndB.m_api_uintmax;
+					RET.m_found = 1; return RET;
 
 				default:
 				RET.m_ret.m_u64 = 0;
@@ -266,6 +308,15 @@ aclexpr_carve_lbl_t aclexpr_carve2_arithmetic(
 		aclexpr_carve_lbl_t				c_lbl_err
 		) { CHECK; {
 	const aclspv_bool_t IS_ASSIGN = s_is_assign(rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_OPCODE]);
+
+	/** pointer arithmetic (`p + n`, `p - n`, `p += n`, `p -= n`, `p - q`):
+	 * a fatal error in the logical addressing model, where a pointer is a
+	 * plain id with no address to offset. the ACLTY_PTR operand test keeps
+	 * ordinary integer / float arithmetic untouched, and the check is
+	 * gated on the logical flag alone so physical addressing keeps it. */
+	if(aclexpr_ptr_arith_fatal(rdwr_lst_extra[0].m_type_original, CTX(rdwr_data))
+	|| aclexpr_ptr_arith_fatal(rdwr_lst_extra[1].m_type_original, CTX(rdwr_data)))
+		return c_lbl_err;
 
 	rdwr_prv_extra->m_type_original = rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_RESTYID] = s_decide_cast(
 			(enum ACLSPV_ID_) rdwr_lst_extra[0].m_type_original
@@ -404,93 +455,31 @@ aclexpr_carve_lbl_t aclexpr_carve2_arithmetic(
 
 			break;
 
-		case ACLUTIL_LITERAL_MASK_RT:
-#define	XORSWAP(a, b)	{ (a) ^= (b); (b) ^= (a); (a) ^= (b); }
-			/**
-			 * here, operation is not constant.
-			 *
-			 * current
-			 * [1] OpSpecConstant opcode (ignorance required)
-			 * [2] result type
-			 * [3] result id
-			 * [4] literal opcode (opspecconstant evaluation)
-			 * ...
-			 *
-			 *
-			 * we want
-			 * [2] opcode with operand count
-			 * [3] result type
-			 * [4] result id
-			 * */
 
-			/**
-			 * swap [2] and [4]
-			 *
-			 * after this will
-			 * [2] literal opcode (without operand)
-			 * [3] result id
-			 * [4] result type
-			 * * */
-			XORSWAP(rdwr_lst_scale_buf[2], rdwr_lst_scale_buf[4]);
-
-			/** we have four operands (including opcode) */
-			rdwr_lst_scale_buf[2] |= aclspv_mk_noprnds(4);
-
-			/**
-			 * swap [3] and [4].
-			 *
-			 * after this will
-			 * [2] opcode
-			 * [3] result type
-			 * [4] result id
-			 *
-			 * that matches what we want.
-			 * */
-			XORSWAP(rdwr_lst_scale_buf[3], rdwr_lst_scale_buf[4]);
-#undef	XORSWAP
-			ae2f_fallthrough;
 		case ACLUTIL_LITERAL_MASK_CONSTANT:
+			ae2f_ifezerr(*rdwr_prv_idval = aclconst_specop(
+						rdwr_lst_scale_buf
+						, 6
+						, rdwr_data->m_ctx)) return c_lbl_err;
+			break;
 
-#define		TMPL_SECTION	(*((rdwr_prv_extra->m_mask_literal) == ACLUTIL_LITERAL_RT \
-			? &(rdwr_data)->m_ctx->m_section.m_fnimpl		\
-			: &(rdwr_data)->m_ctx->m_section.m_types))
-
-#define		TMPL_COUNT	(*((rdwr_prv_extra->m_mask_literal) == ACLUTIL_LITERAL_RT	\
-			? &(rdwr_data)->m_ctx->m_count.m_fnimpl			\
-			: &(rdwr_data)->m_ctx->m_count.m_types))
-
-			ae2f_ifnezerr_strict(rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_END] >= rdwr_data->m_ctx->m_id)
-				return c_lbl_err;
-
-			ae2f_ifnezerr_strict(rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_END + 1] >= rdwr_data->m_ctx->m_id)
-				return c_lbl_err;
-
-			dbg_prefix();
-			dbg_call((void), fprintf(stderr
-						, "[carve2::arithmetic] check two id: %u %u\n"
-						, (unsigned)rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_END]
-						, (unsigned)rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_END + 1]
-					  ));
-
-			dbg_puts("[carve2::arithmetic] vec_with_copy");
-
-			ae2f_ifnezerr_strict(s_aclmem_cgrow2(
-						&TMPL_SECTION
-						, TMPL_COUNT + 6u - (aclspv_wrd_t)(rdwr_prv_extra->m_mask_literal == (aclspv_wrd_t)ACLUTIL_LITERAL_RT)
-						, sizeof(aclspv_wrd_t)
-						, ACLSPV_COMPILE_ALLOC_FAILED_EXPR
-					)) return c_lbl_err;
-
+		case ACLUTIL_LITERAL_MASK_RT:
+			/** runtime: the operation is a graph node, flushed by aclcur_emit(). */
 			{
-				aclspv_wrd_t	CI = 6 - (!rdwr_prv_extra->m_mask_literal);
-				while(CI --> 0) {
-					aclutil_get_wrd_of_vec(&TMPL_SECTION)[TMPL_COUNT + CI]
-						= rdwr_lst_scale_buf[1u + (!rdwr_prv_extra->m_mask_literal) + CI];
-				}
+				aclspv_id_t TY_RES = rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_RESTYID];
+
+				ae2f_ifezerr(*rdwr_prv_idval = aclcur_cfg_op2(
+							rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_RESID]
+							, (enum SpvOp_)rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_OPCODE]
+							, TY_RES
+							, rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_END]
+							, rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_END + 1]
+							, rdwr_data->m_ctx))
+					return c_lbl_err;
 			}
 
-			TMPL_COUNT += 6u - (aclspv_wrd_t)(rdwr_prv_extra->m_mask_literal == ACLUTIL_LITERAL_RT);
 			break;
+
 		default:
 			err_puts(("unknown literal"));
 			ae2f_unreachable();
@@ -498,39 +487,68 @@ aclexpr_carve_lbl_t aclexpr_carve2_arithmetic(
 
 	if(IS_ASSIGN) {
 		CXCursor	CASSIGN		= rdwr_lst_extra->m_cursor;
-		aclspv_wrd_t IDX = aclutil_find_cursor(
-				rdwr_data->m_ctx->m_num_cursor
-				, rdwr_data->m_ctx->m_cursors.m_p
-				, (clang_getCursorReferenced(CASSIGN))
+		aclspv_id_t	PTR;
+
+		/** deref lvalue (`*q += 2`): the result belongs at the address q
+		 * holds, so it is stored THROUGH the pointer, not into a register's
+		 * own storage — aclcur_store_reg cannot express that, and
+		 * clang_getCursorReferenced yields nothing for a UnaryOperator.
+		 *
+		 * the pointer comes from the deref read that produced this operand:
+		 * extra[0] is the read's extra, which recorded the pointer it loaded
+		 * through. the lvalue cursor is no help by now — the visit cascade
+		 * overwrote it with each cursor on the way down, so it points at the
+		 * bare operand rather than the dereference. */
+		if(rdwr_lst_extra->m_state0
+				& (aclspv_wrd_t)ACLEXPR_OPCFGX_STATE0_DEREF_LOADED)
+			PTR = rdwr_lst_extra->m_extra.m_deref.m_ptr_id;
+		else
+			PTR = aclexpr_ptr_of_deref(CASSIGN, rdwr_data->m_ctx);
+
+		if(PTR) {
+			dbg_puts("[carve2::arithmetic] assign mode: deref store");
+
+			ae2f_ifezerr(aclcur_cfg_st(
+						SpvOpStore
+						, PTR
+						, *rdwr_prv_idval
+						, rdwr_data->m_ctx
+						)) {
+				err_puts("[carve2::arithmetic] store through the deref failed");
+				rdwr_data->m_ctx->m_err = ACLSPV_COMPILE_UNHANDLED_CARVE;
+				return c_lbl_err;
+			}
+
+			return c_lbl_success;
+		}
+
+		{
+		const aclspv_id_t REG = aclexpr_curreg_find(
+				clang_getCursorReferenced(CASSIGN)
+				, rdwr_data->m_ctx
 				);
-
-		x_aclcursor* ae2f_restrict PC = &((x_aclcursor* ae2f_restrict)rdwr_data->m_ctx->m_cursors.m_p)[IDX];
-
-		aclspv_wrd_t	CLVAL;
 
 		dbg_puts("[carve2::arithmetic] assign mode");
 
-		ae2f_ifnezerr_strict(IDX >= rdwr_data->m_ctx->m_num_cursor) {
-			err_puts("[carve2::arithmetic] CIDX assert");
+		ae2f_ifezerr(REG) {
+			err_puts("[carve2::arithmetic] no register for the lvalue");
+			rdwr_data->m_ctx->m_err = ACLSPV_COMPILE_UNHANDLED_CARVE;
 			return c_lbl_err;
 		}
 
-		CLVAL = aclcursor_vardecl_assign(
-				PC
-				, rdwr_data->m_fnctx, *rdwr_prv_idval
-				, rdwr_prv_extra->m_type_original
-				, rdwr_prv_extra->m_mask_literal
-				, &rdwr_prv_extra->m_literal
-				, 0
-				);
-
-		ae2f_ifezerr(CLVAL) {
+		ae2f_ifezerr(aclcur_store_reg(
+					REG, *rdwr_prv_idval, rdwr_data->m_ctx
+					)) {
 			err_puts("[carve] aclutil_assign_cursor_lval has been failed.");
 			rdwr_data->m_ctx->m_err = ACLSPV_COMPILE_UNHANDLED_CARVE;
 			return c_lbl_err;
 		}
 
-		dbg_call((void), fprintf(stderr, "[carve2::arithmetic] assigned %u\n", CLVAL));
+		dbg_call((void), fprintf(
+					stderr
+					, "[carve2::arithmetic] assigned %u\n"
+					, *rdwr_prv_idval));
+		}
 	}
 	return c_lbl_success;
 }}

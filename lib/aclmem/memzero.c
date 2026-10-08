@@ -13,7 +13,7 @@ static ae2f_inline_f void s_mz256(void* ae2f_restrict wr, aclspv_wrd_t c) {
 #define	s_case_bulk(c_bit, ptr)	case ((c_bit) >> 3): *((b##c_bit*)(void*)((ptr) -= (c_bit) >> 3)) = ZERO##c_bit; break
 #define	s_case_skip(c, c_bit, ptr, lbl)	\
 	case c:	\
-		*((b##c_bit*)(void*)((ptr) -= (c_bit) >> 3)) = 0;	\
+		*((b##c_bit*)(void*)((ptr) -= (c_bit) >> 3)) = ZERO##c_bit;	\
 		goto lbl
 
 void aclmemzero(void* ae2f_restrict wr, aclspv_wrd_t c) {

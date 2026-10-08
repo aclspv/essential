@@ -6,26 +6,36 @@
 #include <aclmem.h>
 #include <aclexpr/op.h>
 
-#include <ae2f/cc/memset.h>
-
 #include "./carve.h"
 
 #include "./visit/api.h"
 #include "./visit/simple.h"
 #include "./visit/op1/arithmetic_cast.h"
+#include "./visit/op1/deref.h"
 #include "./visit/op1/incr.h"
+#include "./visit/op1/memberread.h"
+#include "./visit/op1/subscript.h"
+#include "./visit/opn/initlist.h"
 #include "./visit/op2/arithmetic.h"
 #include "./visit/op2/assign.h"
 #include "./visit/op2/bool0.h"
+#include "./visit/op2/cmp.h"
+#include "./visit/op2/shift.h"
 
 #include "./beforevisit.h"
 
 enum {
 	OP2_ARITHMETIC,
+	OP2_CMP,
+	OP2_SHIFT,
 	OP2_BOOL0,
 	OP2_ASSIGN,
 	OP1_ARITHMETIC_CAST,
 	OP1_INCR,
+	OP1_SUBSCRIPT,
+	OP1_MEMBERREAD,
+	OP1_DEREF,
+	OPN_INITLIST,
 	OP0_,
 	OP0_VAL,
 	OP_FAIL,
@@ -133,7 +143,7 @@ enum CXChildVisitResult aclexpr_visit(
 		cgcsdef(OP_FAIL):
 		{
 			err_puts("[visit] OP_FAIL");
-			CTX->m_err = (e_aclspv_compile_t) ae2f_bll_sel_bool1(
+			CTX->m_err = (aclspv_compile_t) ae2f_bll_sel_bool1(
 					uint_leastenum_t
 					, CTX->m_err
 					, (uint_leastenum_t) CTX-> m_err
@@ -174,7 +184,7 @@ enum CXChildVisitResult aclexpr_visit(
 				aclspv_wrd_t	IDVAL_PRV = 0;
 				aclexpr_opbincfg_extra PRV_EXTRA;
 
-				ae2fcc_memset(&PRV_EXTRA, 0, sizeof(PRV_EXTRA));
+				aclmemzero(&PRV_EXTRA, sizeof(PRV_EXTRA));
 
 				LST_SCALE		= get_last_scale_from_vec(&CMDSTCK_SCALE);
 				LST_SCALE_BUF		= get_buf_from_scale2(aclspv_wrd_t, &CMDSTCK_SCALE, *LST_SCALE);
@@ -196,7 +206,7 @@ enum CXChildVisitResult aclexpr_visit(
 							, (unsigned)NUM_CMDCOUNTERSTCK - 1u
 							, (unsigned)GETLASTEL_CMDCOUNTERSTCK_PRV(a).m_count_oprnd));
 
-				ae2f_unexpected_but_if(aclexpr_carve(
+				ae2f_ifnezerr_strict(aclexpr_carve(
 							rdwr_data
 							, &IDVAL_PRV
 							, &PRV_EXTRA))
@@ -244,14 +254,50 @@ enum CXChildVisitResult aclexpr_visit(
 			cgjmp(
 					aclexpr_beforevisit(rdwr_data, GETLASTEL_CMDCOUNTERSTCK(a).m_count_oprnd)
 					? cgcase(OP_FAIL)
-					: cgcase(OP2_ARITHMETIC)
+					: cgcase(OPN_INITLIST)
 					);
+		}
+
+		cgcsdef(OPN_INITLIST):
+		{
+			dbg_puts("[visit] OPN_INITLIST");
+			cgjmp(aclexpr_visit_opn_initlist(
+						h_cur, CTX
+						, &CMDSTCK_SCALE
+						, cgcase(OP_RECURSE)
+						, cgcase(OP_FAIL)
+						, cgcase(OP2_ARITHMETIC)
+						));
 		}
 
 		cgcsdef(OP2_ARITHMETIC): 
 		{
 			dbg_puts("[visit] OP2_ARITHMETIC");
 			cgjmp(aclexpr_visit_op2_arithmetic(
+						h_cur, CTX
+						, &CMDSTCK_SCALE
+						, cgcase(OP_RECURSE)
+						, cgcase(OP_FAIL)
+						, cgcase(OP2_CMP)
+						));
+		}
+
+		cgcsdef(OP2_CMP):
+		{
+			dbg_puts("[visit] OP2_CMP");
+			cgjmp(aclexpr_visit_op2_cmp(
+						h_cur, CTX
+						, &CMDSTCK_SCALE
+						, cgcase(OP_RECURSE)
+						, cgcase(OP_FAIL)
+						, cgcase(OP2_SHIFT)
+						));
+		}
+
+		cgcsdef(OP2_SHIFT):
+		{
+			dbg_puts("[visit] OP2_SHIFT");
+			cgjmp(aclexpr_visit_op2_shift(
 						h_cur, CTX
 						, &CMDSTCK_SCALE
 						, cgcase(OP_RECURSE)
@@ -304,7 +350,49 @@ enum CXChildVisitResult aclexpr_visit(
 						, &CMDSTCK_SCALE
 						, cgcase(OP_RECURSE)
 						, cgcase(OP_FAIL)
+						, cgcase(OP1_SUBSCRIPT)
+						));
+		}
+
+		cgcsdef(OP1_SUBSCRIPT):
+		{
+			dbg_puts("[visit] OP1_SUBSCRIPT");
+			cgjmp(aclexpr_visit_op1_subscript(
+						h_cur, CTX
+						, &CMDSTCK_SCALE
+						, &LST_EXTRA[GETLASTEL_CMDCOUNTERSTCK(a).m_count_oprnd]
+						, cgcase(OP_RECURSE)
+						, cgcase(OP_FAIL)
+						, cgcase(OP1_DEREF)
+						, cgcase(OP0_)
+						));
+		}
+
+		cgcsdef(OP1_DEREF):
+		{
+			dbg_puts("[visit] OP1_DEREF");
+			cgjmp(aclexpr_visit_op1_deref(
+						h_cur, CTX
+						, &CMDSTCK_SCALE
+						, &LST_EXTRA[GETLASTEL_CMDCOUNTERSTCK(a).m_count_oprnd]
+						, cgcase(OP_RECURSE)
+						, cgcase(OP_FAIL)
+						, cgcase(OP1_MEMBERREAD)
+						, cgcase(OP0_)
+						));
+		}
+
+		cgcsdef(OP1_MEMBERREAD):
+		{
+			dbg_puts("[visit] OP1_MEMBERREAD");
+			cgjmp(aclexpr_visit_op1_memberread(
+						h_cur, CTX
+						, &CMDSTCK_SCALE
+						, &LST_EXTRA[GETLASTEL_CMDCOUNTERSTCK(a).m_count_oprnd]
+						, cgcase(OP_RECURSE)
+						, cgcase(OP_FAIL)
 						, cgcase(OP0_VAL)
+						, cgcase(OP0_)
 						));
 		}
 

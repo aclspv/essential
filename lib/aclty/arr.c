@@ -1,13 +1,15 @@
+#include "../aclty.h"
 #include "./arr.h"
 #include "./implutil.h"
 
 #include <aclmem.h>
 #include <aclexpr.h>
+#include <aclctx/err.h>
 
 #include <util/emitx.h>
 #include <util/iddef.h>
 #include <util/constant.h>
-#include <util/capability.h>
+#include <aclutil/capability.h>
 
 #include <ae2f/pat/dbg.h>
 
@@ -33,8 +35,23 @@ aclspv_id_t aclty_mk_arr3(
 				, h_ctx
 				);
 
+		aclspv_wrd_t stride;
+		aclconst_specsz elm_size = aclty_getsize(c_type_elm, h_ctx);
+
+		ae2f_ifnezerr(elm_size.m_id) {
+			_aclctx_err(h_ctx, ACLSPV_COMPILE_UNHANDLED);
+			return 0;
+		}
+
+		stride = ae2f_expected_strict(elm_size.m_lit.m_max == (aclspv_wrdmax_t)elm_size.m_lit.m_wrd) 
+			? elm_size.m_lit.m_wrd 
+			: 0;
+
+		ae2f_ifezerr(stride) return 0;
+		stride = (stride + c_decorate_stride - 1) & ~(c_decorate_stride - 1);
+
 		arr_stride->m_info.m_dcr.m_num_oprnd = 1;
-		arr_stride->m_info.m_dcr.m_oprnd[0] = c_decorate_stride;
+		arr_stride->m_info.m_dcr.m_oprnd[0] = stride;
 	}
 
 	r = aclty_build_arr(arr, h_ctx);
@@ -80,6 +97,7 @@ static aclspv_bool_t s_is_same(
 	if(rd0 == rd1) return 0;
 	if(rd0->m_class != rd1->m_class) return 0;
 	if(rd0->m_alignof != rd1->m_alignof) return 0;
+	if(rd0->m_info.m_arr.m_type != rd1->m_info.m_arr.m_type) return 0;
 	unless(aclconst_is_specsz_same(rd0->m_sizeof, rd1->m_sizeof, h_ctx))
 
 	if(rd0->m_info.m_arr.m_num_dcr != rd1->m_info.m_arr.m_num_dcr)

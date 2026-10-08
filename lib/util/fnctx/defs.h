@@ -53,4 +53,6 @@ typedef struct {
 	aclspv_wrdcount_t	m_continue_loop;	/** continue destination */
 } aclutil_fnctx;
 
+typedef aclutil_fnctx* ae2f_restrict h_aclutil_fnctx;
+
 #endif

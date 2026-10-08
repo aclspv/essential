@@ -9,60 +9,79 @@
 #include <aclattr/btcast.h>
 
 #include <aclexpr.h>
-#include <aclcursor.h>
+#include <aclexpr/curreg.h>
+#include <aclcur/common.h>
+#include <aclcur/reg/var.h>
+
 #include <aclty.h>
 
 #include <ae2f/pat/macrofunc.h>
 #include <ae2f/pat/dbg.h>
 
-#include <ae2f/cc/memset.h>
+
+/** @brief whether the declaration's own type is an array.
+ *
+ * an array-typed VarDecl carries its array-size expression as a child
+ * cursor. that child is not an initializer, so it must not be mistaken
+ * for one. note a named element type contributes a CXCursor_TypeRef child
+ * of its own, which is why a `T[N]` over a builtin element type is the
+ * shape that reaches this predicate unabsorbed.
+ * */
+static aclspv_bool_t	s_vardecl_ty_arr(CXCursor h_cur) {
+	const enum CXTypeKind	KIND
+		= clang_getCanonicalType(clang_getCursorType(h_cur)).kind
+		;
+
+	return	KIND == CXType_ConstantArray
+		||	KIND == CXType_IncompleteArray
+		||	KIND == CXType_VariableArray
+		||	KIND == CXType_DependentSizedArray
+		;
+}
+
+/** @brief detects an expression child on a VarDecl that the C API hid from clang_Cursor_getVarDeclInitializer (e.g. the compound-literal init shape). */
+static enum CXChildVisitResult	s_vardecl_init_detect(CXCursor h_cur, CXCursor h_parent, CXClientData ae2f_restrict rw_found) {
+	const enum CXCursorKind KIND = h_cur.kind;
+
+	unless(KIND == CXCursor_TypeRef) {
+		unless(KIND >= CXCursor_FirstAttr && KIND <= CXCursor_LastAttr) {
+			/** an array declaration's size expression is not an
+			 * initializer, hidden or otherwise. */
+			unless(s_vardecl_ty_arr(h_parent)) {
+				*((int* ae2f_restrict)rw_found) = 1;
+				return CXChildVisit_Break;
+			}
+		}
+	}
+
+	return CXChildVisit_Continue;
+}
 
 
 /** @brief it produces error on ctx. */
 ae2f_MAC((L, )) aclemit_body_vardecl(CXCursor h_cur, aclutil_fnctx* ae2f_restrict h_fnctx) { ae2fpat_assertassume(h_fnctx); {
 	h_aclspv_ctx_t	L$$CTX = h_fnctx->m_ctx;
-
-	aclspv_wrdcount_t L$$IDX = aclutil_mk_cursor_base(
-			L$$CTX->m_num_cursor
-			, &L$$CTX->m_cursors
-			, h_cur);
-
+	aclutil_literal	L$$LITERAL;
+	aclspv_id_t		L$$TYPEID = 0;
 	aclspv_id_t		L$$TYPE_PTR = 0;
-
-	aclspv_wrdcount_t	L$$ORIGIN_CURSORS_NUM = L$$CTX->m_num_cursor;
+	aclspv_id_t		L$$REG = 0;
+	aclspv_id_t		L$$INIT = 0;
 
 	const CXType	L$$TYPE = clang_getCanonicalType(clang_getCursorType(h_cur));
-	x_aclcursor* L$$PCURSOR = L$$CTX->m_cursors.m_p ? &((x_aclcursor* ae2f_restrict)L$$CTX->m_cursors.m_p)[L$$IDX] : 0;
 
-	ae2f_ifezerr(L$$PCURSOR) {
-		L$$CTX->m_err = ACLSPV_COMPILE_UNHANDLED_BODY;
-		goto L$$LBL_END; 
-	}
+	L$$LITERAL.m_api_uintmax = 0;
 
-	ae2f_unexpected_but_if(L$$IDX == L$$CTX->m_num_cursor + 1)
-		goto L$$LBL_END;
-
-	L$$CTX->m_num_cursor += L$$IDX == L$$CTX->m_num_cursor;
-
-	ae2f_ifneznrm((L$$PCURSOR->m_data.m_vardecl.m_type_id = aclty_mk_by_cursor(h_cur, L$$TYPE, L$$CTX))) {
+	ae2f_ifneznrm((L$$TYPEID = aclty_mk_by_cursor_dummy(h_cur, L$$TYPE, L$$CTX))) {
 		L$$TYPE_PTR = aclty_mk_ptr(
-				L$$PCURSOR->m_data.m_vardecl.m_type_id
+				L$$TYPEID
 				, SpvStorageClassFunction
 				, L$$CTX
 				);
 
-		L$$PCURSOR->m_data.m_vardecl.m_etype_id = aclty_get_veccfg(L$$PCURSOR->m_data.m_vardecl.m_type_id, L$$CTX).m_ty_elm;
-
-		dbg_prefix(a);
-		dbg_call((void), (fprintf(stderr, "etype: %u type: %u\n"
-						, (unsigned)L$$PCURSOR->m_data.m_vardecl.m_etype_id
-						, (unsigned)L$$PCURSOR->m_data.m_vardecl.m_type_id
-					 )));
-
 		goto L$$VDECL_TY;
 	}
 
-	else { 
+	else {
 		CXString L$$NAME = clang_getTypeSpelling(L$$TYPE);
 		err_prefix(a);
 		err_call(
@@ -83,45 +102,26 @@ ae2f_MAC((L, )) aclemit_body_vardecl(CXCursor h_cur, aclutil_fnctx* ae2f_restric
 		ae2f_expected_but_else(L$$TYPE_PTR)
 		goto L$$LBL_END;
 
-	L$$PCURSOR->m_data.m_vardecl.m_ptr_type_id = L$$TYPE_PTR;
-	L$$PCURSOR->m_data.m_vardecl.m_id = L$$CTX->m_id++;
-	L$$PCURSOR->m_data.m_vardecl.m_mask = 0;
-	L$$PCURSOR->m_data.m_vardecl.m_stage_lvl = h_fnctx->m_var_stage;
-	L$$PCURSOR->m_kind			= ACLCURSOR_VARDECL;
+	/* the register is bound to its declaration cursor; loads resolve it. */
+	L$$REG = aclexpr_curreg_find(h_cur, L$$CTX);
+	unless(L$$REG) {
+		const aclcur_reg_t L$$REGIN = aclcur_regvar_in();
 
-	dbg_call((void), fprintf(stderr, "[vardecl] ptr %u ty %u ety %u\n"
-				, (unsigned)L$$PCURSOR->m_data.m_vardecl.m_ptr_type_id
-				, (unsigned)L$$PCURSOR->m_data.m_vardecl.m_type_id
-				, (unsigned)L$$PCURSOR->m_data.m_vardecl.m_etype_id
-				));
-
-	{
-		aclspv_wrdcount_t L$$STAGEDIDX = aclcursor_vardecl_find_stagedval(
-				L$$ORIGIN_CURSORS_NUM
-				, &h_fnctx->m_ctx->m_cursors
-				, L$$PCURSOR->m_data.m_vardecl.m_stage_lvl
-				, L$$TYPE_PTR
-				);
-
-		dbg_puts("we will find owner");
-
-		if(L$$STAGEDIDX < L$$ORIGIN_CURSORS_NUM) {
-			L$$PCURSOR->m_data.m_vardecl.m_mask &= ~(aclspv_wrd_t)ACLCURSOR_VARDECL_OWNER;
-			L$$PCURSOR->m_data.m_vardecl.m_id
-				= L$$PCURSOR[L$$STAGEDIDX - L$$IDX].m_data.m_vardecl.m_id;
-			L$$PCURSOR[L$$STAGEDIDX - L$$IDX].m_data.m_vardecl.m_mask |= ACLCURSOR_VARDECL_OCCUPIED;
-		} else {
-			L$$PCURSOR->m_data.m_vardecl.m_mask |= ACLCURSOR_VARDECL_OWNER;
-			dbg_puts("is the owner");
-		}
-
-		L$$PCURSOR->m_data.m_vardecl.m_mask |= ACLCURSOR_VARDECL_OCCUPIED;
+		L$$REG = aclcur_cfg_reg(h_cur, L$$TYPEID, SpvStorageClassFunction, &L$$REGIN, L$$CTX);
 	}
 
-	L$$PCURSOR->m_data.m_vardecl.m_mask &= ~(aclspv_wrd_t)ACLCURSOR_VARDECL_PREDICTABLE;
-	L$$PCURSOR->m_data.m_vardecl.m_init_val = 0;
+	ae2f_ifezerr(L$$REG) {
+		L$$CTX->m_err = ACLSPV_COMPILE_MET_INVAL;
+		goto L$$LBL_END;
+	}
 
-	if(aclid_is_vectorisable(L$$PCURSOR->m_data.m_vardecl.m_type_id))
+	dbg_call((void), fprintf(stderr, "[vardecl] reg %u ty %u ptr %u\n"
+				, (unsigned)L$$REG
+				, (unsigned)L$$TYPEID
+				, (unsigned)L$$TYPE_PTR
+				));
+
+	if(aclid_is_vectorisable(L$$TYPEID))
 	{
 		aclspv_id_t	L$$SPECID = 0xFFFFFFFF;
 
@@ -129,8 +129,8 @@ ae2f_MAC((L, )) aclemit_body_vardecl(CXCursor h_cur, aclutil_fnctx* ae2f_restric
 
 		if(L$$SPECID != 0xFFFFFFFF) {
 			/** specid! */
-			aclutil_specconstant_val_t	L$$NODE
-				= aclutil_get_specconstant_val_id(L$$CTX, L$$SPECID);
+			aclval_spec_t	L$$NODE
+				= aclval_get_spec(L$$CTX, L$$SPECID);
 
 			dbg_prefix(i);
 			dbg_call(fprintf, (stderr, "Spec ID detected: %u\n", L$$SPECID));
@@ -144,8 +144,8 @@ ae2f_MAC((L, )) aclemit_body_vardecl(CXCursor h_cur, aclutil_fnctx* ae2f_restric
 							L$$NODE.m_val
 							, L$$NODE.m_ty
 							, ACLUTIL_LITERAL_CONSTANT
-							, &L$$PCURSOR->m_data.m_vardecl.m_init_val
-							, L$$PCURSOR->m_data.m_vardecl.m_type_id
+							, &L$$INIT
+							, L$$TYPEID
 							, L$$CTX
 							))
 				{
@@ -164,17 +164,23 @@ ae2f_MAC((L, )) aclemit_body_vardecl(CXCursor h_cur, aclutil_fnctx* ae2f_restric
 						goto L$$LBL_END;
 
 					case ACLEXPR_RET_SUCCESS_CONSTANT:
-						L$$PCURSOR->m_data.m_vardecl.m_mask |= ACLUTIL_LITERAL_CONSTANT;
-						L$$PCURSOR->m_data.m_vardecl.m_mask |= ACLCURSOR_VARDECL_PREDICTABLE;
+						break;
+				}
+
+				ae2f_ifezerr(aclcur_store_reg(L$$REG, L$$INIT, L$$CTX)) {
+					L$$CTX->m_err = ACLSPV_COMPILE_MET_INVAL;
+					goto L$$LBL_END;
 				}
 
 				goto L$$LBL_END;
-			} else {
+			}
+			else {
 				CXCursor	L$$VAR_INIT = clang_Cursor_getVarDeclInitializer(h_cur);
 				ae2f_ifnezerr(clang_Cursor_isNull(L$$VAR_INIT)) {
-					(h_fnctx)->m_ctx->m_err = ACLSPV_COMPILE_UNHANDLED_BODY;
+					(h_fnctx)->m_ctx->m_err = ACLSPV_COMPILE_UNHANDLED_BODY_VARDECL;
 					goto L$$LBL_END;
-				} else {
+				}
+				else {
 					fn_aclspv_get_expr_t*	L$$FN_GETEXPR = aclexpr_eval;
 
 					{
@@ -184,22 +190,24 @@ ae2f_MAC((L, )) aclemit_body_vardecl(CXCursor h_cur, aclutil_fnctx* ae2f_restric
 					}
 
 					ae2f_ifnezerr_strict(ACLEXPR_RET_SUCCESS_LITERAL != L$$FN_GETEXPR(
-								&L$$PCURSOR->m_data.m_vardecl.m_init_val
-								, L$$PCURSOR->m_data.m_vardecl.m_type_id
+								&L$$INIT
+								, L$$TYPEID
 								, L$$VAR_INIT
-								, &L$$PCURSOR->m_data.m_vardecl.m_literal
+								, &L$$LITERAL
 								, h_fnctx)) {
 						L$$CTX->m_err = ACLSPV_COMPILE_MET_INVAL_BODY_VARDECL_GET_EXPR;
 						goto L$$LBL_END;
 					}
 
-					L$$PCURSOR->m_data.m_vardecl.m_mask |= ACLUTIL_LITERAL_CONSTANT;
-					L$$PCURSOR->m_data.m_vardecl.m_mask |= ACLCURSOR_VARDECL_PREDICTABLE;
+					ae2f_ifezerr(L$$INIT = aclutil_mk_specconstant_val_by_enum(L$$SPECID
+								, L$$LITERAL.m_api_uintmax
+								, L$$CTX
+								, (enum ACLSPV_ID_) L$$TYPEID)) {
+						L$$CTX->m_err = ACLSPV_COMPILE_MET_INVAL;
+						goto L$$LBL_END;
+					}
 
-					ae2f_ifezerr(L$$PCURSOR->m_data.m_vardecl.m_init_val = aclutil_mk_specconstant_val_by_enum(L$$SPECID
-							, L$$PCURSOR->m_data.m_vardecl.m_literal.m_api_uintmax
-							, L$$CTX
-							, (enum ACLSPV_ID_) L$$PCURSOR-> m_data.m_vardecl.m_type_id)) {
+					ae2f_ifezerr(aclcur_store_reg(L$$REG, L$$INIT, L$$CTX)) {
 						L$$CTX->m_err = ACLSPV_COMPILE_MET_INVAL;
 						goto L$$LBL_END;
 					}
@@ -213,8 +221,16 @@ ae2f_MAC((L, )) aclemit_body_vardecl(CXCursor h_cur, aclutil_fnctx* ae2f_restric
 	{
 		CXCursor	L$$VAR_INIT = clang_Cursor_getVarDeclInitializer(h_cur);
 		if(clang_Cursor_isNull(L$$VAR_INIT)) {
-			L$$PCURSOR->m_data.m_vardecl.m_mask &= ~(aclspv_wrd_t)ACLCURSOR_VARDECL_PREDICTABLE;
-			L$$PCURSOR->m_data.m_vardecl.m_init_val = 0;
+			/** the C API hid an existing initializer (e.g. the compound-literal shape):
+			 * 		fail loudly instead of registering an uninitialized variable. */
+			int	L$$HAS_INIT = 0;
+
+			clang_visitChildren(h_cur, s_vardecl_init_detect, &L$$HAS_INIT);
+
+			ae2f_ifnezerr(L$$HAS_INIT) {
+				err_puts("[aclemit::body::vardecl] initializer exists but is invisible to clang_Cursor_getVarDeclInitializer (compound-literal init?) — not supported");
+				L$$CTX->m_err = ACLSPV_COMPILE_UNHANDLED_BODY_VARDECL;
+			}
 			goto L$$LBL_END;
 		}
 
@@ -233,10 +249,10 @@ ae2f_MAC((L, )) aclemit_body_vardecl(CXCursor h_cur, aclutil_fnctx* ae2f_restric
 			dbg_puts(("Variable has constructor."));
 
 			switch(L$$FN_GETEXPR(
-						&L$$PCURSOR->m_data.m_vardecl.m_init_val
-						, L$$PCURSOR->m_data.m_vardecl.m_type_id
+						&L$$INIT
+						, L$$TYPEID
 						, L$$VAR_INIT
-						, &L$$PCURSOR->m_data.m_vardecl.m_literal
+						, &L$$LITERAL
 						, h_fnctx))
 			{
 				case ACLEXPR_RET_NOT_THE_CASE:
@@ -250,15 +266,18 @@ ae2f_MAC((L, )) aclemit_body_vardecl(CXCursor h_cur, aclutil_fnctx* ae2f_restric
 					break;
 
 				case ACLEXPR_RET_SUCCESS_LITERAL:
-					L$$PCURSOR->m_data.m_vardecl.m_mask |= ACLUTIL_LITERAL_LITERAL;
-					ae2f_fallthrough;
 				case ACLEXPR_RET_SUCCESS_CONSTANT:
-					L$$PCURSOR->m_data.m_vardecl.m_mask |= ACLUTIL_LITERAL_CONSTANT;
-					ae2f_fallthrough;
 				case ACLEXPR_RET_SUCCESS:
-					L$$PCURSOR->m_data.m_vardecl.m_mask |= ACLCURSOR_VARDECL_PREDICTABLE;
 					break;
 			}
+		}
+
+		ae2f_ifnezerr(L$$CTX->m_err)
+			goto L$$LBL_END;
+
+		ae2f_ifezerr(aclcur_store_reg(L$$REG, L$$INIT, L$$CTX)) {
+			L$$CTX->m_err = ACLSPV_COMPILE_MET_INVAL;
+			goto L$$LBL_END;
 		}
 	}
 

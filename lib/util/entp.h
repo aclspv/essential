@@ -7,16 +7,8 @@
 
 typedef struct {
 	aclspv_id_t	m_id;
-
-	/** parameter count (excluding push constants) */
-	aclspv_wrd_t	m_nprm;
-
-	struct {
-		aclspv_id_t	m_push_struct;
-		aclspv_id_t	m_push_ptr;
-		aclspv_id_t	m_push_var;
-	} m_push_ids;
-
+	aclspv_wrd_t	m_idx_push_constant;
+	aclspv_wrd_t	m_descriptor_set;
 	CXCursor	m_fn;
 } aclutil_entp_t;
 

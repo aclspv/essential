@@ -2,6 +2,7 @@
 #define aclemit_body_while_cc
 
 #include <util/fnctx.h>
+#include <util/constant.h>
 #include <util/emitx.h>
 #include <util/visitfromroot.h>
 
@@ -9,7 +10,7 @@
 #include <ae2f/cgoto.h>
 
 #include <aclexpr.h>
-#include <aclcursor.h>
+#include <aclcur/common.h>
 #include <aclattr/getkinder.h>
 #include <aclattr/branchratio.h>
 
@@ -26,7 +27,6 @@ ae2f_MAC((L, )) aclemit_body_while(CXCursor h_cur, aclutil_fnctx * ae2f_restrict
 
 	aclspv_wrd_t			L$$LOOPCTL	= SpvLoopControlMaskNone;
 	aclspv_wrd_t			L$$LOOPCND	= 0;
-	aclspv_wrd_t			L$$SNAPSHOT	= 0;
 	aclspv_wrd_t			L$$WEIGHTS[2]	= {0, 0};
 
 	unsigned			L$$IS_INFINITE_LOOP = 0;
@@ -36,7 +36,6 @@ ae2f_MAC((L, )) aclemit_body_while(CXCursor h_cur, aclutil_fnctx * ae2f_restrict
 	L$$GETKINDER.m_num_wanted	= 2;
 	L$$GETKINDER.m_res		= CXChildVisit_Continue;
 
-	L$$SNAPSHOT			= (h_fnctx)->m_ctx->m_count.m_fnimpl;
 	L$$LITERAL.m_api_uintmax	= 0;
 
 	clang_visitChildren(
@@ -70,33 +69,29 @@ ae2f_MAC((L, )) aclemit_body_while(CXCursor h_cur, aclutil_fnctx * ae2f_restrict
 		const L$$LOOPWRD_T L$$LOOPEND		= (h_fnctx)->m_ctx->m_id++;
 		const L$$LOOPWRD_T L$$LOOPCONTINUE	= (h_fnctx)->m_ctx->m_id++;
 
-		ae2f_ifnezerr((h_fnctx->m_ctx)->m_err = aclcursor_vardecl_evuclbl(
-					(h_fnctx->m_ctx)->m_num_cursor
-					, (h_fnctx->m_ctx)->m_cursors.m_p
-					, (h_fnctx->m_ctx)
-					, (h_fnctx)->m_var_stage + 1)) goto L$$RET;
+		
 
-		ae2f_ifezerr((h_fnctx)->m_ctx->m_count.m_fnimpl = aclutil_emitx_2(
-					&(h_fnctx)->m_ctx->m_section.m_fnimpl
-					, (h_fnctx)->m_ctx->m_count.m_fnimpl
-					, SpvOpBranch
-					,  L$$LOOPCHECK
-					)) {
+		ae2f_ifezerr(aclcur_cfg_jmp(L$$LOOPCHECK, (h_fnctx)->m_ctx)) {
 			(h_fnctx)->m_ctx->m_err = ACLSPV_COMPILE_ALLOC_FAILED;
 			break;
 		}
 
-		ae2f_ifezerr((h_fnctx)->m_ctx->m_count.m_fnimpl = aclutil_emitx_2(
-					&(h_fnctx)->m_ctx->m_section.m_fnimpl
-					, (h_fnctx)->m_ctx->m_count.m_fnimpl
-					, SpvOpLabel
-					,  L$$LOOPCHECK
-					)) {
+		ae2f_ifezerr(aclcur_cfg_lbl(L$$LOOPCHECK, (h_fnctx)->m_ctx)) {
 			(h_fnctx)->m_ctx->m_err = ACLSPV_COMPILE_ALLOC_FAILED;
 			break;
 		}
 
 		(h_fnctx)->m_branch = L$$LOOPCHECK;
+
+		/** the loop header (cond) is marked at carve time because the
+		 * back edge is not carved yet when its loads resolve — the graph
+		 * cannot reveal the loopness then. the body needs no marker: its
+		 * loopness is detected from the loop JC (carved before the body
+		 * is visited), whose continue target proves a cycle. */
+		ae2f_ifezerr(aclcur_cfg_lbl_loop(L$$LOOPCHECK, (h_fnctx)->m_ctx)) {
+			(h_fnctx)->m_ctx->m_err = ACLSPV_COMPILE_ALLOC_FAILED;
+			break;
+		}
 
 		switch(aclexpr_eval(
 					&L$$LOOPCND
@@ -112,70 +107,41 @@ ae2f_MAC((L, )) aclemit_body_while(CXCursor h_cur, aclutil_fnctx * ae2f_restrict
 				goto L$$ERR;
 
 			case ACLEXPR_RET_SUCCESS_LITERAL:
-				(h_fnctx)->m_ctx->m_count.m_fnimpl
-					= ae2f_bll_sel_bool1(
-							aclspv_wrd_t
-							, L$$LITERAL.m_api_uintmax
-							, (h_fnctx)->m_ctx->m_count.m_fnimpl
-							, L$$SNAPSHOT);
+				L$$LOOPCND = aclutil_mk_constant_val_by_enum(
+						L$$LITERAL.m_api_uintmax
+						, (h_fnctx)->m_ctx
+						, ACLSPV_ID_BOOL
+						);
 
-				ae2f_cgoto2_strict(L$$LITERAL.m_api_uintmax, L$$CONTINUE, L$$RET);
+				ae2f_ifezerr(L$$LOOPCND)
+					goto L$$ERR;
+
+				ae2f_fallthrough;
 
 			case ACLEXPR_RET_SUCCESS_CONSTANT:
-				L$$CONTINUE:
-					warn_puts("Constant value on loop condition");
-				L$$IS_INFINITE_LOOP = (aclspv_wrd_t)L$$LITERAL.m_api_uintmax;
+				warn_puts("Constant value on loop condition");
+				L$$IS_INFINITE_LOOP = (aclspv_wrd_t)(L$$LITERAL.m_api_uintmax != 0);
 				ae2f_fallthrough;
 
 			case ACLEXPR_RET_SUCCESS:
 				break;
 		}
 
-		ae2f_ifnezerr((h_fnctx->m_ctx)->m_err = aclcursor_vardecl_evuclbl(
-					(h_fnctx->m_ctx)->m_num_cursor
-					, (h_fnctx->m_ctx)->m_cursors.m_p
-					, (h_fnctx->m_ctx)
-					, (h_fnctx)->m_var_stage + 1)) goto L$$RET;
+		
 
 
-		ae2f_ifezerr((h_fnctx)->m_ctx->m_count.m_fnimpl = aclutil_emitx_4(
-					&(h_fnctx)->m_ctx->m_section.m_fnimpl
-					, (h_fnctx)->m_ctx->m_count.m_fnimpl
-					, SpvOpLoopMerge
-					,  L$$LOOPEND
-					,  L$$LOOPCONTINUE
-					, L$$LOOPCTL)) {
+		ae2f_ifezerr(aclcur_cfg_jc(
+					L$$LOOPCND
+					, L$$LOOPSTART
+					, L$$LOOPEND
+					, L$$WEIGHTS[0]
+					, L$$WEIGHTS[1]
+					, L$$LOOPEND
+					, L$$LOOPCONTINUE
+					, L$$LOOPCTL
+					, (h_fnctx)->m_ctx)) {
 			(h_fnctx)->m_ctx->m_err = ACLSPV_COMPILE_ALLOC_FAILED;
 			break;
-		}
-
-		if(L$$WEIGHTS[0] || L$$WEIGHTS[1]) {
-			dbg_puts("while::has weights.");
-			ae2f_ifezerr((h_fnctx)->m_ctx->m_count.m_fnimpl = aclutil_emitx_6(
-						&(h_fnctx)->m_ctx->m_section.m_fnimpl
-						, (h_fnctx)->m_ctx->m_count.m_fnimpl
-						, SpvOpBranchConditional
-						, L$$LOOPCND
-						, L$$LOOPSTART
-						, L$$LOOPEND
-						, L$$WEIGHTS[0]
-						, L$$WEIGHTS[1])) {
-				(h_fnctx)->m_ctx->m_err = ACLSPV_COMPILE_ALLOC_FAILED;
-				break;
-			}
-		}
-		else {
-			ae2f_ifezerr((h_fnctx)->m_ctx->m_count.m_fnimpl = aclutil_emitx_4(
-						&(h_fnctx)->m_ctx->m_section.m_fnimpl
-						, (h_fnctx)->m_ctx->m_count.m_fnimpl
-						, SpvOpBranchConditional
-						, L$$LOOPCND
-						, L$$LOOPSTART
-						, L$$LOOPEND)) {
-				(h_fnctx)->m_ctx->m_err = ACLSPV_COMPILE_ALLOC_FAILED;
-				break;
-			}
-
 		}
 
 		{
@@ -184,16 +150,11 @@ ae2f_MAC((L, )) aclemit_body_while(CXCursor h_cur, aclutil_fnctx * ae2f_restrict
 			L$$FNCTX_NEW.m_break_loop	= L$$LOOPEND;
 			L$$FNCTX_NEW.m_continue_loop	= L$$LOOPCHECK;
 
-			ae2f_ifezerr((h_fnctx->m_ctx)->m_count.m_fnimpl = aclutil_emitx_2(
-						&(h_fnctx->m_ctx)->m_section.m_fnimpl
-						, (h_fnctx->m_ctx)->m_count.m_fnimpl
-						, SpvOpLabel
-						, L$$LOOPSTART
-						)) goto L$$ERR;
-
-			_aclutil_fnctx_snap(L$$FNCTX_NEW, *h_fnctx, ACLUTIL_FNCTX_SNAPS_LBL);
+			ae2f_ifezerr(aclcur_cfg_lbl(L$$LOOPSTART, (h_fnctx)->m_ctx))
+				goto L$$ERR;
 
 			(h_fnctx)->m_branch = L$$LOOPSTART;
+
 			(void)++L$$FNCTX_NEW.m_var_stage;
 
 			aclutil_visitfromroot(
@@ -208,19 +169,9 @@ ae2f_MAC((L, )) aclemit_body_while(CXCursor h_cur, aclutil_fnctx * ae2f_restrict
 
 			h_fnctx->m_state0		|= L$$FNCTX_NEW.m_state0;
 
-			ae2f_ifnezerr((h_fnctx->m_ctx)->m_err = aclcursor_vardecl_evuclbl(
-						(h_fnctx->m_ctx)->m_num_cursor
-						, (h_fnctx->m_ctx)->m_cursors.m_p
-						, (h_fnctx->m_ctx)
-						, (h_fnctx)->m_var_stage + 1)) goto L$$RET;
 
 			unless(L$$FNCTX_NEW.m_state0 & ACLUTIL_FNCTX_STATE0_FNRET) {
-				ae2f_expected_but_else((h_fnctx->m_ctx)->m_count.m_fnimpl = aclutil_emitx_2(
-							&(h_fnctx->m_ctx)->m_section.m_fnimpl
-							, (h_fnctx->m_ctx)->m_count.m_fnimpl
-							, SpvOpBranch
-							, L$$LOOPCONTINUE
-							)) {
+				ae2f_expected_but_else(aclcur_cfg_jmp(L$$LOOPCONTINUE, (h_fnctx)->m_ctx)) {
 					goto L$$ERR;
 				}
 			}
@@ -231,33 +182,18 @@ ae2f_MAC((L, )) aclemit_body_while(CXCursor h_cur, aclutil_fnctx * ae2f_restrict
 			}
 		}
 
-		ae2f_ifezerr((h_fnctx)->m_ctx->m_count.m_fnimpl = aclutil_emitx_2(
-					&(h_fnctx)->m_ctx->m_section.m_fnimpl
-					, (h_fnctx)->m_ctx->m_count.m_fnimpl
-					, SpvOpLabel
-					, L$$LOOPCONTINUE
-					)) {
+		ae2f_ifezerr(aclcur_cfg_lbl(L$$LOOPCONTINUE, (h_fnctx)->m_ctx)) {
 			(h_fnctx)->m_ctx->m_err = ACLSPV_COMPILE_ALLOC_FAILED;
 			break;
 		}
 		(h_fnctx)->m_branch = L$$LOOPCONTINUE;
 
-		ae2f_ifezerr((h_fnctx)->m_ctx->m_count.m_fnimpl = aclutil_emitx_2(
-					&(h_fnctx)->m_ctx->m_section.m_fnimpl
-					, (h_fnctx)->m_ctx->m_count.m_fnimpl
-					, SpvOpBranch
-					, L$$LOOPCHECK
-					)) {
+		ae2f_ifezerr(aclcur_cfg_jmp(L$$LOOPCHECK, (h_fnctx)->m_ctx)) {
 			(h_fnctx)->m_ctx->m_err = ACLSPV_COMPILE_ALLOC_FAILED;
 			break;
 		}
 
-		ae2f_ifezerr((h_fnctx)->m_ctx->m_count.m_fnimpl = aclutil_emitx_2(
-					&(h_fnctx)->m_ctx->m_section.m_fnimpl
-					, (h_fnctx)->m_ctx->m_count.m_fnimpl
-					, SpvOpLabel
-					, L$$LOOPEND
-					)) {
+		ae2f_ifezerr(aclcur_cfg_lbl(L$$LOOPEND, (h_fnctx)->m_ctx)) {
 			(h_fnctx)->m_ctx->m_err = ACLSPV_COMPILE_ALLOC_FAILED;
 			break;
 		}
@@ -297,10 +233,10 @@ ae2f_MAC((L, )) aclemit_body_while(CXCursor h_cur, aclutil_fnctx * ae2f_restrict
 
 	ae2f_unreachable();
 	L$$ERR:
-		(h_fnctx)->m_ctx->m_err = (e_aclspv_compile_t) ae2f_bll_sel_bool_naive1(
-				uint_leastenum_t
+		(h_fnctx)->m_ctx->m_err = ae2f_bll_sel_bool_naive1(
+				aclspv_compile_t
 				, (h_fnctx)->m_ctx->m_err
-				, (uint_leastenum_t) (h_fnctx)->m_ctx->m_err
+				, (h_fnctx)->m_ctx->m_err
 				, ACLSPV_COMPILE_UNHANDLED_WHILE
 				);
 
@@ -320,7 +256,6 @@ ae2f_MAC((L, )) aclemit_body_while(CXCursor h_cur, aclutil_fnctx * ae2f_restrict
 	 *
 	 * */
 
-	L$$RET: (void)0;
 } while(0); }
 
 #endif

@@ -2,14 +2,15 @@
 #include "./constant.h"
 #include "./emitx.h"
 #include "./iddef.h"
+#include <ae2f/c90/stdbool.h>
 
 #include <ae2f/pat/dbg.h>
-#include <ae2f/cc/memset.h>
 #include <aclmem.h>
 
-aclutil_constant*  aclutil_mk_constant_node(
-		const u64_least	c_key,
-		h_aclspv_ctx_t	h_ctx
+aclval_t*  aclval_cfg_node2(
+		const aclspv_wrd_t	c_key_0,
+		const aclspv_wrd_t	c_key_1,
+		h_aclspv_ctx_t		h_ctx
 		)
 {
 	const aclspv_wrdcount_t	COUNT = h_ctx
@@ -24,7 +25,7 @@ aclutil_constant*  aclutil_mk_constant_node(
 		ae2f_ifnezerr_strict(s_aclmem_cgrow2(
 					&h_ctx->m_constant_cache
 					, COUNT
-					, sizeof(aclutil_constant)
+					, sizeof(aclval_t)
 					, ACLSPV_COMPILE_ALLOC_FAILED_CONSTANT
 					)) return 0;
 
@@ -37,32 +38,32 @@ aclutil_constant*  aclutil_mk_constant_node(
 	if(COUNT && h_ctx->m_constant_cache.m_p) {
 		while(LEFT < RIGHT) {
 			const aclspv_wrdcount_t	MIDDLE	= LEFT + ((RIGHT - LEFT) >> 1);
-			const uint_least64_t	KEY_MADE =
-				(u64_least)(((p_aclutil_constant_t)h_ctx->m_constant_cache.m_p)
-						[MIDDLE].m_key_0)
-				| ((u64_least)((p_aclutil_constant_t)h_ctx->m_constant_cache.m_p)
-						[MIDDLE].m_key_1) << 32;
+			const aclspv_wrd_t	KEY0 = (((p_aclval_t)h_ctx->m_constant_cache.m_p)
+					[MIDDLE].m_key_0);
+			const aclspv_wrd_t	KEY1 = (((p_aclval_t)h_ctx->m_constant_cache.m_p)
+					[MIDDLE].m_key_1);
 
-			if(KEY_MADE == c_key)
-				return &((p_aclutil_constant_t)h_ctx->m_constant_cache.m_p)[MIDDLE];
+			const bool cond = KEY1 < c_key_1 || (KEY1 == c_key_1 && KEY0 < c_key_0);
 
+			if(c_key_0 == KEY0 && c_key_1 == KEY1)
+				return &((p_aclval_t)h_ctx->m_constant_cache.m_p)[MIDDLE];
 
 			/** is `KEY_MAKE < c_key ? (LEFT = MIDDLE + 1) : (RIGHT = MIDDLE)` */
-			LR[KEY_MADE < c_key] = ((KEY_MADE < c_key) ? MIDDLE + 1 : MIDDLE);
+			LR[cond] = ((cond) ? MIDDLE + 1 : MIDDLE);
 		}
 	}
 
 	ae2f_ifnezerr_strict(s_aclmem_cgrow2(
 				&h_ctx->m_constant_cache
 				, COUNT + 1
-				, sizeof(aclutil_constant)
+				, sizeof(aclval_t)
 				, ACLSPV_COMPILE_ALLOC_FAILED_CONSTANT))
 		return 0;
 
 
 	if(LEFT < COUNT) {
 		aclspv_wrd_t		C = COUNT - LEFT;
-		p_aclutil_constant_t	BASE = &((p_aclutil_constant_t)(h_ctx->m_constant_cache.m_p))[COUNT];
+		p_aclval_t	BASE = &((p_aclval_t)(h_ctx->m_constant_cache.m_p))[COUNT];
 
 		while( C --> 0 ) {
 			BASE[0] = BASE[-1];
@@ -71,15 +72,18 @@ aclutil_constant*  aclutil_mk_constant_node(
 	} 
 
 	/** sanity check for future possibility of having more elements */
-	ae2fcc_memset(&((p_aclutil_constant_t)(h_ctx->m_constant_cache.m_p))[LEFT], 0, sizeof(aclutil_constant));
-	((p_aclutil_constant_t)(h_ctx->m_constant_cache.m_p))[LEFT].m_key_0
-		= (u32_least)(c_key & 0xFFFFFFFF);
-	((p_aclutil_constant_t)(h_ctx->m_constant_cache.m_p))[LEFT].m_key_1
-		= (u32_least)(c_key >> 32) & 0xFFFFFFFF;
+	aclmemzero(&((p_aclval_t)(h_ctx->m_constant_cache.m_p))[LEFT], sizeof(aclval_t));
+
+	((p_aclval_t)(h_ctx->m_constant_cache.m_p))[LEFT].m_key_0
+		= c_key_0;
+	((p_aclval_t)(h_ctx->m_constant_cache.m_p))[LEFT].m_key_1
+		= c_key_1;
+	((p_aclval_t)(h_ctx->m_constant_cache.m_p))[LEFT].m_set_bind_storage_class
+		= (aclspv_wrd_t)SpvStorageClassMax;
 
 	++h_ctx->m_num_constant_cache;
 
-	return &((p_aclutil_constant_t)(h_ctx->m_constant_cache.m_p))[LEFT];
+	return &((p_aclval_t)(h_ctx->m_constant_cache.m_p))[LEFT];
 
 #undef	LEFT
 #undef	RIGHT
@@ -87,11 +91,11 @@ aclutil_constant*  aclutil_mk_constant_node(
 
 #include <ae2f/bll.h>
 
-aclspv_id_t aclutil_mk_constant_bool_id(
+aclspv_id_t aclval_cfg_bool(
 		const aclspv_bool_t c_val,
 		h_aclspv_ctx_t h_ctx
 		) {
-	aclutil_constant* ae2f_restrict const C = aclutil_mk_constant_node((u64_least)c_val, h_ctx);
+	aclval_t* ae2f_restrict const C = aclval_cfg_node((u64_least)c_val, h_ctx);
 	ae2f_ifezerr(C) return 0;
 	if(C->m_const_val_bool) return C->m_const_val_bool;
 
@@ -109,13 +113,13 @@ aclspv_id_t aclutil_mk_constant_bool_id(
 	return C->m_const_val_bool = h_ctx->m_id++;
 }
 
-aclspv_id_t aclutil_mk_constant_val_id1(
-		const u64_least		c_val,
+aclspv_id_t aclval_cfg(
+		const aclspv_wrd2_t	c_val,
 		h_aclspv_ctx_t		h_ctx,
-		enum ACLUTIL_CV_NBYTE_	c_idx_nbyte,
-		enum ACLUTIL_CV_TY_	c_idx_ty
+		enum ACLVAL_NBYTE_	c_idx_nbyte,
+		enum ACLVAL_TY_	c_idx_ty
 		) {
-	const enum ACLSPV_ID_ MAP[ACLUTIL_CV_TY_MAX][ACLUTIL_CV_NBYTE_MAX] = {
+	const enum ACLSPV_ID_ MAP[ACLVAL_TY_MAX][ACLVAL_NBYTE_MAX] = {
 		{ ACLSPV_ID_I8, ACLSPV_ID_I16, ACLSPV_ID_I32, ACLSPV_ID_I64 },
 		{ ACLSPV_ID_U8, ACLSPV_ID_U16, ACLSPV_ID_U32, ACLSPV_ID_U64 },
 		{ 0, ACLSPV_ID_F16, ACLSPV_ID_F32, ACLSPV_ID_F64 }
@@ -123,10 +127,10 @@ aclspv_id_t aclutil_mk_constant_val_id1(
 
 
 #if	1
-	aclutil_constant* ae2f_restrict const C = aclutil_mk_constant_node(c_val, h_ctx);
+	aclval_t* ae2f_restrict const C = aclval_cfg_node(c_val, h_ctx);
 
-	if(c_idx_nbyte <= ACLUTIL_CV_NBYTE_4 && c_val >> 32) {
-		return aclutil_mk_constant_val_id1(
+	if(c_idx_nbyte <= ACLVAL_NBYTE_4 && c_val >> 32) {
+		return aclval_cfg(
 				c_val & 0xFFFFFFFF
 				, h_ctx
 				, c_idx_nbyte
@@ -139,7 +143,7 @@ aclspv_id_t aclutil_mk_constant_val_id1(
 
 	if(C->m_const_ids[c_idx_ty][c_idx_nbyte]) return C->m_const_ids[c_idx_ty][c_idx_nbyte];
 
-	if(c_idx_nbyte == ACLUTIL_CV_NBYTE_8) {
+	if(c_idx_nbyte == ACLVAL_NBYTE_8) {
 		ae2f_expected_but_else(h_ctx->m_count.m_types = aclutil_emitx_5(
 					&h_ctx->m_section.m_types
 					, h_ctx->m_count.m_types
@@ -164,32 +168,32 @@ aclspv_id_t aclutil_mk_constant_val_id1(
 #endif
 }
 
-aclutil_specconstant_val_t ae2f_ccpure aclutil_get_specconstant_val_id(
+aclval_spec_t ae2f_ccpure aclval_get_spec(
 		h_aclspv_ctx_t		h_ctx,
 		aclspv_wrd_t		c_idx_specconst
 		) {
-	aclutil_specconstant_val_t	DUMMY = {0, 0};
-	aclutil_constant* ae2f_restrict const C = aclutil_mk_constant_node(c_idx_specconst, h_ctx);
+	aclval_spec_t	DUMMY = {0, 0};
+	aclval_t* ae2f_restrict const C = aclval_cfg_node(c_idx_specconst, h_ctx);
 	return ae2f_expected(C) ? C->m_spec_constant : DUMMY;
 }
 
-aclutil_specconstant_val_t aclutil_mk_specconstant_val_id(
+aclval_spec_t aclval_cfg_spec(
 		const u64_least		c_val,
 		h_aclspv_ctx_t		h_ctx,
-		enum ACLUTIL_CV_NBYTE_	c_idx_nbyte,
-		enum ACLUTIL_CV_TY_	c_idx_ty,
+		enum ACLVAL_NBYTE_	c_idx_nbyte,
+		enum ACLVAL_TY_	c_idx_ty,
 		aclspv_wrd_t		c_idx_specconst
 		) {
 
-	const aclutil_specconstant_val_t	ZERO = {0, 0};
+	const aclval_spec_t	ZERO = {0, 0};
 
-	const enum ACLSPV_ID_ MAP[ACLUTIL_CV_TY_MAX][ACLUTIL_CV_NBYTE_MAX] = {
+	const enum ACLSPV_ID_ MAP[ACLVAL_TY_MAX][ACLVAL_NBYTE_MAX] = {
 		{ ACLSPV_ID_I8, ACLSPV_ID_I16, ACLSPV_ID_I32, ACLSPV_ID_I64 },
 		{ ACLSPV_ID_U8, ACLSPV_ID_U16, ACLSPV_ID_U32, ACLSPV_ID_U64 },
 		{ 0, ACLSPV_ID_F16, ACLSPV_ID_F32, ACLSPV_ID_F64 }
 	};
 
-	aclutil_constant* ae2f_restrict const C = aclutil_mk_constant_node(c_idx_specconst, h_ctx);
+	aclval_t* ae2f_restrict const C = aclval_cfg_node(c_idx_specconst, h_ctx);
 
 	ae2f_expected_but_else(C)	return ZERO;
 	ae2f_expected_but_else(aclid_mk_default_id((B_id_default_t) MAP[c_idx_ty][c_idx_nbyte], h_ctx))
@@ -198,7 +202,7 @@ aclutil_specconstant_val_t aclutil_mk_specconstant_val_id(
 	if(C->m_spec_constant.m_val)
 		return C->m_spec_constant.m_ty == (aclspv_id_t) MAP[c_idx_ty][c_idx_nbyte] ? C->m_spec_constant : ZERO;
 
-	if(c_idx_nbyte == ACLUTIL_CV_NBYTE_8) {
+	if(c_idx_nbyte == ACLVAL_NBYTE_8) {
 		ae2f_expected_but_else(h_ctx->m_count.m_types = aclutil_emitx_5(
 					&h_ctx->m_section.m_types
 					, h_ctx->m_count.m_types
@@ -225,33 +229,33 @@ aclutil_specconstant_val_t aclutil_mk_specconstant_val_id(
 	return C->m_spec_constant;
 }
 
-aclspv_id_t	aclutil_mk_constant_val_f32_id(const float c_val, h_aclspv_ctx_t h_ctx)
+aclspv_id_t	aclval_cfg_f32(const float c_val, h_aclspv_ctx_t h_ctx)
 {
 	union {
 		float		m_flt;
-		u32_least	m_u32;
+		aclspv_wrd_t	m_u32;
 	} FLT_U32;
 	FLT_U32.m_flt = c_val;
 
-	return aclutil_mk_constant_val_id1(
+	return aclval_cfg(
 			FLT_U32.m_u32
-			, h_ctx, ACLUTIL_CV_NBYTE_4
-			, ACLUTIL_CV_TY_FLT
+			, h_ctx, ACLVAL_NBYTE_4
+			, ACLVAL_TY_FLT
 			);
 }
 
-aclspv_id_t	aclutil_mk_constant_val_f64_id(const double c_val, h_aclspv_ctx_t h_ctx)
+aclspv_id_t	aclval_cfg_f64(const double c_val, h_aclspv_ctx_t h_ctx)
 {
 	union {
 		double		m_flt;
-		u64_least	m_u64;
+		aclspv_wrd2_t	m_u64;
 	} FLT_U64;
 
 	FLT_U64.m_flt = c_val;
 
-	return aclutil_mk_constant_val_id1(
+	return aclval_cfg(
 			FLT_U64.m_u64
-			, h_ctx, ACLUTIL_CV_NBYTE_8
-			, ACLUTIL_CV_TY_FLT
+			, h_ctx, ACLVAL_NBYTE_8
+			, ACLVAL_TY_FLT
 			);
 }

@@ -2,7 +2,8 @@
 
 #include "./iddef.h"
 #include "./emitx.h"
-#include "./capability.h"
+
+#include <aclutil/capability.h>
 
 #include <aclty.h>
 
@@ -264,7 +265,7 @@ aclspv_id_t aclid_mk_default_id(
 			return 0;
 
 		case ACLSPV_ID_BOOL:
-			ae2f_expected_but_else((ret_count = aclutil_emitx_2(
+			ae2f_ifezerr((ret_count = aclutil_emitx_2(
 							&CTX->m_section.m_types
 							, ret_count
 							, SpvOpTypeBool
@@ -274,20 +275,18 @@ aclspv_id_t aclid_mk_default_id(
 
 		case ACLSPV_ID_VOID:
 			/** OpTypeVoid */
-			ae2f_expected_but_else((ret_count = emit_opcode(
+			ae2f_ifezerr((ret_count = aclutil_emitx_2(
 							&CTX->m_section.m_types
 							, ret_count
-							, SpvOpTypeVoid, 1)))
-				return 0;
-			ae2f_expected_but_else((ret_count = aclutil_emit_wrd(
-							&CTX->m_section.m_types
-							, ret_count
-							, ACLSPV_ID_VOID
-							))) 
+							, SpvOpTypeVoid
+							, ACLSPV_ID_VOID)))
 				return 0;
 			break;
 
 		case ACLSPV_ID_I64:
+			ae2f_ifezerr(aclutil_add_capability_by_flag(CTX, SpvCapabilityInt64)) 
+				return 0;
+
 			ae2f_expected_but_else(
 					ret_count = aclutil_emitx_4(
 						&CTX->m_section.m_types
@@ -297,11 +296,12 @@ aclspv_id_t aclid_mk_default_id(
 						, 64, 1))
 				return 0;
 
-			ae2f_expected_but_else(aclutil_add_capability_by_flag(CTX, SpvCapabilityInt64)) 
-				return 0;
 			break;
 
 		case ACLSPV_ID_U64:
+			ae2f_expected_but_else(aclutil_add_capability_by_flag(CTX, SpvCapabilityInt64))
+				return 0;
+
 			ae2f_expected_but_else(
 					ret_count = aclutil_emitx_4(
 						&CTX->m_section.m_types
@@ -311,8 +311,6 @@ aclspv_id_t aclid_mk_default_id(
 						, 64, 0))
 				return 0;
 
-			ae2f_expected_but_else(aclutil_add_capability_by_flag(CTX, SpvCapabilityInt64)) 
-				return 0;
 			break;
 		case ACLSPV_ID_U32:
 			ae2f_expected_but_else(
@@ -337,7 +335,8 @@ aclspv_id_t aclid_mk_default_id(
 			break;
 
 		case ACLSPV_ID_U16:
-			ae2f_expected_but_else(
+
+			ae2f_ifezerr(
 					ret_count = aclutil_emitx_4(
 						&CTX->m_section.m_types
 						, ret_count
@@ -346,13 +345,16 @@ aclspv_id_t aclid_mk_default_id(
 						, 16, 0))
 				return 0;
 
-			ae2f_expected_but_else(aclutil_add_capability_by_flag(CTX, SpvCapabilityInt16)) 
+			ae2f_ifezerr(aclutil_add_capability_by_flag(CTX, SpvCapabilityInt16)) 
 				return 0;
 
 			break;
 
 		case ACLSPV_ID_I16:
-			ae2f_expected_but_else(
+			ae2f_ifezerr(aclutil_add_capability_by_flag(CTX, SpvCapabilityInt16)) 
+				return 0;
+
+			ae2f_ifezerr(
 					ret_count = aclutil_emitx_4(
 						&CTX->m_section.m_types
 						, ret_count
@@ -361,13 +363,13 @@ aclspv_id_t aclid_mk_default_id(
 						, 16, 1))
 				return 0;
 
-			ae2f_expected_but_else(aclutil_add_capability_by_flag(CTX, SpvCapabilityInt16)) 
-				return 0;
-
 			break;
 
 		case ACLSPV_ID_U8:
-			ae2f_expected_but_else(
+			ae2f_ifezerr(aclutil_add_capability_by_flag(CTX, SpvCapabilityInt8)) 
+				return 0;
+
+			ae2f_ifezerr(
 					ret_count = aclutil_emitx_4(
 						&CTX->m_section.m_types
 						, ret_count
@@ -375,13 +377,13 @@ aclspv_id_t aclid_mk_default_id(
 						, ACLSPV_ID_U8
 						, 8, 0))
 				return 0;
-
-			ae2f_expected_but_else(aclutil_add_capability_by_flag(CTX, SpvCapabilityInt8)) 
-				return 0;
 			break;
 
 		case ACLSPV_ID_I8:
-			ae2f_expected_but_else(
+			ae2f_ifezerr(aclutil_add_capability_by_flag(CTX, SpvCapabilityInt8)) 
+				return 0;
+
+			ae2f_ifezerr(
 					ret_count = aclutil_emitx_4(
 						&CTX->m_section.m_types
 						, ret_count
@@ -390,25 +392,23 @@ aclspv_id_t aclid_mk_default_id(
 						, 8, 1))
 				return 0;
 
-			ae2f_expected_but_else(aclutil_add_capability_by_flag(CTX, SpvCapabilityInt8)) 
-				return 0;
 			break;
 
 		case ACLSPV_ID_F16:
-			ae2f_expected_but_else(ret_count = aclutil_emitx_3(
+			ae2f_ifezerr(aclutil_add_capability_by_flag(CTX, SpvCapabilityFloat16))
+				return 0;
+
+			ae2f_ifezerr(ret_count = aclutil_emitx_3(
 						&CTX->m_section.m_types
 						, ret_count
 						, SpvOpTypeFloat
 						, ACLSPV_ID_F16
 						, 16
 						)) return 0;
-
-			ae2f_expected_but_else(aclutil_add_capability_by_flag(CTX, SpvCapabilityFloat16)) 
-				return 0;
 			break;
 
 		case ACLSPV_ID_F32:
-			ae2f_expected_but_else(ret_count = aclutil_emitx_3(
+			ae2f_ifezerr(ret_count = aclutil_emitx_3(
 						&CTX->m_section.m_types
 						, ret_count
 						, SpvOpTypeFloat
@@ -418,7 +418,10 @@ aclspv_id_t aclid_mk_default_id(
 			break;
 
 		case ACLSPV_ID_F64:
-			ae2f_expected_but_else(ret_count = aclutil_emitx_3(
+			ae2f_ifezerr(aclutil_add_capability_by_flag(CTX, SpvCapabilityFloat64)) 
+				return 0;
+
+			ae2f_ifezerr(ret_count = aclutil_emitx_3(
 						&CTX->m_section.m_types
 						, ret_count
 						, SpvOpTypeFloat
@@ -426,8 +429,6 @@ aclspv_id_t aclid_mk_default_id(
 						, 64
 						)) return 0;
 
-			ae2f_expected_but_else(aclutil_add_capability_by_flag(CTX, SpvCapabilityFloat64)) 
-				return 0;
 			break;
 	}
 

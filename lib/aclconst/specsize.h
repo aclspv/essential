@@ -9,7 +9,7 @@ typedef struct {
 	union {
 		aclspv_wrd_t	m_wrd;
 		aclspv_wrd2_t	m_wrd2;
-		aclspv_wrd2_t	m_max;
+		aclspv_wrdmax_t	m_max;
 	}		m_lit;
 } aclconst_specsz;
 

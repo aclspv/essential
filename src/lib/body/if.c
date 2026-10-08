@@ -5,7 +5,7 @@
 #include <aclattr/branchratio.h>
 
 #include <aclexpr.h>
-#include <aclcursor.h>
+#include <aclcur/common.h>
 
 #include <aclemit/body.h>
 
@@ -113,55 +113,25 @@ ae2f_MAC((L, )) aclemit_body_if(CXCursor h_cur, aclutil_fnctx * ae2f_restrict h_
 			, &L$$WEIGHTS[0]
 			);
 
-	ae2f_unexpected_but_if((h_fnctx->m_ctx)->m_err = aclcursor_vardecl_evuclbl(
-				(h_fnctx->m_ctx)->m_num_cursor
-				, (h_fnctx->m_ctx)->m_cursors.m_p
-				, (h_fnctx->m_ctx)
-				, h_fnctx->m_var_stage + 1)) goto L$$LBL_END;
-
-	ae2f_expected_but_else((h_fnctx->m_ctx)->m_count.m_fnimpl = aclutil_emitx_3(
-				&(h_fnctx->m_ctx)->m_section.m_fnimpl
-				, (h_fnctx->m_ctx)->m_count.m_fnimpl
-				, SpvOpSelectionMerge
+	ae2f_expected_but_else(aclcur_cfg_jc(
+				L$$IDVAL
+				, L$$IFPART.m_b_true
+				, L$$IFPART.m_b_false
+				, L$$WEIGHTS[0]
+				, L$$WEIGHTS[1]
 				, L$$IFPART.m_b_default
+				, (aclspv_id_t)0
 				, L$$IFCTL	/** attribute */
+				, (h_fnctx)->m_ctx
 				)) goto L$$LBL_END;
-
-	if(L$$WEIGHTS[0] || L$$WEIGHTS[1]) {
-		ae2f_expected_but_else((h_fnctx->m_ctx)->m_count.m_fnimpl = aclutil_emitx_6(
-					&(h_fnctx->m_ctx)->m_section.m_fnimpl
-					, (h_fnctx->m_ctx)->m_count.m_fnimpl
-					, SpvOpBranchConditional
-					, L$$IDVAL
-					, L$$IFPART.m_b_true
-					, L$$IFPART.m_b_false
-					, L$$WEIGHTS[0]
-					, L$$WEIGHTS[1]
-					)) goto L$$LBL_END;
-	} else {
-		ae2f_expected_but_else((h_fnctx->m_ctx)->m_count.m_fnimpl = aclutil_emitx_4(
-					&(h_fnctx->m_ctx)->m_section.m_fnimpl
-					, (h_fnctx->m_ctx)->m_count.m_fnimpl
-					, SpvOpBranchConditional
-					, L$$IDVAL
-					, L$$IFPART.m_b_true
-					, L$$IFPART.m_b_false
-					)) goto L$$LBL_END;
-	}
 
 	{
 		aclutil_fnctx		L$$FNCTX_NEW = *h_fnctx;
 		L$$FNCTX_NEW.m_state0 = 0;
 		++L$$FNCTX_NEW.m_var_stage;
 
-		ae2f_expected_but_else((h_fnctx->m_ctx)->m_count.m_fnimpl = aclutil_emitx_2(
-					&(h_fnctx->m_ctx)->m_section.m_fnimpl
-					, (h_fnctx->m_ctx)->m_count.m_fnimpl
-					, SpvOpLabel
-					, L$$IFPART.m_b_true
-					)) goto L$$LBL_END;
-
-		_aclutil_fnctx_snap(L$$FNCTX_NEW, *h_fnctx, ACLUTIL_FNCTX_SNAPS_LBL);
+		ae2f_expected_but_else(aclcur_cfg_lbl(L$$IFPART.m_b_true, (h_fnctx)->m_ctx))
+			goto L$$LBL_END;
 
 		L$$FNCTX_NEW.m_branch		= L$$IFPART.m_b_true;
 
@@ -174,19 +144,9 @@ ae2f_MAC((L, )) aclemit_body_if(CXCursor h_cur, aclutil_fnctx * ae2f_restrict h_
 
 		(h_fnctx)->m_state0		|= L$$FNCTX_NEW.m_state0;
 
-		ae2f_unexpected_but_if((h_fnctx->m_ctx)->m_err = aclcursor_vardecl_evuclbl(
-					(h_fnctx->m_ctx)->m_num_cursor
-					, (h_fnctx->m_ctx)->m_cursors.m_p
-					, (h_fnctx->m_ctx)
-					, h_fnctx->m_var_stage + 1)) goto L$$LBL_END;
-
 		unless(L$$FNCTX_NEW.m_state0 & ACLUTIL_FNCTX_STATE0_FNRET) {
-			ae2f_expected_but_else((h_fnctx->m_ctx)->m_count.m_fnimpl = aclutil_emitx_2(
-						&(h_fnctx->m_ctx)->m_section.m_fnimpl
-						, (h_fnctx->m_ctx)->m_count.m_fnimpl
-						, SpvOpBranch
-						, L$$IFPART.m_b_default
-						)) goto L$$LBL_END;
+			ae2f_expected_but_else(aclcur_cfg_jmp(L$$IFPART.m_b_default, (h_fnctx)->m_ctx))
+				goto L$$LBL_END;
 
 			(h_fnctx)->m_branch = L$$IFPART.m_b_default;
 		}
@@ -207,14 +167,8 @@ ae2f_MAC((L, )) aclemit_body_if(CXCursor h_cur, aclutil_fnctx * ae2f_restrict h_
 		aclutil_fnctx		L$$FNCTX_NEW = *h_fnctx;
 		L$$FNCTX_NEW.m_state0 = 0;
 
-		ae2f_ifezerr((h_fnctx->m_ctx)->m_count.m_fnimpl = aclutil_emitx_2(
-					&(h_fnctx->m_ctx)->m_section.m_fnimpl
-					, (h_fnctx->m_ctx)->m_count.m_fnimpl
-					, SpvOpLabel
-					, L$$IFPART.m_b_false
-					)) goto L$$LBL_END;
-
-		_aclutil_fnctx_snap(L$$FNCTX_NEW, *h_fnctx, ACLUTIL_FNCTX_SNAPS_LBL);
+		ae2f_expected_but_else(aclcur_cfg_lbl(L$$IFPART.m_b_false, (h_fnctx)->m_ctx))
+			goto L$$LBL_END;
 
 		L$$FNCTX_NEW.m_branch		= L$$IFPART.m_b_false;
 		++L$$FNCTX_NEW.m_var_stage;
@@ -230,19 +184,9 @@ ae2f_MAC((L, )) aclemit_body_if(CXCursor h_cur, aclutil_fnctx * ae2f_restrict h_
 
 		h_fnctx->m_state0		|= L$$FNCTX_NEW.m_state0;
 
-		ae2f_ifnezerr((h_fnctx->m_ctx)->m_err = aclcursor_vardecl_evuclbl(
-					(h_fnctx->m_ctx)->m_num_cursor
-					, (h_fnctx->m_ctx)->m_cursors.m_p
-					, (h_fnctx->m_ctx)
-					, (h_fnctx)->m_var_stage + 1)) goto L$$LBL_END;
-
 		unless(L$$FNCTX_NEW.m_state0 & ACLUTIL_FNCTX_STATE0_FNRET) {
-			ae2f_expected_but_else((h_fnctx->m_ctx)->m_count.m_fnimpl = aclutil_emitx_2(
-						&(h_fnctx->m_ctx)->m_section.m_fnimpl
-						, (h_fnctx->m_ctx)->m_count.m_fnimpl
-						, SpvOpBranch
-						, L$$IFPART.m_b_default
-						)) goto L$$LBL_END;
+			ae2f_expected_but_else(aclcur_cfg_jmp(L$$IFPART.m_b_default, (h_fnctx)->m_ctx))
+				goto L$$LBL_END;
 		}
 
 		aclutil_mkname_dbg_fn(
@@ -260,12 +204,8 @@ ae2f_MAC((L, )) aclemit_body_if(CXCursor h_cur, aclutil_fnctx * ae2f_restrict h_
 			, &(h_fnctx)->m_ctx->m_tmp.m_v0
 			);
 
-	ae2f_expected_but_else((h_fnctx->m_ctx)->m_count.m_fnimpl = aclutil_emitx_2(
-				&(h_fnctx->m_ctx)->m_section.m_fnimpl
-				, (h_fnctx->m_ctx)->m_count.m_fnimpl
-				, SpvOpLabel
-				, L$$IFPART.m_b_default
-				)) goto L$$LBL_END;
+	ae2f_expected_but_else(aclcur_cfg_lbl(L$$IFPART.m_b_default, (h_fnctx)->m_ctx))
+		goto L$$LBL_END;
 
 	(h_fnctx)->m_branch = L$$IFPART.m_b_default;
 

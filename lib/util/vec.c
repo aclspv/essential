@@ -33,7 +33,7 @@ aclspv_id_t aclutil_mkvec(
 
 	const aclspv_wrd_t	ANCHOUR = *P_VWRD;
 
-	const aclspv_wrd_t	TY = aclutil_mk_cxtp_vec(c_ty, c_num_elm, h_ctx);
+	const aclspv_wrd_t	TY = aclty_mk_vec(c_ty, c_num_elm, h_ctx);
 
 	ae2fpat_assertassume(rd_elm);
 	ae2fpat_assertassume(h_ctx);

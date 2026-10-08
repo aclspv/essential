@@ -1,7 +1,10 @@
 #include "./incr.h"
 
 #include <aclty.h>
-#include <aclcursor.h>
+#include <aclcur/common.h>
+#include <aclexpr/carve/ptr.h>
+#include <aclexpr/curreg.h>
+#include <aclconst/specop.h>
 
 #include <util/constant.h>
 #include <util/emitx.h>
@@ -33,23 +36,25 @@ aclexpr_carve_lbl_t aclexpr_carve1_incr(
 		aclexpr_carve_lbl_t		c_lbl_success,
 		aclexpr_carve_lbl_t		c_lbl_err
 		) { unless(s_check(rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_OPCODE])) return c_lbl_continue; {
-	const aclspv_wrd_t	CURIDX = aclutil_find_cursor(
-			rdwr_data->m_ctx->m_num_cursor
-			, rdwr_data->m_ctx->m_cursors.m_p
-			, clang_getCanonicalCursor(clang_getCursorDefinition(rdwr_lst_extra->m_cursor))
+	const aclspv_id_t	REG = aclexpr_curreg_find(
+			clang_getCanonicalCursor(clang_getCursorDefinition(rdwr_lst_extra->m_cursor))
+			, rdwr_data->m_ctx
 			);
 
-	x_aclcursor	* ae2f_restrict C = ((x_aclcursor* ae2f_restrict)rdwr_data->m_ctx->m_cursors.m_p) + CURIDX;
-
-	aclutil_literal LTRL;
+	aclutil_literal LTRL = {0, };
 	aclspv_id_t	V;
 
 	aclspv_wrd_t	O = rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_OPCODE];
 
-	ae2f_ifnezerr_strict(CURIDX >= rdwr_data->m_ctx->m_num_cursor) {
-		err_puts("[carve1::incr] CURIDX is out of bound.");
+	ae2f_ifnezerr_strict(!REG) {
+		err_puts("[carve1::incr] no register for the lvalue.");
 		return c_lbl_err;
 	}
+
+	/** `++p` / `--p` on a pointer is pointer arithmetic: a fatal error in
+	 * the logical addressing model. */
+	if(aclexpr_ptr_arith_fatal(rdwr_lst_extra->m_type_original, rdwr_data->m_ctx))
+		return c_lbl_err;
 
 	ae2f_ifezerr(aclid_is_int(aclty_get_veccfg(rdwr_lst_extra->m_type_original, rdwr_data->m_ctx).m_ty_elm)) {
 		err_puts("[carve1::incr] no integer detected.");
@@ -59,8 +64,10 @@ aclexpr_carve_lbl_t aclexpr_carve1_incr(
 	*rdwr_prv_extra = *rdwr_lst_extra;
 
 
-	V = aclcursor_vardecl_assign(C, rdwr_data->m_fnctx, 0, 0, 0
-			, 0, &LTRL);
+	ae2f_ifezerr(V = aclcur_load_reg(REG, rdwr_data->m_ctx, &LTRL)) {
+		err_puts("[carve1::incr] reading the lvalue has been failed.");
+		return c_lbl_err;
+	}
 
 	if(rdwr_lst_extra->m_mask_literal & (aclspv_wrd_t)ACLUTIL_LITERAL_LITERAL) {
 		switch(O) {
@@ -80,13 +87,17 @@ aclexpr_carve_lbl_t aclexpr_carve1_incr(
 				ae2f_unreachable();
 		}
 
-		ae2f_ifezerr(*rdwr_prv_idval = aclcursor_vardecl_assign(
-					C, rdwr_data->m_fnctx, 0
-					, rdwr_lst_extra->m_type_original
-					, ACLUTIL_LITERAL_LITERAL
-					, &LTRL, 0
+		ae2f_ifezerr(*rdwr_prv_idval = aclutil_mk_constant_val_by_enum(
+					LTRL.m_api_uintmax, rdwr_data->m_ctx
+					, (enum ACLSPV_ID_)rdwr_lst_extra->m_type_original
 					)) { 
 			err_puts("[carve1::incr] getting value from cursor has been failed.");
+			return c_lbl_err;
+		}
+
+		ae2f_ifezerr(aclcur_store_reg(
+				REG, *rdwr_prv_idval, rdwr_data->m_ctx)) {
+			err_puts("[carve1::incr] storing the incremented value has been failed.");
 			return c_lbl_err;
 		}
 
@@ -133,25 +144,33 @@ aclexpr_carve_lbl_t aclexpr_carve1_incr(
 
 			case ACLEXPR_RET_SUCCESS:
 				rdwr_prv_extra->m_mask_literal &= ACLUTIL_LITERAL_RT;
-				ae2f_ifezerr(rdwr_data->m_ctx->m_count.m_fnimpl = aclutil_emitx_5(
-							&rdwr_data->m_ctx->m_section.m_fnimpl
-							, rdwr_data->m_ctx->m_count.m_fnimpl
-							, RO, rdwr_lst_extra->m_type_original
-							, VP
-							, V, ONE_CASTED))
+				ae2f_ifezerr(VP = aclcur_cfg_op2(
+						VP, (enum SpvOp_)RO
+						, rdwr_lst_extra->m_type_original
+						, V, ONE_CASTED
+						, rdwr_data->m_ctx))
 					return c_lbl_err;
 				break;
 
 			case ACLEXPR_RET_SUCCESS_CONSTANT:
-				rdwr_prv_extra->m_mask_literal &= ACLUTIL_LITERAL_CONSTANT;
-				ae2f_ifezerr(rdwr_data->m_ctx->m_count.m_types = aclutil_emitx_6(
-							&rdwr_data->m_ctx->m_section.m_types
-							, rdwr_data->m_ctx->m_count.m_types
-							, SpvOpSpecConstantOp
-							, rdwr_lst_extra->m_type_original
-							, VP, RO
-							, V, ONE_CASTED))
-					return c_lbl_err;
+				{
+					aclspv_wrd_t B[6]; 
+
+					B[0] = aclspv_opcode_to_wrd(SpvOpSpecConstantOp, 5);
+					B[1] = rdwr_lst_extra->m_type_original;
+					B[2] = VP;
+					B[3] = RO;
+					B[4] = V;
+					B[5] = ONE_CASTED;
+
+					rdwr_prv_extra->m_mask_literal &= ACLUTIL_LITERAL_CONSTANT;
+
+					ae2f_ifezerr(aclconst_specop(
+								B
+								, sizeof(B) / sizeof(B[0])
+								, rdwr_data->m_ctx))
+						return c_lbl_err;
+				}
 				break;
 		}
 
@@ -169,11 +188,8 @@ aclexpr_carve_lbl_t aclexpr_carve1_incr(
 				return c_lbl_err;
 		}
 
-		ae2f_ifnezerr_strict(VP != aclcursor_vardecl_assign(
-					C, rdwr_data->m_fnctx
-					, VP, rdwr_lst_extra->m_type_original
-					, LM
-					, 0, 0))
+		ae2f_ifezerr(aclcur_store_reg(
+					REG, VP, rdwr_data->m_ctx))
 			return c_lbl_err;
 
 		return c_lbl_success;

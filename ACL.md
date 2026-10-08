@@ -140,11 +140,26 @@ aclspv_bratio(weight_true_branch, weight_false_branch)
 - if
 - three-operand expression (c ? t: f)
 
+
+aclspv_layout(layout_number)  
+> specify a variable | type be follows a certain memory layout  
+> see `./lib/aclty/layout.h` to get the layouts  
+
+> without this attribute specified, layout will be std430 (see ./lib/aclattr/layout.h)
+
 # Restriction
 > Some statements / extensions may not be planned to be supported for now.
 
 `VK_KHR_relaxed_block_layout` behaviour (free alignment)  
+
 Non plain-old-data types  
+
 `OpenCL` memory model  
+
 `Simple` memory model  
+
 `function-scoped variable` shadowing function parameter  
+
+designated initializer list
+
+pointer arithmetic on non-physical addressing model

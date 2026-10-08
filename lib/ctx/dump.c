@@ -4,7 +4,7 @@
 
 #include <.aclspv/util/vcopr.h>
 
-ACLSPV_ABI_IMPL enum ACLSPV_COMPILE_ aclspv_dump_ctx_output1(
+ACLSPV_ABI_IMPL aclspv_compile_t aclspv_dump_ctx_output1(
 		const x_aclspv_ctx* ae2f_restrict		h_ctx,
 		aclspv_wrd_t* ae2f_restrict const	rdwr_count_ret,
 		aclspv_wrd_t* ae2f_restrict const	ret
@@ -36,7 +36,7 @@ ACLSPV_ABI_IMPL enum ACLSPV_COMPILE_ aclspv_dump_ctx_output1(
 	ae2f_ifezerr(ret)		return ACLSPV_COMPILE_PRM_INVAL_NIL;
 
 	ret[0]	=	SpvMagicNumber;
-	ret[1]	=	h_ctx->m_usrcfg.m_spirv_ver;
+	ret[1]	=	h_ctx->m_usrcfg.m_ver_spv;
 	ret[2]	=	0;
 	ret[3]	=	NUM_RET;
 	ret[4]	=	0;
@@ -130,7 +130,7 @@ ACLSPV_ABI_IMPL enum ACLSPV_COMPILE_ aclspv_dump_ctx_output1(
 
 #include <stdlib.h>
 
-ACLSPV_ABI_IMPL enum ACLSPV_COMPILE_ aclspv_dump_ctx_output(
+ACLSPV_ABI_IMPL aclspv_compile_t aclspv_dump_ctx_output(
 		const x_aclspv_ctx* ae2f_restrict		h_ctx,
 		aclspv_wrd_t* ae2f_restrict const			r_count,
 		aclspv_wrd_t* ae2f_restrict* ae2f_restrict const	ret

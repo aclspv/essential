@@ -16,8 +16,6 @@
 #include <aclty.h>
 #include <aclexpr.h>
 
-#include <ae2f/cc/memset.h>
-
 ae2f_inline_f static aclexpr_visit_lbl_t aclexpr_visit_op1_arithmetic_cast(
 		const CXCursor				c_cur,
 		const h_aclspv_ctx_t			h_ctx, 
@@ -65,12 +63,10 @@ ae2f_inline_f static aclexpr_visit_lbl_t aclexpr_visit_op1_arithmetic_cast(
 			VEC[ACLEXPR_OPBINCFG_NUMOPRND]	= 1;				/** number of operands */
 			VEC[ACLEXPR_OPBINCFG_OPCODE]	= (aclspv_wrd_t) OPCODE;
 
-			ae2fcc_memset(&VEC[ACLEXPR_OPBINCFG_END + 1], 0, sizeof(aclexpr_opbincfg_extra));
+			aclmemzero(&VEC[ACLEXPR_OPBINCFG_END + 1], sizeof(aclexpr_opbincfg_extra));
 
-			ae2f_ifezerr(VEC[ACLEXPR_OPBINCFG_RESTYID] = aclty_mk_by_cursor(
-						c_cur
-						, clang_getCursorType(c_cur)
-						, h_ctx
+			ae2f_ifezerr(VEC[ACLEXPR_OPBINCFG_RESTYID] = aclty_mk_by_type(
+						clang_getCursorType(c_cur)
 						)) {
 				err_puts("[s_cast_numeric] failed aclutil_mk_cxtp_by_cursor");
 				h_ctx->m_err = ACLSPV_COMPILE_ARITHMETIC_CAST_TYPE_IS_UNDEFINED_NEW;

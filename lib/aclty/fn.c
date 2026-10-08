@@ -36,7 +36,7 @@ aclspv_id_t aclty_mk_fn1(
 
 	{
 		const CXType RET	= clang_getResultType(c_type_compound);
-		RETID			= aclty_mk_by_cursor(
+		RETID			= aclty_mk_by_cursor_dummy(
 				c_cursor_compound
 				,RET 
 				, h_ctx);
@@ -62,7 +62,7 @@ aclspv_id_t aclty_mk_fn1(
 				, ARGC_IDX
 				);
 
-		const aclspv_wrd_t ARG_ID	= aclty_mk_by_cursor(
+		const aclspv_wrd_t ARG_ID	= aclty_mk_by_cursor_dummy(
 				c_cursor_compound
 				, ARG
 				, h_ctx

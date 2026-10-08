@@ -14,7 +14,7 @@
 #include <aclexpr/visit/api.h>
 #include <aclexpr/op.h>
 
-#include <ae2f/cc/memset.h>
+#include <aclmem.h>
 
 ae2f_inline_f static aclexpr_visit_lbl_t aclexpr_visit_op2_arithmetic(
 		const CXCursor				c_cur,
@@ -106,7 +106,7 @@ ae2f_inline_f static aclexpr_visit_lbl_t aclexpr_visit_op2_arithmetic(
 		VEC[ACLEXPR_OPBINCFG_SPECCONSTANTOP] = aclspv_opcode_to_wrd(SpvOpSpecConstantOp, 5);
 		VEC[ACLEXPR_OPBINCFG_OPCODE] = (aclspv_wrd_t) OPCODE;
 
-		ae2fcc_memset(&VEC[ACLEXPR_OPBINCFG_END + 2], 0, sizeof(aclexpr_opbincfg_extra) << 1);
+		aclmemzero(&VEC[ACLEXPR_OPBINCFG_END + 2], sizeof(aclexpr_opbincfg_extra) << 1);
 
 		((aclexpr_opbincfg_extra* ae2f_restrict)(void* ae2f_restrict)(&VEC[(ACLEXPR_OPBINCFG_END + 2)]))->m_mask_literal = 3;
 	}

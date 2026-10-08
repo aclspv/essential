@@ -6,7 +6,8 @@
 #include <ae2f/cc.h>
 #include <string.h>
 #include <util/log.h>
-#include <aclspv3rd/clang/idx.h>
+
+#include <aclspv.h>
 
 /** 
  * @fn static enum CXChildVisitResult attr_execmodel(CXCursor h_cur, CXCursor h_parent, int* ae2f_restrict wr_is_btcast)

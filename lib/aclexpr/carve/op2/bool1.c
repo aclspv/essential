@@ -1,6 +1,6 @@
 #include "./bool1.h"
 #include <util/emitx.h>
-#include <aclcursor/vardecl.h>
+#include <aclcur/common.h>
 #include <.aclspv/util/mkname.h>
 
 aclexpr_carve_lbl_t aclexpr_carve2_bool1(
@@ -40,47 +40,35 @@ aclexpr_carve_lbl_t aclexpr_carve2_bool1(
 			break;
 	}
 
-	ae2f_ifnezerr(rdwr_data->m_ctx->m_err = aclcursor_vardecl_evuclbl(
-			rdwr_data->m_ctx->m_num_cursor
-			, rdwr_data->m_ctx->m_cursors.m_p
+	/** the branch-CUR block's tail is a branch: the auto-scan skips it, add it by hand.
+	 * op1's value is defined in the branch-CUR block, so the store must land there
+	 * BEFORE the jump; storing at the merge instead would reference a value that is
+	 * undefined on the fallthrough edge (dominance violation on the merge's load). */
+	ae2f_ifezerr(aclcur_store_reg(
+			rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_RESID]
+			, rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_END + 1]
 			, rdwr_data->m_ctx
-			, rdwr_data->m_fnctx->m_var_stage + 1))
-		return c_lbl_err;
+			)) return c_lbl_err;
 
 	/** now we can branch shit */
-	ae2f_ifezerr(rdwr_data->m_ctx->m_count.m_fnimpl = aclutil_emitx_2(
-			&rdwr_data->m_ctx->m_section.m_fnimpl
-			, rdwr_data->m_ctx->m_count.m_fnimpl
-			, SpvOpBranch
-			, rdwr_data->m_fnctx->m_branch)) {
-		err_puts("branch fucked");
+	ae2f_ifezerr(aclcur_cfg_jmp(rdwr_data->m_fnctx->m_branch, rdwr_data->m_ctx))
 		return c_lbl_err;
-	}
 
-	/** now we can label this shit */
-	ae2f_ifezerr(rdwr_data->m_ctx->m_count.m_fnimpl = aclutil_emitx_2(
-			&rdwr_data->m_ctx->m_section.m_fnimpl
-			, rdwr_data->m_ctx->m_count.m_fnimpl
-			, SpvOpLabel
-			, rdwr_data->m_fnctx->m_branch)) {
-		err_puts("label fucked");
+	/** merge block. */
+	ae2f_ifezerr(aclcur_cfg_lbl(rdwr_data->m_fnctx->m_branch, rdwr_data->m_ctx))
 		return c_lbl_err;
-	}
 
-	ae2f_ifezerr(rdwr_data->m_ctx->m_count.m_fnimpl = aclutil_emitx_7(
-			&rdwr_data->m_ctx->m_section.m_fnimpl
-			, rdwr_data->m_ctx->m_count.m_fnimpl
-			, SpvOpPhi
-			, ACLSPV_ID_BOOL
-			, *rdwr_prv_idval = rdwr_data->m_ctx->m_id++
-			, rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_END]
+	ae2f_ifezerr(*rdwr_prv_idval = aclcur_load_reg(
+			rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_RESID]
+			, rdwr_data->m_ctx
+			, 0
+			)) return c_lbl_err;
+
+	ae2f_ifnezerr_strict(aclcur_cfg_load_phi(
+			*rdwr_prv_idval
 			, rdwr_lst_extra[0].m_extra.m_bool1.m_parent
-			, rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_END + 1]
-			, rdwr_lst_extra[1].m_extra.m_bool1.m_parent
-			)) {
-		err_puts("phi fucked.");
-		return c_lbl_err;
-	}
+			, rdwr_data->m_ctx
+			)) return c_lbl_err;
 
 	rdwr_prv_extra->m_mask_literal	= 0;
 	rdwr_prv_extra->m_type_original	= ACLSPV_ID_BOOL;
@@ -88,7 +76,6 @@ aclexpr_carve_lbl_t aclexpr_carve2_bool1(
 	ae2fpat_assertassume_strict(*rdwr_prv_idval);
 	ae2fpat_assertassume_strict(rdwr_lst_extra[0].m_extra.m_bool1.m_parent);
 	ae2fpat_assertassume_strict(rdwr_lst_extra[1].m_extra.m_bool1.m_parent);
-	ae2fpat_assertassume_strict(rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_END]);
 	ae2fpat_assertassume_strict(rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_END + 1]);
 
 	_aclutil_mkname_dbg(

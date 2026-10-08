@@ -30,18 +30,22 @@ typedef	u32 uptr;typedef i32 iptr;
 #define	aclattr(a)	__attribute__((annotate(a)))
 #define	vector(a)	__attribute__((ext_vector_type(a))) 
 #define	kernel_raw(a)	aclattr("aclspv_execmodel( " #a " )")
-#define	kernel	kernel_raw(5)			kernel
-#define	__kernel	kernel
 #define	storage_class(a)	aclattr("aclspv_storage_class( " #a " )")
-#define	global		storage_class(12)	global
-#define	__global	global
-#define	constant	storage_class(2)	constant
-#define	__constant	constant
-#define	local		storage_class(4)	local
-#define	__local		local
 
 #define	btcast		aclattr("aclspv_btcast")
 #define specid(a)	aclattr("aclspv_specid( " #a " )")
-#define	bratio(t, f) aclattr("aclspv_bratio ("#t","#f")")
+#define	bratio(t, f)	aclattr("aclspv_bratio ("#t","#f")")
+
+#if	defined(__OPENCL_VERSION__) && __OPENCL_VERSION__
+#define	__kernel	kernel_raw(5)		__kernel
+#define	__global	storage_class(12)	__global
+#define __constant	storage_class(2)	__constant
+#define	__local		storage_class(4)	__local
+#else
+#define	__kernel	kernel_raw(5)	
+#define	__global	storage_class(12)
+#define __constant	storage_class(2)
+#define	__local		storage_class(4)
+#endif
 
 #endif

@@ -7,7 +7,7 @@
 #define compiler_arg2	"-triple"
 #define compiler_arg3	"spir64-unknown-unknown"
 
-#define compiler_argc	5
+#define compiler_argc	1
 
 #endif
 

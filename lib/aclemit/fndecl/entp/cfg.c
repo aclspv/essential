@@ -1,8 +1,9 @@
 #include "./cfg.h"
-#include <ae2f/cc/memset.h>
 
 #include <aclattr/wrkgroup.h>
 #include <aclattr/execmodel.h>
+
+#include <aclmem.h>
 
 #include <util/constant.h>
 #include <util/emitx.h>
@@ -15,7 +16,7 @@ aclutil_entp_t aclemit_fndecl_entp_cfg(CXCursor h_parent, h_aclspv_ctx_t CTX) {
 	aclutil_entp_t		THIS_ENTRY_POINT;
 	aclspv_wrdcount_t	POS = CTX->m_count.m_entp;
 
-	ae2fcc_memset(&THIS_ENTRY_POINT, 0, sizeof(THIS_ENTRY_POINT));
+	aclmemzero(&THIS_ENTRY_POINT, sizeof(THIS_ENTRY_POINT));
 
 	ae2f_ifnezerr(CTX->m_err) return THIS_ENTRY_POINT;
 
@@ -33,7 +34,7 @@ aclutil_entp_t aclemit_fndecl_entp_cfg(CXCursor h_parent, h_aclspv_ctx_t CTX) {
 
 #define	S_GETSPECID(K_idx)										\
 		if(XYZ.m_flag_specid & (1 << K_idx)) {						\
-			aclutil_specconstant_val_t nd = aclutil_get_specconstant_val_id(CTX, XYZ.m_##K_idx);	\
+			aclval_spec_t nd = aclval_get_spec(CTX, XYZ.m_##K_idx);	\
 			ae2f_ifezerr(nd.m_val) goto LBL_ABRT;						\
 			if(nd.m_val) {								\
 				ae2f_ifezerr_strict(aclid_is_int((B_id_default_t) nd.m_ty)) {	\
@@ -48,13 +49,13 @@ aclutil_entp_t aclemit_fndecl_entp_cfg(CXCursor h_parent, h_aclspv_ctx_t CTX) {
 				}								\
 			}									\
 		} else ae2f_ifezerr(aclutil_mk_constant_val_id(					\
-					(uint_least64_t)XYZ.m_0					\
+					(aclspv_wrd2_t)XYZ.m_0					\
 					, CTX)) {						\
 			goto LBL_ABRT;								\
 		}
 
 		if(XYZ.m_flag_specid) {
-			ae2f_ifnezerr(CTX->m_usrcfg.m_spirv_ver < aclspv_ver_spv(1, 2)) {
+			ae2f_ifnezerr(CTX->m_usrcfg.m_ver_spv < aclspv_ver_spv(1, 2)) {
 				CTX->m_err = ACLSPV_COMPILE_NOIMPL_V_WRKGROUP_SIZE;
 				err_puts("workgroup size id is for spirv 1.2");
 				goto LBL_ABRT;

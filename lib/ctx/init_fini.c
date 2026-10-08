@@ -2,19 +2,20 @@
 #include <aclmem.h>
 
 #include <util/scale.h>
-#include <ae2f/cc/memset.h>
 
 #include "./conf.h"
 
 ACLSPV_ABI_IMPL void aclspv_fini_ctx(
 		const h_aclspv_ctx_t	d_ctx
 		) {
-	enum ACLSPV_COMPILE_	E = d_ctx->m_err;
-
+	aclspv_compile_t	E = d_ctx->m_err;
 
 	aclmem_fini(&d_ctx->m_constant_cache);
 	aclmem_fini(&d_ctx->m_type_uniques);
 	aclmem_fini(&d_ctx->m_cursors);
+
+	aclmem_fini(&d_ctx->m_cur_lbl_dfs);
+	aclmem_fini(&d_ctx->m_cur_lbl_dfs_visit);
 
 	aclmem_fini(&d_ctx->m_fnlist.m_entp);
 	aclmem_fini(&d_ctx->m_fnlist.m_fn);
@@ -35,7 +36,7 @@ ACLSPV_ABI_IMPL void aclspv_fini_ctx(
 	aclmem_fini(&d_ctx->m_section.m_vars);
 	aclmem_fini(&d_ctx->m_section.m_fnimpl);
 
-	ae2fcc_memset(d_ctx, 0, sizeof(x_aclspv_ctx));
+	aclmemzero(d_ctx, sizeof(x_aclspv_ctx));
 	d_ctx->m_err = E;
 }
 
@@ -86,18 +87,16 @@ static void s_free(void* fini_mem, aclspv_wrd_t c_sz, ae2f_unused void* h_usr) {
 #endif
 }
 
-ACLSPV_ABI_IMPL enum ACLSPV_COMPILE_ aclspv_init_ctx(
+ACLSPV_ABI_IMPL aclspv_compile_t aclspv_init_ctx(
 		const h_aclspv_ctx_t	i_ctx,
 		const aclspv_usrcfg_t*	ae2f_restrict	rd_usrcfg
 		) {
 	ae2f_ifezerr(i_ctx)
 		return ACLSPV_COMPILE_PRM_INVAL_NIL;
 
-	ae2fcc_memset(i_ctx, 0, sizeof(x_aclspv_ctx));
+	aclmemzero(i_ctx, sizeof(*i_ctx));
 
 	i_ctx->m_id		= ACLSPV_ID_END;
-	i_ctx->m_work_nxt	= aclemit_root;
-	i_ctx->m_work_data	= 0;
 
 	rd_usrcfg ? (void)(i_ctx->m_usrcfg = *rd_usrcfg) : (void)0;
 
@@ -107,17 +106,29 @@ ACLSPV_ABI_IMPL enum ACLSPV_COMPILE_ aclspv_init_ctx(
 	unless(i_ctx->m_usrcfg.m_byte_size_type)
 		i_ctx->m_usrcfg.m_byte_size_type = 4;
 
-	unless(i_ctx->m_usrcfg.m_spirv_ver)
-		i_ctx->m_usrcfg.m_spirv_ver = aclspv_ver_spv(1, 0);
+	unless(i_ctx->m_usrcfg.m_ver_spv)
+		i_ctx->m_usrcfg.m_ver_spv = aclspv_ver_spv(1, 0);
+
+	unless(i_ctx->m_usrcfg.m_ver_vk)
+		i_ctx->m_usrcfg.m_ver_vk = aclspv_ver_vk2(1, 0);
 
 	unless(i_ctx->m_usrcfg.m_malloc && i_ctx->m_usrcfg.m_free) {
 		i_ctx->m_usrcfg.m_malloc	= s_malloc;
 		i_ctx->m_usrcfg.m_free		= s_free;
 	}
 
+	unless(i_ctx->m_usrcfg.m_mdl_mem)
+		i_ctx->m_usrcfg.m_mdl_mem = SpvMemoryModelSimple;
+
+	unless(i_ctx->m_usrcfg.m_mdl_addr)
+		i_ctx->m_usrcfg.m_mdl_addr = SpvAddressingModelLogical;
+
 	aclmem_init(&i_ctx->m_constant_cache		, i_ctx);
 	aclmem_init(&i_ctx->m_type_uniques		, i_ctx);
 	aclmem_init(&i_ctx->m_cursors			, i_ctx);
+
+	aclmem_init(&i_ctx->m_cur_lbl_dfs			, i_ctx);
+	aclmem_init(&i_ctx->m_cur_lbl_dfs_visit		, i_ctx);
 
 	aclmem_init(&i_ctx->m_fnlist.m_fn			, i_ctx);
 	aclmem_init(&i_ctx->m_fnlist.m_entp		, i_ctx);

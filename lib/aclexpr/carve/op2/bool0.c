@@ -2,10 +2,12 @@
 
 #include "./bool0.h"
 #include <util/constant.h>
+#include <aclconst/specop.h>
 #include <util/wrdemit.h>
 #include <ae2f/pat/dbg.h>
 
-#include <aclcursor.h>
+#include <aclcur/common.h>
+#include <aclexpr/curreg.h>
 #include <aclmem.h>
 
 ae2f_inline_f static ae2f_ccconst aclspv_wrd_t	s_opcvrt(const aclspv_wrd_t c_op) {
@@ -170,7 +172,7 @@ static aclspv_id_t	s_ty_oprnd(
 
 	{
 		struct aclutil_cxtp_veccfg_t V = aclty_get_veccfg(c_ty_origin, h_ctx);
-		return aclutil_mk_cxtp_vec(ACLSPV_ID_BOOL, V.m_num, h_ctx);
+		return aclty_mk_vec(ACLSPV_ID_BOOL, V.m_num, h_ctx);
 	}
 }
 
@@ -180,7 +182,7 @@ static aclspv_id_t	s_ty_out(
 		h_aclspv_ctx_t	h_ctx
 		) { unless(c_is_logical) return c_ty_origin; else {
 	struct aclutil_cxtp_veccfg_t V = aclty_get_veccfg(c_ty_origin, h_ctx);
-	return aclutil_mk_cxtp_vec(ACLSPV_ID_BOOL, V.m_num, h_ctx);
+	return aclty_mk_vec(ACLSPV_ID_BOOL, V.m_num, h_ctx);
 }}
 
 ae2f_inline_f static ae2f_ccconst struct aclutil_ltrl_eval_t	s_eval2_ltrl(
@@ -276,7 +278,7 @@ aclexpr_carve_lbl_t aclexpr_carve2_bool0(
 					), s_is_logical(rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_OPCODE])
 				, rdwr_data->m_ctx);
 
-	rdwr_prv_extra->m_mask_literal = 3;
+	rdwr_prv_extra->m_mask_literal = rdwr_lst_extra[0].m_mask_literal & rdwr_lst_extra[1].m_mask_literal;
 
 	ae2fpat_assertassume_strict(rdwr_lst_scale_buf);
 
@@ -349,79 +351,24 @@ aclexpr_carve_lbl_t aclexpr_carve2_bool0(
 			}
 
 		case ACLUTIL_LITERAL_MASK_RT:
-#define	XORSWAP(a, b)	{ (a) ^= (b); (b) ^= (a); (a) ^= (b); }
-			/** 
-			 * here, operation is not constant.
-			 *
-			 * current
-			 * [1] OpSpecConstant opcode (ignorance required)
-			 * [2] result type
-			 * [3] result id
-			 * [4] literal opcode (opspecconstant evaluation)
-			 * ...
-			 *
-			 *
-			 * we want
-			 * [2] opcode with operand count
-			 * [3] result type
-			 * [4] result id
-			 * */
-
-			/** 
-			 * swap [2] and [4]
-			 *
-			 * after this will
-			 * [2] literal opcode (without operand)
-			 * [3] result id
-			 * [4] result type
-			 * * */
-			XORSWAP(rdwr_lst_scale_buf[2], rdwr_lst_scale_buf[4]);
-
-			/** we have four operands (including opcode) */
-			rdwr_lst_scale_buf[2] |= aclspv_mk_noprnds(4);
-
-			/**
-			 * swap [3] and [4].
-			 *
-			 * after this will
-			 * [2] opcode
-			 * [3] result type
-			 * [4] result id
-			 *
-			 * that matches what we want.
-			 * */
-			XORSWAP(rdwr_lst_scale_buf[3], rdwr_lst_scale_buf[4]);
-#undef	XORSWAP
-			ae2f_fallthrough;
-		case ACLUTIL_LITERAL_MASK_CONSTANT:
-
-#define		TMPL_SECTION	(*((rdwr_prv_extra->m_mask_literal) == ACLUTIL_LITERAL_RT \
-			? &(rdwr_data)->m_ctx->m_section.m_fnimpl		\
-			: &(rdwr_data)->m_ctx->m_section.m_types))
-
-#define		TMPL_COUNT	(*((rdwr_prv_extra->m_mask_literal) == ACLUTIL_LITERAL_RT	\
-			? &(rdwr_data)->m_ctx->m_count.m_fnimpl			\
-			: &(rdwr_data)->m_ctx->m_count.m_types))
-
-			dbg_puts("[carve2::arithmetic] vec_with_copy");
-
-			ae2f_ifnezerr_strict(s_aclmem_cgrow2(
-					&TMPL_SECTION
-					, TMPL_COUNT + 6u - (aclspv_wrd_t)(rdwr_prv_extra->m_mask_literal == (aclspv_wrd_t)ACLUTIL_LITERAL_RT)
-					, sizeof(aclspv_wrd_t)
-					, ACLSPV_COMPILE_ALLOC_FAILED_EXPR
-				       )) return c_lbl_err;
-
-			{
-				aclspv_wrd_t	CI = 6 - (!rdwr_prv_extra->m_mask_literal);
-				while(CI --> 0) {
-					aclutil_get_wrd_of_vec(&TMPL_SECTION)[TMPL_COUNT + CI]
-						= rdwr_lst_scale_buf[1u + (!rdwr_prv_extra->m_mask_literal) + CI];
-				}
-			}
-
-			TMPL_COUNT += 6u - (aclspv_wrd_t)(rdwr_prv_extra->m_mask_literal == ACLUTIL_LITERAL_RT);
+			/** runtime: the operation is a graph node, flushed by aclcur_emit(). */
+			ae2f_ifezerr(*rdwr_prv_idval = aclcur_cfg_op2(
+					rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_RESID]
+					, (enum SpvOp_)OPNATIVE
+					, rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_RESTYID]
+					, rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_END]
+					, rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_END + 1]
+					, rdwr_data->m_ctx))
+				return c_lbl_err;
 			break;
+
+		case ACLUTIL_LITERAL_MASK_CONSTANT:
+			ae2f_ifezerr(*rdwr_prv_idval = aclconst_specop(
+						rdwr_lst_scale_buf
+						, 6
+						, rdwr_data->m_ctx)) return c_lbl_err;
+			break;
+
 		default:
 			err_puts(("unknown literal"));
 			ae2f_unreachable();
@@ -429,21 +376,20 @@ aclexpr_carve_lbl_t aclexpr_carve2_bool0(
 
 	if(ISASS) {
 		CXCursor	CASSIGN		= rdwr_lst_extra->m_cursor;
-		aclspv_wrd_t IDX = aclutil_find_cursor(
-				rdwr_data->m_ctx->m_num_cursor
-				, rdwr_data->m_ctx->m_cursors.m_p
-				, clang_getCursorReferenced(CASSIGN)
+		const aclspv_id_t REG = aclexpr_curreg_find(
+				clang_getCursorReferenced(CASSIGN)
+				, rdwr_data->m_ctx
 				);
 
-		aclspv_wrd_t	CLVAL = aclcursor_vardecl_assign(
-				&((x_aclcursor* ae2f_restrict)rdwr_data->m_ctx->m_cursors.m_p)[IDX]
-				, rdwr_data->m_fnctx, *rdwr_prv_idval, rdwr_prv_extra->m_type_original
-				, rdwr_prv_extra->m_mask_literal
-				, &rdwr_prv_extra->m_literal
-				, 0
-				);
+		ae2f_ifezerr(REG) {
+			err_puts("[carve] no register for the assigned lvalue.");
+			rdwr_data->m_ctx->m_err = ACLSPV_COMPILE_UNHANDLED_CARVE;
+			return c_lbl_err;
+		}
 
-		ae2f_ifezerr_strict(CLVAL) {
+		ae2f_ifezerr(aclcur_store_reg(
+				REG, *rdwr_prv_idval, rdwr_data->m_ctx
+				)) {
 			err_puts("[carve] aclutil_assign_cursor_lval has been failed.");
 			rdwr_data->m_ctx->m_err = ACLSPV_COMPILE_UNHANDLED_CARVE;
 			return c_lbl_err;

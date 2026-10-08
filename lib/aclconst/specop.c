@@ -1,6 +1,7 @@
 #include "./specop.h"
 #include <util/wrdemit.h>
-#include <.aclspv/util/vcopr.h>
+#include <aclmem.h>
+#include <ae2f/cc/assume.h>
 
 static aclspv_id_t s_app(
 		const aclspv_wrd_t* ae2f_restrict	rd_wrds,
@@ -15,12 +16,12 @@ static aclspv_id_t s_app(
 				, h_ctx->m_count.m_types + c_num_wrd - 1
 				, 0
 				)) {
-		h_ctx->m_err = ACLSPV_COMPILE_MET_INVAL;
+		h_ctx->m_err = ACLSPV_COMPILE_ALLOC_FAILED;
 		return 0;
 	}
 
 	wr = &aclutil_get_wrd_of_vec(&h_ctx->m_section.m_types)[anchour];
-	_aclutil_vcopr(L, =, wr, rd_wrds, c_num_wrd);
+	aclmemcpy(wr, rd_wrds, c_num_wrd * (aclspv_sz_t)sizeof(aclspv_wrd_t));
 
 	return wr[2] = h_ctx->m_id++;
 }
@@ -55,8 +56,25 @@ static const ae2f_ccpure aclspv_wrd_t* s_cmp_advance(
 	return R;
 }
 
+#include <aclutil/op.h>
+
+static void s_sort(aclspv_wrd_t* ae2f_restrict rdwr_operands, const aclspv_wrd_t c) {
+	aclspv_wrd_t i;
+	for(i = 1; i < c; ++i) {
+		const aclspv_wrd_t k = rdwr_operands[i];
+		aclspv_wrd_t j = i;
+
+		while(j && rdwr_operands[j - 1] > k) {
+			rdwr_operands[j] = rdwr_operands[j - 1];
+			--j;
+		}
+
+		rdwr_operands[j] = k;
+	}
+}
+
 aclspv_id_t	aclconst_specop(
-		const aclspv_wrd_t* ae2f_restrict	rd_wrds,
+		aclspv_wrd_t* ae2f_restrict	rd_wrds,
 		aclspv_wrdcount_t			c_num_wrd,
 		h_aclspv_ctx_t				h_ctx
 		) {
@@ -64,6 +82,18 @@ aclspv_id_t	aclconst_specop(
 		= aclutil_get_wrd_of_vec(&h_ctx->m_section.m_types);
 
 	const aclspv_wrd_t* anchour, * pool0 = pool;
+
+#if	__ACLSPV_CHECK_EXTRA
+	ae2f_ifnezerr_strict(c_num_wrd < 4) {
+		err_puts("this is constant op. should be more than 3.\n");
+		return 0;
+	}
+#else
+	ae2f_assume(c_num_wrd >= 4);
+#endif
+
+	unless(aclutil_op_ordered(rd_wrds[3]))
+		s_sort(rd_wrds + 4, c_num_wrd - 4);
 
 	while(
 			(anchour = s_cmp_advance(pool, rd_wrds, c_num_wrd)) != pool

@@ -2,7 +2,7 @@
 #include "./implutil.h"
 
 #include <aclmem.h>
-#include <util/capability.h>
+#include <aclutil/capability.h>
 #include <.aclspv/util/u32_to_hex8.h>
 
 /*** STRUCT CONFIGURATION ***/
@@ -68,6 +68,11 @@ static ae2f_ccpure aclspv_bool_t	s_is_struct_same(
 	if(rd0 == rd1) return 0;
 	if(rd0->m_class != rd1->m_class) return 0;
 	if(rd0->m_alignof != rd1->m_alignof) return 0;
+
+	/** a union never unifies with a struct of equal members (their
+	 * initializers and decoration differ). */
+	if((rd0->m_field0 ^ rd1->m_field0) & ACLTY_STRUCT_FIELD0_UNION)
+		return 0;
 
 #if	0
 	unless(aclconst_is_specsz_same(rd0->m_sizeof, rd1->m_sizeof, h_ctx))
@@ -225,9 +230,9 @@ aclspv_id_t aclty_cfg_struct2(h_aclspv_ctx_t h_ctx, aclspv_id_t c) {
 	const aclspv_id_t	NEWID = aclty_cfg_struct(h_ctx);
 	p_cxtp_t ORIG = aclty_find(c, h_ctx), NEW;
 
+	ae2f_ifezerr(c)		return NEWID;
 	ae2f_ifezerr(ORIG)	return 0;
 	ae2f_ifezerr(NEWID)	return 0;
-	ae2f_ifezerr(c)		return NEWID;
 	ae2f_ifnezerr_strict(ORIG->m_class != ACLTY_STRUCT)
 		return 0;
 

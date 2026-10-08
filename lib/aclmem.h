@@ -32,13 +32,14 @@ ae2f_inline_f static aclspv_bool_t	s_aclmem_cgrow2(
 			c_elmc * c_elml < c_elmc || 
 			c_elmc * c_elml < c_elml || 
 			aclmem_cgrow(h, c_elmc * c_elml)) {
-		h->m_ctx->m_err = c_err_in_case;
+		h->m_ctx->m_err = (aclspv_compile_t)c_err_in_case;
 		return 1;
 	}
 
 	return 0;
 }
 
+/** 1 on error. */
 ae2f_inline_f static aclspv_bool_t	s_aclmem_calloc2(
 		x_aclspv_vec* ae2f_restrict	h,
 		aclspv_wrd_t			c_elmc,
@@ -49,14 +50,14 @@ ae2f_inline_f static aclspv_bool_t	s_aclmem_calloc2(
 			c_elmc * c_elml < c_elmc ||
 			c_elmc * c_elml < c_elml ||
 			aclmem_calloc(h, c_elmc * c_elml)) {
-		h->m_ctx->m_err = c_err_in_case;
+		h->m_ctx->m_err = (aclspv_compile_t)c_err_in_case;
 		return 1;
 	}
 
 	return 0;
 }
 
-ae2f_ccconst ae2f_inline_f aclspv_wrd_t aclmemremaddr(const void* c_p, aclspv_wrd_t c_a)
+ae2f_ccconst ae2f_inline_f static aclspv_wrd_t aclmemremaddr(const void* c_p, aclspv_wrd_t c_a)
 {
 	return (aclspv_wrd_t)(((aclspv_ptr_t)c_p) & (((aclspv_ptr_t)c_a) - 1));
 }

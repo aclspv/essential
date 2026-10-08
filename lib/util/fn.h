@@ -3,7 +3,7 @@
 #ifndef lib_build_fn_h
 #define lib_build_fn_h
 
-#include <util/wrd.h>
+#include "./wrd.h"
 
 typedef struct {
 	/* @brief Result ID for function */

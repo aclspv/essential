@@ -2,6 +2,7 @@
 
 #include <aclexpr.h>
 #include <aclexpr/op.h>
+#include <aclcur/common.h>
 
 #include <ae2f/bll.h>
 #include <ae2f/pat/dbg.h>
@@ -184,7 +185,7 @@ enum ACLEXPR_RET_ aclexpr_eval_btcast(
 
 		const aclspv_id_t	TYPE_DST = aclid_getty_uint(aclid_get_bit_width(c_type_req));
 
-		const aclspv_id_t	VAL_SRC = CTX->m_id;
+		aclspv_id_t	VAL_SRC = 0;
 		typedef const aclspv_id_t* ae2f_restrict ptr_id_t;
 
 		ptr_id_t VAL_SRC_PTR, TYPE_SRC_PTR;
@@ -196,17 +197,20 @@ enum ACLEXPR_RET_ aclexpr_eval_btcast(
 		}
 
 		unless(aclid_is_int(DATA.m_tyid_current)) {
-			++CTX->m_id;
-			ae2f_expected_but_else(CTX->m_count.m_fnimpl = aclutil_emitx_4(
-						&CTX->m_section.m_fnimpl
-						, CTX->m_count.m_fnimpl
+			/** the bitcast must be a value-flow node: direct stream
+			 * emission would place the instruction at the raw-stream
+			 * end — possibly ahead of the current block's own nodes —
+			 * and would not reference-count the source node, whose
+			 * zero-ref elision would leave the bitcast's operand
+			 * undefined. */
+			ae2f_expected_but_else(VAL_SRC = aclcur_cfg_op1(
+						CTX->m_id++
 						, SpvOpBitcast
 						, TYPE_SRC
-						, VAL_SRC
-						, DATA.m_id_ret 
-						)) {
+						, DATA.m_id_ret
+						, CTX
+						))
 				return ACLEXPR_RET_FAILURE;
-			}
 
 			VAL_SRC_PTR = &VAL_SRC;
 			TYPE_SRC_PTR = &TYPE_SRC;
@@ -239,16 +243,15 @@ enum ACLEXPR_RET_ aclexpr_eval_btcast(
 		ae2fpat_assertassume(aclid_is_uint(TYPE_DST));
 
 		unless(aclid_is_int(c_type_req)) {
-			ae2f_expected_but_else(CTX->m_count.m_fnimpl = aclutil_emitx_4(
-						&CTX->m_section.m_fnimpl
-						, CTX->m_count.m_fnimpl
+			/** node-based, like the source bitcast above. */
+			ae2f_expected_but_else(*ret_id = aclcur_cfg_op1(
+						CTX->m_id++
 						, SpvOpBitcast
 						, c_type_req
-						, *ret_id = CTX->m_id++
 						, VAL_DST
-						)) {
+						, CTX
+						))
 				return ACLEXPR_RET_FAILURE;
-			}
 
 			return ACLEXPR_RET_SUCCESS;
 		} else {

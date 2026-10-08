@@ -12,7 +12,9 @@
 #include <aclexpr.h>
 #include <aclexpr/op.h>
 
-#include <aclcursor.h>
+#include <aclcur/common.h>
+#include <aclcur/load/get.h>
+#include <aclexpr/curreg.h>
 
 #include <.aclspv/util/mkname.h>
 #include <aclexpr/visit/api.h>
@@ -129,7 +131,7 @@ ae2f_inline_f static aclexpr_visit_lbl_t aclexpr_visit_op0_val(
 
 						*rwr_literal = EVRES;
 
-						ae2f_expected_but_else(*wr_newid = aclutil_mk_constant_val_f32_id(
+						ae2f_expected_but_else(*wr_newid = aclval_cfg_f32(
 									EVRES.m_flt
 									, h_fnctx->m_ctx
 									))
@@ -145,57 +147,49 @@ ae2f_inline_f static aclexpr_visit_lbl_t aclexpr_visit_op0_val(
 		case CXCursor_DeclRefExpr:
 			if(rdwr_extra->m_state0 & ACLEXPR_OPCFGX_STATE0_VAL_NO_NEED) {
 				dbg_puts("[visit0::val value not needed]");
+				/** no value fetched: not a compile-time literal either. */
+				rdwr_extra->m_mask_literal = 0;
 				return c_lbl_success;
 			} else {
 				const CXCursor DECL = clang_getCursorReferenced(c_cur);
-				const aclspv_wrd_t	DECL_IDX = aclutil_find_cursor(
-						h_fnctx->m_ctx->m_num_cursor
-						, h_fnctx->m_ctx->m_cursors.m_p
-						, DECL
-						);
+				const aclspv_id_t REG = aclexpr_curreg_find(DECL, h_fnctx->m_ctx);
 
-				ae2f_expected_but_else(DECL_IDX < h_fnctx->m_ctx->m_num_cursor)
+				ae2f_expected_but_else(REG)
 					return c_lbl_fail;
 
-#define	DECL_INFO	DECL_IDX[((x_aclcursor* ae2f_restrict)h_fnctx->m_ctx->m_cursors.m_p)]
+				{
+					h_aclcur_t p_reg = aclcur_get_node(REG, h_fnctx->m_ctx);
 
-				/** NaN is undefined behaviour here */
-				unless(aclid_is_arithmetic(DECL_INFO.m_data.m_vardecl.m_type_id, h_fnctx->m_ctx)) {
-					err_prefix(a);
-					err_call((void), (fprintf(stderr
-									, "[visit0::val] type(%u) is no arithmetic [NOIMPL]\n"
-									, DECL_INFO.m_data.m_vardecl.m_type_id))
-						);
-					return c_lbl_fail;
+					ae2f_ifezerr(p_reg)	return c_lbl_fail;
+
+					*wr_type_fetched = p_reg->m_ty;
 				}
 
-				*wr_type_fetched = DECL_INFO.m_data.m_vardecl.m_type_id;
-				*rwr_literal = DECL_INFO.m_data.m_vardecl.m_literal;
-
-				dbg_prefix();
-				dbg_call((void), fprintf(stderr, "[visit0::val] lval cache check %u value %u idx %u before\n"
-							, (unsigned)!!(DECL_INFO.m_data.m_vardecl.m_mask 
-								& (aclspv_wrd_t)ACLCURSOR_VARDECL_PREDICTABLE)
-							, (unsigned)*wr_newid
-							, (unsigned)DECL_IDX));
-
-				ae2f_ifezerr(*wr_newid = aclcursor_vardecl_assign(
-							&DECL_INFO, h_fnctx
-							, 0, 0
-							, 3, 0
-							, rwr_literal))
+				/** loaded from memory: runtime value — unless the served
+				 * id is a compile-time constant: a store of a literal
+				 * tracks the OpConstant itself, so a reference to the
+				 * register inherits the constant's literalness. the
+				 * register's own stale label/loop state (phis, CHANGED)
+				 * must not force a runtime op. */
+				ae2f_ifezerr(*wr_newid = aclcur_load_reg(
+						REG, h_fnctx->m_ctx, rwr_literal))
 					return c_lbl_fail;
 
-				dbg_prefix();
-				dbg_call((void), fprintf(stderr, "[visit0::val] lval cache check %u value %u idx %u\n"
-							, (unsigned)!!(DECL_INFO.m_data.m_vardecl.m_mask 
-								& (aclspv_wrd_t)ACLCURSOR_VARDECL_PREDICTABLE)
-							, (unsigned)*wr_newid
-							, (unsigned)DECL_IDX));
+				{
+					const aclcur_t LB = aclcur_get_load(*wr_newid, h_fnctx->m_ctx);
 
-				rdwr_extra->m_mask_literal = ((aclspv_wrd_t)(ACLCURSOR_VARDECL_LITERAL) & DECL_INFO.m_data.m_vardecl.m_mask);
+					if((LB.m_val_mask & ACLUTIL_LITERAL_MASK_LITERAL)
+							== ACLUTIL_LITERAL_MASK_LITERAL) {
+						rdwr_extra->m_mask_literal = ACLUTIL_LITERAL_MASK_LITERAL;
+						if(rwr_literal)
+							*rwr_literal = LB.m_val_lit;
+					} else if(LB.m_val_mask & ACLUTIL_LITERAL_CONSTANT) {
+						rdwr_extra->m_mask_literal = ACLUTIL_LITERAL_MASK_CONSTANT;
+					} else {
+						rdwr_extra->m_mask_literal = 0;
+					}
+				}
 				return c_lbl_success;
-#undef	DECL_INFO
 			}
 	}
 

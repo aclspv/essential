@@ -3,7 +3,7 @@
 
 #include <ae2f/pat/macrofunc.h>
 #include <string.h>
-#include <aclspv3rd/clang/idx.h>
+#include <aclspv.h>
 
 ae2f_MAC((L, L_NDL, )) aclattr_rdattr(
 		const CXCursor c_cur,

@@ -11,6 +11,7 @@
 #include <aclty.h>
 #include <aclexpr.h>
 #include <aclconst/specop.h>
+#include <aclcur/common.h>
 
 static enum ACLEXPR_RET_ s_non_literal_novec(
 		const aclspv_id_t	c_old_id,
@@ -77,16 +78,14 @@ static enum ACLEXPR_RET_ s_non_literal_novec(
 
 			return ACLEXPR_RET_SUCCESS_CONSTANT;
 		} else {
-			ae2f_expected_but_else(h_ctx->m_count.m_fnimpl
-					= aclutil_emitx_4(
-						&h_ctx->m_section.m_fnimpl
-						, h_ctx->m_count.m_fnimpl
-						, SpvOpFConvert
-						, TYEVAL_NEW
-						, *r_newid = h_ctx->m_id++
-						, c_old_id
-						)
-					) return ACLEXPR_RET_FAILURE;
+			ae2f_expected_but_else(*r_newid = aclcur_cfg_op1(
+					h_ctx->m_id++
+					, SpvOpFConvert
+					, TYEVAL_NEW
+					, c_old_id
+					, h_ctx
+					))
+				return ACLEXPR_RET_FAILURE;
 			return ACLEXPR_RET_SUCCESS;
 		}
 	}
@@ -130,17 +129,15 @@ static enum ACLEXPR_RET_ s_non_literal_novec(
 
 				return ACLEXPR_RET_SUCCESS_CONSTANT;
 			} else {
-				ae2f_expected_but_else(h_ctx->m_count.m_fnimpl
-						= aclutil_emitx_5(
-							&h_ctx->m_section.m_fnimpl
-							, h_ctx->m_count.m_fnimpl
-							, SpvOpBitwiseOr
-							, TYEVAL_NEW
-							, *r_newid = h_ctx->m_id++
-							, c_old_id
-							, VAL_ZERO
-							)
-						) return ACLEXPR_RET_FAILURE;
+				ae2f_expected_but_else(*r_newid = aclcur_cfg_op2(
+						h_ctx->m_id++
+						, SpvOpBitwiseOr
+						, TYEVAL_NEW
+						, c_old_id
+						, VAL_ZERO
+						, h_ctx
+						))
+					return ACLEXPR_RET_FAILURE;
 				return ACLEXPR_RET_SUCCESS;
 			}
 
@@ -160,16 +157,14 @@ static enum ACLEXPR_RET_ s_non_literal_novec(
 
 			return ACLEXPR_RET_SUCCESS_CONSTANT;
 		} else {
-			ae2f_expected_but_else(h_ctx->m_count.m_fnimpl
-					= aclutil_emitx_4(
-						&h_ctx->m_section.m_fnimpl
-						, h_ctx->m_count.m_fnimpl
-						, OPCODE 
-						, TYEVAL_NEW
-						, *r_newid = h_ctx->m_id++
-						, c_old_id
-						)
-					) return ACLEXPR_RET_FAILURE;
+			ae2f_expected_but_else(*r_newid = aclcur_cfg_op1(
+					h_ctx->m_id++
+					, (enum SpvOp_)OPCODE
+					, TYEVAL_NEW
+					, c_old_id
+					, h_ctx
+					))
+				return ACLEXPR_RET_FAILURE;
 			return ACLEXPR_RET_SUCCESS;
 		}
 
@@ -197,17 +192,15 @@ static enum ACLEXPR_RET_ s_non_literal_novec(
 
 			return ACLEXPR_RET_SUCCESS_CONSTANT;
 		} else {
-			ae2f_expected_but_else(h_ctx->m_count.m_fnimpl
-					= aclutil_emitx_5(
-						&h_ctx->m_section.m_fnimpl
-						, h_ctx->m_count.m_fnimpl
-						,OPCODE 
-						, TYEVAL_NEW
-						, *r_newid = h_ctx->m_id++
-						, c_old_id 
-						, V0
-						)
-					) return ACLEXPR_RET_FAILURE;
+			ae2f_expected_but_else(*r_newid = aclcur_cfg_op2(
+					h_ctx->m_id++
+					, (enum SpvOp_)OPCODE
+					, TYEVAL_NEW
+					, c_old_id
+					, V0
+					, h_ctx
+					))
+				return ACLEXPR_RET_FAILURE;
 			return ACLEXPR_RET_SUCCESS;
 		}
 	}
@@ -238,49 +231,42 @@ static enum ACLEXPR_RET_ s_non_literal_novec(
 
 			return ACLEXPR_RET_SUCCESS_CONSTANT;
 		} else {
-			ae2f_expected_but_else(h_ctx->m_count.m_fnimpl
-					= aclutil_emitx_6(
-						&h_ctx->m_section.m_fnimpl
-						, h_ctx->m_count.m_fnimpl
-						, SpvOpSelect
-						, TYEVAL_NEW
-						, *r_newid = h_ctx->m_id++
-						, c_old_id
-						, V1, V0
-						)
-					) return ACLEXPR_RET_FAILURE;
+			ae2f_expected_but_else(*r_newid = aclcur_cfg_op3(
+					h_ctx->m_id++
+					, SpvOpSelect
+					, TYEVAL_NEW
+					, c_old_id
+					, V1, V0
+					, h_ctx
+					))
+				return ACLEXPR_RET_FAILURE;
 			return ACLEXPR_RET_SUCCESS;
 		}
 	}
 
 	/** TWO ARE DIFFERENT */
 	if(aclid_is_float(c_new_type)) {
-		ae2f_expected_but_else(h_ctx->m_count.m_fnimpl
-				= aclutil_emitx_4(
-					&h_ctx->m_section.m_fnimpl
-					, h_ctx->m_count.m_fnimpl
-					, SpvOpConvertSToF 
+		ae2f_expected_but_else(*r_newid = aclcur_cfg_op1(
+					h_ctx->m_id++
+					, SpvOpConvertSToF
 					, TYEVAL_NEW
-					, *r_newid = h_ctx->m_id++
 					, c_old_id
-					)
-				) return ACLEXPR_RET_FAILURE;
+					, h_ctx
+					))
+			return ACLEXPR_RET_FAILURE;
 
 		return ACLEXPR_RET_SUCCESS;
 	}
 
 	if(aclid_is_int(c_new_type)) {
-		*r_newid = h_ctx->m_id;
-		ae2f_ifezerr(h_ctx->m_count.m_fnimpl
-				= aclutil_emitx_4(
-					&h_ctx->m_section.m_fnimpl
-					, h_ctx->m_count.m_fnimpl
+		ae2f_expected_but_else(*r_newid = aclcur_cfg_op1(
+					h_ctx->m_id++
 					, SpvOpConvertFToS
 					, c_new_type
-					, h_ctx->m_id++
 					, c_old_id
-					)
-				) return ACLEXPR_RET_FAILURE;
+					, h_ctx
+					))
+			return ACLEXPR_RET_FAILURE;
 
 		return ACLEXPR_RET_SUCCESS;
 	}
@@ -322,7 +308,7 @@ static enum ACLEXPR_RET_ s_non_literal_vec(
 				, c_new_type
 				);
 	} else if(VCFG_NEW.m_num > 1 && VCFG_OLD.m_num == 1) {
-		aclspv_id_t	VECTYID = aclutil_mk_cxtp_vec(
+		aclspv_id_t	VECTYID = aclty_mk_vec(
 				VCFG_OLD.m_ty_elm
 				, VCFG_NEW.m_num
 				, h_ctx
@@ -490,7 +476,7 @@ enum ACLEXPR_RET_ aclexpr_arithmetic_cast_literal(
 	else if(aclid_is_int(c_old_type) && c_new_type == ACLSPV_ID_BOOL) {
 		dbg_puts("int -> bool");
 		RESULT.m_u64 = !!c_old_literal.m_api_uintmax;
-		*r_newid = aclutil_mk_constant_bool_id((aclspv_bool_t)RESULT.m_u64, h_ctx);
+		*r_newid = aclval_cfg_bool((aclspv_bool_t)RESULT.m_u64, h_ctx);
 		if(wr_new_literal_opt) *wr_new_literal_opt = RESULT;
 		return ACLEXPR_RET_SUCCESS_LITERAL;
 	} else if(aclid_is_float(c_old_type) && c_new_type == ACLSPV_ID_BOOL) {
@@ -506,7 +492,7 @@ enum ACLEXPR_RET_ aclexpr_arithmetic_cast_literal(
 				return ACLEXPR_RET_NOT_THE_CASE;
 		}
 
-		*r_newid = aclutil_mk_constant_bool_id((aclspv_bool_t)RESULT.m_u64, h_ctx);
+		*r_newid = aclval_cfg_bool((aclspv_bool_t)RESULT.m_u64, h_ctx);
 		RESULT.m_u64 = !!c_old_literal.m_api_uintmax;
 		if(wr_new_literal_opt) *wr_new_literal_opt = RESULT;
 		return ACLEXPR_RET_SUCCESS_LITERAL;
@@ -565,21 +551,21 @@ enum ACLEXPR_RET_ aclexpr_arithmetic_cast_literal(
 		return ACLEXPR_RET_SUCCESS_LITERAL;
 
 		case ACLSPV_ID_F32:
-		ae2f_expected_but_else(ID_RET = aclutil_mk_constant_val_f32_id(
+		ae2f_expected_but_else(ID_RET = aclval_cfg_f32(
 					RESULT.m_flt
 					, h_ctx)) return ACLEXPR_RET_FAILURE;
 
 		*r_newid = ID_RET;
 		return ACLEXPR_RET_SUCCESS_LITERAL;
 		case ACLSPV_ID_F64:
-		ae2f_expected_but_else(ID_RET = aclutil_mk_constant_val_f64_id(
+		ae2f_expected_but_else(ID_RET = aclval_cfg_f64(
 					RESULT.m_dbl
 					, h_ctx)) return ACLEXPR_RET_FAILURE;
 		*r_newid = ID_RET;
 		return ACLEXPR_RET_SUCCESS_LITERAL;
 
 		case ACLSPV_ID_BOOL:
-		ae2f_ifezerr(ID_RET = aclutil_mk_constant_bool_id((aclspv_wrd_t)!!RESULT.m_api_uintmax, h_ctx))
+		ae2f_ifezerr(ID_RET = aclval_cfg_bool((aclspv_wrd_t)!!RESULT.m_api_uintmax, h_ctx))
 			return ACLEXPR_RET_FAILURE;
 
 		*r_newid = ID_RET;

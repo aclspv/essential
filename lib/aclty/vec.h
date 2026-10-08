@@ -12,7 +12,7 @@ ae2f_ccpure struct aclutil_cxtp_veccfg_t {
 		const h_aclspv_ctx_t	h_ctx
 		);
 
-aclspv_id_t aclutil_mk_cxtp_vec(
+aclspv_id_t aclty_mk_vec(
 		const aclspv_id_t	c_type_elm,
 		const aclspv_wrd_t	c_num_arr,
 		const h_aclspv_ctx_t	h_ctx

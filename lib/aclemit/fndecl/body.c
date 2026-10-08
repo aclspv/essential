@@ -5,6 +5,8 @@
 #include <aclemit/body.h>
 #include <aclemit/root.h>
 #include <aclattr/main.h>
+#include <aclcur/common.h>
+#include <aclcur/ssa.h>
 
 enum CXChildVisitResult	aclemit_fndecl_bodycfg(
 		CXCursor h_cur,
@@ -18,13 +20,17 @@ enum CXChildVisitResult	aclemit_fndecl_bodycfg(
 
 	h_ctx->m_count.m_fnimpl = 0;
 
-	ae2f_ifezerr(h_ctx->m_count.m_fndef = aclutil_emitx_2(
-				&h_ctx->m_section.m_fndef
-				, h_ctx->m_count.m_fndef
-				, SpvOpLabel
-				, fnctx.m_branch = h_ctx->m_id++)) {
-		fnctx.m_ctx->m_err = ACLSPV_COMPILE_ALLOC_FAILED;
-		return CXChildVisit_Break;
+	{
+		/** the root label is bootstrapped by aclemit_root; at this point
+		 * it is the current (and only) label, so m_branch can take it. */
+		h_aclcur_t	p_root = aclcur_get_lbl_last1(h_ctx);
+
+		ae2f_ifezerr(p_root) {
+			h_ctx->m_err = ACLSPV_COMPILE_ALLOC_FAILED;
+			return CXChildVisit_Break;
+		}
+
+		fnctx.m_branch = p_root->m_id;
 	}
 
 	h_ctx->m_work_nxt = aclemit_entp_body;
@@ -39,11 +45,16 @@ enum CXChildVisitResult	aclemit_fndecl_bodycfg(
 		return CXChildVisit_Break;
 	}
 
-	unless(fnctx.m_state0 & ACLUTIL_FNCTX_STATE0_LBL_DO_SOMETHING) {
-		_aclutil_fnctx_sync(fnctx, fnctx, ACLUTIL_FNCTX_SNAPS_LBL);
-	}
+	/** post-carve, pre-emit: complete the loop-header phi chains with
+	 * the final-graph back-edge carries (the back edge is not part of
+	 * the graph while the header's reads resolve). */
+	ae2f_ifnezerr(h_ctx->m_err = aclcur_ssa_loop_carry_fill(h_ctx))
+		return CXChildVisit_Break;
 
-	ae2f_ifnezerr(h_ctx->m_err)	return CXChildVisit_Break;
+	/** flush the cursor graph into m_fnimpl: labels, branches, ops, and
+	 * register storage (OpVariable) via the register interfaces. */
+	ae2f_ifnezerr(h_ctx->m_err = aclcur_emit(h_ctx))
+		return CXChildVisit_Break;
 
 	if(h_ctx->m_count.m_fnimpl) {
 		ae2f_ifnezerr_strict(s_aclmem_cgrow2(
@@ -81,7 +92,6 @@ enum CXChildVisitResult	aclemit_fndecl_bodycfg(
 		h_ctx->m_err = ACLSPV_COMPILE_ALLOC_FAILED;
 		return CXChildVisit_Break;
 	}
-
 
 	fnctx.m_ctx->m_work_data	= fnctx.m_ctx;
 	fnctx.m_ctx->m_work_nxt		= aclemit_root;

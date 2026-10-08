@@ -1,7 +1,8 @@
 #include "./bool1.h"
 #include "./util.h"
 
-#include <aclcursor/vardecl.h>
+#include <aclcur/common.h>
+#include <aclcur/reg/var.h>
 
 #include <aclexpr/op.h>
 #include <.aclspv/util/mkname.h>
@@ -42,7 +43,7 @@ aclspv_bool_t aclexpr_beforevisit2_bool1(
 			, rdwr_data->m_ctx
 			);
 
-	VBOOL = aclutil_mk_cxtp_vec(ACLSPV_ID_BOOL, V.m_num, rdwr_data->m_ctx);
+	VBOOL = aclty_mk_vec(ACLSPV_ID_BOOL, V.m_num, rdwr_data->m_ctx);
 
 	if(1 != V.m_num)	return 0;	/** f*ck short circuting when it is vector */
 
@@ -98,37 +99,49 @@ aclspv_bool_t aclexpr_beforevisit2_bool1(
 			);
 
 	fixme_puts("add control variable later");
-	ae2f_ifezerr(rdwr_data->m_ctx->m_count.m_fnimpl = aclutil_emitx_3(
-			&rdwr_data->m_ctx->m_section.m_fnimpl
-			, rdwr_data->m_ctx->m_count.m_fnimpl
-			, (aclspv_wrd_t)SpvOpSelectionMerge
-			, LWBR[1]
-			, 0x0)) return 1;
 
-	ae2f_ifezerr(rdwr_data->m_ctx->m_count.m_fnimpl = aclutil_emitx_4(
-				&rdwr_data->m_ctx->m_section.m_fnimpl
-				, rdwr_data->m_ctx->m_count.m_fnimpl
-				, (aclspv_wrd_t)SpvOpBranchConditional
-				, NEWID_0
-				, LWBR[IS_LWOR]
-				, LWBR[!IS_LWOR]
+	{
+		/** value-phi: a temporary register carries the boolean result. */
+		const aclcur_reg_t REGIN = aclcur_regvar_in();
+
+		ae2f_ifezerr(LST_SCALE_BUF[ACLEXPR_OPBINCFG_RESID] = aclcur_cfg_reg(
+				clang_getNullCursor()
+				, ACLSPV_ID_BOOL
+				, SpvStorageClassFunction
+				, &REGIN
+				, rdwr_data->m_ctx
 				)) return 1;
-
-	ae2f_ifezerr(rdwr_data->m_ctx->m_count.m_fnimpl = aclutil_emitx_2(
-				&rdwr_data->m_ctx->m_section.m_fnimpl
-				, rdwr_data->m_ctx->m_count.m_fnimpl
-				, (aclspv_wrd_t)SpvOpLabel
-				, LWBR[0]
-				)) return 1;
-
-	ae2fpat_assertassume_strict(rdwr_data->m_fnctx->m_branch);
+	}
 
 	/** 0 must be fallback value. */
-	ae2f_ifezerr(LST_SCALE_BUF[ACLEXPR_OPBINCFG_END] = aclutil_mk_constant_bool_id(IS_LWOR, rdwr_data->m_ctx))
+	ae2f_ifezerr(LST_SCALE_BUF[ACLEXPR_OPBINCFG_END] = aclval_cfg_bool(IS_LWOR, rdwr_data->m_ctx))
+		return 1;
+
+	/** the fallback is stored on the branch-ALL block, before the branch. */
+	ae2f_ifezerr(aclcur_store_reg(
+			LST_SCALE_BUF[ACLEXPR_OPBINCFG_RESID]
+			, LST_SCALE_BUF[ACLEXPR_OPBINCFG_END]
+			, rdwr_data->m_ctx
+			)) return 1;
+
+	/** branch-ALL: from where the short-circuit falls. */
+	LST_EXTRA[0].m_extra.m_bool1.m_parent = aclcur_get_lbl_last(rdwr_data->m_ctx);
+
+	/** terminate branch-ALL with the (possibly constant) condition. */
+	ae2f_ifezerr(aclcur_cfg_jc(
+			NEWID_0
+			, LWBR[IS_LWOR]
+			, LWBR[!IS_LWOR]
+			, 0, 0
+			, LWBR[1], 0, 0
+			, rdwr_data->m_ctx
+			)) return 1;
+
+	/** branch-CUR starts here. */
+	ae2f_ifezerr(aclcur_cfg_lbl(LWBR[0], rdwr_data->m_ctx))
 		return 1;
 
 	LST_EXTRA[1].m_extra.m_bool1.m_parent	= LWBR[0];			/** branch-current */
-	LST_EXTRA[0].m_extra.m_bool1.m_parent	= rdwr_data->m_fnctx->m_branch;	/** branch-fallback */
 	rdwr_data->m_fnctx->m_branch		= LWBR[1];
 
 	/** no sync-caching on vardecl is required since there's no other branch */

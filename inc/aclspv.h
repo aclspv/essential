@@ -8,9 +8,6 @@
 
 #include <ae2f/cc/profiles.h>
 
-#include "./aclspv3rd/spirv-unified1.h"
-#include "./aclspv3rd/clang/idx.h"
-
 #include <ae2f/Keys.h>
 #include <ae2f/.Call.h>
 
@@ -44,7 +41,7 @@
 
 #include <ae2f/c90/stdint.h>
 #include <ae2f/c90/stdint/enum.h>
-#include <stddef.h>
+#include <stddef.h> 
 
 /**
  * @typedef	aclspv_wrd_t
@@ -60,9 +57,14 @@ typedef uint_least32_t	aclspv_wrd_t;
 /**
  * 64-bits unsigned.
  * */
-#ifndef	aclspv_dwrd_t
+#ifndef	aclspv_wrd2_t
 typedef	uint_least64_t	aclspv_wrd2_t;
 #define	aclspv_wrd2_t	aclspv_wrd2_t
+#endif
+
+#ifndef	aclspv_swrd2_t
+typedef	int_least64_t	aclspv_swrd2_t;
+#define	aclspv_swrd2_t	aclspv_swrd2_t
 #endif
 
 #ifndef	aclspv_ptr_t
@@ -70,9 +72,39 @@ typedef intptr_t	aclspv_ptr_t;
 #define aclspv_ptr_t	aclspv_ptr_t
 #endif
 
+typedef aclspv_wrd2_t aclspv_wrdmax_t;
+
+#include <clang-c/Index.h>
+#include <spirv/unified1/spirv.h>
+
+
+/** ((c & c_and) << c_pad) */
+#define aclspv_and_pad(c, c_and, c_pad)	\
+	((ae2f_static_cast(aclspv_wrd_t, (c)) & ae2f_static_cast(aclspv_wrd_t, (c_and))) \
+	 << ae2f_static_cast(aclspv_wrd_t, (c_pad)))
+
+/** 
+ * represents version c_mjr.c_mnr in 32-bits (aclspv_wrd_t)
+ *
+ * c_mjr: u8	; majour version
+ * c_mnr: u8	; minour version
+ * */
 #define	aclspv_ver_spv(c_mjr, c_mnr)	\
-	((ae2f_static_cast(aclspv_wrd_t, c_mjr) << ae2f_static_cast(aclspv_wrd_t, 16))	|	\
-	 (ae2f_static_cast(aclspv_wrd_t, c_mnr) << ae2f_static_cast(aclspv_wrd_t, 8)))
+	(aclspv_and_pad(c_mjr, 0xFF, 16) | aclspv_and_pad(c_mnr, 0xFF, 8))
+
+/**
+ * c_var: u3(u8)	; variant identifier (0 as std)
+ * c_mjr: u7(u8)	; majour version number
+ * c_mnr: u10(u16)	; minour version number
+ * c_patch: u12(u16)	; patch version number
+ * */
+#define aclspv_ver_vk(c_var, c_mjr, c_mnr, c_patch)	(	\
+		aclspv_and_pad(c_patch, 0xFFF, 0) | aclspv_and_pad(c_mnr, 0x3FF, 12) | \
+		aclspv_and_pad(c_mjr, 0x7F, 22)	| aclspv_and_pad(c_var, 0x7, 29)	\
+		)
+
+#define aclspv_ver_vk2(c_mjr, c_mnr)	\
+	aclspv_ver_vk(0x0, c_mjr, c_mnr, 0x0)
 
 /**
  * @typedef	aclspv_wrdcount_t
@@ -91,7 +123,7 @@ typedef aclspv_wrd_t	aclspv_bool_t;
 
 typedef int ACLSPV_WRD_CHECK[sizeof(aclspv_wrd_t) >= 4 ? 1 : -1];
 
-typedef enum ACLSPV_COMPILE_ {
+enum ACLSPV_COMPILE_ {
 	ACLSPV_COMPILE_OK,
 	ACLSPV_COMPILE_PRM_INVAL_NIL,
 
@@ -132,6 +164,7 @@ typedef enum ACLSPV_COMPILE_ {
 
 	ACLSPV_COMPILE_TOO_BIG,
 	ACLSPV_COMPILE_TOO_BIG_EXPRVISIT,
+	ACLSPV_COMPILE_TOO_BIG_CUR_LBL,
 
 	ACLSPV_COMPILE_CXTP_ZERO,
 	ACLSPV_COMPILE_CXTP_STRUCT_MBR_NUM_IS_LYING,
@@ -161,6 +194,10 @@ typedef enum ACLSPV_COMPILE_ {
 	ACLSPV_COMPILE_UNHANDLED,
 	ACLSPV_COMPILE_UNHANDLED_ARGS,
 	ACLSPV_COMPILE_UNHANDLED_BODY,
+	ACLSPV_COMPILE_UNHANDLED_BODY_LBL,
+	ACLSPV_COMPILE_UNHANDLED_BODY_CURKINDER,
+	ACLSPV_COMPILE_UNHANDLED_BODY_VARDECL,
+	ACLSPV_COMPILE_UNHANDLED_BODY_RET,
 	ACLSPV_COMPILE_UNHANDLED_WHILE,
 	ACLSPV_COMPILE_UNHANDLED_VISIT,
 	ACLSPV_COMPILE_UNHANDLED_CARVE,
@@ -169,8 +206,30 @@ typedef enum ACLSPV_COMPILE_ {
 	ACLSPV_COMPILE_DIAG_ERR,
 
 	ACLSPV_COMPILE_NOT_INIT_STATE,
-	ACLSPV_COMPILE_PUSHCONSTANT_TOO_BIG
-} e_aclspv_compile_t;
+	ACLSPV_COMPILE_PUSHCONSTANT_TOO_BIG,
+
+	/** pointer arithmetic (`p + n`, `p - n`, `p - q`, `++p`, `--p`) is a
+	 * deliberate language-model rejection in the logical addressing model,
+	 * not a missing feature: pointers are plain ids there, with no
+	 * address to offset. physical addressing will need it later, so this
+	 * is gated on ACLSPV_CTX_FLAG0_LOGICAL, never unconditional. */
+	ACLSPV_COMPILE_POINTER_ARITHMETIC,
+
+	/** dereference / address-of applied to something that is not a
+	 * pointer. an explicit rejection, never a silent pass: emitting a load
+	 * or a store through a non-pointer id produces a module that is
+	 * structurally wrong rather than diagnosable. */
+	ACLSPV_COMPILE_NOT_A_POINTER,
+
+	/** see ACLSPV_CTX_FLAG0_ERROR_UNASSIGNED_VAL_USED */
+	ACLSPV_COMPILE_UNASSIGNED_VALUE
+};
+
+/** 
+ * could now fit in 32-bit.
+ * see enum ACLSPV_COMPILE_
+ * */
+typedef aclspv_wrd_t	aclspv_compile_t;
 
 typedef struct {
 	/** should be used */
@@ -188,13 +247,11 @@ typedef struct {
 
 #define	__ENUM()			\
 	__X(SYMBOL),			\
-	__X(BUF64),			\
-	__X(OGL),			\
-	__X(LOGICAL),			\
 	__X(DUMP_DIAGNOSTICS),		\
 	__X(KILL_ON_DIAGNOSTICS),	\
 	__X(EXPLICIT_CAPABILITY),	\
-	__X(EXPLICIT_EXTENSION)
+	__X(EXPLICIT_EXTENSION),	\
+	__X(ERROR_UNASSIGNED_VAL_USED)
 
 #define	__X(A)	ACLSPV_CTX_FLAGPAD0_##A
 
@@ -230,9 +287,18 @@ enum ACLSPV_ID_ {
 	ACLSPV_ID_END
 };
 
+/** memory layout */
 enum ACLSPV_LAYOUT_ {
-	ACLSPV_LAYOUT_STD430
+	ACLSPV_LAYOUT_STD430,
+	ACLSPV_LAYOUT_STD140,
+	ACLSPV_LAYOUT_MAX
 };
+
+typedef aclspv_wrd_t	aclspv_ver_spv_t;
+typedef aclspv_wrd_t	aclspv_ver_vk_t;
+
+/** see enum ACLSPV_LAYOUT_ */
+typedef aclspv_wrd_t	aclspv_layout_t;
 
 typedef struct {
 	void*	m_usrdata;
@@ -251,45 +317,30 @@ typedef struct {
 	aclspv_wrd_t		m_max_push_size_limit;
 
 	/** @brief see `ACLSPV_CTX_FLAG0_` */
-	uint_leastenum_t	m_flag0;
+	aclspv_wrd_t		m_flag0;
 
 	/**
 	 * @brief
 	 * A output bitcode(spir-v)'s version.
 	 * Use `aclspv_ver_spv` to specify it
 	 * */
-	aclspv_wrd_t		m_spirv_ver;
+	aclspv_ver_spv_t	m_ver_spv;
+	aclspv_ver_vk_t		m_ver_vk;
 
-	/** see enum ACLSPV_LAYOUT_ */
-	aclspv_wrd_t		m_layout;
+	/** default memory layout */
+	aclspv_layout_t		m_layout_default;
 
 	/** byte size of sizeof() operation */
 	aclspv_wrd_t		m_byte_size_type;
+
+	/** see SpvAddressingModel */
+	aclspv_wrd_t		m_mdl_addr;
+
+	/** see SpvMemoryModel */
+	aclspv_wrd_t		m_mdl_mem;
 } aclspv_usrcfg_t;	/** user can configurate this */
 
 typedef struct a_aclspv_ctx {
-	e_aclspv_compile_t	m_err;
-
-	/** 
-	 * @brief
-	 * number of `m_cursors`.	\n
-	 * for its use see util/cursor.h
-	 *
-	 * @details
-	 * reset on every function
-	 * */
-	aclspv_wrdcount_t	m_num_cursor;
-
-	/** @see `m_type_uniques` */
-	aclspv_wrdcount_t	m_num_type_uniques;
-	aclspv_wrdcount_t	m_num_constant_cache;
-
-	/**
-	 * @var		m_id
-	 * @brief	id
-	 * */
-	aclspv_id_t		m_id;
-
 	/** cache for elements related to unsigned integer constants [lib_build_constant] */
 	x_aclspv_vec		m_constant_cache;
 
@@ -304,6 +355,9 @@ typedef struct a_aclspv_ctx {
 	 * reset on every function
 	 * */
 	x_aclspv_vec		m_cursors;
+
+	x_aclspv_vec		m_cur_lbl_dfs;
+	x_aclspv_vec		m_cur_lbl_dfs_visit;
 
 	/** 
 	 * @brief
@@ -332,6 +386,27 @@ typedef struct a_aclspv_ctx {
 		x_aclspv_vec	m_v2;
 	}	m_tmp;
 
+	aclspv_compile_t	m_err;
+
+	/** 
+	 * @brief
+	 * number of `m_cursors`.	\n
+	 * for its use see util/cursor.h
+	 *
+	 * @details
+	 * reset on every function
+	 * */
+	aclspv_wrdcount_t	m_num_cursor;
+
+	/** @see `m_type_uniques` */
+	aclspv_wrdcount_t	m_num_type_uniques;
+	aclspv_wrdcount_t	m_num_constant_cache;
+
+	/**
+	 * @var		m_id
+	 * @brief	id
+	 * */
+	aclspv_id_t		m_id;
 
 	struct {
 		aclspv_wrdcount_t
@@ -392,11 +467,10 @@ typedef struct a_aclspv_ctx {
 	}			m_section;
 
 	aclspv_id_t		m_id_defaults[ACLSPV_ID_END];
-	aclspv_wrd_t		m_max_push_size;
-	aclspv_id_t		m_push_size_id;
 
 	/** push constant should be singleton. */
 	aclspv_wrd_t		m_push_size_ty_pad;
+	aclspv_wrd_t		m_num_push_constant_func;
 
 	CXCursorVisitor		m_work_nxt;
 	CXClientData		m_work_data;
@@ -408,7 +482,7 @@ typedef struct a_aclspv_ctx {
  * @brief	initialisse `i_ctx` with `c_init_flag0` and `c_spirv_version`.
  *		`i_ctx` must be released by `aclspv_fini_ctx`.
  * */
-ae2f_extern ACLSPV_ABI_DECL enum ACLSPV_COMPILE_ aclspv_init_ctx(
+ae2f_extern ACLSPV_ABI_DECL aclspv_compile_t aclspv_init_ctx(
 		const h_aclspv_ctx_t			init_ctx,
 		const aclspv_usrcfg_t*	ae2f_restrict	rd_usrcfg_opt
 		);
@@ -416,7 +490,7 @@ ae2f_extern ACLSPV_ABI_DECL enum ACLSPV_COMPILE_ aclspv_init_ctx(
 /** 
  * @brief	reads `c_cur_root` and merge it to `h_ctx`
  * */
-ae2f_extern ACLSPV_ABI_DECL enum ACLSPV_COMPILE_ aclspv_ctx_compile(
+ae2f_extern ACLSPV_ABI_DECL aclspv_compile_t aclspv_ctx_compile(
 		const h_aclspv_ctx_t	h_ctx,
 		CXCursor		c_cur_root
 		);
@@ -424,12 +498,12 @@ ae2f_extern ACLSPV_ABI_DECL enum ACLSPV_COMPILE_ aclspv_ctx_compile(
 /** 
  * @brief	reads `h_tu` and merge it to `h_ctx`.
  * */
-ae2f_extern ACLSPV_ABI_DECL enum ACLSPV_COMPILE_ aclspv_ctx_compile1(
+ae2f_extern ACLSPV_ABI_DECL aclspv_compile_t aclspv_ctx_compile1(
 		const h_aclspv_ctx_t	h_ctx,
 		CXTranslationUnit	h_tu
 		);
 
-ae2f_extern ACLSPV_ABI_DECL enum ACLSPV_COMPILE_ aclspv_ctx_compile2(
+ae2f_extern ACLSPV_ABI_DECL aclspv_compile_t aclspv_ctx_compile2(
 		const h_aclspv_ctx_t	h_ctx,
 		struct CXUnsavedFile* ae2f_restrict const 	rdwr_unsaved,
 		const unsigned					c_unsaved_count,
@@ -439,7 +513,7 @@ ae2f_extern ACLSPV_ABI_DECL enum ACLSPV_COMPILE_ aclspv_ctx_compile2(
 		CXIndex							h_cxidx
 		);
 
-ae2f_extern ACLSPV_ABI_DECL enum ACLSPV_COMPILE_ aclspv_ctx_compile3(
+ae2f_extern ACLSPV_ABI_DECL aclspv_compile_t aclspv_ctx_compile3(
 		const h_aclspv_ctx_t	h_ctx,
 		struct CXUnsavedFile* ae2f_restrict const 	rdwr_unsaved,
 		const unsigned					c_unsaved_count,
@@ -459,7 +533,7 @@ ae2f_extern ACLSPV_ABI_DECL void aclspv_fini_ctx(
  * @brief	dump the spir-v output from `h_ctx` to `ir_output_opt`, with length to `r_output_count_opt`.
  * 		value of `ir_output_opt` must be manually freed by `free`.
  * */
-ae2f_extern ACLSPV_ABI_DECL enum ACLSPV_COMPILE_ aclspv_dump_ctx_output(
+ae2f_extern ACLSPV_ABI_DECL aclspv_compile_t aclspv_dump_ctx_output(
 		const x_aclspv_ctx* ae2f_restrict		h_ctx,
 		aclspv_wrdcount_t* ae2f_restrict const		r_output_count_opt,
 		aclspv_wrd_t* ae2f_restrict* ae2f_restrict	ir_output_opt
@@ -471,7 +545,7 @@ ae2f_extern ACLSPV_ABI_DECL enum ACLSPV_COMPILE_ aclspv_dump_ctx_output(
  * 		when word count is not sufficient, value of `rdwr_count_ret` will be changed to 
  * 			actual required word count of `ret`.
  * */
-ae2f_extern ACLSPV_ABI_DECL enum ACLSPV_COMPILE_ aclspv_dump_ctx_output1(
+ae2f_extern ACLSPV_ABI_DECL aclspv_compile_t aclspv_dump_ctx_output1(
 		const x_aclspv_ctx* ae2f_restrict		h_ctx,
 		aclspv_wrd_t* ae2f_restrict const	rdwr_count_ret,
 		aclspv_wrd_t* ae2f_restrict const	ret
@@ -487,6 +561,7 @@ ae2f_extern ACLSPV_ABI_DECL ae2f_ccpure ae2f_noexcept aclspv_bool_t aclspv_chck_
 
 /**
  * @brief	add a capacity `c_cap` to `h_ctx`
+ * 1 on success
  * */
 ae2f_extern ACLSPV_ABI_DECL ae2f_noexcept aclspv_bool_t aclspv_add_capability_from_ctx(
 		h_aclspv_ctx_t				h_ctx,

@@ -5,6 +5,11 @@
 
 #include <aclmem.h>
 #include <aclty.h>
+#include <aclctx/err.h>
+#include <aclctx/id.h>
+
+#include <aclcur/common.h>
+#include <aclutil/capability.h>
 
 #include <util/fnctx.h>
 #include <util/constant.h>
@@ -16,8 +21,11 @@
 
 #include <ae2f/pat/dbg.h>
 
-
-enum CXChildVisitResult aclemit_fndecl_entp(ae2f_unused CXCursor h_cur, CXCursor h_parent, CXClientData h_ctx) {
+enum CXChildVisitResult aclemit_fndecl_entp(
+		CXCursor h_cur,
+		CXCursor h_parent,
+		CXClientData h_ctx
+		) {
 	h_aclspv_ctx_t	ctx = h_ctx;
 	aclutil_entp_t	entp = {0, };
 	struct aclemit_fndecl_entp_arg_data DATA;
@@ -27,7 +35,6 @@ enum CXChildVisitResult aclemit_fndecl_entp(ae2f_unused CXCursor h_cur, CXCursor
 
 	aclmemzero(&DATA, sizeof(DATA));
 	DATA.m_ctx = ctx;
-	DATA.m_ctx->m_num_cursor = 0;
 	DATA.m_idx_entp_buf_count = ctx->m_count.m_entp;
 
 	if(NPARAMS < 0) {
@@ -39,58 +46,86 @@ enum CXChildVisitResult aclemit_fndecl_entp(ae2f_unused CXCursor h_cur, CXCursor
 	ae2f_ifnezerr(ctx->m_err)
 		return CXChildVisit_Break;
 
-	unless(NPARAMS) {
-		goto LBL_HOLLOW_ENTP;
+	clang_visitChildren(h_parent, aclemit_fndecl_entp_arg, &DATA);
+
+	/*** Extension Default **/
+	ae2f_ifezerr(aclutil_add_capability_by_flag(ctx, SpvCapabilityShader)) {
+		_aclctx_err(ctx, ACLSPV_COMPILE_UNHANDLED_ARGS);
+		return CXChildVisit_Break;
 	}
 
-	clang_visitChildren(h_parent, aclemit_fndecl_entp_arg, &DATA);
 	ae2f_ifnezerr(ctx->m_err)
 		return CXChildVisit_Break;
 
-	if(DATA.m_push_size) {
-		aclspv_id_t PSH_PTR_ID;
+	if(DATA.m_id_push_constant_struct_ty) {
+		aclspv_wrd_t* ae2f_restrict p_ty = &aclutil_get_wrd_of_vec(&ctx->m_section.m_vars)[ctx->m_push_size_ty_pad];
+		aclspv_id_t id_cfg;
+		aclty_t* ae2f_restrict p_cfg;
 
-		ae2f_ifnezerr_strict((ctx->m_max_push_size += DATA.m_push_size) > ctx->m_usrcfg.m_max_push_size_limit) {
-			ctx->m_err = ACLSPV_COMPILE_PUSHCONSTANT_TOO_BIG;
+		p_cfg = aclty_find(*p_ty, h_ctx);
+
+		dbg_prefix(a);
+		dbg_call(fprintf, (
+					stderr
+					, "push constant member type: %u\n"
+					, (unsigned)(p_cfg ? p_cfg->m_info.m_ptr.m_type : 0)
+				  ));
+
+		ae2f_ifezerr(id_cfg = aclty_cfg_struct2(h_ctx, p_cfg ? p_cfg->m_info.m_ptr.m_type : 0)) {
+			_aclctx_err(ctx, ACLSPV_COMPILE_UNHANDLED);
 			return CXChildVisit_Break;
 		}
 
-		PSH_PTR_ID	= aclutil_mk_constant_ptr_psh_id(
-				ctx->m_max_push_size
-				, ctx
-				);
-
-		ae2f_ifezerr(PSH_PTR_ID) {
-			unless(ctx->m_err) {
-				err_puts("unhandled");
-				ctx->m_err = ACLSPV_COMPILE_UNHANDLED;
-			}
-
+		ae2f_ifezerr(p_cfg = aclty_find(id_cfg, h_ctx)) {
+			_aclctx_err(ctx, ACLSPV_COMPILE_UNHANDLED);
 			return CXChildVisit_Break;
 		}
 
-		if(ctx->m_push_size_id) {
-			((aclspv_wrd_t* ae2f_restrict)ctx->m_section.m_vars.m_p)
-				[ctx->m_push_size_ty_pad] = PSH_PTR_ID;
-		} else {
-			dbg_puts("push size id is not set. having new one...");
-			ctx->m_push_size_ty_pad = ctx->m_count.m_vars + 1;
-			ae2f_ifezerr(ctx->m_count.m_vars = aclutil_emitx_4(
-						&ctx->m_section.m_vars
-						, ctx->m_count.m_vars
-						, SpvOpVariable
-						, PSH_PTR_ID
-						, (ctx->m_push_size_id = ctx->m_id++)
-						, SpvStorageClassPushConstant
-						)) {
-				return CXChildVisit_Break;
-			}
+		dbg_prefix(a);
+		dbg_call(fprintf, (
+					stderr
+					, "push constant member index: %u\n"
+					, (unsigned)p_cfg->m_info.m_struct.m_num_mbr
+				  ));
+
+		ae2f_ifezerr( aclty_add_struct_mbr_std430(p_cfg, DATA.m_id_push_constant_struct_ty, h_ctx) ) {
+			_aclctx_err(ctx, ACLSPV_COMPILE_UNHANDLED);
+			return CXChildVisit_Break;
 		}
 
-		entp.m_nprm = DATA.m_num_interface;
+		ae2f_ifezerr(p_cfg = aclty_build_struct(id_cfg, h_ctx)) {
+			_aclctx_err(ctx, ACLSPV_COMPILE_UNHANDLED);
+			return CXChildVisit_Break;
+		}
+
+		dbg_prefix(a);
+		dbg_call(fprintf, (
+					stderr
+					, "push constant member index (after): %u\n"
+					, (unsigned)p_cfg->m_info.m_struct.m_num_mbr
+				  ));
+
+		p_ty = &aclutil_get_wrd_of_vec(&ctx->m_section.m_vars)[ctx->m_push_size_ty_pad];
+
+		ae2f_ifezerr(*p_ty = aclty_mk_ptr(p_cfg->m_type_id, SpvStorageClassPushConstant, ctx)) {
+			_aclctx_err(ctx, ACLSPV_COMPILE_UNHANDLED);
+			return CXChildVisit_Break;
+		}
+
+		++ctx->m_num_push_constant_func;
+
+		/** the packing-level view's type was captured mid-build (aclty
+		 * struct ids churn per arg): patch it to the final packed struct
+		 * type now that the last arg settled it. */
+		if(DATA.m_id_push_constant_reg_view) {
+			h_aclcur_t p_r1 = aclcur_get_node(
+					DATA.m_id_push_constant_reg_view
+					, ctx
+					);
+			if(p_r1 && p_r1->m_class == ACLCUR_REG)
+				p_r1->m_ty = DATA.m_id_push_constant_struct_ty;
+		}
 	}
-
-LBL_HOLLOW_ENTP:
 
 	{
 		const aclspv_id_t	id_void_func = aclty_mk_fn(
@@ -120,11 +155,11 @@ LBL_HOLLOW_ENTP:
 	}
 
 	ae2f_ifnezerr_strict(s_aclmem_cgrow2(
-			&ctx->m_fnlist.m_entp
-			, (ctx->m_fnlist.m_num_entp + 1)
-			, sizeof(entp)
-			, ACLSPV_COMPILE_ALLOC_FAILED_ENTP
-			)) return CXChildVisit_Break;
+				&ctx->m_fnlist.m_entp
+				, (ctx->m_fnlist.m_num_entp + 1)
+				, sizeof(entp)
+				, ACLSPV_COMPILE_ALLOC_FAILED_ENTP
+				)) return CXChildVisit_Break;
 
 	((aclutil_entp_t* ae2f_restrict)ctx->m_fnlist.m_entp.m_p)
 		[ctx->m_fnlist.m_num_entp++] = entp;
@@ -134,4 +169,6 @@ LBL_HOLLOW_ENTP:
 		fnctx.m_retid = ACLSPV_ID_VOID;
 		return aclemit_fndecl_bodycfg(h_cur, &fnctx, h_ctx);
 	}
+
+	ae2f_unreachable();
 }

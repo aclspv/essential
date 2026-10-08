@@ -14,14 +14,15 @@
  * @brief	compile files and generate spir-v for vulkan.	\n
  * 		value of `rwr_output` must be manually freed by `free`.
  * */
-ae2f_unused static e_aclspv_compile_t  dbg_aclspv_compile(
+ae2f_unused static aclspv_compile_t  dbg_aclspv_compile(
 		struct CXUnsavedFile* ae2f_restrict const 	rdwr_unsaved,
 		const unsigned					c_unsaved_count,
 		const char* ae2f_restrict const * ae2f_restrict const	rd_argv_opt,
 		const int						c_argc,
 		aclspv_wrdcount_t* ae2f_restrict			rwr_output_count_opt,
 		aclspv_wrd_t* ae2f_restrict* ae2f_restrict		rwr_output,
-		enum CXErrorCode* ae2f_restrict				rwr_cxerr_opt
+		enum CXErrorCode* ae2f_restrict				rwr_cxerr_opt,
+		aclspv_wrd_t						c_ctx_flag0
 		)
 {
 	x_aclspv_ctx	CTX;
@@ -39,7 +40,7 @@ ae2f_unused static e_aclspv_compile_t  dbg_aclspv_compile(
 	}
 
 	memset(&usrcfg, 0, sizeof(usrcfg));
-	usrcfg.m_flag0 = ACLSPV_CTX_FLAG0_OGL | ACLSPV_CTX_FLAG0_LOGICAL | ACLSPV_CTX_FLAG0_DUMP_DIAGNOSTICS | ACLSPV_CTX_FLAG0_SYMBOL;
+	usrcfg.m_flag0 = c_ctx_flag0;
 
 	ae2f_ifnezerr(aclspv_init_ctx(
 				&CTX
@@ -65,7 +66,7 @@ LBL_ERRCLEANUP:
 	CTX.m_err = 
 		CTX.m_err
 		? CTX.m_err
-		: (ACLSPV_COMPILE_UNHANDLED)
+		: ae2f_static_cast(aclspv_compile_t, ACLSPV_COMPILE_UNHANDLED)
 		;
 
 LBL_CLEANUP:
