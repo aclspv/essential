@@ -19,10 +19,10 @@ aclspv_bool_t aclconst_is_specsz_same(aclconst_specsz c_x, aclconst_specsz c_y, 
 			return 0;
 		}
 
-		unless(c_x.m_id) c_x.m_id = aclutil_mk_constant_val_by_enum(
+		unless(c_x.m_id) c_x.m_id = aclval_cfg_by_enum(
 				c_x.m_lit.m_max, h_ctx, (enum ACLSPV_ID_)szty);
 
-		unless(c_y.m_id) c_y.m_id = aclutil_mk_constant_val_by_enum(
+		unless(c_y.m_id) c_y.m_id = aclval_cfg_by_enum(
 				c_y.m_lit.m_max, h_ctx, (enum ACLSPV_ID_)szty);
 
 		ae2f_ifnezerr_strict(!c_x.m_id && !c_y.m_id) {

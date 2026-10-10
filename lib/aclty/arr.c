@@ -147,7 +147,7 @@ aclty_t* aclty_build_arr(
 		const aclspv_id_t SIZE_TY = aclid_getty_uint(h_ctx->m_usrcfg.m_byte_size_type << 3);
 		ae2f_ifezerr(SIZE_TY)	return 0;
 
-		ae2f_ifezerr(rdwr_arr->m_info.m_arr.m_num.m_id = aclutil_mk_constant_val_by_enum(
+		ae2f_ifezerr(rdwr_arr->m_info.m_arr.m_num.m_id = aclval_cfg_by_enum(
 					rdwr_arr->m_info.m_arr.m_num.m_lit.m_max
 					, h_ctx
 					, (enum ACLSPV_ID_)SIZE_TY))
@@ -276,13 +276,11 @@ aclty_t* aclty_cfg_arr(
 	if(c_num_arr.m_id) {
 		tar.m_info.m_arr.m_num.m_id		= c_num_arr.m_id;
 	} else ae2f_ifneznrm(c_num_arr.m_lit.m_max) {
-		ae2f_ifezerr(tar.m_info.m_arr.m_num.m_id = aclutil_mk_constant_val_by_enum(
+		ae2f_ifezerr(tar.m_info.m_arr.m_num.m_id = aclval_cfg_by_enum(
 					c_num_arr.m_lit.m_max
 					, h_ctx
 					, (enum ACLSPV_ID_)size_ty)) return 0;
-	} else {
-		return 0;
-	}
+	}	/** trust it is going to be runtime array */ 
 
 	tar.m_class		= ACLTY_ARR;
 	tar.m_info.m_arr.m_type	= c_type_elm;

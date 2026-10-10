@@ -145,8 +145,20 @@ ae2f_inline_f static aclspv_id_t aclexpr_sub_elm_ty(
 		aclspv_id_t* ae2f_restrict	rdwr_ty_mid
 		) {
 	const h_aclcur_t p_reg = aclcur_get_node(c_reg, h_ctx);
+	/** classify on the STORAGE type when the register carries a distinct
+	 * native pointer type: a storage-buffer (or `__local`) argument's
+	 * OpVariable is the wrapped-runtime-array struct while the register's
+	 * logical m_ty is the plain element pointer. the leaf type returned is
+	 * still the array's element, so the view chain the caller builds off the
+	 * variable id stays correct. */
+	const aclspv_id_t TY_CLS
+		= p_reg
+		? (p_reg->m_class == ACLCUR_REG && p_reg->m_d.m_reg.m_ty_native
+				? p_reg->m_d.m_reg.m_ty_native
+				: p_reg->m_ty)
+		: 0;
 	const aclty_t* const ae2f_restrict P_TY
-		= p_reg ? aclty_find(p_reg->m_ty, h_ctx) : 0;
+		= TY_CLS ? aclty_find(TY_CLS, h_ctx) : 0;
 
 	*rdwr_ty_mid = 0;
 

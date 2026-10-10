@@ -87,7 +87,7 @@ aclexpr_carve_lbl_t aclexpr_carve1_incr(
 				ae2f_unreachable();
 		}
 
-		ae2f_ifezerr(*rdwr_prv_idval = aclutil_mk_constant_val_by_enum(
+		ae2f_ifezerr(*rdwr_prv_idval = aclval_cfg_by_enum(
 					LTRL.m_api_uintmax, rdwr_data->m_ctx
 					, (enum ACLSPV_ID_)rdwr_lst_extra->m_type_original
 					)) { 
@@ -110,7 +110,7 @@ aclexpr_carve_lbl_t aclexpr_carve1_incr(
 				rdwr_lst_extra->m_type_original
 				, rdwr_data->m_ctx);
 
-		const aclspv_id_t	ONE = aclutil_mk_constant_val_by_enum(
+		const aclspv_id_t	ONE = aclval_cfg_by_enum(
 				1u, rdwr_data->m_ctx
 				, (enum ACLSPV_ID_)VCFG.m_ty_elm
 				);

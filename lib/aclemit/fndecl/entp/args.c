@@ -77,12 +77,102 @@ LBL_FINI:
 	return RES;
 }
 
+/** whether an argument register's address needs the wrapped-member descent
+ * instead of a plain pointer copy.
+ *
+ * a storage-buffer (or workgroup) pointer argument is materialised as an
+ * OpVariable whose pointee is a single-member wrapper struct (the Vulkan
+ * block idiom) while the register's logical type is `ptr<SC,L>`:
+ *
+ *   - `struct T*` -> `struct { struct T }`: one index, member 0.
+ *   - `T*`        -> `struct { T[] }`:      two indices, member 0 (the
+ *                                           runtime array), then element 0.
+ *
+ * the register's value is therefore NOT the variable id: it is the address
+ * the chain lands on, taking the same shape as the subscript carve's chain.
+ *
+ * only the pointer argument idiom is descended; an array-typed logical
+ * argument (whose value is not an address) and any other distinct native
+ * shape keep the historical copy.
+ *
+ * @return 1 and fills the shared i32 0 constant id, plus the index count
+ * (1 or 2), when the descent applies.
+ * */
+static aclspv_bool_t	s_argv_load_chain(
+		const aclspv_id_t	c_native,
+		const aclspv_id_t	c_logical_ty,
+		h_aclspv_ctx_t		h_ctx,
+		aclspv_id_t* ae2f_restrict	rdwr_idx0,
+		aclspv_wrd_t* ae2f_restrict	rdwr_num_idx
+		) {
+	const aclty_t* ae2f_restrict P_NATIVE;
+	const aclty_t* ae2f_restrict P_LOGICAL;
+	const aclty_t* ae2f_restrict P_POI;
+	const aclty_t* ae2f_restrict P_MBR0;
+	const aclty_t* ae2f_restrict P_MBR0_TY;
+	aclspv_id_t	id_log;
+
+	if(!c_native || c_native == c_logical_ty)
+		return 0;
+
+	P_NATIVE	= aclty_find(c_native, h_ctx);
+	P_LOGICAL	= aclty_find(c_logical_ty, h_ctx);
+
+	/** only the pointer argument idiom: the register's logical type is
+	 * `ptr<SC,L>`; its value denotes the address of L. */
+	if(!P_LOGICAL || P_LOGICAL->m_class != ACLTY_PTR)
+		return 0;
+
+	id_log		= P_LOGICAL->m_info.m_ptr.m_type;
+
+	P_POI		= (P_NATIVE && P_NATIVE->m_class == ACLTY_PTR)
+			? aclty_find(P_NATIVE->m_info.m_ptr.m_type, h_ctx)
+			: 0;
+
+	/** the wrapper idiom: the variable's pointee is a single-member
+	 * struct. any other native shape keeps the historical copy. */
+	if(!P_POI || P_POI->m_class != ACLTY_STRUCT)
+		return 0;
+
+	P_MBR0		= aclty_get_struct_mbr((aclty_t*)P_POI, 0, h_ctx);
+	P_MBR0_TY	= P_MBR0
+			? aclty_find(P_MBR0->m_info.m_struct_mbr.m_id_mbr, h_ctx)
+			: 0;
+
+	if(!P_MBR0_TY)
+		return 0;
+
+	if(P_MBR0_TY->m_class == ACLTY_ARR) {
+		/** `T* -> struct { T[] }`: member 0, then element 0. */
+		if(P_MBR0_TY->m_info.m_arr.m_type != id_log)
+			return 0;
+
+		*rdwr_num_idx	= 2;
+	} else if(P_MBR0->m_info.m_struct_mbr.m_id_mbr == id_log) {
+		/** `struct T* -> struct { struct T }`: member 0 only. */
+		*rdwr_num_idx	= 1;
+	} else {
+		return 0;
+	}
+
+	ae2f_ifezerr(*rdwr_idx0 = aclutil_mk_constant_val_id(0, h_ctx))
+		return 0;
+
+	return 1;
+}
+
 /** POINTER-flavored argument load: an entry-point arg register IS its
  * interface variable (m_id == the OpVariable result id), so "loading"
  * it copies the pointer — the result is a non-dominating alias of the
  * same storage. a pointer copy is not a memory read, so the explicit
  * (volatile) variant is the same op, matching the logical-addressing
- * model. */
+ * model.
+ *
+ * when the variable's storage type is a wrapped single-member struct but
+ * the register's logical type is the plain pointee pointer, the copy's
+ * operand type would not match its result type — the address of the
+ * wrapper's member 0 (element 0 for the runtime array idiom) is
+ * materialised instead (see s_argv_load_chain). */
 static aclspv_compile_t	s_argv_emit_load(aclspv_id_t c_id, h_aclspv_ctx_t h_ctx) {
 	aclcur_t* ae2f_restrict p;
 	aclcur_t* ae2f_restrict p_reg;
@@ -96,14 +186,52 @@ static aclspv_compile_t	s_argv_emit_load(aclspv_id_t c_id, h_aclspv_ctx_t h_ctx)
 	ae2f_ifnezerr_strict(p_reg->m_class != ACLCUR_REG)
 		return ACLSPV_COMPILE_UNHANDLED;
 
-	ae2f_ifezerr(h_ctx->m_count.m_fnimpl = aclutil_emitx_4(
-				&h_ctx->m_section.m_fnimpl
-				, h_ctx->m_count.m_fnimpl
-				, SpvOpCopyObject
-				, p_reg->m_ty
-				, c_id
-				, p_reg->m_id
-				)) return ACLSPV_COMPILE_ALLOC_FAILED_CURSOR;
+	{
+		aclspv_id_t IDX0;
+		aclspv_wrd_t NUM_IDX;
+
+		if(s_argv_load_chain(
+					p_reg->m_d.m_reg.m_ty_native
+					, p_reg->m_ty
+					, h_ctx
+					, &IDX0
+					, &NUM_IDX
+					)) {
+			/** two indices (member 0 then element 0) for the runtime
+			 * array wrapper; one (member 0) for the struct wrapper. */
+			if(NUM_IDX >= 2) {
+				ae2f_ifezerr(h_ctx->m_count.m_fnimpl = aclutil_emitx_6(
+							&h_ctx->m_section.m_fnimpl
+							, h_ctx->m_count.m_fnimpl
+							, SpvOpAccessChain
+							, p_reg->m_ty
+							, c_id
+							, p_reg->m_id
+							, IDX0
+							, IDX0
+							)) return ACLSPV_COMPILE_ALLOC_FAILED_CURSOR;
+			} else {
+				ae2f_ifezerr(h_ctx->m_count.m_fnimpl = aclutil_emitx_5(
+							&h_ctx->m_section.m_fnimpl
+							, h_ctx->m_count.m_fnimpl
+							, SpvOpAccessChain
+							, p_reg->m_ty
+							, c_id
+							, p_reg->m_id
+							, IDX0
+							)) return ACLSPV_COMPILE_ALLOC_FAILED_CURSOR;
+			}
+		} else {
+			ae2f_ifezerr(h_ctx->m_count.m_fnimpl = aclutil_emitx_4(
+						&h_ctx->m_section.m_fnimpl
+						, h_ctx->m_count.m_fnimpl
+						, SpvOpCopyObject
+						, p_reg->m_ty
+						, c_id
+						, p_reg->m_id
+						)) return ACLSPV_COMPILE_ALLOC_FAILED_CURSOR;
+		}
+	}
 
 	return ACLSPV_COMPILE_OK;
 }
@@ -122,7 +250,7 @@ static aclspv_compile_t	s_pcv_chain(
 		, aclspv_id_t* ae2f_restrict wr_ptr
 		, h_aclspv_ctx_t h_ctx
 		) {
-	aclspv_id_t idxs[ACLCUR_ARG_PCV_CHAIN_MAX];
+	aclspv_id_t idx_s[ACLCUR_ARG_PCV_CHAIN_MAX];
 	aclspv_id_t tys[ACLCUR_ARG_PCV_CHAIN_MAX];
 	aclspv_wrd_t nidx;
 	aclspv_wrd_t bound;
@@ -155,7 +283,7 @@ static aclspv_compile_t	s_pcv_chain(
 		unless(p->m_flag0 & aclcur_flag0_reg(ACLCUR_FLAG0_REG_ALIAS2))
 			break;
 
-		idxs[nidx]	= p->m_d.m_reg.m_id_idx;
+		idx_s[nidx]	= p->m_d.m_reg.m_id_idx;
 		tys[nidx]	= p->m_ty;
 		++nidx;
 		id_cur		= p->m_d.m_reg.m_d.m_ref.m_id;
@@ -197,7 +325,7 @@ static aclspv_compile_t	s_pcv_chain(
 					, TY_ELEM
 					, id_nxt
 					, id_base
-					, idxs[J]
+					, idx_s[J]
 					)) return ACLSPV_COMPILE_ALLOC_FAILED_CURSOR;
 
 		id_base	= id_nxt;
@@ -301,7 +429,7 @@ enum CXChildVisitResult aclemit_fndecl_entp_arg(
 
 			/*** Extension Default **/
 			ae2f_ifezerr(aclutil_add_extension_by_flag(CTX, "SPV_KHR_storage_buffer_storage_class")) {
-				_aclctx_err(CTX, ACLSPV_COMPILE_UNHANDLED_ARGS);
+				_aclctx_err(DAT->m_ctx, ACLSPV_COMPILE_UNHANDLED_ARGS);
 				return CXChildVisit_Break;
 			}
 
@@ -343,21 +471,31 @@ enum CXChildVisitResult aclemit_fndecl_entp_arg(
 						 * */
 					case ACLTY_PTR:
 						{
-							aclty_t* ae2f_restrict p_elm = aclty_find(p_ty->m_info.m_ptr.m_type, CTX);
-							ae2f_ifezerr(p_elm) {
+							const aclspv_id_t	id_elm = p_ty->m_info.m_ptr.m_type;
+							aclty_t* ae2f_restrict p_elm = aclty_find(id_elm, CTX);
+
+							ae2f_ifnezerr_strict(!p_elm && id_elm >= ACLSPV_ID_END) {
 								_aclctx_err(DAT->m_ctx, ACLSPV_COMPILE_UNHANDLED_ARGS);
 								return CXChildVisit_Break;
 							}
 
-							if(p_elm->m_class == ACLTY_STRUCT) {
-								var_elm_type_id = p_elm->m_type_id;
+							if(p_elm && p_elm->m_class == ACLTY_STRUCT) {
+								ae2f_ifezerr(var_elm_type_id = aclty_mk_struct_single_blk(
+											id_elm
+											, ACLTY_STRUCT_FIELD0_BLOCK
+											, 0
+											, CTX
+											)) {
+									_aclctx_err(DAT->m_ctx, ACLSPV_COMPILE_UNHANDLED_ARGS);
+									return CXChildVisit_Break;
+								}
 							} else {
 								aclconst_specsz a;
 								a.m_id = 0;
 								a.m_lit.m_max = 0;
 
 								ae2f_ifezerr(var_elm_type_id = aclty_mk_arr3(
-											p_elm->m_type_id
+											id_elm
 											, a
 											, 4
 											, CTX
@@ -603,9 +741,9 @@ enum CXChildVisitResult aclemit_fndecl_entp_arg(
 		case SpvStorageClassPushConstant:
 			{
 				aclspv_id_t ty_old = aclty_cfg_struct2(CTX, DAT->m_id_push_constant_struct_ty);
-				aclty_t* ae2f_restrict p_old = aclty_find(ty_old, CTX);
+				aclty_t* ae2f_restrict p_old;
 
-				ae2f_ifezerr(p_old) {
+				ae2f_ifezerr(p_old = aclty_find(ty_old, CTX)) {
 					_aclctx_err(DAT->m_ctx, ACLSPV_COMPILE_UNHANDLED_ARGS);
 					return CXChildVisit_Break;
 				}
@@ -897,11 +1035,16 @@ enum CXChildVisitResult aclemit_fndecl_entp_arg(
 				aclcur_t* ae2f_restrict p_view;
 
 				/** member ordinals as i32 OpConstants. */
-				ae2f_ifezerr(cst_func = aclutil_mk_constant_val_id(pc_idx_func, CTX)) {
+				ae2f_ifezerr(cst_func = aclutil_mk_constant_val_id(
+							pc_idx_func
+							, CTX)) {
 					_aclctx_err(DAT->m_ctx, ACLSPV_COMPILE_UNHANDLED_ARGS);
 					return CXChildVisit_Break;
 				}
-				ae2f_ifezerr(cst_arg = aclutil_mk_constant_val_id(pc_idx_arg, CTX)) {
+				ae2f_ifezerr(cst_arg = aclutil_mk_constant_val_id(
+							pc_idx_arg
+							, CTX
+							)) {
 					_aclctx_err(DAT->m_ctx, ACLSPV_COMPILE_UNHANDLED_ARGS);
 					return CXChildVisit_Break;
 				}
@@ -936,7 +1079,7 @@ enum CXChildVisitResult aclemit_fndecl_entp_arg(
 
 					ae2f_ifezerr(DAT->m_id_push_constant_reg_view = aclcur_reg_view(
 								clang_getNullCursor()
-								, var_id	/** parent = root register R0 (its m_id), resolves via aclcur_get_node */
+								, var_id
 								, DAT->m_id_push_constant_struct_ty
 								, cst_func
 								, SpvStorageClassPushConstant
@@ -989,7 +1132,7 @@ enum CXChildVisitResult aclemit_fndecl_entp_arg(
 
 				ae2f_ifezerr(reg = aclcur_cfg_reg(
 							h_cur
-							, var_native_type_id
+							, var_type_id
 							, (SpvStorageClass)storage_class
 							, &REGIN
 							, CTX
@@ -1004,6 +1147,10 @@ enum CXChildVisitResult aclemit_fndecl_entp_arg(
 					return CXChildVisit_Break;
 				}
 				p_reg->m_id = var_id;
+				/** the OpVariable's storage type, when it differs from the
+				 * register's logical var_type_id (wrapped-runtime-array
+				 * idiom). 0 for the push-constant branch above. */
+				p_reg->m_d.m_reg.m_ty_native = var_native_type_id;
 			}
 			break;
 	}

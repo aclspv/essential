@@ -113,6 +113,11 @@ typedef struct {
 		 * down. m_extra survives, m_cursor does not. */
 		struct {
 			aclspv_id_t	m_ptr_id;
+			/** the member ordinal and logical type of the member
+			 * extracted from the value loaded through m_ptr_id,
+			 * valid under ACLEXPR_OPCFGX_STATE0_MEMBER_OF_DEREF. */
+			aclspv_wrd_t	m_idx_mbr;
+			aclspv_id_t	m_ty_mbr;
 		} m_deref;
 	} m_extra;
 } aclexpr_opbincfg_extra;
@@ -130,7 +135,13 @@ enum ACLEXPR_OPCFGX_STATE0_ {
 	 * it reaches the address carve riding PRV_EXTRA — by which point
 	 * extra[0].m_cursor has been rewritten by the cascade to name the ARRAY,
 	 * and is of no use to tell the two apart. */
-	ACLEXPR_OPCFGX_STATE0_ADDR_OF_ELM	= 0x4
+	ACLEXPR_OPCFGX_STATE0_ADDR_OF_ELM	= 0x4,
+	/** a member was extracted from the value loaded through
+	 * m_extra.m_deref.m_ptr_id (`(*p).m`): m_idx_mbr and m_ty_mbr are valid,
+	 * and a compound assignment through this lvalue must store through an
+	 * address into that member rather than through m_ptr_id, which points at
+	 * the whole composite. */
+	ACLEXPR_OPCFGX_STATE0_MEMBER_OF_DEREF	= 0x8
 };
 
 /**

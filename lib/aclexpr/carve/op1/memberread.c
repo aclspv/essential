@@ -66,6 +66,24 @@ aclexpr_carve_lbl_t aclexpr_carve1_memberread(
 	*rdwr_prv_extra = rdwr_lst_extra[0];
 	rdwr_prv_extra->m_type_original = TY;
 
+	/** the base was a dereference read: record which member was extracted
+	 * and its logical type, so a compound assignment through this lvalue
+	 * (`(*p).m += x`) can rebuild an address into the member and store
+	 * there. the pointer the read went through is already in m_extra.m_deref;
+	 * storing a member value through it would type-mismatch the composite. */
+	if(rdwr_lst_extra[0].m_state0
+			& (aclspv_wrd_t)ACLEXPR_OPCFGX_STATE0_DEREF_LOADED) {
+		rdwr_prv_extra->m_extra.m_deref.m_idx_mbr = IDX;
+		rdwr_prv_extra->m_extra.m_deref.m_ty_mbr = TY;
+		rdwr_prv_extra->m_state0
+			|= (aclspv_wrd_t)ACLEXPR_OPCFGX_STATE0_MEMBER_OF_DEREF;
+	} else {
+		/** a member of a member (of a deref) is not addressable this way:
+		 * drop the flag rather than index the pointer at the wrong member. */
+		rdwr_prv_extra->m_state0
+			&= ~(aclspv_wrd_t)ACLEXPR_OPCFGX_STATE0_MEMBER_OF_DEREF;
+	}
+
 	return c_lbl_success;
 }
 

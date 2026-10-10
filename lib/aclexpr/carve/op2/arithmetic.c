@@ -3,6 +3,7 @@
 #include <aclexpr/carve/util.h>
 #include <aclexpr/carve/ptr.h>
 #include <aclcur/common.h>
+#include <aclcur/op.h>
 #include <aclexpr/curreg.h>
 #include <aclconst/specop.h>
 #include <aclmem.h>
@@ -256,6 +257,23 @@ ae2f_inline_f static ae2f_ccconst struct aclutil_ltrl_eval_t	s_eval2_ltrl(
 #undef	EXPR_TWO
 }
 
+/** storage class of the pointer value a member-of-deref store goes through:
+ * the pointer node's own type carries it. */
+static aclspv_bool_t s_ptr_storage(
+		aclspv_id_t	c_ptr,
+		h_aclspv_ctx_t	h_ctx,
+		aclspv_wrd_t* ae2f_restrict	rdwr_storage
+		) {
+	const h_aclcur_t p = aclcur_get_node(c_ptr, h_ctx);
+	const aclty_t* const ae2f_restrict P_TY = p ? aclty_find(p->m_ty, h_ctx) : 0;
+
+	if(!P_TY || P_TY->m_class != ACLTY_PTR)
+		return 0;
+
+	*rdwr_storage = (aclspv_wrd_t)P_TY->m_info.m_ptr.m_storage;
+	return 1;
+}
+
 static aclspv_wrd_t s_decide_cast(const enum ACLSPV_ID_ c_id0, const enum ACLSPV_ID_ c_id1, const h_aclspv_ctx_t h_ctx) {
 	/** one is 0? */
 	unless(c_id0 && c_id1)
@@ -437,7 +455,7 @@ aclexpr_carve_lbl_t aclexpr_carve2_arithmetic(
 					rdwr_prv_extra->m_type_original = rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_RESTYID];
 
 
-					ae2f_ifezerr(*rdwr_prv_idval = aclutil_mk_constant_val_by_enum(EVAL_LIT.m_ret.m_api_uintmax, rdwr_data->m_ctx
+					ae2f_ifezerr(*rdwr_prv_idval = aclval_cfg_by_enum(EVAL_LIT.m_ret.m_api_uintmax, rdwr_data->m_ctx
 								, (enum ACLSPV_ID_)rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_RESTYID])) {
 						err_puts("[carve2::arithmetic] aclutil_mk_constant_val_by_enum");
 						return c_lbl_err;
@@ -504,6 +522,72 @@ aclexpr_carve_lbl_t aclexpr_carve2_arithmetic(
 			PTR = rdwr_lst_extra->m_extra.m_deref.m_ptr_id;
 		else
 			PTR = aclexpr_ptr_of_deref(CASSIGN, rdwr_data->m_ctx);
+
+		/** member of a dereference (`(*p).m += x`): the value belongs in the
+		 * member, not in the whole composite m_ptr_id points at — an OpStore
+		 * of a member value through the composite pointer does not validate.
+		 * rebuild an address into the member with one OpAccessChain over the
+		 * same pointer and store the value there. the OpLoad + extract that
+		 * produced the operand stay as they are; only the store path differs.
+		 *
+		 * the member ordinal and its logical type were recorded by the
+		 * memberread carve when it saw the deref in the base's extra. */
+		if(rdwr_lst_extra->m_state0
+				& (aclspv_wrd_t)ACLEXPR_OPCFGX_STATE0_MEMBER_OF_DEREF) {
+			aclspv_wrd_t	STORAGE;
+			aclspv_id_t	IDX;
+			aclspv_id_t	TY_PTR;
+			aclspv_id_t	PTR_MBR;
+
+			ae2f_ifnezerr_strict(!PTR
+					|| !s_ptr_storage(PTR, CTX(rdwr_data), &STORAGE)) {
+				err_puts("[carve2::arithmetic] member-of-deref pointer is not a pointer");
+				rdwr_data->m_ctx->m_err = ACLSPV_COMPILE_UNHANDLED_CARVE;
+				return c_lbl_err;
+			}
+
+			ae2f_ifezerr(IDX = aclutil_mk_constant_val_id(
+						rdwr_lst_extra->m_extra.m_deref.m_idx_mbr
+						, CTX(rdwr_data)
+						)) {
+				err_puts("[carve2::arithmetic] member index constant failed");
+				return c_lbl_err;
+			}
+
+			ae2f_ifezerr(TY_PTR = aclty_mk_ptr(
+						rdwr_lst_extra->m_extra.m_deref.m_ty_mbr
+						, (enum SpvStorageClass_)STORAGE
+						, CTX(rdwr_data)
+						)) {
+				err_puts("[carve2::arithmetic] member pointer type failed");
+				return c_lbl_err;
+			}
+
+			ae2f_ifezerr(PTR_MBR = aclcur_cfg_op1i(
+						0
+						, SpvOpAccessChain
+						, TY_PTR
+						, PTR
+						, IDX
+						, CTX(rdwr_data)
+						)) {
+				err_puts("[carve2::arithmetic] member access chain failed");
+				return c_lbl_err;
+			}
+
+			ae2f_ifezerr(aclcur_cfg_st(
+						SpvOpStore
+						, PTR_MBR
+						, *rdwr_prv_idval
+						, CTX(rdwr_data)
+						)) {
+				err_puts("[carve2::arithmetic] member store failed");
+				rdwr_data->m_ctx->m_err = ACLSPV_COMPILE_UNHANDLED_CARVE;
+				return c_lbl_err;
+			}
+
+			return c_lbl_success;
+		}
 
 		if(PTR) {
 			dbg_puts("[carve2::arithmetic] assign mode: deref store");

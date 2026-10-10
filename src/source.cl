@@ -11,18 +11,6 @@ typedef vector(4) long long4;
 typedef vector(4) int int4;
 typedef vector(4) _Bool bool4;
 
-#if	1
-void NON_KERNEL(int a) {
-	int A;
-	A += 3;
-}
-
-void NON_KERNEL2(int a) {
-	int A = 3;
-	A += 3;
-}
-#endif
-
 #if 1
 kernel_raw(0) void KERNEL(int aaaa, int a2) {
 	goto K;
@@ -42,7 +30,7 @@ K:
 	if(bb) {}
 }
 
-kernel_raw(0) void BOOLEAN(float4 float4_boolean) {
+kernel_raw(0) void BOOLEAN() {
 	_Bool OP0;
 	_Bool OP1;
 
@@ -53,6 +41,27 @@ kernel_raw(0) void BOOLEAN(float4 float4_boolean) {
 	OP_OR		= OP0 || OP1;
 	_Bool OP_AND	= OP0 && OP1;
 }
+
+#if	1
+kernel_raw(0) void SQUARE_V4F32_STRUCT(__global struct { float4 c; }* r, float4 c0) {
+	float4 a;
+	float4 b;
+	a += c0 * c0;
+	b -= a;
+
+	(*r).c += b;
+}
+#endif
+
+kernel_raw(0) void SQUARE_V4F32(__global float4* r, float4 c0) {
+	float4 a;
+	float4 b;
+	a += c0 * c0;
+	b -= a;
+
+	*r += b;
+}
+
 #endif
 
 __attribute__((annotate("reqd_work_group_size(3, 4, 2)"))) /** work group size should be specified on constant time. */

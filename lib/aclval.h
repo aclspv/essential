@@ -156,7 +156,7 @@ struct aclutil_mk_constant_repvec_t {
 struct aclutil_mk_constant_repvec_t	aclutil_mk_constant_repvec_id(const aclspv_id_t	c_id_ty, const aclspv_id_t c_val, const aclspv_wrd_t c_literal_mask, h_aclspv_ctx_t h_ctx);
 
 
-ae2f_unused ae2f_inline_f static aclspv_id_t	aclutil_mk_constant_val_by_enum(const u64_least c_val, h_aclspv_ctx_t h_ctx, enum ACLSPV_ID_ c_ty) {
+ae2f_unused ae2f_inline_f static aclspv_id_t	aclval_cfg_by_enum(const u64_least c_val, h_aclspv_ctx_t h_ctx, enum ACLSPV_ID_ c_ty) {
 	switch((uint_leastenum_t)c_ty) {
 #define	CASE_NUM(k, nbyte, ty)	case (k): return	\
 		aclval_cfg(c_val, h_ctx, (nbyte), (ty))

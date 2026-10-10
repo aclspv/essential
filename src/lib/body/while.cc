@@ -107,7 +107,7 @@ ae2f_MAC((L, )) aclemit_body_while(CXCursor h_cur, aclutil_fnctx * ae2f_restrict
 				goto L$$ERR;
 
 			case ACLEXPR_RET_SUCCESS_LITERAL:
-				L$$LOOPCND = aclutil_mk_constant_val_by_enum(
+				L$$LOOPCND = aclval_cfg_by_enum(
 						L$$LITERAL.m_api_uintmax
 						, (h_fnctx)->m_ctx
 						, ACLSPV_ID_BOOL

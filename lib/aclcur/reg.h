@@ -236,6 +236,18 @@ typedef struct aclcur_reg {
 
 	/** see enum SpvStorageClass_ */
 	aclspv_wrd_t m_storage_class;
+
+	/** the storage/ABI pointer type the register's m_id OpVariable was
+	 * declared with, when that differs from the register's own logical
+	 * m_ty (the frontend's wrapped-runtime-array idiom for a storage-buffer
+	 * pointer argument: m_ty is `ptr<SC,T>` while the variable is
+	 * `ptr<SC, struct{T[]}>`).
+	 *
+	 * 0 means "identical to m_ty": the register's address is its m_id
+	 * verbatim. only the register's own emit_load (args.c) and the subscript
+	 * classification (aclexpr_sub_elm_ty) consult it; every logical-type
+	 * consumer keeps reading m_ty. */
+	aclspv_id_t	m_ty_native;
 } aclcur_reg_t;
 
 /**
@@ -249,12 +261,23 @@ typedef struct aclcur_reg {
  *
  * returns the new register id, or 0 on failure.
  * */
-aclspv_id_t aclcur_cfg_reg(
+aclspv_id_t aclcur_cfg_reg1(
+		aclspv_id_t		c_varid_opt,
 		CXCursor		c_cur,
 		aclspv_id_t		c_ty,
 		aclspv_wrd_t		c_storage_class,
 		const aclcur_reg_t*	c_in_opt,
 		h_aclspv_ctx_t		h_ctx
 		);
+
+ae2f_inline_f static aclspv_id_t aclcur_cfg_reg(
+		CXCursor		c_cur,
+		aclspv_id_t		c_ty,
+		aclspv_wrd_t		c_storage_class,
+		const aclcur_reg_t*	c_in_opt,
+		h_aclspv_ctx_t		h_ctx
+		) {
+	return aclcur_cfg_reg1(0, c_cur, c_ty, c_storage_class, c_in_opt, h_ctx);
+}
 
 #endif

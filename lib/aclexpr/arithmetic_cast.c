@@ -175,7 +175,7 @@ static enum ACLEXPR_RET_ s_non_literal_novec(
 		aclspv_id_t	V0;
 		aclspv_wrd_t	OPCODE = ae2f_bll_sel_bool1(aclspv_wrd_t, aclid_is_int(c_old_type), SpvOpINotEqual, SpvOpFOrdNotEqual);
 		
-		ae2f_expected_but_else(V0 = aclutil_mk_constant_val_by_enum(0, h_ctx, (enum ACLSPV_ID_) c_old_type))
+		ae2f_expected_but_else(V0 = aclval_cfg_by_enum(0, h_ctx, (enum ACLSPV_ID_) c_old_type))
 			return ACLEXPR_RET_FAILURE;
 
 		if(c_flag_literal & ACLUTIL_LITERAL_CONSTANT) {
@@ -208,10 +208,10 @@ static enum ACLEXPR_RET_ s_non_literal_novec(
 	if((aclid_is_int(c_new_type)) && c_old_type == ACLSPV_ID_BOOL) {
 		aclspv_id_t		V0, V1;
 
-		ae2f_expected_but_else(V0 = aclutil_mk_constant_val_by_enum(0, h_ctx, (enum ACLSPV_ID_) c_new_type))
+		ae2f_expected_but_else(V0 = aclval_cfg_by_enum(0, h_ctx, (enum ACLSPV_ID_) c_new_type))
 			return ACLEXPR_RET_FAILURE;
 
-		ae2f_expected_but_else(V1 = aclutil_mk_constant_val_by_enum(1, h_ctx, (enum ACLSPV_ID_) c_new_type))
+		ae2f_expected_but_else(V1 = aclval_cfg_by_enum(1, h_ctx, (enum ACLSPV_ID_) c_new_type))
 			return ACLEXPR_RET_FAILURE;
 
 
@@ -499,7 +499,7 @@ enum ACLEXPR_RET_ aclexpr_arithmetic_cast_literal(
 	} else if (aclid_is_int(c_new_type) && c_old_type == ACLSPV_ID_BOOL) {
 		dbg_puts("bool -> int");
 		RESULT.m_api_uintmax = c_old_literal.m_api_uintmax;
-		*r_newid = aclutil_mk_constant_val_by_enum(
+		*r_newid = aclval_cfg_by_enum(
 				RESULT.m_api_uintmax = c_old_literal.m_api_uintmax
 				, h_ctx
 				, (enum ACLSPV_ID_) c_new_type
@@ -520,7 +520,7 @@ enum ACLEXPR_RET_ aclexpr_arithmetic_cast_literal(
 		}
 
 		if(wr_new_literal_opt) *wr_new_literal_opt = RESULT;
-		*r_newid = aclutil_mk_constant_val_by_enum(
+		*r_newid = aclval_cfg_by_enum(
 				RESULT.m_api_uintmax
 				, h_ctx
 				, (enum ACLSPV_ID_) c_new_type);

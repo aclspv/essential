@@ -146,7 +146,8 @@ void	aclcur_reg_untrack(aclspv_id_t c_reg, h_aclspv_ctx_t h_ctx) {
 	}
 }
 
-aclspv_id_t aclcur_cfg_reg(
+aclspv_id_t aclcur_cfg_reg1(
+		aclspv_id_t		c_varid_opt,
 		CXCursor		c_cur,
 		aclspv_id_t		c_ty,
 		aclspv_wrd_t		c_storage_class,
@@ -156,8 +157,9 @@ aclspv_id_t aclcur_cfg_reg(
 	aclspv_id_t id;
 	h_aclcur_t p;
 
-	ae2f_ifezerr(id = aclcur_cfg_node(0, h_ctx))
+	ae2f_ifezerr(id = aclcur_cfg_node(c_varid_opt, h_ctx))
 		return 0;
+
 	ae2f_ifezerr(p = aclcur_get_node(id, h_ctx))
 		return 0;
 
