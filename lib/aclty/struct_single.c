@@ -21,15 +21,6 @@ aclspv_id_t aclty_mk_struct_single_blk(
 		aclty_t* ae2f_restrict mbr = aclty_add_struct_mbr_un(cxtp, c_type_member, h_ctx);
 		ae2f_ifezerr(mbr)	return 0;
 		cxtp = aclty_find(id, h_ctx);
-
-		{
-#if	0
-			aclty_t* ae2f_restrict mdcr;
-			ae2f_ifezerr(mdcr = aclty_cfg_struct_mdcr(mbr, SpvDecorationOffset, h_ctx)) return 0;
-			mdcr->m_info.m_dcr.m_num_oprnd = 1;
-			mdcr->m_info.m_dcr.m_oprnd[0] = 0;
-#endif
-		}
 	}
 
 	cxtp = aclty_find(id, h_ctx);

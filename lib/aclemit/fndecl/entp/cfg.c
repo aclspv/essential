@@ -73,6 +73,7 @@ aclutil_entp_t aclemit_fndecl_entp_cfg(CXCursor h_parent, h_aclspv_ctx_t CTX) {
 
 #if	1
 	/** OpEntryPoint */
+
 	unless((CTX->m_count.m_entp = emit_opcode(
 					&CTX->m_section.m_entp
 					, CTX->m_count.m_entp

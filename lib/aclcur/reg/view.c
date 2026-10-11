@@ -8,7 +8,7 @@
 #include <ae2f/Cxx/Constexpr.h>
 
 /** OpAccessChain index-chain depth cap (fixed-size accumulator). */
-#define	ACLCUR_REGVIEW_CHAIN_MAX		32
+#define	ACLCUR_REGVIEW_CHAIN_MAX		__ACLSPV_OPACC_IDX_MAX
 
 /** the address of an ALIAS2 view: one OpAccessChain per chain level,
  * root-most first, each a real node.

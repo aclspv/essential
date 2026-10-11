@@ -58,7 +58,7 @@ static enum CXChildVisitResult aclattr_wrkgroup(CXCursor h_cur, ae2f_unused CXCu
 
 		clang_disposeString(ATTR_KIND);
 		return CXChildVisit_Break;
-	} 
+	}
 
 	clang_disposeString(ATTR_KIND);
 	return CXChildVisit_Continue;

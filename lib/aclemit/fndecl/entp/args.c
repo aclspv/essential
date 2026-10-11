@@ -238,7 +238,7 @@ static aclspv_compile_t	s_argv_emit_load(aclspv_id_t c_id, h_aclspv_ctx_t h_ctx)
 
 /** OpAccessChain index-chain depth cap (fixed-size accumulator),
  * mirroring lib/aclcur/reg/view.c's ACLCUR_REGVIEW_CHAIN_MAX. */
-#define	ACLCUR_ARG_PCV_CHAIN_MAX		32
+#define	ACLCUR_ARG_PCV_CHAIN_MAX		__ACLSPV_OPACC_IDX_MAX
 
 /** pointer producer for push-constant leaf registers: appends one
  * OpAccessChain per ALIAS2 level (root-most first) directly into the

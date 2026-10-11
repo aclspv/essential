@@ -262,11 +262,12 @@ ae2f_UltraErrWERROR(ae3f-aclspv PRIVATE)
 
 include(./cmake/predef.cmake)
 
-aclspv_predef_switch(ae3f-aclspv ACLSPV_OpCapabilityKernel 1)
-aclspv_predef_switch(ae3f-aclspv ACLSPV_OpCapabilityShader 1)
-aclspv_predef_switch(ae3f-aclspv ACLSPV_CHECK_EXTRA 1)
-aclspv_predef_switch(ae3f-aclspv ACLSPV_SYMBOL 1)
-aclspv_predef_switch(ae3f-aclspv ACLSPV_ATOMIC_ID 0)
+aclspv_predef_switch(ae3f-aclspv "ACLSPV_OpCapabilityKernel" "1")
+aclspv_predef_switch(ae3f-aclspv "ACLSPV_OpCapabilityShader" "1")
+aclspv_predef_switch(ae3f-aclspv "ACLSPV_CHECK_EXTRA" "1")
+aclspv_predef_switch(ae3f-aclspv "ACLSPV_SYMBOL" "1")
+aclspv_predef_switch(ae3f-aclspv "ACLSPV_ATOMIC_ID" 0)
+aclspv_predef_switch(ae3f-aclspv "ACLSPV_OPACC_IDX_MAX" 64)
 
 target_include_directories(ae3f-aclspv PUBLIC 
 	$<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/3rdinc>
