@@ -3,18 +3,20 @@
 
 # aclspv
 
-- this project is written in strict iso c90 to make this project portable as possible in my knowledge.
+summary  
+- this project is written in strict iso c90 to make this project as portable and stable as possible in my knowledge.
 - this project could be compiled in higher version or dialect of c to increase its performance.
+- this project compiles c-family language with annotation attributes to SPIR-V compiler library. - 
+- this project is can generate flexible form of entry points.
+- uses clang-c as frontend to generate ast.
+- list of attribute specs is written [here](./aclang.md)
 
-- c-family language with annotation attributes to SPIR-V compiler library.  
-- uses llvm-c, clang-c to avoid memory corruption caused by static fiasco 
+tree  
 - `lib` for library source to be compiled
 - `inc` for library header
 - `src` is for dsl of generated headers.
-- this project compiles a c-like language with attributes.
-- list of attribute specs is written [here](./aclang.md)
 
-## How to build
+## how to build
 ```sh
 cmake -S. -Bbuild
 cmake --build build
