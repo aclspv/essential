@@ -1,6 +1,7 @@
 # aclang
 > `aclang`, annotated C-family language parses subset of clang ast.  
-> This page describes the pure specification of `aclang`, without preprocessing sugar.
+> This page describes the pure specification of `aclang`, without preprocessing sugar.  
+> listed patterns can be emitted as spir-v which validates.
 
 # size of integer
 
@@ -19,11 +20,12 @@ with unsigned is also possible.
 ```c
 typedef int i32;
 typedef i32 __attribute__((ext_vector_type(4))) v4i32;
+typedef _Bool __attribute__((ext_vector_type(4))) boolx4;
 
-_Bool band128(const v4i32 A, const v4i32 B) {
+boolx4 band128(const v4i32 A, const v4i32 B) {
     v4i32 Z;
     Z[0] = 0; Z[1] = 0;
-    Z[3] = 0; Z[4] = 0;
+    Z[2] = 0; Z[3] = 0;
 
     return A & B != Z;  
 }
