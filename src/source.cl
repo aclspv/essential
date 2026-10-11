@@ -1,192 +1,205 @@
-/** 
- * This source is test experimental.
- * extensions will be attributes inside.
- * 
- * macros will be defined in opencl-base.h
- **/
-
-typedef vector(4) float float4;
-typedef vector(4) double double4;
-typedef vector(4) long long4;
-typedef vector(4) int int4;
-typedef vector(4) _Bool bool4;
-
-#if 1
-kernel_raw(0) void KERNEL(int aaaa, int a2) {
-	goto K;
-	double4    c, c1, c2;
-	float    cc = 1;
-	float	bb;
-	float4    d = cc;
-	double4    a  = d * cc;
-
-K:
-	{
-		double4    c, c1, c2;
-		c += a;
-		c2 += c;
-	}
-
-	if(bb) {}
-}
-
-kernel_raw(0) void BOOLEAN() {
-	_Bool OP0;
-	_Bool OP1;
-
-	_Bool OP_OR;
-
-	if(OP_OR) {  }
-
-	OP_OR		= OP0 || OP1;
-	_Bool OP_AND	= OP0 && OP1;
-}
+typedef int i32;
+typedef i32 __attribute__((ext_vector_type(4))) v4i32;
+typedef _Bool __attribute__((ext_vector_type(4))) boolx4;
 
 #if	1
-kernel_raw(0) void SQUARE_V4F32_STRUCT(__global struct { float4 c; }* r, float4 c0) {
-	float4 a;
-	float4 b;
-	a += c0 * c0;
-	b -= a;
 
-	(*r).c += b;
-}
-#endif
+boolx4 t0_band128(const v4i32 A, const v4i32 B) {
+    v4i32 Z;
+    Z[0] = 0; Z[1] = 0;
+    Z[2] = 0; Z[3] = 0;
 
-kernel_raw(0) void SQUARE_V4F32(__global float4* r, float4 c0) {
-	float4 a;
-	float4 b;
-	a += c0 * c0;
-	b -= a;
-
-	*r += b;
+    return A & B != Z;  
 }
 
 #endif
 
-__attribute__((annotate("reqd_work_group_size(3, 4, 2)"))) /** work group size should be specified on constant time. */
-kernel_raw(5) void N_KERNEL_0(
-		__constant uintptr_t* consti32, 
-		storage_class(3) uint* u32out,
-		__local float i32aaaa[3],
-		layout(1) __constant float i32aaab[3],
-		const int pshconst
-		) {
+typedef int i32;
 
-	btcast float a0 = 1078774989;
-	int a1 specid(0) = 3;
-	int a2 = a0 + (a0 += a1);
-	int dd = 3 && 0;
+#if	1
 
-	btcast long a = (double)(int)(float)(a0 + a1 + a2);
+/** 
+ * r's size will be determined by spec constant with id 0.
+ * without constant specified in certain type, spec constant will be defined with a default of 3.
+ * */
+i32 t1_sum(const i32 rd[3] __attribute__((annotate("aclspv_specid(0)")))) {
 
-#if 1
-	while(a2++ & a1) {
-		bratio(1, 2) int AAA;
-		a1 += a2;
+    /** since specid is specified upon, no specifying default value is required. */
+    i32 c __attribute__((annotate("aclspv_specid(0)")));
+    i32 ret = 0;
+    
+    for(i32 i = 0; i < c; ++i)
+        ret += rd[i];
 
-		if(0) { int B = 3; a2 += (B -= 2); continue; }
-		else if(a) { bratio(3, 3) int B = 4; a2 += B; if(1) { int C = 3; a2 += C; } }
-		else {
-			break;
-		}
-	}
-
-#else
-	int x = 0, y = 7;
-	while (x < 10) {
-		if (x & 1)
-			y += x;
-		else
-			y += 2;
-
-		x++;
-	}
-#endif
-
-	a2 = 8;
-#if 	0
-	goto GOTO;
-
-	a2 += 6;
-	a2 += 5;
-
-GOTO:
-#endif
-	a2 += 3;
-	a2 += 3;
-
-	{
-		i32 a3;
-		a3 <<= 3;
-		a3 >>= 4;
-		a3 = a3 << 4 >> a3;
-	}
-
-	{
-		u32 a3;
-		u32 a4;
-		a3 <<= 3;
-		a3 >>= 4;
-		a3 = a4 = a3 << 4;
-	}
-
-	{
-		union L2ST {
-			int a;
-			float b;
-		};
-
-		struct L2NEST {
-			int c;
-			union L2ST st;
-		};
-
-		struct L2VM {
-			float4 v;
-		};
-
-		struct L2AM {
-			int arr[3];
-		};
-
-		/** lane 2: struct aggregate initializers */
-		union L2ST s = { 1 };
-		struct L2NEST t = { 9, { 3, 4.5f } };
-		struct L2VM vm = { (float4){ 1.f, 2.f, 3.f, 4.f } };
-		struct L2AM am = { { 5, 6, 7 } };
-		struct L2AM am2;
-
-		am = am2;
-
-		/** lane 3: composite member reads */
-		float a2;
-		a2 = s.b;
-		int c2;
-		c2 = t.c;
-
-		/** lane 4: composite member writes (lvalue targets) */
-		s.b = 6.0f;
-		t.c = 8;
-		c2 = t.c;
-	}
-
-	{
-		int a = 3;
-		int* p = &a;
-		int* q = &a;
-
-		*p = 2;
-		*q += 2;
-	}
-
-	{
-		int idx;
-		int a[3];
-		int* p2 = &a[idx - 1];
-		if((a[idx] = *p2) - 5) { a[0] = 2; };
-	}
-
-	return;
+    return ret;
 }
 
+#endif
+
+#if	1
+
+/** this is a normal function */
+void t2_norm_func(void) {
+    return;
+}
+
+#endif
+
+#if	1
+
+/**
+ * this is an entry point of vertex. (0 is a number for vertex execution model)
+ */
+__attribute__((annotate("aclspv_execmodel(0)")))
+void t3_entry_point_vertex(void) {
+    return;
+}
+
+#endif
+
+#if	1
+
+__attribute__((annotate("aclspv_execmodel(0)")))
+void t4_entry_point_vertex(
+    int pc_int /** becomes a push constant's element. follows std430 memory layout. */,
+
+    /*** 3: output */
+    __attribute__((annotate("aclspv_storage_class(3)")))
+    int* out_int,
+
+    /*** 
+     * 12: storage buffer
+     * bindable, which should follow std430 memory layout.
+     * */
+
+    /** bind number 0 **/
+    __attribute__((annotate("aclspv_storage_class(12)"))) int* sbo_int_rtarray /** struct { runtimearray<int> a; } */,
+    /** bind number 1 **/
+    __attribute__((annotate("aclspv_storage_class(12)"))) struct { int c; }* sbo_struct /** struct { int c; }  */,
+
+    /***
+     * 2: uniform buffer
+     * bindable, which should follow std140 memory layout.
+     */
+
+    /** bind number 2 **/
+    __attribute__((annotate("aclspv_storage_class(2)"))) int* ubo_int,
+    
+    /** bind number 3 **/
+    __attribute__((annotate("aclspv_layout(1)")))
+    __attribute__((annotate("aclspv_storage_class(2)")))
+    struct { int c; }* ubo_struct,
+
+    /*** 4: workgroup */ 
+    __attribute__((annotate("aclspv_storage_class(4)"))) int* work_int,
+    __attribute__((annotate("aclspv_storage_class(4)"))) int work_i32_15[15],
+    __attribute__((annotate("aclspv_storage_class(4)"))) int work_int_arr_spec[] __attribute__((annotate("aclspv_specid(1)"))),
+
+    int pc2
+) {
+    return;
+}
+
+#endif
+
+#if	1
+
+__attribute__((annotate("aclspv_execmodel(0)")))
+void t5_entry_point_vertex(
+    /*** 
+     * 12: storage buffer
+     * */
+    __attribute__((annotate("aclspv_storage_class(12)"))) int sbo_int_rtarray[] /** struct { runtimearray<int> a; } */
+) {
+    /** legal, has same storage class. */
+    __attribute__((annotate("aclspv_storage_class(12)"))) int* p0 = &sbo_int_rtarray[3];
+
+    #if	0
+    /** illegal, has different storage class. */
+    __attribute__((annotate("aclspv_storage_class(5)"))) int* p1 = &sbo_int_rtarray[3];
+    #endif
+}
+
+#endif
+
+#if	1
+
+typedef unsigned int u32;
+typedef u32* __attribute__((annotate("aclspv_storage_class(12)"))) p_u32_sbo_t;
+typedef struct { u32 m_lsb; u32 m_hsb; } u32x2;
+typedef u32x2* __attribute__((annotate("aclspv_storage_class(12)"))) p_u32x2_sbo_t;
+
+#endif
+
+#if	1
+
+__attribute__((annotate("aclspv_wrkgroup_size(1, 1, 1)")))  /** with workgroup size (1, 1, 1) */
+__attribute__((annotate("aclspv_execmodel(5)")))            /** GLCompute */
+void t6_entry_point_glcompute(void) {
+    return;
+}
+
+#endif
+
+#if	0
+__attribute__((annotate("aclspv_wrkgroup_size_id(&1, #3, &2)")))
+__attribute__((annotate("aclspv_execmodel(5)")))            /** GLCompute */
+void t7_entry_point_glcompute(void) {
+    return;
+}
+#endif
+
+#if	1
+
+__attribute__((annotate("aclspv_execmodel(0)")))
+void t8_entry_point_vertex(
+    /*** 
+     * omitted.
+     * location: 0
+     * */
+    __attribute__((annotate("aclspv_storage_class(1)"))) int* in_int,
+
+    /** 
+     * location: 1
+     **/
+    __attribute__((annotate("aclspv_location(1)")))
+    __attribute__((annotate("aclspv_storage_class(3)"))) int* out_int
+) { *out_int = *in_int; }
+
+#endif
+
+#if	1
+
+void t9_foo(void) {
+    /** 3.20000005 */
+    __attribute__((annotate("aclspv_btcast"))) float bar = 1078774989;
+}
+
+#endif
+
+#if	1
+
+typedef int i32;
+struct foo { i32 m; };
+
+__attribute__((annotate("aclspv_execmodel(0)")))
+void t10_foo_read_32(
+		     __attribute__((annotate("aclspv_storage_class(1)"))) struct foo* h_whatever,
+		     __attribute__((annotate("aclspv_storage_class(3)"))) i32* out
+		     ) {
+    if((*h_whatever).m) {    /** weighted as 7 */
+        __attribute__(("aclspv_bratio(7, 1)")) typedef int dummy_t;
+        *out = (*h_whatever).m;
+    } else {            /** weighted as 1 */
+        *out = 0;
+    }
+}
+
+#endif
+
+#if	1
+
+__attribute__((annotate("aclspv_layout(1)")))
+typedef struct { unsigned m_uint; } std140_uint_t;
+
+#endif
