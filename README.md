@@ -1,5 +1,10 @@
-# aclspv
+> [!WARNING]
 > it is incomplete project. please keep your expectation of this application low.  
+
+# aclspv
+
+- this project is written in strict iso c90 to make this project portable as possible in my knowledge.
+- this project could be compiled in higher version or dialect of c to increase its performance.
 
 - c-family language with annotation attributes to SPIR-V compiler library.  
 - uses llvm-c, clang-c to avoid memory corruption caused by static fiasco 
@@ -14,9 +19,6 @@
 cmake -S. -Bbuild
 cmake --build build
 ```
-
-## project language
-- ISO C90 with strict rule.
 
 ## dependency
 - cmake >= 3.10
