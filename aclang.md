@@ -313,6 +313,11 @@ i32 foo_read_32(struct foo* h_whatever) {
 - see `./lib/aclty/layout.h` to get the layouts  
 - without this attribute specified, layout will be default. (see ACLSPV_LAYOUT_)
 
+```c
+__attribute__((annotate("aclspv_layout(1)")))
+typedef struct { unsigned m_uint; } std140_uint_t;
+```
+
 # Restriction
 > Some statements / extensions may not be planned to be supported for now.
 
