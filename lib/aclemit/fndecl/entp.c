@@ -48,7 +48,6 @@ enum CXChildVisitResult aclemit_fndecl_entp(
 
 	clang_visitChildren(h_parent, aclemit_fndecl_entp_arg, &DATA);
 
-	/*** Extension Default **/
 	ae2f_ifezerr(aclutil_add_capability_by_flag(ctx, SpvCapabilityShader)) {
 		_aclctx_err(ctx, ACLSPV_COMPILE_UNHANDLED_ARGS);
 		return CXChildVisit_Break;

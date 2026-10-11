@@ -29,6 +29,8 @@ aclconst_specsz	aclty_getsize(const aclspv_id_t c, const h_aclspv_ctx_t h_ctx) {
 			r.m_lit.m_wrd = 0;
 			return r;
 		}
+
+		/** abstract shit */
 		return cxtp->m_sizeof;
 	}
 

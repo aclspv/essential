@@ -177,7 +177,7 @@ aclty_t* aclty_build_struct(aclspv_id_t c_id, h_aclspv_ctx_t h_ctx) {
 
 #define	s_str4_word(a, b, c, d)	(((wrd_t)(a)) | ((wrd_t)(b) << (wrd_t)8) | ((wrd_t)(c) << (wrd_t)16) | ((wrd_t)(d) << (wrd_t)24))
 
-			ae2f_ifezerr(h_ctx->m_count.m_types = aclutil_emitx_6(
+			ae2f_ifezerr(h_ctx->m_count.m_types = aclutil_emitx_7(
 						&h_ctx->m_section.m_types
 						, h_ctx->m_count.m_types
 						, SpvOpTypeOpaque
@@ -186,6 +186,7 @@ aclty_t* aclty_build_struct(aclspv_id_t c_id, h_aclspv_ctx_t h_ctx) {
 						, s_str4_word('u', 'e', hex[0], hex[1])
 						, s_str4_word(hex[2], hex[3], hex[4], hex[5])
 						, s_str4_word(hex[6], hex[7], '_', 't')
+						, 0
 						)) return 0;
 
 #undef	s_str4_word

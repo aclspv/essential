@@ -18,6 +18,8 @@
 #include <aclattr/specid.h>
 #endif
 
+#include <aclctx/err.h>
+
 typedef struct {
 	h_aclspv_ctx_t			m_ctx;
 	aclty_add_struct_mbr_t*		m_add_struct_mbr;
@@ -150,6 +152,53 @@ static aclspv_id_t s_helper2(
 						);
 
 				return aclty_mk_ptr(ELMID, SCLASS, h_ctx);
+			}
+
+		case CXType_IncompleteArray:
+			{
+				aclspv_wrd_t	SPECID = 0xFFFFFFFF;
+				const CXType ELM		= clang_getArrayElementType(TYPE);
+				const aclspv_id_t	ELMID = aclty_mk_by_cursor(c_cursor, ELM, h_ctx, rd_info);
+
+				clang_visitChildren(TYPEDEF, s_attr_specid, &SPECID);
+				clang_visitChildren(c_cursor, s_attr_specid, &SPECID);
+
+#define	SPECID	((aclspv_wrd_t)SPECID)
+
+				if(SPECID ^ 0xFFFFFFFF) {
+					/** specid */
+					aclspv_id_t SPECID_WRD = aclutil_mk_constant_spec_id(
+							SPECID, 1, h_ctx);
+					unless(SPECID_WRD)
+						SPECID_WRD = aclutil_mk_constant_spec64_id(
+								SPECID, 1, h_ctx);
+
+					ae2f_expected_but_else(SPECID_WRD) {
+						h_ctx->m_err = ACLSPV_COMPILE_CXTP_ZERO;
+						return 0; /** not found */
+					}
+
+					return aclty_mk_arr2(
+							ELMID
+							, SPECID_WRD
+							, rd_info->m_array_stride
+							, h_ctx
+							);
+				}
+
+				{
+					aclconst_specsz C;
+					C.m_id = 0;
+					C.m_lit.m_max = 0;
+					return aclty_mk_arr3(
+							ELMID
+							, C
+							, rd_info->m_array_stride
+							, h_ctx
+							);
+				}
+
+#undef	SPECID
 			}
 
 		case CXType_ConstantArray:	/** array */

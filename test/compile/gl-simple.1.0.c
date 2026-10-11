@@ -42,7 +42,7 @@ int main(void) {
 			, &spirv_count
 			, &spirv0
 			, ae2f_NIL
-			,ACLSPV_CTX_FLAG0_DUMP_DIAGNOSTICS | ACLSPV_CTX_FLAG0_SYMBOL
+			, ACLSPV_CTX_FLAG0_SYMBOL
 			);
 
 	printf("aclspv_compile: %d\n", (int) RET);

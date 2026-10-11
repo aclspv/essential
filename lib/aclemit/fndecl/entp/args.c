@@ -544,13 +544,15 @@ enum CXChildVisitResult aclemit_fndecl_entp_arg(
 				return CXChildVisit_Break;
 			}
 
-			ae2f_ifnezerr(aclty_getsize(var_type_id, DAT->m_ctx).m_id) {
+			var_elm_type_id = var_type_id;
+
+			ae2f_ifezerr(aclty_getsize(var_elm_type_id, DAT->m_ctx).m_id || aclty_getsize(var_elm_type_id, DAT->m_ctx).m_lit.m_max) {
 				_aclctx_err(DAT->m_ctx, ACLSPV_COMPILE_UNHANDLED_ARGS);
-				err_puts("is abstract. and is push constant. is shit.\n");
+				err_prefix(i);
+				err_call(fprintf, (stderr, "is abstract. and is push constant. is shit. %lu\n", (unsigned long)var_type_id));
 				return CXChildVisit_Break;
 			}
 
-			var_elm_type_id = var_type_id;
 			break;
 
 		case SpvStorageClassInput:
@@ -578,6 +580,7 @@ enum CXChildVisitResult aclemit_fndecl_entp_arg(
 
 				{
 					aclty_t* ae2f_restrict p_elm = aclty_find(p_ty->m_info.m_ptr.m_type, CTX);
+
 					ae2f_ifnezerr_strict(!p_elm && p_ty->m_info.m_ptr.m_type >= ACLSPV_ID_END) {
 						_aclctx_err(DAT->m_ctx, ACLSPV_COMPILE_UNHANDLED_ARGS);
 						return CXChildVisit_Break;
@@ -587,9 +590,14 @@ enum CXChildVisitResult aclemit_fndecl_entp_arg(
 				}
 			}
 
-			ae2f_ifnezerr(aclty_getsize(var_elm_type_id, DAT->m_ctx).m_id) {
+			ae2f_ifezerr(aclty_getsize(var_elm_type_id, DAT->m_ctx).m_id || aclty_getsize(var_elm_type_id, DAT->m_ctx).m_lit.m_max) {
 				_aclctx_err(DAT->m_ctx, ACLSPV_COMPILE_UNHANDLED_ARGS);
-				err_puts("is abstract. and is push constant. is shit.\n");
+				err_prefix(i);
+				err_call(fprintf, (
+							stderr
+							, "is abstract. and is input/output. is shit. %lu\n"
+							, (unsigned long)var_type_id)
+						);
 				return CXChildVisit_Break;
 			}
 
@@ -648,15 +656,22 @@ enum CXChildVisitResult aclemit_fndecl_entp_arg(
 
 			{
 				aclty_t* ae2f_restrict p_ty = aclty_find(var_type_id, CTX);
-				ae2f_ifezerr(p_ty) {
-					_aclctx_err(DAT->m_ctx, ACLSPV_COMPILE_UNHANDLED_ARGS);
-					return CXChildVisit_Break;
-				}
 
-				switch(p_ty->m_class) {
+				/** 
+				 * any fixed-size type is accepted here:
+				 *   struct | int | float | vector | constant-size array.
+				 *
+				 * a builtin scalar | vector has no type node (p_ty == 0) and is
+				 * already fixed-size, so it is taken as-is.
+				 *
+				 * a runtime-sized array (`T[]` without specid) and anything else
+				 * abstract is rejected by the size guard below.
+				 **/
+				var_elm_type_id = var_type_id;
+
+				ae2f_ifnezerr(p_ty) switch((aclspv_wrd_t)p_ty->m_class) {
 					/** T[] -> struct { T[] } */
 					case ACLTY_ARR:
-						var_elm_type_id = var_type_id;
 						ae2f_ifezerr(var_elm_type_id = aclty_mk_struct_single_blk(
 									var_elm_type_id
 									, ACLTY_STRUCT_FIELD0_BLOCK
@@ -670,8 +685,7 @@ enum CXChildVisitResult aclemit_fndecl_entp_arg(
 						break;
 
 						/** 
-						 * struct T* -> struct { struct T } 
-						 * T* -> struct { T[] }
+						 * T* -> struct { T }
 						 * */
 					case ACLTY_PTR:
 						{
@@ -694,23 +708,19 @@ enum CXChildVisitResult aclemit_fndecl_entp_arg(
 						}
 						break;
 
-					case ACLTY_STRUCT:
-					case ACLTY_DCR:
-					case ACLTY_FN:
-					case ACLTY_FN_ARG:
-					case ACLTY_SIMD:
-					case ACLTY_RESERVED:
-					case ACLTY_STRUCT_MBR:
 					default:
-						_aclctx_err(DAT->m_ctx, ACLSPV_COMPILE_UNHANDLED_ARGS);
-						return CXChildVisit_Break;
+						/** fixed-size value (struct, vector, ...): used as-is. */
+						break;
 				}
-
 			}
 
-			ae2f_ifnezerr(aclty_getsize(var_elm_type_id, DAT->m_ctx).m_id) {
-				_aclctx_err(DAT->m_ctx, ACLSPV_COMPILE_UNHANDLED_ARGS);
-				err_puts("is abstract. and is push constant. is shit.\n");
+			ae2f_ifezerr(aclty_getsize(var_elm_type_id, DAT->m_ctx).m_id || aclty_getsize(var_elm_type_id, DAT->m_ctx).m_lit.m_max) {
+				_aclctx_err(
+						DAT->m_ctx
+						, ACLSPV_COMPILE_UNHANDLED_ARGS
+						);
+				err_prefix(i);
+				err_call(fprintf, (stderr, "is abstract. and is workgroup | uniform. is shit. %lu\n", (unsigned long)var_elm_type_id));
 				return CXChildVisit_Break;
 			}
 
@@ -893,11 +903,6 @@ enum CXChildVisitResult aclemit_fndecl_entp_arg(
 
 			break;
 		case SpvStorageClassWorkgroup:
-			ae2f_ifnezerr_strict(PARAM_TY.kind != CXType_ConstantArray) {
-				CTX->m_err = ACLSPV_COMPILE_WORKGROUP_MUST_BE_CONSTANT_ARRAY;
-				return CXChildVisit_Break;
-			}
-
 			{
 				ae2f_ifezerr(var_native_type_id = aclty_mk_ptr(
 							var_elm_type_id

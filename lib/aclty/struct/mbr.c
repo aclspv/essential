@@ -316,7 +316,8 @@ aclty_t* aclty_add_struct_mbr_std140(
 
 	{
 		aclty_t* ae2f_restrict mbrty = aclty_find(c_id, h_ctx);
-		ae2f_ifezerr(mbrty) return 0;
+		/** builtin ids (< ACLSPV_ID_END) have no type node: nothing to bump. */
+		ae2f_ifnezerr(mbrty)
 		switch((aclspv_wrd_t)mbrty->m_class) {
 			case ACLTY_STRUCT:
 			case ACLTY_SIMD:
