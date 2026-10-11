@@ -87,7 +87,7 @@ i32 sum(const i32 rd[3] __attribute__((annotate("aclspv_specid(0)")))) {
 
 /** this is a normal function */
 void normal_function(void) {
-    return 0;
+    return;
 }
 
 /**
