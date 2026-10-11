@@ -11,7 +11,8 @@
 with unsigned is also possible.
 
 # Attributes
-__attribute__((ext_vector_type(a)))
+> `__attribute__((ext_vector_type(a)))`
+
 > make a vector type.  
 > a vector type is a simd type, where many operations maps to simd.  
 
@@ -35,7 +36,7 @@ _Bool band128(const v4i32 A, const v4i32 B) {
 
 ### aclspv_specid
 
-> aclspv_specid(specid : u32)
+> `aclspv_specid(specid : u32)`
 
 > Make constant value modifiable on vulkan pipeline.  
 > See [shader stage create info](https://docs.vulkan.org/refpages/latest/refpages/source/VkPipelineShaderStageCreateInfo.html)  
@@ -76,7 +77,7 @@ i32 sum(const i32 rd[3] __attribute__((annotate("aclspv_specid(0)")))) {
 ```
 
 ### aclspv_execmodel
-> aclspv_execmodel(model : u32)
+> `aclspv_execmodel(model : u32)`
 
 - make a function entry point
 - only attach this on a function which returns void. others should be ignored.
@@ -111,7 +112,7 @@ arguments
 > without `storage class` specified on pointer parameter, compiler should emit an error.  
 
 bindables  
-> every entry points have its own reserved [descriptor set](#aclspv_set).  
+> every entry points have its own reserved [descriptor set](#aclspv_set), incremented from 0.  
 > from left to right, bindable arguments have its reserved [binding index](#aclspv_bind) from 0, incremented on every bindable obejcts.  
 
 ```c
@@ -159,7 +160,7 @@ void entry_point_vertex(
 
 ### aclspv_storage_class
 
-> aclspv_storage_class(class : u32)
+> `aclspv_storage_class(class : u32)`
 
 > Specifies the storage class for the target pointer type.  
 > Possible inputs are defined as enum `SpvStorageClass_` on spirv-header.  
@@ -191,20 +192,20 @@ typedef u32x2* __attribute__((annotate("aclspv_storage_class(12)"))) p_u32x2_sbo
 ```
 
 ### aclspv_set
-> aclspv_set(set : u32)
+> `aclspv_set(set : u32)`
 
 - specifies the descriptor sets of bindable object.  
 - could be used on bindable objects.  
 - when specified, specifing [binding index](#aclspv_bind_idx) is required.
 
 ### aclspv_bind_idx
-> aclspv_bind_idx(idx : u32)
+> `aclspv_bind_idx(idx : u32)`
 
 - specifies the binding index of bindable object.
 
 ### aclspv_wrkgroup_size
-> aclspv_wrkgroup_size(x: u32, y: u32, z: u32)  
-> reqd_work_group_size(x: u32, y: u32, z: u32)  
+> `aclspv_wrkgroup_size(x: u32, y: u32, z: u32)`  
+> `reqd_work_group_size(x: u32, y: u32, z: u32)`
 
 - specifies the entry point's workgroup size.
 - `x`, `y`, `z` must be a 32-bit integer as decimal literal.
@@ -222,7 +223,7 @@ void entry_point_glcompute(void) {
 > [!NOTE]  
 > this attribute is available from spir-v version 1.2.
 
-> aclspv_wrkgroup_size_id(x : u32 | id, y: u32 | id, z: u32 | id)
+> `aclspv_wrkgroup_size_id(x : u32 | id, y: u32 | id, z: u32 | id)`
 
 - specifies the entry point's workgroup size, with not only literal, but an spec constant id.
 - to specify which is literal or specid, prefix is used.
@@ -246,7 +247,7 @@ void entry_point_glcompute(void) {
 
 ### aclspv_location
 
-> aclspv_location(location : u32)
+> `aclspv_location(location : u32)`
 
 - used on declaring arguments in entry point.
 - specifies the location of `input(1)` or `output(3)`  
@@ -271,7 +272,7 @@ void entry_point_vertex(
 
 ### aclspv_btcast
 
-> aclspv_btcast
+> `aclspv_btcast`
 
 - tells that the final casting of variable would be bit-casting when it is arithmetic casting.
 
@@ -284,7 +285,7 @@ void foo(void) {
 
 ### aclspv_bratio
 
-> aclspv_bratio(weight_true_branch : u32, weight_false_branch : u32)  
+> `aclspv_bratio(weight_true_branch : u32, weight_false_branch : u32)`  
 
 - declare a branch ratio of possibility that whether branch would be true or not.  
 - this attribute is a performance hint which affects the logic-based control statement has two cases
@@ -306,7 +307,7 @@ i32 foo_read_32(struct foo* h_whatever) {
 ```
 
 ### aclspv_layout
-> aclspv_layout(layout_number: u32)  
+> `aclspv_layout(layout_number: u32)`  
 
 - specify a variable | type be follows a certain memory layout  
 - see `./lib/aclty/layout.h` to get the layouts  
