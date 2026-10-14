@@ -4,6 +4,8 @@
 #include "../api.h"
 #include "../../op.h"
 
+#include <aclexpr/util/unwrap.h>
+
 #include <util/constant.h>
 #include <util/scale.h>
 #include <util/wrdemit.h>
@@ -69,28 +71,31 @@ ae2f_inline_f static aclexpr_visit_lbl_t aclexpr_visit_op2_assign(
 	VEC[ACLEXPR_OPBINCFG_NUMOPRND]		= 2;
 	VEC[ACLEXPR_OPBINCFG_OPCODE]		= ACLEXPR_OP2_ASSIGN;
 
-	/** member lvalue: route the whole assignment to the member-write
-	 * carve. the NO_NEED seed below still applies — the memberread visit
-	 * honours it by skipping the read cascade. */
+	/** lvalue target: classify the (transparently unwrapped) first child so
+	 * a parenthesized / implicit-cast-wrapped lvalue routes the same as the
+	 * bare one — `*(p) = x`, `(*p) = x`, `(s).m = x`, `(a[i]) = x` all reach
+	 * the matching write carve. the NO_NEED seed below still applies: every
+	 * write carve honours it by skipping the read cascade. */
 	PEEK.m_c_first = clang_getNullCursor();
 	PEEK.m_has = 0;
 	clang_visitChildren(c_cur, s_assign_peek, &PEEK);
-	if(PEEK.m_has && clang_getCursorKind(PEEK.m_c_first) == CXCursor_MemberRefExpr) {
-		VEC[ACLEXPR_OPBINCFG_OPCODE] = ACLEXPR_OP2_MEMBERWRITE;
-	} else if(PEEK.m_has
-			&& clang_getCursorKind(PEEK.m_c_first) == CXCursor_UnaryOperator
-			&& CXUnaryOperator_Deref
-					== clang_getCursorUnaryOperatorKind(PEEK.m_c_first)) {
-		/** deref lvalue (`*o = x`): route to the deref-write carve, which
-		 * re-derives the pointer from the lvalue cursor. the NO_NEED seed
-		 * below still applies — the deref visit honours it by skipping
-		 * the read cascade. */
-		VEC[ACLEXPR_OPBINCFG_OPCODE] = ACLEXPR_OP2_DEREFWRITE;
-	} else if(PEEK.m_has
-			&& clang_getCursorKind(PEEK.m_c_first) == CXCursor_ArraySubscriptExpr) {
-		/** subscript lvalue (`a[i] = x`): route to the subscript-write
-		 * carve, same NO_NEED seed as the two cases above. */
-		VEC[ACLEXPR_OPBINCFG_OPCODE] = ACLEXPR_OP2_SUBSCRIPTWRITE;
+	if(PEEK.m_has) {
+		switch((int)aclexpr_lvalue_kind(PEEK.m_c_first)) {
+			case ACLEXPR_LVALUEKIND_MEMBER:
+				VEC[ACLEXPR_OPBINCFG_OPCODE] = ACLEXPR_OP2_MEMBERWRITE;
+				break;
+
+			case ACLEXPR_LVALUEKIND_DEREF:
+				VEC[ACLEXPR_OPBINCFG_OPCODE] = ACLEXPR_OP2_DEREFWRITE;
+				break;
+
+			case ACLEXPR_LVALUEKIND_SUBSCRIPT:
+				VEC[ACLEXPR_OPBINCFG_OPCODE] = ACLEXPR_OP2_SUBSCRIPTWRITE;
+				break;
+
+			default:
+				break;
+		}
 	}
 
 	aclmemzero(&VEC[ACLEXPR_OPBINCFG_END + 2], sizeof(aclexpr_opbincfg_extra) << 1);

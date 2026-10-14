@@ -2,10 +2,12 @@
 
 #include <aclexpr/carve/util.h>
 #include <aclexpr/carve/ptr.h>
+#include <aclexpr/util/unwrap.h>
 
 #include <aclty.h>
 #include <aclcur/common.h>
 #include <aclcur/load.h>
+#include <aclcur/store.h>
 #include <aclexpr/curreg.h>
 
 #include <aclutil/emitx.h>
@@ -33,11 +35,12 @@ aclexpr_carve_lbl_t aclexpr_carve2_derefwrite(
 		aclexpr_carve_lbl_t			c_lbl_success,
 		aclexpr_carve_lbl_t			c_lbl_err
 		) {
-	const CXCursor DREF = rdwr_lst_extra[0].m_cursor;
+	const CXCursor DREF = aclexpr_expr_unwrap(rdwr_lst_extra[0].m_cursor);
 	const aclspv_id_t X = rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_END + 1];
 	aclexpr_opnd_t OPND;
 	aclspv_id_t REG;
 	aclspv_id_t PTR;
+	aclspv_id_t GHOST;
 
 	unless(rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_OPCODE] == (aclspv_wrd_t)ACLEXPR_OP2_DEREFWRITE)
 		return c_lbl_continue;
@@ -56,7 +59,7 @@ aclexpr_carve_lbl_t aclexpr_carve2_derefwrite(
 		return c_lbl_err;
 	}
 
-	ae2f_ifezerr(REG = aclexpr_opnd_reg(OPND.m_c, CTX(rdwr_data)))
+	ae2f_ifezerr(REG = aclexpr_opnd_reg(aclexpr_expr_unwrap(OPND.m_c), CTX(rdwr_data)))
 		REG = 0;
 
 	if(!REG || !X) {
@@ -77,19 +80,20 @@ aclexpr_carve_lbl_t aclexpr_carve2_derefwrite(
 		return c_lbl_err;
 	}
 
-	{
-		/** an emitted node, not words appended here: the emit pass runs
-		 * after evaluation, so anything appended during carve would land
-		 * before the instructions this store's operands come from. */
-		ae2f_ifezerr(aclcur_cfg_st(
-					SpvOpStore
-					, PTR
-					, X
-					, CTX(rdwr_data)
-					)) {
-			err_puts("[carve2::derefwrite] OpStore failed\n");
-			return c_lbl_err;
-		}
+	/** D6/D7: store through the ghost the read builds for the same pointer
+	 * (aclcur_reg_ghost dedups on the held pointer value), so a plain deref
+	 * store untracks the tracked value exactly the way any view store
+	 * does. an emitted node, not words appended here: the emit pass runs
+	 * after evaluation, so anything appended during carve would land
+	 * before the instructions this store's operands come from. */
+	ae2f_ifezerr(GHOST = aclcur_reg_ghost(PTR, CTX(rdwr_data))) {
+		err_puts("[carve2::derefwrite] no ghost for the deref operand\n");
+		return c_lbl_err;
+	}
+
+	ae2f_ifezerr(aclcur_store_reg(GHOST, X, CTX(rdwr_data))) {
+		err_puts("[carve2::derefwrite] OpStore failed\n");
+		return c_lbl_err;
 	}
 
 	*rdwr_prv_idval = X;

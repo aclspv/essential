@@ -32,6 +32,41 @@ aclconst_specsz	aclcur_regvar_size(aclspv_id_t c_reg, h_aclspv_ctx_t h_ctx) {
 	return aclty_getsize(p->m_ty, h_ctx);
 }
 
+/** is c_reg c_root itself, or an ALIAS2 view descended from c_root?
+ *
+ * a LOAD / STORE node records the register it was issued on, and for a
+ * view that is the VIEW, not the root that owns the storage. the keep
+ * scan below has to see through the ALIAS2 chain so a root whose only
+ * access is through a view still earns its OpVariable. bounded by the
+ * cursor count, exactly as aclcur_reg_resolve(). */
+static aclspv_bool_t	s_reg_is_view_of(
+		aclspv_id_t	c_root,
+		aclspv_id_t	c_reg,
+		h_aclspv_ctx_t	h_ctx
+		) {
+	aclspv_wrd_t n = h_ctx ? h_ctx->m_num_cursor : 0;
+	aclspv_id_t c = c_reg;
+
+	while(c && n--) {
+		h_aclcur_t p;
+
+		ae2f_ifezerr(p = aclcur_get_node(c, h_ctx))
+			return 0;
+		ae2f_ifnezerr_strict(p->m_class != ACLCUR_REG)
+			return 0;
+
+		if(c == c_root)
+			return 1;
+
+		if(!(p->m_flag0 & aclcur_flag0_reg(ACLCUR_FLAG0_REG_ALIAS2)))
+			return 0;
+
+		c = p->m_d.m_reg.m_d.m_ref.m_id;
+	}
+
+	return 0;
+}
+
 aclspv_compile_t	aclcur_regvar_emit_reg(aclspv_id_t c_reg, h_aclspv_ctx_t h_ctx) {
 	h_aclcur_t p;
 	aclspv_id_t ty;
@@ -51,26 +86,27 @@ aclspv_compile_t	aclcur_regvar_emit_reg(aclspv_id_t c_reg, h_aclspv_ctx_t h_ctx)
 
 		/** a function variable earns its OpVariable only when an emitted
 		 * instruction references its storage: a seed or explicit load, an
-		 * explicit (call-boundary) store, or the register being marked
-		 * ACLCUR_FLAG0_REG_ALLOCATED — its address is taken, or an ALIAS2
-		 * view chains onto it, so the storage must exist even with no
-		 * live access. value-flow registers carry their values in SSA and
-		 * never touch memory, so their variables would be dead weight —
-		 * and a reference whose block is powered off at emission would
-		 * dangle. */
+		 * explicit (call-boundary) store, an access through an ALIAS2
+		 * view of it (a LOAD / STORE records the view, see
+		 * s_reg_is_view_of), or the register being marked
+		 * ACLCUR_FLAG0_REG_ALLOCATED — its address is taken, so the
+		 * storage must exist even with no live access. value-flow
+		 * registers carry their values in SSA and never touch memory, so
+		 * their variables would be dead weight — and a reference whose
+		 * block is powered off at emission would dangle. */
 		keep = (aclspv_bool_t)(p->m_flag0 & aclcur_flag0_reg(ACLCUR_FLAG0_REG_ALLOCATED));
 		unless(keep)
 		for(j = 0; j < h_ctx->m_num_cursor; ++j) {
 			h_aclcur_t q = &s_get_buf(h_ctx)[j];
 
 			if(q->m_class == ACLCUR_LOAD
-			&& q->m_d.m_load.m_reg == c_reg
+			&& s_reg_is_view_of(c_reg, q->m_d.m_load.m_reg, h_ctx)
 			&& aclcur_ssa_lbl_live(q->m_lbl, h_ctx)) {
 				keep = 1;
 				break;
 			}
 			if(q->m_class == ACLCUR_STORE
-			&& q->m_d.m_store.m_reg == c_reg
+			&& s_reg_is_view_of(c_reg, q->m_d.m_store.m_reg, h_ctx)
 			&& aclcur_ssa_lbl_live(q->m_lbl, h_ctx)
 			&& (q->m_flag0 & aclcur_flag0_store(ACLCUR_FLAG0_STORE_EXPLICIT))) {
 				keep = 1;
@@ -383,12 +419,17 @@ aclspv_compile_t	aclcur_regvar_emit_storeof(
 	ae2f_ifezerr(p = aclcur_get_node(c_id, h_ctx))
 		return ACLSPV_COMPILE_UNHANDLED;
 
-	/** non-explicit stores are pure SSA definitions of the register's
-	 * value: the value flows through the block-local tracking and the
-	 * phi graph; storage is written only at explicit (call-boundary)
-	 * stores. */
+	/** a non-explicit store is a pure SSA definition of the register's
+	 * value UNLESS the stored register's storage must exist in memory
+	 * (non-SCOPED root, or an address-taken root) — then the value is
+	 * observable outside the SSA scope and must be written. the mode is
+	 * re-resolved from the storage root HERE, at emit time: all carving
+	 * (including any address-of that demotes the root) precedes the emit
+	 * pass, so a store carved before the root's address was taken still
+	 * emits its OpStore. */
 	unless(c_volatile
-	|| (p->m_flag0 & aclcur_flag0_store(ACLCUR_FLAG0_STORE_EXPLICIT)))
+	|| (p->m_flag0 & aclcur_flag0_store(ACLCUR_FLAG0_STORE_EXPLICIT))
+	|| aclcur_reg_needs_memory(p->m_d.m_store.m_reg, h_ctx))
 		return ACLSPV_COMPILE_OK;
 
 	/** the OpStore memory operand: the register id by default, or the

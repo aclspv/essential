@@ -1,10 +1,12 @@
 #include "./memberread.h"
 
 #include <aclexpr/carve/util.h>
+#include <aclexpr/carve/ptr.h>
 
 #include <aclty.h>
 #include <aclcur/common.h>
 #include <aclcur/op.h>
+#include <aclcur/load.h>
 
 #include <util/constant.h>
 
@@ -26,6 +28,75 @@ aclexpr_carve_lbl_t aclexpr_carve1_memberread(
 
 	unless(rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_OPCODE] == (aclspv_wrd_t)ACLEXPR_OP1_MEMBERREAD)
 		return c_lbl_continue;
+
+	/** ghost view lane (D6/D7): when the base is a pointer (`p->b`) or a
+	 * dereference (`(*p).b`), the member is an l-value of the storage the
+	 * pointer names. load it through a ghost-rooted MEMBER view rather than
+	 * extracting it out of a loaded composite — and if that fails, fail
+	 * rather than silently falling back: the value lane would need a struct
+	 * base the pointer is not.
+	 *
+	 * the same view node is what the member-write carve builds, so read and
+	 * write of one region name one l-value (aclcur_reg_ghost /
+	 * aclcur_reg_view dedup). */
+	if(aclexpr_member_base_ptr(rdwr_lst_extra[1].m_cursor, CTX(rdwr_data))) {
+		const aclspv_id_t VIEW = aclexpr_member_view(
+				rdwr_lst_extra[1].m_cursor
+				, TY
+				, (aclspv_id_t)IDX
+				, CTX(rdwr_data));
+
+		ae2f_ifezerr(VIEW) {
+			err_puts("[carve1::memberread] pointer-base member view could not be built");
+			return c_lbl_err;
+		}
+
+		ae2f_ifezerr(*rdwr_prv_idval = aclcur_load_reg(VIEW, CTX(rdwr_data), 0)) {
+			err_puts("[carve1::memberread] view load failed");
+			return c_lbl_err;
+		}
+
+		*rdwr_prv_extra = rdwr_lst_extra[0];
+		rdwr_prv_extra->m_type_original = TY;
+		rdwr_prv_extra->m_extra.m_view.m_reg = VIEW;
+		rdwr_prv_extra->m_state0 |= (aclspv_wrd_t)ACLEXPR_OPCFGX_STATE0_LVALUE_VIEW;
+
+		return c_lbl_success;
+	}
+
+	/** addressable-base view lane (D3/D5): when the base is a plain variable
+	 * of struct/union type (`s.m`), the member is an l-value of the base's
+	 * storage. build the SAME MEMBER view the member-write carve builds and
+	 * load through it (aclcur_load_reg) — an OpAccessChain + OpLoad over the
+	 * member rather than load-the-whole-composite + OpCompositeExtract. the
+	 * view is SSA-tracked like any l-value, and a compound assignment through
+	 * `s.m` stores back through exactly this node.
+	 *
+	 * a non-addressable base (a value-only node, a constant composite) has no
+	 * storage to name, so aclexpr_member_view_reg returns 0 and it stays on
+	 * the value lane below (D3). */
+	{
+		const aclspv_id_t VIEW = aclexpr_member_view_reg(
+				rdwr_lst_extra[1].m_cursor
+				, TY
+				, (aclspv_id_t)IDX
+				, CTX(rdwr_data));
+
+		if(VIEW) {
+			ae2f_ifezerr(*rdwr_prv_idval = aclcur_load_reg(VIEW, CTX(rdwr_data), 0)) {
+				err_puts("[carve1::memberread] view load failed");
+				return c_lbl_err;
+			}
+
+			*rdwr_prv_extra = rdwr_lst_extra[0];
+			rdwr_prv_extra->m_type_original = TY;
+			rdwr_prv_extra->m_extra.m_view.m_reg = VIEW;
+			rdwr_prv_extra->m_state0
+				|= (aclspv_wrd_t)ACLEXPR_OPCFGX_STATE0_LVALUE_VIEW;
+
+			return c_lbl_success;
+		}
+	}
 
 	/** the base must be a struct/union value with the indexed member. */
 	{
@@ -65,24 +136,6 @@ aclexpr_carve_lbl_t aclexpr_carve1_memberread(
 
 	*rdwr_prv_extra = rdwr_lst_extra[0];
 	rdwr_prv_extra->m_type_original = TY;
-
-	/** the base was a dereference read: record which member was extracted
-	 * and its logical type, so a compound assignment through this lvalue
-	 * (`(*p).m += x`) can rebuild an address into the member and store
-	 * there. the pointer the read went through is already in m_extra.m_deref;
-	 * storing a member value through it would type-mismatch the composite. */
-	if(rdwr_lst_extra[0].m_state0
-			& (aclspv_wrd_t)ACLEXPR_OPCFGX_STATE0_DEREF_LOADED) {
-		rdwr_prv_extra->m_extra.m_deref.m_idx_mbr = IDX;
-		rdwr_prv_extra->m_extra.m_deref.m_ty_mbr = TY;
-		rdwr_prv_extra->m_state0
-			|= (aclspv_wrd_t)ACLEXPR_OPCFGX_STATE0_MEMBER_OF_DEREF;
-	} else {
-		/** a member of a member (of a deref) is not addressable this way:
-		 * drop the flag rather than index the pointer at the wrong member. */
-		rdwr_prv_extra->m_state0
-			&= ~(aclspv_wrd_t)ACLEXPR_OPCFGX_STATE0_MEMBER_OF_DEREF;
-	}
 
 	return c_lbl_success;
 }

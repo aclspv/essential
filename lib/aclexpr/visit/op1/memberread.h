@@ -136,6 +136,10 @@ ae2f_inline_f static aclexpr_visit_lbl_t aclexpr_visit_op1_memberread(
 	SCALE_EXTRA = (void* ae2f_restrict)(&VEC[ACLEXPR_OPBINCFG_END + 1]);
 	aclmemzero(SCALE_EXTRA, sizeof(aclexpr_opbincfg_extra) * 2);
 	SCALE_EXTRA[1].m_literal.m_u64 = IDX;
+	/** the member reference itself, so the carve can classify its base
+	 * (arrow `p->m` / deref `(*p).m` -> a ghost-rooted view) without
+	 * relying on extra[0].m_cursor, which the cascade rewrites. */
+	SCALE_EXTRA[1].m_cursor = c_cur;
 
 	return c_lbl_success;
 }

@@ -62,6 +62,8 @@ ae2f_inline_f static struct __ret s_ret(const h_aclspv_ctx_t h_ctx, const aclty_
 	return s_ret_new(h_ctx, rd_cxtp, 0, 1);
 }
 
+#include "../aclty.h"
+
 aclspv_id_t aclty_mk_ptr(
 		const aclspv_id_t	c_type_elm,
 		const SpvStorageClass	c_storage_class,
@@ -85,10 +87,28 @@ aclspv_id_t aclty_mk_ptr(
 		TAR.m_field0 |= ACLTY_FIELD0_NOPOD;
 	}
 
+	switch((aclspv_wrd_t)c_storage_class) {
+		/** input|output's element type should not be a structure */
+		case SpvStorageClassInput:
+		case SpvStorageClassOutput:
+			{
+				aclty_t* ae2f_restrict p_elm = aclty_find(c_type_elm, h_ctx);
+				ae2f_ifnezerr_strict(p_elm && p_elm->m_class == ACLTY_STRUCT) {
+					err_puts("struct on input|output buffer is illegal.\n");
+					return 0;
+				}
+			}
+
+			break;
+
+		default:
+			break;
+	}
+
 	{
 		const struct __ret ID = s_ret(h_ctx, &TAR); 
-		ae2f_ifezerr(ID.m_id) return 0;
-		unless(ID.m_isfirst)		return ID.m_id;
+		ae2f_ifezerr(ID.m_id)	return 0;
+		unless(ID.m_isfirst)	return ID.m_id;
 
 		ae2f_ifezerr(h_ctx->m_count.m_types = aclutil_emitx_4(
 					&h_ctx->m_section.m_types

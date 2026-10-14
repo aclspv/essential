@@ -80,7 +80,7 @@ void t4_entry_point_vertex(
     /***
      * 2: uniform buffer
      * bindable, which should follow std140 memory layout.
-     */
+     * */
 
     /** bind number 2 **/
     __attribute__((annotate("aclspv_storage_class(2)"))) int* ubo_int,
@@ -97,7 +97,10 @@ void t4_entry_point_vertex(
 
     int pc2
 ) {
-    return;
+	sbo_struct->c = 3;
+	(sbo_struct)->c = 4;
+	(sbo_struct->c) = 5;
+	return;
 }
 
 #endif
@@ -119,7 +122,7 @@ void t5_entry_point_vertex(
     __attribute__((annotate("aclspv_storage_class(5)"))) int* p1 = &sbo_int_rtarray[3];
     #endif
 }
-
+  
 #endif
 
 #if	1
@@ -170,9 +173,11 @@ void t8_entry_point_vertex(
 
 #if	1
 
-void t9_foo(void) {
+__attribute__((annotate("aclspv_execmodel(0)")))
+void t9_foo(__attribute__((annotate("aclspv_storage_class(3)"))) float* out) {
     /** 3.20000005 */
     __attribute__((annotate("aclspv_btcast"))) float bar = 1078774989;
+    *out = bar;
 }
 
 #endif
@@ -180,19 +185,28 @@ void t9_foo(void) {
 #if	1
 
 typedef int i32;
-struct foo { i32 m; };
 
 __attribute__((annotate("aclspv_execmodel(0)")))
 void t10_foo_read_32(
-		     __attribute__((annotate("aclspv_storage_class(1)"))) struct foo* h_whatever,
-		     __attribute__((annotate("aclspv_storage_class(3)"))) i32* out
+		     __attribute__((annotate("aclspv_storage_class(1)"))) int* h_whatever,
+		     __attribute__((annotate("aclspv_storage_class(3)"))) int* out
 		     ) {
-    if((*h_whatever).m) {    /** weighted as 7 */
+    if(*h_whatever) {    /** weighted as 7 */
         __attribute__(("aclspv_bratio(7, 1)")) typedef int dummy_t;
-        *out = (*h_whatever).m;
+        *out = *h_whatever;
     } else {            /** weighted as 1 */
         *out = 0;
     }
+
+    int a;
+
+    #if 1
+    int* p = (&(a));
+    a = 3;
+    (*p) = 2;
+    *(p) = 5;
+    #endif
+    a = 4;
 }
 
 #endif
@@ -202,4 +216,16 @@ void t10_foo_read_32(
 __attribute__((annotate("aclspv_layout(1)")))
 typedef struct { unsigned m_uint; } std140_uint_t;
 
+#endif
+
+#if 1
+__attribute__((annotate("aclspv_execmodel(5)")))            /** GLCompute */
+void t11_dedup_entry(
+		     __attribute__((annotate("aclspv_storage_class(4)"))) int dedup_a[15]
+		     ) {
+	dedup_a[0] = (dedup_a)[0] + dedup_a[0];
+	dedup_a[2] = ((((dedup_a))))[(3)] + dedup_a[4];
+	(dedup_a)[0] = 9;
+	((((dedup_a))))[(1)] = 8;
+}
 #endif

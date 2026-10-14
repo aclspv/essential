@@ -18,6 +18,7 @@ static char s_src0[
 	+ sizeof(SRC0_10) - 1
 	+ sizeof(SRC0_11) - 1
 	+ sizeof(SRC0_12) - 1
+	+ sizeof(SRC0_13) - 1
 ];
 
 static char s_oclbase[
@@ -43,6 +44,7 @@ static void acltestcfg(void) {
 	strcat(s_src0, SRC0_10);
 	strcat(s_src0, SRC0_11);
 	strcat(s_src0, SRC0_12);
+	strcat(s_src0, SRC0_13);
 
 	strcpy(s_oclbase, OCLBASE_0);
 	strcat(s_oclbase, OCLBASE_1);

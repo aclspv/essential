@@ -8,6 +8,7 @@ aclspv_id_t	aclcur_store_reg(aclspv_id_t c_reg, aclspv_id_t c_val, h_aclspv_ctx_
 	aclspv_id_t node;
 	aclspv_id_t c_ref;
 	aclcur_t b_val;
+	aclspv_bool_t c_mem;
 	h_aclcur_t p;
 	h_aclcur_t p_reg;
 	h_aclcur_t p_val;
@@ -40,6 +41,14 @@ aclspv_id_t	aclcur_store_reg(aclspv_id_t c_reg, aclspv_id_t c_val, h_aclspv_ctx_
 	ae2f_ifnezerr_strict(p_reg->m_ty != p_val->m_ty)
 		return 0;
 
+	/** validation (uniform across register kinds): a register whose value
+	 * is observable outside the SSA scope must reach memory, so its store
+	 * is explicit whichever entry point the caller used. resolved from the
+	 * storage root (aclcur_reg_needs_memory); the emit gate re-checks it
+	 * (aclcur_regvar_emit_storeof) so an address taken after this store was
+	 * carved still forces its OpStore out. */
+	c_mem = aclcur_reg_needs_memory(c_reg, h_ctx);
+
 	/** a register never loaded (or already untracked) has no old value to release.
 	 * the old tracked value may also be a node-less constant (stored straight
 	 * from m_types): such a value never acquired a reference, so skip it. */
@@ -52,6 +61,8 @@ aclspv_id_t	aclcur_store_reg(aclspv_id_t c_reg, aclspv_id_t c_val, h_aclspv_ctx_
 	p->m_class		= ACLCUR_STORE;
 	p->m_d.m_store.m_reg	= c_reg;
 	p->m_val		= c_val;
+	if(c_mem)
+		p->m_flag0 |= aclcur_flag0_store(ACLCUR_FLAG0_STORE_EXPLICIT);
 
 	(void)++p_reg->m_num_ref;
 	(void)++p_val->m_num_ref;
@@ -70,11 +81,20 @@ aclspv_id_t	aclcur_store_reg(aclspv_id_t c_reg, aclspv_id_t c_val, h_aclspv_ctx_
 	ae2f_ifezerr(p_reg = aclcur_get_node(c_reg, h_ctx))
 		return 0;
 
-	p_reg->m_flag0 |= aclcur_flag0_reg(ACLCUR_FLAG0_REG_TRACKED)
-	                | aclcur_flag0_reg(ACLCUR_FLAG0_REG_CHANGED);
-	p_reg->m_val = c_val;
-	p_reg->m_val_mask = p_val->m_val_mask;
-	p_reg->m_val_lit = p_val->m_val_lit;
+	if(c_mem) {
+		/** memory is authoritative for a non-scoped register: memory may
+		 * have changed under us, so no SSA value is tracked. */
+		p_reg->m_flag0 &= (aclspv_wrd_t)~(aclcur_flag0_reg(ACLCUR_FLAG0_REG_TRACKED)
+					| aclcur_flag0_reg(ACLCUR_FLAG0_REG_CHANGED));
+		p_reg->m_val	= 0;
+		p_reg->m_val_mask = ACLUTIL_LITERAL_RT;
+	} else {
+		p_reg->m_flag0 |= aclcur_flag0_reg(ACLCUR_FLAG0_REG_TRACKED)
+		                | aclcur_flag0_reg(ACLCUR_FLAG0_REG_CHANGED);
+		p_reg->m_val = c_val;
+		p_reg->m_val_mask = p_val->m_val_mask;
+		p_reg->m_val_lit = p_val->m_val_lit;
+	}
 
 	return p->m_id;
 }

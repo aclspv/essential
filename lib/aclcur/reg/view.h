@@ -43,23 +43,81 @@ aclspv_id_t aclcur_reg_view(
 		aclspv_id_t		c_ty,
 		aclspv_id_t		c_idx,
 		aclspv_wrd_t		c_storage_class,
+		aclspv_wrd_t		c_step,
 		h_aclspv_ctx_t		h_ctx
 		);
 
 /**
+ * create (or reuse) a GHOST register anchored on the pointer VALUE c_base
+ * (D6): a parentless DEREF view. its m_ty is the pointee of c_base's
+ * pointer type, its storage class that of the pointer; its m_base is the
+ * held pointer value, and its own m_id is a fresh compile-time handle.
+ * no storage is emitted (m_emit_reg == 0, like a view); all address work is
+ * forwarded through m_base (see aclcur_reg_base).
+ *
+ * dedup key (P3 open item): (m_base, m_ty) — a held pointer value plus a
+ * pointee type names one region, so two member accesses through the same
+ * pointer share one ghost (and, with aclcur_reg_view's dedup, one view).
+ *
+ * the held pointer value is kept referenced (an unreferenced op is elided
+ * by the emit pass, and the ghost's chain names it later).
+ *
+ * @return the ghost register id, or 0 on failure (c_base is not a pointer).
+ * */
+aclspv_id_t aclcur_reg_ghost(aclspv_id_t c_base, h_aclspv_ctx_t h_ctx);
+
+/**
  * stock "view" register interface: parent-relative access.
  *
- * - m_addr: aclcur_regview_addr, the emit-time OpAccessChain append
+ * - m_addr: aclcur_regview_addr, the emit-time OpAccessChain node append
  *   (see its contract in reg.h, ACLCUR_FLAG0_REG_ALIAS2);
  * - m_size: aclcur_regview_size, the byte size of the view's own type;
  * - no m_emit_reg: a view owns no storage of its own, it is
  *   materialized lazily by its m_addr.
+ *
+ * - m_emit_load / m_emit_store (and their explicit variants): the
+ *   emission hooks a LOAD / STORE node bound to this view dispatches to.
+ *   they mint the view's OpAccessChain as RAW WORDS immediately before
+ *   the OpLoad / OpStore, mirroring the push-constant leaf hooks
+ *   (aclemit/fndecl/entp/args.c): minting an op-node at emit time would
+ *   land at the buffer tail and emit after its own use.
  * */
+aclspv_compile_t aclcur_regview_emit_load(aclspv_id_t c_id, h_aclspv_ctx_t h_ctx);
+aclspv_compile_t aclcur_regview_emit_load_explicit(aclspv_id_t c_id, h_aclspv_ctx_t h_ctx);
+aclspv_compile_t aclcur_regview_emit_store(aclspv_id_t c_id, h_aclspv_ctx_t h_ctx);
+aclspv_compile_t aclcur_regview_emit_store_explicit(aclspv_id_t c_id, h_aclspv_ctx_t h_ctx);
+
+/**
+ * stock "ghost" register interface: a chain root anchored on a held pointer
+ * value, not on any storage the register owns.
+ *
+ * - m_addr: aclcur_regghost_addr, the held pointer value (m_base) by
+ *   identity — `&*p` is `p`; side-effect free, idempotent;
+ * - m_size: aclcur_regview_size, the byte size of the pointee type;
+ * - no m_emit_reg: a ghost owns no storage, nothing is allocated;
+ * - m_emit_load / m_emit_store (and their explicit variants): emit the
+ *   OpLoad / OpStore with m_base as the memory operand.
+ * */
+aclspv_id_t aclcur_regghost_addr(aclspv_id_t c_reg, h_aclspv_ctx_t h_ctx);
+aclspv_compile_t aclcur_regghost_emit_load(aclspv_id_t c_id, h_aclspv_ctx_t h_ctx);
+aclspv_compile_t aclcur_regghost_emit_load_explicit(aclspv_id_t c_id, h_aclspv_ctx_t h_ctx);
+aclspv_compile_t aclcur_regghost_emit_store(aclspv_id_t c_id, h_aclspv_ctx_t h_ctx);
+aclspv_compile_t aclcur_regghost_emit_store_explicit(aclspv_id_t c_id, h_aclspv_ctx_t h_ctx);
+
+ae2f_inline_f static ae2f_ccconst aclcur_reg_t aclcur_regghost_in(void) {
+	const aclcur_reg_t in = {
+		{ 0, 0, aclcur_regghost_addr, aclcur_regview_size, 0, aclcur_regghost_emit_load, aclcur_regghost_emit_load_explicit, aclcur_regghost_emit_store, aclcur_regghost_emit_store_explicit },
+		{ { 0 } },
+		0, 0, 0, 0, 0, 0, 0
+	};
+	return in;
+}
+
 ae2f_inline_f static ae2f_ccconst aclcur_reg_t aclcur_regview_in(void) {
 	const aclcur_reg_t in = {
-		{ 0, 0, aclcur_regview_addr, aclcur_regview_size, 0, 0, 0, 0, 0 },
+		{ 0, 0, aclcur_regview_addr, aclcur_regview_size, 0, aclcur_regview_emit_load, aclcur_regview_emit_load_explicit, aclcur_regview_emit_store, aclcur_regview_emit_store_explicit },
 		{ { 0 } },
-		0, 0, 0, 0, 0
+		0, 0, 0, 0, 0, 0, 0
 	};
 	return in;
 }

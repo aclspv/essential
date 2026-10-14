@@ -75,8 +75,20 @@ enum ACLCUR_FLAG0_REG_ {
 	ACLCUR_FLAG0_REG_ALIAS2,
 
 	/**
-	 * whether its value is scoped.
-	 * values will be NOT explicitly stored when out of scope.
+	 * whether its value is scoped: it lives in SSA and needs no memory.
+	 *
+	 * SET at register initialisation for a Function-storage register, and
+	 * inherited by every ALIAS2 view of one. such a value is tracked
+	 * through the block-local SSA / phi graph, so a non-explicit store is
+	 * a pure definition and materialises no OpStore.
+	 *
+	 * CLEAR for every other register (interface / global / parameter /
+	 * workgroup / address-taken): its value is observable outside the SSA
+	 * scope, so a store MUST reach memory.
+	 *
+	 * the store path reads this flag uniformly (see aclcur_store_reg):
+	 * only the initialisation varies by register kind, the validation does
+	 * not.
 	 * */
 	ACLCUR_FLAG0_REG_SCOPED,
 
@@ -96,6 +108,16 @@ enum ACLCUR_FLAG0_REG_ {
 	 * the frontend sets this flag to request the materialization.
 	 * */
 	ACLCUR_FLAG0_REG_ALLOCATED,
+
+	/**
+	 * this register is a ghost: it anchors a view chain on a pointer VALUE
+	 * (m_base) whose referenced storage the register does not own.
+	 *
+	 * it never emits storage (m_emit_reg == 0, like a view); its m_id is a
+	 * fresh compile-time handle, distinct from m_base. all address work is
+	 * forwarded through m_base.
+	 * */
+	ACLCUR_FLAG0_REG_GHOST,
 
 	ACLCUR_FLAG0_REG_MAX
 };
@@ -158,12 +180,14 @@ ae2f_ccpure aclspv_id_t aclcur_reg_resolve(aclspv_id_t c_reg, h_aclspv_ctx_t h_c
  * configure c_reg as an ACLCUR_FLAG0_REG_ALIAS2 typed view of the
  * storage owned by c_parent.
  *
- * sets the flag, m_d.m_reg.m_d.m_ref.m_id = c_parent, links c_reg
- * into c_parent's child-view list (m_id_child_head / m_id_child_nxt),
- * and marks c_parent ACLCUR_FLAG0_REG_ALLOCATED: a view implies its
- * whole ancestor chain must be kept (materialized) even with no live
- * load or explicit store. transitivity holds because every view link
- * goes through this function.
+ * sets the flag, m_d.m_reg.m_d.m_ref.m_id = c_parent, and links c_reg
+ * into c_parent's child-view list (m_id_child_head / m_id_child_nxt).
+ *
+ * it does NOT force c_parent to be materialized: materialization is
+ * liveness-driven (see aclcur_regvar_emit_reg, which keeps a register
+ * whose own or whose ALIAS2 descendant's storage is actually referenced
+ * by a live load / explicit store). a view that never touches memory
+ * leaves no OpVariable behind.
  *
  * the caller sets c_reg's type (m_ty, different from the parent's) and
  * its m_in callbacks (parent-relative access).
@@ -186,6 +210,57 @@ void aclcur_reg_untrack(aclspv_id_t c_reg, h_aclspv_ctx_t h_ctx);
 
 aclspv_id_t	aclcur_reg_addr(aclspv_id_t c_reg, h_aclspv_ctx_t h_ctx);
 aclconst_specsz	aclcur_reg_size(aclspv_id_t c_reg, h_aclspv_ctx_t h_ctx);
+
+/** the pointer a register is anchored on (m_base): the register's own id
+ * (m_id) for a real register, or the held pointer VALUE for a ghost. this
+ * is the anchor the view chain walk (aclcur_regview_addr) roots on, instead
+ * of reading m_id directly. returns 0 on failure. */
+aclspv_id_t	aclcur_reg_base(aclspv_id_t c_reg, h_aclspv_ctx_t h_ctx);
+
+/** the pointer VALUE carried by a register — the SPIR-V id holding an
+ * address, as opposed to m_addr which yields the address OF the register's
+ * own storage. the single deref base rule (D7), keyed on the explicit
+ * register kind:
+ *
+ * - ALIAS2 view: the view *is* an address (it owns no storage), so its
+ *   m_addr hook is the value: one appended OpAccessChain. EMIT-TIME,
+ *   APPENDING, NON-IDEMPOTENT by contract.
+ * - ghost: the held pointer value m_base (identity, no opcode).
+ * - any other register: aclcur_load_reg decides between emitting an OpLoad
+ *   (a memory variable) and handing back the tracked value (a value / a
+ *   function parameter, whose id is already the pointer in logical
+ *   addressing).
+ *
+ * resolves an alias first. @return 0 on failure. */
+aclspv_id_t aclcur_reg_ptrval(aclspv_id_t c_reg, h_aclspv_ctx_t h_ctx);
+
+
+/** does c_reg's storage have to exist in memory — must a store reach it?
+ *
+ * resolves the ALIAS2 chain to the register owning the storage: a view's
+ * policy is its ROOT's, never a snapshot, so an address taken after the
+ * view was created still counts. true when the root is not
+ * ACLCUR_FLAG0_REG_SCOPED (its value is observable outside SSA) or is
+ * ACLCUR_FLAG0_REG_ALLOCATED (its address escaped). conservative (true)
+ * when the register or its root cannot be resolved.
+ *
+ * resolved at emit time by aclcur_regvar_emit_storeof, so the answer is
+ * independent of the order in which stores and address-of were carved. */
+aclspv_bool_t	aclcur_reg_needs_memory(aclspv_id_t c_reg, h_aclspv_ctx_t h_ctx);
+
+/** the kind of a single view step: how an ALIAS2 view derives from its
+ * parent. stored explicitly on the view (m_step) rather than derived from
+ * the parent's m_ty, which cannot distinguish a pointer value from a
+ * pointer slot. */
+enum aclcur_regview_step {
+	/** struct/union member: append m_id_idx via OpAccessChain. */
+	ACLCUR_REGVIEW_STEP_MEMBER = 0,
+	/** array/vector element: append m_id_idx via OpAccessChain. */
+	ACLCUR_REGVIEW_STEP_ELEMENT,
+	/** pointer dereference: rebase to the parent's pointer value; m_id_idx
+	 * is unused. */
+	ACLCUR_REGVIEW_STEP_DEREF
+};
 
 typedef struct aclcur_reg {
 	struct {
@@ -229,25 +304,51 @@ typedef struct aclcur_reg {
 	aclspv_id_t	m_id_child_nxt;
 
 	/** the single element/member index this ALIAS2 register adds to its
-	 * parent. the view CHAIN is implicit in the ALIAS2 parent links; no
-	 * tag is needed — the step kind (struct member vs array element) is
-	 * derivable from the parent's m_ty. */
+	 * parent. the view CHAIN is implicit in the ALIAS2 parent links. */
 	aclspv_id_t	m_id_idx;
+
+	/** the step kind (enum aclcur_regview_step) this ALIAS2 register adds
+	 * to its parent: MEMBER / ELEMENT append m_id_idx via OpAccessChain;
+	 * DEREF rebases to the parent's pointer value (and leaves m_id_idx
+	 * unused). stored explicitly rather than derived from the parent's
+	 * m_ty — the latter cannot tell a pointer value from a pointer slot. */
+	aclspv_wrd_t	m_step;
 
 	/** see enum SpvStorageClass_ */
 	aclspv_wrd_t m_storage_class;
 
-	/** the storage/ABI pointer type the register's m_id OpVariable was
-	 * declared with, when that differs from the register's own logical
-	 * m_ty (the frontend's wrapped-runtime-array idiom for a storage-buffer
-	 * pointer argument: m_ty is `ptr<SC,T>` while the variable is
-	 * `ptr<SC, struct{T[]}>`).
+	/** the ALIAS2 view of member 0 of the storage the register's m_id
+	 * OpVariable was declared with, when that storage is the frontend's
+	 * wrapped argument idiom and differs from the register's logical m_ty
+	 * (a storage-buffer / workgroup argument: m_ty is `ptr<SC,T>` or the
+	 * array `T[]` while the variable is `ptr<SC, struct{ T }>` /
+	 * `ptr<SC, struct{ T[] }>`).
 	 *
-	 * 0 means "identical to m_ty": the register's address is its m_id
-	 * verbatim. only the register's own emit_load (args.c) and the subscript
-	 * classification (aclexpr_sub_elm_ty) consult it; every logical-type
-	 * consumer keeps reading m_ty. */
-	aclspv_id_t	m_ty_native;
+	 * the view's chain IS the pointer value the argument denotes (one
+	 * OpAccessChain selecting member 0), and its m_ty is member 0's type —
+	 * which is also the intermediate type of a two-level subscript chain.
+	 * the register's own emit_load (args.c) and the subscript
+	 * classification (aclexpr_sub_elm_ty) read it; every logical-type
+	 * consumer keeps reading m_ty.
+	 *
+	 * 0 means "no wrapper": the register's address is its m_id verbatim
+	 * (an Input/Output argument, or any plain register). */
+	aclspv_id_t	m_id_native;
+
+	/** the pointer a register is anchored on, read by the chain walk
+	 * (aclcur_regview_addr / aclcur_reg_base) in place of the register's
+	 * own id.
+	 *
+	 * - real register (var / parameter / plain): 0, an identity sentinel
+	 *   meaning "the register's own id (m_id) IS its base". it is stored as
+	 *   a sentinel rather than a copy because m_id is reassigned to a
+	 *   shared OpVariable result id by the entry-point argument idiom
+	 *   (aclemit/fndecl/entp/args.c); a copy would go stale.
+	 * - ghost register (ACLCUR_FLAG0_REG_GHOST): nonzero, the held pointer
+	 *   VALUE this register is a view over; distinct from m_id.
+	 *
+	 * see aclcur_reg_base(). */
+	aclspv_id_t	m_base;
 } aclcur_reg_t;
 
 /**

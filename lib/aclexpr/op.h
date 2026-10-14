@@ -105,28 +105,18 @@ typedef struct {
 			aclspv_id_t	m_parent;
 		} m_bool1;
 
-		/** set by the deref read carve: the pointer the load went
-		 * through. a compound assignment whose lvalue is a dereference
-		 * (`*q += 2`) must store back through that same pointer, and the
-		 * lvalue cursor it would re-derive is gone by then — the visit
-		 * cascade overwrites extra[0].m_cursor with each cursor on the way
-		 * down. m_extra survives, m_cursor does not. */
+		/** the view register a view-rooted l-value read named
+		 * (`p->m`, `(*p).m`, `*p`), valid under
+		 * ACLEXPR_OPCFGX_STATE0_LVALUE_VIEW: a compound assignment
+		 * through this l-value stores through that view. */
 		struct {
-			aclspv_id_t	m_ptr_id;
-			/** the member ordinal and logical type of the member
-			 * extracted from the value loaded through m_ptr_id,
-			 * valid under ACLEXPR_OPCFGX_STATE0_MEMBER_OF_DEREF. */
-			aclspv_wrd_t	m_idx_mbr;
-			aclspv_id_t	m_ty_mbr;
-		} m_deref;
+			aclspv_id_t	m_reg;
+		} m_view;
 	} m_extra;
 } aclexpr_opbincfg_extra;
 
 enum ACLEXPR_OPCFGX_STATE0_ {
 	ACLEXPR_OPCFGX_STATE0_VAL_NO_NEED	= 0x1,
-	/** m_extra.m_deref.m_ptr_id is valid: this value was loaded through the
-	 * pointer recorded there. */
-	ACLEXPR_OPCFGX_STATE0_DEREF_LOADED	= 0x2,
 	/** `&a[i]` — this subscript is the operand of an address-of, so its
 	 * result is the element's address, not a load of the element.
 	 *
@@ -136,12 +126,11 @@ enum ACLEXPR_OPCFGX_STATE0_ {
 	 * extra[0].m_cursor has been rewritten by the cascade to name the ARRAY,
 	 * and is of no use to tell the two apart. */
 	ACLEXPR_OPCFGX_STATE0_ADDR_OF_ELM	= 0x4,
-	/** a member was extracted from the value loaded through
-	 * m_extra.m_deref.m_ptr_id (`(*p).m`): m_idx_mbr and m_ty_mbr are valid,
-	 * and a compound assignment through this lvalue must store through an
-	 * address into that member rather than through m_ptr_id, which points at
-	 * the whole composite. */
-	ACLEXPR_OPCFGX_STATE0_MEMBER_OF_DEREF	= 0x8
+	/** this l-value is a view-rooted l-value (`*p`, `p->m`, `(*p).m`,
+	 * `a[i]`): m_extra.m_view.m_reg is valid and names the view register. a
+	 * compound assignment through this l-value stores through the view
+	 * (aclcur_store_reg), not through a re-derived pointer. */
+	ACLEXPR_OPCFGX_STATE0_LVALUE_VIEW	= 0x10
 };
 
 /**

@@ -39,6 +39,7 @@ aclexpr_carve_lbl_t aclexpr_carve1_deref(
 		const aclspv_id_t REG = aclexpr_opnd_reg(DC, CTX(rdwr_data));
 		aclspv_id_t TY_POI;
 		aclspv_id_t PTR;
+		aclspv_id_t GHOST;
 
 		ae2f_ifnezerr_strict(!REG) {
 			err_puts("[carve1::deref] no register for the deref operand");
@@ -64,15 +65,18 @@ aclexpr_carve_lbl_t aclexpr_carve1_deref(
 			return c_lbl_err;
 		}
 
-		/** OpLoad: [op|4][ResultType][Result][Pointer] — the ACLCUR_OP1
-		 * shape exactly. */
-		ae2f_ifezerr(*rdwr_prv_idval = aclcur_cfg_op1(
-					0
-					, SpvOpLoad
-					, TY_POI
-					, PTR
-					, CTX(rdwr_data)
-					)) {
+		/** D6/D7: a bare dereference is a ghost, a parentless DEREF view
+		 * rooted on the pointer value (aclcur_reg_ghost). its load goes
+		 * through the ghost's m_base, and the SAME node is what a compound
+		 * assignment stores back through, so compound-assign and plain
+		 * assign name one l-value (the ghost's pointee is TY_POI by
+		 * construction). */
+		ae2f_ifezerr(GHOST = aclcur_reg_ghost(PTR, CTX(rdwr_data))) {
+			err_puts("[carve1::deref] no ghost for the deref operand");
+			return c_lbl_err;
+		}
+
+		ae2f_ifezerr(*rdwr_prv_idval = aclcur_load_reg(GHOST, CTX(rdwr_data), 0)) {
 			err_puts("[carve1::deref] OpLoad failed");
 			return c_lbl_err;
 		}
@@ -81,13 +85,10 @@ aclexpr_carve_lbl_t aclexpr_carve1_deref(
 		rdwr_prv_extra->m_type_original = TY_POI;
 		/** a load is never a compile-time literal. */
 		rdwr_prv_extra->m_mask_literal = 0;
-		/** hand the pointer on: a compound assignment through this lvalue
-		 * (`*q += 2`) has to store back through exactly this pointer, and
-		 * by the time it carves, extra[0].m_cursor has been overwritten on
-		 * the way down the visit cascade. m_extra survives that. */
-		rdwr_prv_extra->m_extra.m_deref.m_ptr_id = PTR;
-		rdwr_prv_extra->m_state0
-			|= (aclspv_wrd_t)ACLEXPR_OPCFGX_STATE0_DEREF_LOADED;
+		/** this l-value is the ghost view: a compound assignment through it
+		 * stores back through exactly this node (aclcur_store_reg). */
+		rdwr_prv_extra->m_extra.m_view.m_reg = GHOST;
+		rdwr_prv_extra->m_state0 |= (aclspv_wrd_t)ACLEXPR_OPCFGX_STATE0_LVALUE_VIEW;
 	}
 
 	return c_lbl_success;

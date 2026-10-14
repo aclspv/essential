@@ -1,6 +1,8 @@
 #include "./memberwrite.h"
 
 #include <aclexpr/carve/util.h>
+#include <aclexpr/carve/ptr.h>
+#include <aclexpr/util/unwrap.h>
 
 #include <aclty.h>
 #include <aclcur/common.h>
@@ -92,11 +94,118 @@ aclexpr_carve_lbl_t aclexpr_carve2_memberwrite(
 			return c_lbl_err;
 		}
 
-		/** the base must be a plain variable: nested member or array
-		 * member writes are deferred (they would need an insert chain). */
+		/** member ordinal: FieldDecl children of the record, in order,
+		 * matching the aclty member chain — bounded by the aclty member
+		 * count. computed before the base split: both lanes need it. */
+		clang_visitChildren(
+				clang_getCursorSemanticParent(FD)
+				, s_memberwrite_cnt
+				, &CNT
+				);
+
+		unless(CNT.m_found) {
+			err_puts("[carve2::memberwrite] field not found in its record\n");
+			return c_lbl_err;
+		}
+
+		/** ghost view lane (D6/D7): `p->b = x` / `(*p).b = x` is a store
+		 * into the storage the pointer names. build the SAME view the member
+		 * read builds and store through it (aclcur_store_reg), instead of
+		 * inserting into a loaded composite. this retires the former
+		 * ParenExpr / nested-member base rejection. */
+		{
+			const aclspv_id_t TY_M
+				= aclty_mk_by_cursor_dummy(FD, clang_getCursorType(FD), rdwr_data->m_ctx);
+
+			ae2f_ifezerr(TY_M) {
+				err_puts("[carve2::memberwrite] failed to make the member type\n");
+				return c_lbl_err;
+			}
+
+			if(aclexpr_member_base_ptr(MREF, rdwr_data->m_ctx)) {
+				const aclspv_id_t VIEW = aclexpr_member_view(
+						MREF
+						, TY_M
+						, (aclspv_id_t)CNT.m_idx
+						, rdwr_data->m_ctx);
+
+				const aclspv_id_t X = rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_END + 1];
+
+				ae2f_ifezerr(VIEW) {
+					err_puts("[carve2::memberwrite] the member view could not be built\n");
+					return c_lbl_err;
+				}
+
+				ae2f_ifnezerr_strict(!X) {
+					err_puts("[carve2::memberwrite] rhs missing\n");
+					return c_lbl_err;
+				}
+
+				ae2f_ifezerr(*rdwr_prv_idval = aclcur_store_reg(
+							VIEW
+							, X
+							, rdwr_data->m_ctx
+							)) {
+					err_puts("[carve2::memberwrite] store through the member view failed\n");
+					return c_lbl_err;
+				}
+
+				*rdwr_prv_extra = rdwr_lst_extra[1];
+				rdwr_prv_extra->m_literal = *r_ltrl;
+
+				return c_lbl_success;
+			}
+
+			/** addressable-base view lane (D3/D5): `s.m = x` for a plain
+			 * struct variable base. build the SAME MEMBER view the read
+			 * builds and store through it (aclcur_store_reg), instead of
+			 * inserting into a loaded composite and storing the whole thing.
+			 * the dedup makes read and write name one l-value; fall through
+			 * to the value lane when the base is not addressable. */
+			{
+				const aclspv_id_t VIEW = aclexpr_member_view_reg(
+						MREF
+						, TY_M
+						, (aclspv_id_t)CNT.m_idx
+						, rdwr_data->m_ctx);
+
+				if(VIEW) {
+					const aclspv_id_t X = rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_END + 1];
+
+					ae2f_ifnezerr_strict(!X) {
+						err_puts("[carve2::memberwrite] rhs missing\n");
+						return c_lbl_err;
+					}
+
+					ae2f_ifezerr(*rdwr_prv_idval = aclcur_store_reg(
+								VIEW
+								, X
+								, rdwr_data->m_ctx
+								)) {
+						err_puts("[carve2::memberwrite] store through the member view failed\n");
+						return c_lbl_err;
+					}
+
+					*rdwr_prv_extra = rdwr_lst_extra[1];
+					rdwr_prv_extra->m_literal = *r_ltrl;
+
+					return c_lbl_success;
+				}
+			}
+		}
+
+		/** value lane: the base must be a plain struct variable; the write is
+		 * an OpCompositeInsert into its tracked value. */
 		clang_visitChildren(MREF, s_memberwrite_base, &B);
 
-		unless(B.m_has && clang_getCursorKind(B.m_c_base) == CXCursor_DeclRefExpr) {
+		unless(B.m_has) {
+			err_puts("[carve2::memberwrite] unsupported base expression (nested member / array member write deferred)\n");
+			return c_lbl_err;
+		}
+
+		B.m_c_base = aclexpr_expr_unwrap(B.m_c_base);
+
+		unless(clang_getCursorKind(B.m_c_base) == CXCursor_DeclRefExpr) {
 			err_puts("[carve2::memberwrite] unsupported base expression (nested member / array member write deferred)\n");
 			return c_lbl_err;
 		}
@@ -134,15 +243,7 @@ aclexpr_carve_lbl_t aclexpr_carve2_memberwrite(
 					return c_lbl_err;
 				}
 
-				/** member ordinal: FieldDecl children of the record, in
-				 * order, matching the aclty member chain — bounded by
-				 * the aclty member count. */
-				clang_visitChildren(
-						clang_getCursorSemanticParent(FD)
-						, s_memberwrite_cnt
-						, &CNT
-						);
-
+				/** member ordinal: already computed above (CNT). */
 				unless(CNT.m_found && CNT.m_idx < P_TY->m_info.m_struct.m_num_mbr) {
 					err_puts("[carve2::memberwrite] member index out of the base composite\n");
 					return c_lbl_err;

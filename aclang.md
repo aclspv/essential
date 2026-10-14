@@ -330,3 +330,4 @@ typedef struct { unsigned m_uint; } std140_uint_t;
 - designated initializer list
 - pointer arithmetic on non-physical addressing model
 - global variables
+- pointer to struct on input | output buffer

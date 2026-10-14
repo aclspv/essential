@@ -257,23 +257,6 @@ ae2f_inline_f static ae2f_ccconst struct aclutil_ltrl_eval_t	s_eval2_ltrl(
 #undef	EXPR_TWO
 }
 
-/** storage class of the pointer value a member-of-deref store goes through:
- * the pointer node's own type carries it. */
-static aclspv_bool_t s_ptr_storage(
-		aclspv_id_t	c_ptr,
-		h_aclspv_ctx_t	h_ctx,
-		aclspv_wrd_t* ae2f_restrict	rdwr_storage
-		) {
-	const h_aclcur_t p = aclcur_get_node(c_ptr, h_ctx);
-	const aclty_t* const ae2f_restrict P_TY = p ? aclty_find(p->m_ty, h_ctx) : 0;
-
-	if(!P_TY || P_TY->m_class != ACLTY_PTR)
-		return 0;
-
-	*rdwr_storage = (aclspv_wrd_t)P_TY->m_info.m_ptr.m_storage;
-	return 1;
-}
-
 static aclspv_wrd_t s_decide_cast(const enum ACLSPV_ID_ c_id0, const enum ACLSPV_ID_ c_id1, const h_aclspv_ctx_t h_ctx) {
 	/** one is 0? */
 	unless(c_id0 && c_id1)
@@ -505,100 +488,19 @@ aclexpr_carve_lbl_t aclexpr_carve2_arithmetic(
 
 	if(IS_ASSIGN) {
 		CXCursor	CASSIGN		= rdwr_lst_extra->m_cursor;
-		aclspv_id_t	PTR;
 
-		/** deref lvalue (`*q += 2`): the result belongs at the address q
-		 * holds, so it is stored THROUGH the pointer, not into a register's
-		 * own storage — aclcur_store_reg cannot express that, and
-		 * clang_getCursorReferenced yields nothing for a UnaryOperator.
-		 *
-		 * the pointer comes from the deref read that produced this operand:
-		 * extra[0] is the read's extra, which recorded the pointer it loaded
-		 * through. the lvalue cursor is no help by now — the visit cascade
-		 * overwrote it with each cursor on the way down, so it points at the
-		 * bare operand rather than the dereference. */
+		/** view-rooted lvalue (`*q += x`, `p->m += x`, `(*p).m += x`,
+		 * `a[i] += x`): the read built the view naming the region, so the
+		 * store goes through it (aclcur_store_reg) exactly like a plain
+		 * variable's. this is the only lvalue store path left besides the
+		 * plain variable below. */
 		if(rdwr_lst_extra->m_state0
-				& (aclspv_wrd_t)ACLEXPR_OPCFGX_STATE0_DEREF_LOADED)
-			PTR = rdwr_lst_extra->m_extra.m_deref.m_ptr_id;
-		else
-			PTR = aclexpr_ptr_of_deref(CASSIGN, rdwr_data->m_ctx);
-
-		/** member of a dereference (`(*p).m += x`): the value belongs in the
-		 * member, not in the whole composite m_ptr_id points at — an OpStore
-		 * of a member value through the composite pointer does not validate.
-		 * rebuild an address into the member with one OpAccessChain over the
-		 * same pointer and store the value there. the OpLoad + extract that
-		 * produced the operand stay as they are; only the store path differs.
-		 *
-		 * the member ordinal and its logical type were recorded by the
-		 * memberread carve when it saw the deref in the base's extra. */
-		if(rdwr_lst_extra->m_state0
-				& (aclspv_wrd_t)ACLEXPR_OPCFGX_STATE0_MEMBER_OF_DEREF) {
-			aclspv_wrd_t	STORAGE;
-			aclspv_id_t	IDX;
-			aclspv_id_t	TY_PTR;
-			aclspv_id_t	PTR_MBR;
-
-			ae2f_ifnezerr_strict(!PTR
-					|| !s_ptr_storage(PTR, CTX(rdwr_data), &STORAGE)) {
-				err_puts("[carve2::arithmetic] member-of-deref pointer is not a pointer");
-				rdwr_data->m_ctx->m_err = ACLSPV_COMPILE_UNHANDLED_CARVE;
-				return c_lbl_err;
-			}
-
-			ae2f_ifezerr(IDX = aclutil_mk_constant_val_id(
-						rdwr_lst_extra->m_extra.m_deref.m_idx_mbr
-						, CTX(rdwr_data)
-						)) {
-				err_puts("[carve2::arithmetic] member index constant failed");
-				return c_lbl_err;
-			}
-
-			ae2f_ifezerr(TY_PTR = aclty_mk_ptr(
-						rdwr_lst_extra->m_extra.m_deref.m_ty_mbr
-						, (enum SpvStorageClass_)STORAGE
-						, CTX(rdwr_data)
-						)) {
-				err_puts("[carve2::arithmetic] member pointer type failed");
-				return c_lbl_err;
-			}
-
-			ae2f_ifezerr(PTR_MBR = aclcur_cfg_op1i(
-						0
-						, SpvOpAccessChain
-						, TY_PTR
-						, PTR
-						, IDX
-						, CTX(rdwr_data)
-						)) {
-				err_puts("[carve2::arithmetic] member access chain failed");
-				return c_lbl_err;
-			}
-
-			ae2f_ifezerr(aclcur_cfg_st(
-						SpvOpStore
-						, PTR_MBR
+				& (aclspv_wrd_t)ACLEXPR_OPCFGX_STATE0_LVALUE_VIEW) {
+			ae2f_ifezerr(aclcur_store_reg(
+						rdwr_lst_extra->m_extra.m_view.m_reg
 						, *rdwr_prv_idval
-						, CTX(rdwr_data)
-						)) {
-				err_puts("[carve2::arithmetic] member store failed");
-				rdwr_data->m_ctx->m_err = ACLSPV_COMPILE_UNHANDLED_CARVE;
-				return c_lbl_err;
-			}
-
-			return c_lbl_success;
-		}
-
-		if(PTR) {
-			dbg_puts("[carve2::arithmetic] assign mode: deref store");
-
-			ae2f_ifezerr(aclcur_cfg_st(
-						SpvOpStore
-						, PTR
-						, *rdwr_prv_idval
-						, rdwr_data->m_ctx
-						)) {
-				err_puts("[carve2::arithmetic] store through the deref failed");
+						, rdwr_data->m_ctx)) {
+				err_puts("[carve2::arithmetic] store through the l-value view failed");
 				rdwr_data->m_ctx->m_err = ACLSPV_COMPILE_UNHANDLED_CARVE;
 				return c_lbl_err;
 			}

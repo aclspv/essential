@@ -4,12 +4,24 @@
 #include "../../op.h"
 #include "../api.h"
 
+#include <aclexpr/util/unwrap.h>
+
 #include <util/constant.h>
 #include <util/scale.h>
 #include <util/wrdemit.h>
 
 #include <aclty.h>
 #include <aclmem.h>
+
+/** first child of an ArraySubscriptExpr: its base operand. */
+ae2f_inline_f static enum CXChildVisitResult	s_subscript_base_first(
+		CXCursor			c_cur,
+		ae2f_unused CXCursor		c_parent,
+		CXClientData ae2f_restrict	h_data
+		) {
+	*(CXCursor* ae2f_restrict)h_data = c_cur;
+	return CXChildVisit_Break;
+}
 
 /**
  * array subscript (`a[i]`).
@@ -106,6 +118,30 @@ ae2f_inline_f static aclexpr_visit_lbl_t aclexpr_visit_op1_subscript(
 		SCL_EXTRA = (void* ae2f_restrict)&VEC[ACLEXPR_OPBINCFG_END + 2];
 		SCL_EXTRA->m_state0
 			|= (aclspv_wrd_t)ACLEXPR_OPCFGX_STATE0_ADDR_OF_ELM;
+	}
+
+	/** the base operand's loaded value is never used: the subscript carve
+	 * resolves the base *register* itself (aclexpr_opnd_reg) and re-derives
+	 * the array and index from the cursor, so the read is dead. suppress it
+	 * — a wrapped array argument's storage is a runtime array, which cannot
+	 * be OpLoad-ed, so its dead read is not merely wasteful but invalid.
+	 *
+	 * only a plain DeclRefExpr base is suppressed: a member / deref /
+	 * nested-subscript base builds a view on the way down and must keep
+	 * cascading. the flag rides THIS scale's operand-0 slot, the same slot
+	 * a plain-variable lvalue read consults. */
+	{
+		CXCursor BASE = clang_getNullCursor();
+
+		clang_visitChildren(c_cur, s_subscript_base_first, &BASE);
+		BASE = aclexpr_expr_unwrap(BASE);
+
+		if(BASE.kind == CXCursor_DeclRefExpr) {
+			dbg_puts("[visit1::subscript] base read suppressed: the carve reads the register");
+			SCL_EXTRA = (void* ae2f_restrict)&VEC[ACLEXPR_OPBINCFG_END + 2];
+			SCL_EXTRA->m_state0
+				|= (aclspv_wrd_t)ACLEXPR_OPCFGX_STATE0_VAL_NO_NEED;
+		}
 	}
 
 	return c_lbl_success;

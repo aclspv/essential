@@ -25,7 +25,7 @@ cmake --build build
 ## dependency
 - cmake >= 3.10
 - c compiler which compiles iso c90 or later which supports compile definition (-D)
-- libclang
+- libclang >= 17
 
 ## license
 - [this project](./LICENSE)

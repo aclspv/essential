@@ -77,12 +77,14 @@ LBL_FINI:
 	return RES;
 }
 
-/** whether an argument register's address needs the wrapped-member descent
- * instead of a plain pointer copy.
+/** the index chain an argument register's pointer value needs instead of a
+ * plain pointer copy.
  *
  * a storage-buffer (or workgroup) pointer argument is materialised as an
  * OpVariable whose pointee is a single-member wrapper struct (the Vulkan
- * block idiom) while the register's logical type is `ptr<SC,L>`:
+ * block idiom) while the register's logical type is `ptr<SC,L>`. the
+ * register's native view (m_id_native) carries member 0's type; the pointer
+ * value is that member's address:
  *
  *   - `struct T*` -> `struct { struct T }`: one index, member 0.
  *   - `T*`        -> `struct { T[] }`:      two indices, member 0 (the
@@ -92,30 +94,27 @@ LBL_FINI:
  * the chain lands on, taking the same shape as the subscript carve's chain.
  *
  * only the pointer argument idiom is descended; an array-typed logical
- * argument (whose value is not an address) and any other distinct native
- * shape keep the historical copy.
+ * argument (whose value is not an address) keeps the historical copy.
  *
+ * @param c_mbr0 member 0's type id (the native view's m_ty), 0 when the
+ * register has no wrapper.
  * @return 1 and fills the shared i32 0 constant id, plus the index count
  * (1 or 2), when the descent applies.
  * */
 static aclspv_bool_t	s_argv_load_chain(
-		const aclspv_id_t	c_native,
+		const aclspv_id_t	c_mbr0,
 		const aclspv_id_t	c_logical_ty,
 		h_aclspv_ctx_t		h_ctx,
 		aclspv_id_t* ae2f_restrict	rdwr_idx0,
 		aclspv_wrd_t* ae2f_restrict	rdwr_num_idx
 		) {
-	const aclty_t* ae2f_restrict P_NATIVE;
 	const aclty_t* ae2f_restrict P_LOGICAL;
-	const aclty_t* ae2f_restrict P_POI;
-	const aclty_t* ae2f_restrict P_MBR0;
-	const aclty_t* ae2f_restrict P_MBR0_TY;
+	const aclty_t* ae2f_restrict P_M0;
 	aclspv_id_t	id_log;
 
-	if(!c_native || c_native == c_logical_ty)
+	if(!c_mbr0)
 		return 0;
 
-	P_NATIVE	= aclty_find(c_native, h_ctx);
 	P_LOGICAL	= aclty_find(c_logical_ty, h_ctx);
 
 	/** only the pointer argument idiom: the register's logical type is
@@ -125,30 +124,18 @@ static aclspv_bool_t	s_argv_load_chain(
 
 	id_log		= P_LOGICAL->m_info.m_ptr.m_type;
 
-	P_POI		= (P_NATIVE && P_NATIVE->m_class == ACLTY_PTR)
-			? aclty_find(P_NATIVE->m_info.m_ptr.m_type, h_ctx)
-			: 0;
+	P_M0		= aclty_find(c_mbr0, h_ctx);
 
-	/** the wrapper idiom: the variable's pointee is a single-member
-	 * struct. any other native shape keeps the historical copy. */
-	if(!P_POI || P_POI->m_class != ACLTY_STRUCT)
+	if(!P_M0)
 		return 0;
 
-	P_MBR0		= aclty_get_struct_mbr((aclty_t*)P_POI, 0, h_ctx);
-	P_MBR0_TY	= P_MBR0
-			? aclty_find(P_MBR0->m_info.m_struct_mbr.m_id_mbr, h_ctx)
-			: 0;
-
-	if(!P_MBR0_TY)
-		return 0;
-
-	if(P_MBR0_TY->m_class == ACLTY_ARR) {
+	if(P_M0->m_class == ACLTY_ARR) {
 		/** `T* -> struct { T[] }`: member 0, then element 0. */
-		if(P_MBR0_TY->m_info.m_arr.m_type != id_log)
+		if(P_M0->m_info.m_arr.m_type != id_log)
 			return 0;
 
 		*rdwr_num_idx	= 2;
-	} else if(P_MBR0->m_info.m_struct_mbr.m_id_mbr == id_log) {
+	} else if(c_mbr0 == id_log) {
 		/** `struct T* -> struct { struct T }`: member 0 only. */
 		*rdwr_num_idx	= 1;
 	} else {
@@ -189,9 +176,12 @@ static aclspv_compile_t	s_argv_emit_load(aclspv_id_t c_id, h_aclspv_ctx_t h_ctx)
 	{
 		aclspv_id_t IDX0;
 		aclspv_wrd_t NUM_IDX;
+		aclcur_t* ae2f_restrict p_native = p_reg->m_d.m_reg.m_id_native
+				? aclcur_get_node(p_reg->m_d.m_reg.m_id_native, h_ctx)
+				: 0;
 
 		if(s_argv_load_chain(
-					p_reg->m_d.m_reg.m_ty_native
+					p_native ? p_native->m_ty : 0
 					, p_reg->m_ty
 					, h_ctx
 					, &IDX0
@@ -1088,6 +1078,7 @@ enum CXChildVisitResult aclemit_fndecl_entp_arg(
 								, DAT->m_id_push_constant_struct_ty
 								, cst_func
 								, SpvStorageClassPushConstant
+								, ACLCUR_REGVIEW_STEP_MEMBER
 								, CTX
 								)) {
 						_aclctx_err(DAT->m_ctx, ACLSPV_COMPILE_UNHANDLED_ARGS);
@@ -1103,6 +1094,7 @@ enum CXChildVisitResult aclemit_fndecl_entp_arg(
 							, var_elm_type_id
 							, cst_arg
 							, SpvStorageClassPushConstant
+							, ACLCUR_REGVIEW_STEP_MEMBER
 							, CTX
 							)) {
 					_aclctx_err(DAT->m_ctx, ACLSPV_COMPILE_UNHANDLED_ARGS);
@@ -1153,9 +1145,56 @@ enum CXChildVisitResult aclemit_fndecl_entp_arg(
 				}
 				p_reg->m_id = var_id;
 				/** the OpVariable's storage type, when it differs from the
-				 * register's logical var_type_id (wrapped-runtime-array
-				 * idiom). 0 for the push-constant branch above. */
-				p_reg->m_d.m_reg.m_ty_native = var_native_type_id;
+				 * register's logical var_type_id (wrapped-argument idiom):
+				 * the pointer value is member 0's address, so keep the
+				 * MEMBER view of member 0 over the variable — its chain is
+				 * that address, its m_ty member 0's type. 0 for the
+				 * Input/Output branch (no wrapper) and the push-constant
+				 * branch above. */
+				p_reg->m_d.m_reg.m_id_native = 0;
+
+				if(var_native_type_id && var_native_type_id != var_type_id) {
+					aclspv_id_t cst0, id_nat;
+					aclty_t* ae2f_restrict p_elm
+						= aclty_find(var_elm_type_id, CTX);
+					const aclty_t* ae2f_restrict p_mbr0
+						= p_elm
+						? aclty_get_struct_mbr(p_elm, 0, CTX)
+						: 0;
+
+					if(p_mbr0) {
+						ae2f_ifezerr(cst0 = aclutil_mk_constant_val_id(0, CTX)) {
+							_aclctx_err(DAT->m_ctx, ACLSPV_COMPILE_UNHANDLED_ARGS);
+							return CXChildVisit_Break;
+						}
+
+						/** ELEMENT step (not MEMBER) so this view is
+						 * canonical with the subscript carve's member-0
+						 * intermediate view: the same (parent, step, idx,
+						 * ty) tuple, hence one node (see
+						 * aclcur_reg_view's dedup). */
+						ae2f_ifezerr(id_nat = aclcur_reg_view(
+									clang_getNullCursor()
+									, var_id
+									, p_mbr0->m_info.m_struct_mbr.m_id_mbr
+									, cst0
+									, (SpvStorageClass)storage_class
+									, ACLCUR_REGVIEW_STEP_ELEMENT
+									, CTX
+									)) {
+							_aclctx_err(DAT->m_ctx, ACLSPV_COMPILE_UNHANDLED_ARGS);
+							return CXChildVisit_Break;
+						}
+
+						/** aclcur_reg_view allocates; and m_id is now
+						 * var_id, so re-fetch by that. */
+						ae2f_ifezerr(p_reg = aclcur_get_node(var_id, CTX)) {
+							_aclctx_err(DAT->m_ctx, ACLSPV_COMPILE_UNHANDLED_ARGS);
+							return CXChildVisit_Break;
+						}
+						p_reg->m_d.m_reg.m_id_native = id_nat;
+					}
+				}
 			}
 			break;
 	}

@@ -54,6 +54,58 @@ aclconst_specsz	aclcur_reg_size(aclspv_id_t c_reg, h_aclspv_ctx_t h_ctx) {
 	return p->m_d.m_reg.m_in.m_size(c_reg, h_ctx);
 }
 
+aclspv_id_t	aclcur_reg_base(aclspv_id_t c_reg, h_aclspv_ctx_t h_ctx) {
+	h_aclcur_t p;
+
+	ae2f_ifezerr(p = aclcur_get_node(c_reg, h_ctx))
+		return 0;
+	ae2f_ifnezerr_strict(p->m_class != ACLCUR_REG)
+		return 0;
+
+	/** m_base == 0 is the real-register identity sentinel: the register's
+	 * own id is its base. m_id is read live, not copied, because it may
+	 * have been reassigned to a shared OpVariable result id. a ghost
+	 * carries its held pointer value here instead. */
+	return p->m_d.m_reg.m_base
+		? p->m_d.m_reg.m_base
+		: p->m_id;
+}
+
+aclspv_bool_t	aclcur_reg_needs_memory(aclspv_id_t c_reg, h_aclspv_ctx_t h_ctx) {
+	aclspv_wrd_t n = h_ctx ? h_ctx->m_num_cursor : 0;
+	aclspv_id_t c = c_reg;
+	h_aclcur_t p;
+
+	/** an ALIAS2 view's memory policy is its ROOT's, never a copy: the
+	 * root's ALLOCATED is set only once an address escapes, which may
+	 * happen after the view was created. walk to the storage owner,
+	 * bounded by the cursor count like every other chain walk. */
+	while(c && n--) {
+		ae2f_ifezerr(p = aclcur_get_node(c, h_ctx))
+			return 1;
+		ae2f_ifnezerr_strict(p->m_class != ACLCUR_REG)
+			return 1;
+
+		if(!(p->m_flag0 & aclcur_flag0_reg(ACLCUR_FLAG0_REG_ALIAS2)))
+			break;
+
+		c = p->m_d.m_reg.m_d.m_ref.m_id;
+	}
+
+	/** unknown root: be conservative — memory is always a safe answer. */
+	ae2f_ifezerr(c)
+		return 1;
+	ae2f_ifezerr(p = aclcur_get_node(c, h_ctx))
+		return 1;
+	ae2f_ifnezerr_strict(p->m_class != ACLCUR_REG)
+		return 1;
+
+	/** a non-SCOPED root is observable outside the SSA scope; an ALLOCATED
+	 * root had its address taken. either way a store must reach memory. */
+	return (aclspv_bool_t)(!(p->m_flag0 & aclcur_flag0_reg(ACLCUR_FLAG0_REG_SCOPED))
+			|| (p->m_flag0 & aclcur_flag0_reg(ACLCUR_FLAG0_REG_ALLOCATED)));
+}
+
 aclspv_id_t	aclcur_reg_alias2(
 		aclspv_id_t c_reg,
 		aclspv_id_t c_parent,
@@ -81,12 +133,10 @@ aclspv_id_t	aclcur_reg_alias2(
 	p_reg->m_d.m_reg.m_id_child_nxt	= p_parent->m_d.m_reg.m_id_child_head;
 	p_parent->m_d.m_reg.m_id_child_head	= c_reg;
 
-	/** a view implies its whole ancestor chain must be kept: the parent
-	 * is materialized (OpVariable) even with no live load / explicit
-	 * store. transitivity holds because every view link goes through
-	 * this function — each ancestor received the flag when the view
-	 * directly above it was linked. */
-	p_parent->m_flag0 |= aclcur_flag0_reg(ACLCUR_FLAG0_REG_ALLOCATED);
+	/** NO eager ACLCUR_FLAG0_REG_ALLOCATED propagation: the parent is
+	 * materialized only when liveness asks for it (aclcur_regvar_emit_reg
+	 * follows ALIAS2 descendants) or when its address is taken
+	 * (aclexpr_ptr_taken). an SSA-only view leaves no storage behind. */
 
 	return c_reg;
 }
@@ -169,6 +219,19 @@ aclspv_id_t aclcur_cfg_reg1(
 	p->m_d.m_reg.m_storage_class	= c_storage_class;
 	if(c_in_opt)
 		p->m_d.m_reg.m_in = c_in_opt->m_in;
+
+	/** fresh identity: a real register's base is its own id (sentinel 0);
+	 * m_step only becomes meaningful once the register is an ALIAS2 view. */
+	p->m_d.m_reg.m_base	= 0;
+	p->m_d.m_reg.m_step	= 0;
+
+	/** SCOPED initialisation (the only varied part of the store policy):
+	 * a Function-storage register's value lives in SSA and needs no
+	 * memory; every other storage class is observable outside the SSA
+	 * scope, so its stores must reach memory. the store path reads the
+	 * flag uniformly (see aclcur_store_reg). */
+	if(c_storage_class == (aclspv_wrd_t)SpvStorageClassFunction)
+		p->m_flag0 |= aclcur_flag0_reg(ACLCUR_FLAG0_REG_SCOPED);
 
 	return id;
 }

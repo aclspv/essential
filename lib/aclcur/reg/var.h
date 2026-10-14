@@ -123,7 +123,7 @@ ae2f_inline_f static ae2f_ccconst aclcur_reg_t aclcur_regvar_in(void) {
 	const aclcur_reg_t in = {
 		{ 0, 0, aclcur_regvar_addr, aclcur_regvar_size, aclcur_regvar_emit_reg, aclcur_regvar_emit_load, aclcur_regvar_emit_load_explicit, aclcur_regvar_emit_store, aclcur_regvar_emit_store_explicit },
 		{ { 0 } },
-		0, 0, 0, 0, 0
+		0, 0, 0, 0, 0, 0, 0
 	};
 	return in;
 }

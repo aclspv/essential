@@ -2,6 +2,7 @@
 
 #include <aclexpr/carve/util.h>
 #include <aclexpr/carve/ptr.h>
+#include <aclexpr/util/unwrap.h>
 
 #include <aclty.h>
 #include <aclcur/common.h>
@@ -32,46 +33,6 @@ static enum CXChildVisitResult s_subscript_opnd(
 	h->m_c_idx = c_cur;
 	h->m_two = 1;
 	return CXChildVisit_Break;
-}
-
-/** first child of an implicit-cast wrapper. */
-static enum CXChildVisitResult s_subscript_unexpose_visit(
-		CXCursor			c_cur,
-		ae2f_unused CXCursor		c_par,
-		CXClientData			rdwr_data
-		) {
-	CXCursor* ae2f_restrict r = (CXCursor* ae2f_restrict)rdwr_data;
-
-	*r = c_cur;
-
-	return CXChildVisit_Break;
-}
-
-/** descend through implicit-cast wrappers to the underlying expression.
- *
- * libclang reports `a[idx]`'s index as an UnexposedExpr (the implicit
- * LValueToRValue cast), not as the DeclRefExpr or IntegerLiteral inside it,
- * so the index has to be unwrapped before its form can be told apart.
- *
- * a wrapper with no child is not a cast: stop there rather than loop. */
-static CXCursor s_subscript_unexpose(CXCursor c_cur) {
-	aclspv_wrd_t bound = 16;
-
-	while(
-			bound--
-			&& CXCursor_UnexposedExpr == c_cur.kind
-			) {
-		CXCursor INNER = clang_getNullCursor();
-
-		clang_visitChildren(c_cur, s_subscript_unexpose_visit, &INNER);
-
-		if(clang_Cursor_isNull(INNER))
-			break;
-
-		c_cur = INNER;
-	}
-
-	return c_cur;
 }
 
 /** resolve the array register and the index value for a subscript cursor.
@@ -106,7 +67,7 @@ static aclspv_bool_t s_subscript_resolve(
 	if(!O.m_has || !O.m_two)
 		return 0;
 
-	ae2f_ifezerr(REG = aclexpr_opnd_reg(O.m_c_arr, h_ctx))
+	ae2f_ifezerr(REG = aclexpr_opnd_reg(aclexpr_expr_unwrap(O.m_c_arr), h_ctx))
 		REG = 0;
 
 	if(!REG)
@@ -133,7 +94,7 @@ static aclspv_bool_t s_subscript_resolve(
 	 *
 	 * ptr_taken first: the variable's OpVariable must exist for the index
 	 * to be a defined id. */
-	C_IDX = s_subscript_unexpose(O.m_c_idx);
+	C_IDX = aclexpr_expr_unwrap(O.m_c_idx);
 
 	switch((uint_leastenum_t)C_IDX.kind) {
 		case CXCursor_IntegerLiteral:
@@ -223,7 +184,7 @@ aclexpr_carve_lbl_t aclexpr_carve2_subscript(
 		 * array, not the subscript. (the write path never cascaded, so it
 		 * re-derives from the subscript cursor instead — see below.) */
 		ae2f_ifezerr(REG = aclexpr_opnd_reg(
-					rdwr_lst_extra[0].m_cursor
+					aclexpr_expr_unwrap(rdwr_lst_extra[0].m_cursor)
 					, CTX(rdwr_data)
 					))
 			REG = 0;
@@ -289,6 +250,7 @@ aclexpr_carve_lbl_t aclexpr_carve2_subscript(
 						, TY_MID
 						, IDX0
 						, STORAGE
+						, ACLCUR_REGVIEW_STEP_ELEMENT
 						, CTX(rdwr_data)
 						)) {
 				err_puts("[carve1::subscript] the member-0 view could not be built");
@@ -301,6 +263,7 @@ aclexpr_carve_lbl_t aclexpr_carve2_subscript(
 						, TY_ELM
 						, IDX
 						, STORAGE
+						, ACLCUR_REGVIEW_STEP_ELEMENT
 						, CTX(rdwr_data)
 						)) {
 				err_puts("[carve1::subscript] the view could not be built");
@@ -313,16 +276,12 @@ aclexpr_carve_lbl_t aclexpr_carve2_subscript(
 						, TY_ELM
 						, IDX
 						, STORAGE
+						, ACLCUR_REGVIEW_STEP_ELEMENT
 						, CTX(rdwr_data)
 						)) {
 				err_puts("[carve1::subscript] the view could not be built");
 				return c_lbl_err;
 			}
-		}
-
-		ae2f_ifezerr(PTR = aclcur_regview_addr(VIEW, CTX(rdwr_data))) {
-			err_puts("[carve1::subscript] the view address failed");
-			return c_lbl_err;
 		}
 
 		/** `&a[i]`: the view is already built and its address taken, and
@@ -334,6 +293,15 @@ aclexpr_carve_lbl_t aclexpr_carve2_subscript(
 				& (aclspv_wrd_t)ACLEXPR_OPCFGX_STATE0_ADDR_OF_ELM) {
 			aclspv_id_t TY_PTR;
 			aclspv_id_t ID_ADDR;
+
+			/** the address of the view, minted only on this path: the plain
+			 * read below goes through the SSA view load instead, whose emit
+			 * hook mints its own chain. one OpAccessChain per chain level,
+			 * in cursor order. */
+			ae2f_ifezerr(PTR = aclcur_regview_addr(VIEW, CTX(rdwr_data))) {
+				err_puts("[carve1::subscript] the view address failed");
+				return c_lbl_err;
+			}
 
 			ae2f_ifezerr(TY_PTR = aclty_mk_ptr(
 						TY_ELM
@@ -379,12 +347,14 @@ aclexpr_carve_lbl_t aclexpr_carve2_subscript(
 			return c_lbl_success;
 		}
 
-		ae2f_ifezerr(*rdwr_prv_idval = aclcur_cfg_op1(
-					0
-					, SpvOpLoad
-					, TY_ELM
-					, PTR
+		/** the value of the view, read as an SSA l-value: aclcur_load_reg
+		 * resolves the block-local value / phi and falls back to a seed
+		 * OpLoad through the view's own chain, which the view hook mints
+		 * as raw words. */
+		ae2f_ifezerr(*rdwr_prv_idval = aclcur_load_reg(
+					VIEW
 					, CTX(rdwr_data)
+					, 0
 					)) {
 			err_puts("[carve1::subscript] the load failed");
 			return c_lbl_err;
@@ -425,7 +395,6 @@ aclexpr_carve_lbl_t aclexpr_carve2_subscriptwrite(
 		aclspv_id_t TY_ELM;
 		aclspv_id_t TY_MID;
 		aclspv_id_t VIEW;
-		aclspv_id_t PTR;
 		aclspv_wrd_t STORAGE;
 		h_aclcur_t P_REG;
 		const aclspv_id_t X = rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_END + 1];
@@ -486,6 +455,7 @@ aclexpr_carve_lbl_t aclexpr_carve2_subscriptwrite(
 						, TY_MID
 						, IDX0
 						, STORAGE
+						, ACLCUR_REGVIEW_STEP_ELEMENT
 						, CTX(rdwr_data)
 						)) {
 				err_puts("[carve1::subscriptwrite] the member-0 view could not be built");
@@ -498,6 +468,7 @@ aclexpr_carve_lbl_t aclexpr_carve2_subscriptwrite(
 						, TY_ELM
 						, IDX
 						, STORAGE
+						, ACLCUR_REGVIEW_STEP_ELEMENT
 						, CTX(rdwr_data)
 						)) {
 				err_puts("[carve1::subscriptwrite] the view could not be built");
@@ -510,6 +481,7 @@ aclexpr_carve_lbl_t aclexpr_carve2_subscriptwrite(
 						, TY_ELM
 						, IDX
 						, STORAGE
+						, ACLCUR_REGVIEW_STEP_ELEMENT
 						, CTX(rdwr_data)
 						)) {
 				err_puts("[carve1::subscriptwrite] the view could not be built");
@@ -517,14 +489,12 @@ aclexpr_carve_lbl_t aclexpr_carve2_subscriptwrite(
 			}
 		}
 
-		ae2f_ifezerr(PTR = aclcur_regview_addr(VIEW, CTX(rdwr_data))) {
-			err_puts("[carve1::subscriptwrite] the view address failed");
-			return c_lbl_err;
-		}
-
-		ae2f_ifezerr(aclcur_cfg_st(
-					SpvOpStore
-					, PTR
+		/** store through the view: aclcur_store_reg validates the SSA-scope
+		 * policy (ACLCUR_FLAG0_REG_SCOPED) uniformly — a non-scoped view's
+		 * store is explicit and reaches memory, through a chain the view's
+		 * own emit hook mints. no PTR is needed here. */
+		ae2f_ifezerr(aclcur_store_reg(
+					VIEW
 					, X
 					, CTX(rdwr_data)
 					)) {

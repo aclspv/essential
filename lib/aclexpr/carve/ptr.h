@@ -4,9 +4,13 @@
 #include <aclspv.h>
 
 #include <aclty.h>
+#include <aclval.h>
 #include <aclcur/common.h>
 #include <aclcur/load.h>
+#include <aclcur/reg/view.h>
 #include <aclexpr/curreg.h>
+
+#include <aclexpr/util/unwrap.h>
 
 #include <aclutil/capability.h>
 
@@ -145,22 +149,41 @@ ae2f_inline_f static aclspv_id_t aclexpr_sub_elm_ty(
 		aclspv_id_t* ae2f_restrict	rdwr_ty_mid
 		) {
 	const h_aclcur_t p_reg = aclcur_get_node(c_reg, h_ctx);
-	/** classify on the STORAGE type when the register carries a distinct
-	 * native pointer type: a storage-buffer (or `__local`) argument's
-	 * OpVariable is the wrapped-runtime-array struct while the register's
-	 * logical m_ty is the plain element pointer. the leaf type returned is
-	 * still the array's element, so the view chain the caller builds off the
-	 * variable id stays correct. */
-	const aclspv_id_t TY_CLS
-		= p_reg
-		? (p_reg->m_class == ACLCUR_REG && p_reg->m_d.m_reg.m_ty_native
-				? p_reg->m_d.m_reg.m_ty_native
-				: p_reg->m_ty)
-		: 0;
-	const aclty_t* const ae2f_restrict P_TY
-		= TY_CLS ? aclty_find(TY_CLS, h_ctx) : 0;
 
 	*rdwr_ty_mid = 0;
+
+	/** wrapped-argument back end: the register's value is member 0's
+	 * address and its native view (m_id_native) carries member 0's type.
+	 * that type is exactly the intermediate step a subscript chain needs —
+	 * member 0, then the element — so classify on it directly. a scalar
+	 * member 0 (`struct { T }`, the workgroup / struct-pointer idiom) has
+	 * no array to descend, so member 0's type is the leaf. */
+	if(p_reg && p_reg->m_class == ACLCUR_REG
+			&& p_reg->m_d.m_reg.m_id_native) {
+		h_aclcur_t p_nat = aclcur_get_node(
+				p_reg->m_d.m_reg.m_id_native, h_ctx);
+		const aclty_t* const ae2f_restrict P_M0
+			= p_nat ? aclty_find(p_nat->m_ty, h_ctx) : 0;
+
+		if(!P_M0)
+			return 0;
+
+		if(P_M0->m_class == ACLTY_ARR) {
+			/** the wrapper's member 0 is the runtime/fixed array: the
+			 * chain is base-/0const-/idx, whose intermediate view
+			 * carries member 0's array type. */
+			*rdwr_ty_mid = p_nat->m_ty;
+			return P_M0->m_info.m_arr.m_type;
+		}
+
+		return p_nat->m_ty;
+	}
+
+	/** otherwise classify on the register's own logical type: a plain
+	 * array register yields its element, a plain pointer its pointee. */
+	const aclspv_id_t TY_CLS = p_reg ? p_reg->m_ty : 0;
+	const aclty_t* const ae2f_restrict P_TY
+		= TY_CLS ? aclty_find(TY_CLS, h_ctx) : 0;
 
 	if(!P_TY)
 		return 0;
@@ -233,53 +256,192 @@ ae2f_inline_f static aclspv_id_t aclexpr_ptrval(
 		aclspv_id_t	c_reg,
 		h_aclspv_ctx_t	h_ctx
 		) {
-	const h_aclcur_t p_reg = aclcur_get_node(c_reg, h_ctx);
-
-	ae2f_ifezerr(p_reg) return 0;
-	ae2f_ifnezerr_strict(p_reg->m_class != ACLCUR_REG) return 0;
-
-	if(p_reg->m_flag0 & aclcur_flag0_reg(ACLCUR_FLAG0_REG_ALIAS2))
-		return p_reg->m_d.m_reg.m_in.m_addr
-				? p_reg->m_d.m_reg.m_in.m_addr(c_reg, h_ctx)
-				: 0;
-
-	return aclcur_load_reg(c_reg, h_ctx, 0);
+	/** D7 unified deref rule, keyed on the register kind: ALIAS2 view ->
+	 * m_addr; ghost -> m_base; any other register -> aclcur_load_reg. */
+	return aclcur_reg_ptrval(c_reg, h_ctx);
 }
 
-/** the pointer a dereference lvalue stores THROUGH.
- *
- * `*q += 2` is a compound assignment whose result belongs at the address q
- * holds, not in q's own storage, so the arithmetic carve cannot route it
- * through aclcur_store_reg the way a plain variable lvalue does.
- *
- * @return 0 when the cursor is not a dereference, or the pointer is not
- * available — the caller then falls back to the plain-variable path.
- * */
-ae2f_inline_f static aclspv_id_t aclexpr_ptr_of_deref(
-		CXCursor	c_lvalue,
+/** the storage class of a register whose type is a pointer; Function when
+ * the register is missing or not a pointer. this is the class any view built
+ * off the register's pointer value must declare its OpAccessChain with. */
+ae2f_inline_f static aclspv_wrd_t aclexpr_ptr_storage(
+		aclspv_id_t	c_reg,
 		h_aclspv_ctx_t	h_ctx
 		) {
-	aclexpr_opnd_t OPND;
-	aclspv_id_t REG;
+	const h_aclcur_t p_reg = aclcur_get_node(c_reg, h_ctx);
+	const aclty_t* const ae2f_restrict P_TY
+		= p_reg ? aclty_find(p_reg->m_ty, h_ctx) : 0;
 
-	if(clang_getCursorKind(c_lvalue) != CXCursor_UnaryOperator
-	|| CXUnaryOperator_Deref != clang_getCursorUnaryOperatorKind(c_lvalue))
+	if(!P_TY || P_TY->m_class != ACLTY_PTR)
+		return (aclspv_wrd_t)SpvStorageClassFunction;
+
+	return (aclspv_wrd_t)P_TY->m_info.m_ptr.m_storage;
+}
+
+/** the pointer register a member reference indexes THROUGH, when its base is
+ * a bare pointer (arrow `p->m`) or a dereference (`(*p).m`); 0 otherwise.
+ *
+ * only the DIRECT base child is classified, so `p->b.c` stays on the value
+ * path: its outer member's base child is the inner MemberRefExpr (a struct),
+ * not a pointer. this is what keeps `p->b.c` from mis-rooting at `p`.
+ *
+ * @return the pointer register id, or 0 when the base is anything else (a
+ * struct value) or the register is unavailable.
+ * */
+ae2f_inline_f static aclspv_id_t aclexpr_member_base_ptr(
+		CXCursor		c_mref,
+		h_aclspv_ctx_t		h_ctx
+		) {
+	aclexpr_opnd_t OB;
+	CXCursor C;
+
+	if(clang_getCursorKind(c_mref) != CXCursor_MemberRefExpr)
 		return 0;
 
-	/** the lvalue short-circuited the child cascade, so this is still the
-	 * dereference itself: take its operand explicitly. */
-	OPND = aclexpr_opnd_first_child(c_lvalue);
+	OB = aclexpr_opnd_first_child(c_mref);
+
+	if(!OB.m_has)
+		return 0;
+
+	C = aclexpr_expr_unwrap(OB.m_c);
+
+	/** `(*p).m` / `((*p)).m`: a deref base — resolve through its operand. */
+	if(clang_getCursorKind(C) == CXCursor_UnaryOperator
+	&& clang_getCursorUnaryOperatorKind(C) == CXUnaryOperator_Deref) {
+		aclexpr_opnd_t U = aclexpr_opnd_first_child(C);
+
+		if(!U.m_has)
+			return 0;
+
+		C = aclexpr_expr_unwrap(U.m_c);
+	} else if(clang_getCursorType(C).kind != CXType_Pointer) {
+		/** a struct value base: not a pointer/deref member access. */
+		return 0;
+	}
+
+	return aclexpr_opnd_reg(C, h_ctx);
+}
+
+/** the (ghost-rooted) MEMBER view of a member reference whose base is a
+ * pointer/deref, or 0 when the base is not one.
+ *
+ * this is the single construction point shared by the member read carve and
+ * the member write carve: both call it with the same MemberRefExpr, the
+ * member's logical type and its ordinal, so both reach the SAME view node
+ * (aclcur_reg_ghost + aclcur_reg_view dedup) — the read and the write of one
+ * region name one l-value.
+ *
+ * @param c_ty  the member's logical type (the view's m_ty)
+ * @param c_idx the member ORDINAL in the base record; it is minted into a
+ * constant index id, because aclcur_reg_view's chain emits its m_id_idx as a
+ * raw OpAccessChain index OPERAND (an id), unlike OpCompositeExtract which
+ * takes a literal.
+ * @return the view register id, or 0 when the base is not a pointer/deref or
+ * construction fails.
+ * */
+ae2f_inline_f static aclspv_id_t aclexpr_member_view(
+		CXCursor		c_mref,
+		aclspv_id_t		c_ty,
+		aclspv_id_t		c_idx,
+		h_aclspv_ctx_t		h_ctx
+		) {
+	aclspv_id_t REG, PTRVAL, GHOST, IDX;
+	aclspv_wrd_t STORAGE;
+
+	ae2f_ifezerr(REG = aclexpr_member_base_ptr(c_mref, h_ctx))
+		return 0;
+
+	ae2f_ifezerr(PTRVAL = aclexpr_ptrval(REG, h_ctx))
+		return 0;
+
+	STORAGE = aclexpr_ptr_storage(REG, h_ctx);
+
+	ae2f_ifezerr(GHOST = aclcur_reg_ghost(PTRVAL, h_ctx))
+		return 0;
+
+	/** the member ordinal becomes the constant index operand of the view's
+	 * OpAccessChain; see the @param c_idx note above. */
+	ae2f_ifezerr(IDX = aclutil_mk_constant_val_id((aclspv_wrd_t)c_idx, h_ctx))
+		return 0;
+
+	return aclcur_reg_view(
+			c_mref
+			, GHOST
+			, c_ty
+			, IDX
+			, STORAGE
+			, ACLCUR_REGVIEW_STEP_MEMBER
+			, h_ctx);
+}
+
+/** the MEMBER view of a member reference whose base is an ADDRESSABLE plain
+ * value — a register naming storage (`s.m` for a local/global struct `s`) — or
+ * 0 when the base is not one.
+ *
+ * this is the value-lane counterpart of aclexpr_member_view: where that one
+ * roots a ghost on a pointer base (`p->m`), this one chains the MEMBER view
+ * directly on the base register, whose own m_id is already a pointer to the
+ * struct. read and write of one region reach the SAME view (aclcur_reg_view
+ * dedup on (parent, step, idx, ty)), so a store through the view untracks the
+ * value a read tracks.
+ *
+ * bounded to a DIRECT DeclRefExpr base: a nested member base (`s.b.c`) has the
+ * inner MemberRefExpr there, whose clang_getCursorReferenced is the FieldDecl,
+ * not a register, so it stays on the value lane (D3) — the same bound the
+ * pointer lane draws.
+ *
+ * @param c_mref the MemberRefExpr (the view's cursor)
+ * @param c_ty   the member's logical type (the view's m_ty)
+ * @param c_idx  the member ORDINAL in the base record; minted into a constant
+ *               index id because aclcur_reg_view's chain emits m_id_idx as a
+ *               raw OpAccessChain index OPERAND (an id), unlike
+ *               OpCompositeExtract which takes a literal.
+ * @return the view register id, or 0 when the base is not an addressable plain
+ * value (a value-only / constant-composite base, per D3) or construction
+ * fails.
+ * */
+ae2f_inline_f static aclspv_id_t aclexpr_member_view_reg(
+		CXCursor		c_mref,
+		aclspv_id_t		c_ty,
+		aclspv_id_t		c_idx,
+		h_aclspv_ctx_t		h_ctx
+		) {
+	aclexpr_opnd_t OPND;
+	aclspv_id_t REG, IDX;
+	h_aclcur_t p_reg;
+	CXCursor BASE;
+
+	OPND = aclexpr_opnd_first_child(c_mref);
 
 	if(!OPND.m_has)
 		return 0;
 
-	ae2f_ifezerr(REG = aclexpr_opnd_reg(OPND.m_c, h_ctx))
-		REG = 0;
+	BASE = aclexpr_expr_unwrap(OPND.m_c);
 
-	if(!REG)
+	/** only a plain variable base is addressable this way; a value-only
+	 * base (call result, constant composite) is not. */
+	unless(clang_getCursorKind(BASE) == CXCursor_DeclRefExpr)
 		return 0;
 
-	return aclexpr_ptrval(REG, h_ctx);
+	ae2f_ifezerr(REG = aclexpr_opnd_reg(BASE, h_ctx))
+		return 0;
+
+	ae2f_ifezerr(p_reg = aclcur_get_node(REG, h_ctx))
+		return 0;
+	ae2f_ifnezerr_strict(p_reg->m_class != ACLCUR_REG)
+		return 0;
+
+	ae2f_ifezerr(IDX = aclutil_mk_constant_val_id((aclspv_wrd_t)c_idx, h_ctx))
+		return 0;
+
+	return aclcur_reg_view(
+			c_mref
+			, REG
+			, c_ty
+			, IDX
+			, p_reg->m_d.m_reg.m_storage_class
+			, ACLCUR_REGVIEW_STEP_MEMBER
+			, h_ctx);
 }
 
 /** the aclty pointer type of a register node, 0 when it is not a pointer. */
