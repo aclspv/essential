@@ -39,15 +39,18 @@ aclspv_id_t aclty_mk_arr3(
 		aclconst_specsz elm_size = aclty_getsize(c_type_elm, h_ctx);
 
 		ae2f_ifnezerr(elm_size.m_id) {
+			err_puts("it has elm_size with id\n");
 			_aclctx_err(h_ctx, ACLSPV_COMPILE_UNHANDLED);
 			return 0;
 		}
 
-		stride = ae2f_expected_strict(elm_size.m_lit.m_max == (aclspv_wrdmax_t)elm_size.m_lit.m_wrd) 
-			? elm_size.m_lit.m_wrd 
-			: 0;
+		stride = ae2f_expected_not_strict(elm_size.m_lit.m_max > (aclspv_wrdmax_t)0xFFFFFFFF)
+			? 0
+			: elm_size.m_lit.m_wrd;
 
-		ae2f_ifezerr(stride) return 0;
+		ae2f_ifezerr(stride) {
+			return 0;
+		}
 		stride = (stride + c_stride - 1) & ~(c_stride - 1);
 
 		arr_stride->m_info.m_dcr.m_num_oprnd = 1;
@@ -56,7 +59,7 @@ aclspv_id_t aclty_mk_arr3(
 
 	r = aclty_build_arr(arr, h_ctx);
 	ae2f_ifezerr(r) {
-		err_puts("aclutil_cfg_cxtp_arr has failed");
+		err_puts("aclty_build_arr has failed\n");
 		return 0;
 	}
 
