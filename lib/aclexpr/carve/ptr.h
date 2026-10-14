@@ -179,60 +179,63 @@ ae2f_inline_f static aclspv_id_t aclexpr_sub_elm_ty(
 		return p_nat->m_ty;
 	}
 
-	/** otherwise classify on the register's own logical type: a plain
-	 * array register yields its element, a plain pointer its pointee. */
-	const aclspv_id_t TY_CLS = p_reg ? p_reg->m_ty : 0;
-	const aclty_t* const ae2f_restrict P_TY
-		= TY_CLS ? aclty_find(TY_CLS, h_ctx) : 0;
+	{
 
-	if(!P_TY)
-		return 0;
+		/** otherwise classify on the register's own logical type: a plain
+		 * array register yields its element, a plain pointer its pointee. */
+		const aclspv_id_t TY_CLS = p_reg ? p_reg->m_ty : 0;
+		const aclty_t* const ae2f_restrict P_TY
+			= TY_CLS ? aclty_find(TY_CLS, h_ctx) : 0;
 
-	switch((aclspv_wrd_t)P_TY->m_class) {
-		case ACLTY_ARR:
-			return P_TY->m_info.m_arr.m_type;
-
-		case ACLTY_PTR:
-		{
-			const aclty_t* const ae2f_restrict P_POI
-				= aclty_find(P_TY->m_info.m_ptr.m_type, h_ctx);
-
-			ae2f_ifezerr(P_POI)
-				return 0;
-
-			/** pointer to an array: one level, the pointee's element. */
-			if(P_POI->m_class == ACLTY_ARR)
-				return P_POI->m_info.m_arr.m_type;
-
-			/** pointer to the wrapped-runtime-array struct: two levels.
-			 * member 0 only — the idiom is `struct { T[] }`; any other
-			 * member layout is not an array wrapper. */
-			if(P_POI->m_class == ACLTY_STRUCT) {
-				const aclty_t* const ae2f_restrict P_MBR0
-					= aclty_get_struct_mbr(
-							(aclty_t*)P_POI
-							, 0
-							, h_ctx
-							);
-				const aclty_t* const ae2f_restrict P_MBR0_TY
-					= P_MBR0 ? aclty_find(
-							P_MBR0->m_info.m_struct_mbr.m_id_mbr
-							, h_ctx
-							) : 0;
-
-				if(P_MBR0_TY && P_MBR0_TY->m_class == ACLTY_ARR) {
-					*rdwr_ty_mid = P_MBR0->m_info.m_struct_mbr.m_id_mbr;
-					return P_MBR0_TY->m_info.m_arr.m_type;
-				}
-			}
-
-			/** pointer to a plain value (or a struct with no array
-			 * member 0): one level, the pointee. */
-			return P_TY->m_info.m_ptr.m_type;
-		}
-
-		default:
+		if(!P_TY)
 			return 0;
+
+		switch((aclspv_wrd_t)P_TY->m_class) {
+			case ACLTY_ARR:
+				return P_TY->m_info.m_arr.m_type;
+
+			case ACLTY_PTR:
+				{
+					const aclty_t* const ae2f_restrict P_POI
+						= aclty_find(P_TY->m_info.m_ptr.m_type, h_ctx);
+
+					ae2f_ifezerr(P_POI)
+						return 0;
+
+					/** pointer to an array: one level, the pointee's element. */
+					if(P_POI->m_class == ACLTY_ARR)
+						return P_POI->m_info.m_arr.m_type;
+
+					/** pointer to the wrapped-runtime-array struct: two levels.
+					 * member 0 only — the idiom is `struct { T[] }`; any other
+					 * member layout is not an array wrapper. */
+					if(P_POI->m_class == ACLTY_STRUCT) {
+						const aclty_t* const ae2f_restrict P_MBR0
+							= aclty_get_struct_mbr(
+									(aclty_t*)P_POI
+									, 0
+									, h_ctx
+									);
+						const aclty_t* const ae2f_restrict P_MBR0_TY
+							= P_MBR0 ? aclty_find(
+									P_MBR0->m_info.m_struct_mbr.m_id_mbr
+									, h_ctx
+									) : 0;
+
+						if(P_MBR0_TY && P_MBR0_TY->m_class == ACLTY_ARR) {
+							*rdwr_ty_mid = P_MBR0->m_info.m_struct_mbr.m_id_mbr;
+							return P_MBR0_TY->m_info.m_arr.m_type;
+						}
+					}
+
+					/** pointer to a plain value (or a struct with no array
+					 * member 0): one level, the pointee. */
+					return P_TY->m_info.m_ptr.m_type;
+				}
+
+			default:
+				return 0;
+		}
 	}
 }
 
@@ -307,7 +310,7 @@ ae2f_inline_f static aclspv_id_t aclexpr_member_base_ptr(
 
 	/** `(*p).m` / `((*p)).m`: a deref base — resolve through its operand. */
 	if(clang_getCursorKind(C) == CXCursor_UnaryOperator
-	&& clang_getCursorUnaryOperatorKind(C) == CXUnaryOperator_Deref) {
+			&& clang_getCursorUnaryOperatorKind(C) == CXUnaryOperator_Deref) {
 		aclexpr_opnd_t U = aclexpr_opnd_first_child(C);
 
 		if(!U.m_has)
