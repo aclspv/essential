@@ -611,6 +611,8 @@ enum CXChildVisitResult aclemit_fndecl_entp_arg(
 						return CXChildVisit_Break;
 					}
 
+					break;
+
 				case ACLSPV_LAYOUT_STD140:
 					break;	/** nothing wrong here - that's how uniform works */
 
@@ -802,7 +804,7 @@ enum CXChildVisitResult aclemit_fndecl_entp_arg(
 			{
 				var_native_type_id = aclty_mk_ptr(
 						var_elm_type_id
-						, storage_class
+						, (SpvStorageClass)storage_class
 						, CTX
 						);
 
@@ -1130,7 +1132,7 @@ enum CXChildVisitResult aclemit_fndecl_entp_arg(
 				ae2f_ifezerr(reg = aclcur_cfg_reg(
 							h_cur
 							, var_type_id
-							, (SpvStorageClass)storage_class
+							, storage_class
 							, &REGIN
 							, CTX
 							)) {
@@ -1178,7 +1180,7 @@ enum CXChildVisitResult aclemit_fndecl_entp_arg(
 									, var_id
 									, p_mbr0->m_info.m_struct_mbr.m_id_mbr
 									, cst0
-									, (SpvStorageClass)storage_class
+									, storage_class
 									, ACLCUR_REGVIEW_STEP_ELEMENT
 									, CTX
 									)) {
