@@ -4,6 +4,7 @@
 #include "../api.h"
 #include "../../op.h"
 
+#include <aclattr/getkinder.h>
 #include <aclexpr/util/unwrap.h>
 
 #include <util/constant.h>
@@ -16,22 +17,6 @@
 /** capture the first child of the binary operator (clang publishes the
  * assignment operands in order: LHS first). the assign stage uses it to
  * detect a member lvalue (`s.b`) before the generic child cascade runs. */
-typedef struct {
-	CXCursor	m_c_first;
-	aclspv_bool_t	m_has;
-} s_assign_peek_t;
-
-static enum CXChildVisitResult s_assign_peek(
-		CXCursor			c_cur,
-		ae2f_unused CXCursor		c_par,
-		CXClientData			rdwr_data
-		) {
-	s_assign_peek_t* ae2f_restrict h = rdwr_data;
-
-	h->m_c_first = c_cur;
-	h->m_has = 1;
-	return CXChildVisit_Break;
-}
 
 ae2f_inline_f static aclexpr_visit_lbl_t aclexpr_visit_op2_assign(
 		const CXCursor				c_cur,
@@ -43,7 +28,7 @@ ae2f_inline_f static aclexpr_visit_lbl_t aclexpr_visit_op2_assign(
 		) {
 	x_scale* ae2f_restrict		NEW_SCALE;
 	aclspv_wrd_t* ae2f_restrict	VEC;
-	s_assign_peek_t			PEEK;
+	CXCursor				PEEK;
 
 	ae2fpat_assertunless(h_ctx) {
 		return c_lbl_fail;
@@ -76,11 +61,19 @@ ae2f_inline_f static aclexpr_visit_lbl_t aclexpr_visit_op2_assign(
 	 * bare one — `*(p) = x`, `(*p) = x`, `(s).m = x`, `(a[i]) = x` all reach
 	 * the matching write carve. the NO_NEED seed below still applies: every
 	 * write carve honours it by skipping the read cascade. */
-	PEEK.m_c_first = clang_getNullCursor();
-	PEEK.m_has = 0;
-	clang_visitChildren(c_cur, s_assign_peek, &PEEK);
-	if(PEEK.m_has) {
-		switch((int)aclexpr_lvalue_kind(PEEK.m_c_first)) {
+	PEEK = clang_getNullCursor();
+	{
+		struct aclattr_getkinder	K;
+
+		K.m_cursor		= &PEEK;
+		K.m_res			= CXChildVisit_Break;
+		K.m_num_wanted		= 1;
+		K.m_num_grepped		= 0;
+
+		clang_visitChildren(c_cur, s_aclattr_getkinder_visit, &K);
+	}
+	if(clang_Cursor_isNull(PEEK) == 0) {
+		switch((int)aclexpr_lvalue_kind(PEEK)) {
 			case ACLEXPR_LVALUEKIND_MEMBER:
 				VEC[ACLEXPR_OPBINCFG_OPCODE] = ACLEXPR_OP2_MEMBERWRITE;
 				break;

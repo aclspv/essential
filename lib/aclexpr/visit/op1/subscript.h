@@ -4,6 +4,7 @@
 #include "../../op.h"
 #include "../api.h"
 
+#include <aclattr/getkinder.h>
 #include <aclexpr/util/unwrap.h>
 
 #include <util/constant.h>
@@ -12,16 +13,6 @@
 
 #include <aclty.h>
 #include <aclmem.h>
-
-/** first child of an ArraySubscriptExpr: its base operand. */
-ae2f_inline_f static enum CXChildVisitResult	s_subscript_base_first(
-		CXCursor			c_cur,
-		ae2f_unused CXCursor		c_parent,
-		CXClientData ae2f_restrict	h_data
-		) {
-	*(CXCursor* ae2f_restrict)h_data = c_cur;
-	return CXChildVisit_Break;
-}
 
 /**
  * array subscript (`a[i]`).
@@ -131,9 +122,15 @@ ae2f_inline_f static aclexpr_visit_lbl_t aclexpr_visit_op1_subscript(
 	 * cascading. the flag rides THIS scale's operand-0 slot, the same slot
 	 * a plain-variable lvalue read consults. */
 	{
-		CXCursor BASE = clang_getNullCursor();
+		CXCursor	BASE = clang_getNullCursor();
+		struct aclattr_getkinder	K;
 
-		clang_visitChildren(c_cur, s_subscript_base_first, &BASE);
+		K.m_cursor		= &BASE;
+		K.m_res			= CXChildVisit_Break;
+		K.m_num_wanted		= 1;
+		K.m_num_grepped		= 0;
+
+		clang_visitChildren(c_cur, s_aclattr_getkinder_visit, &K);
 		BASE = aclexpr_expr_unwrap(BASE);
 
 		if(BASE.kind == CXCursor_DeclRefExpr) {

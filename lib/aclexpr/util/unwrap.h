@@ -4,6 +4,8 @@
 #include <aclspv.h>
 #include <stdint.h>
 
+#include <aclattr/getkinder.h>
+
 /** the transparent wrappers libclang places between an operator and its
  * operand: user parentheses (ParenExpr) and the UnexposedExpr it surfaces an
  * implicit cast (LValueToRValue / array decay) as.
@@ -12,14 +14,6 @@
  * child is a bare DeclRefExpr; the moment a ParenExpr sits under it the
  * referent is lost. every carve-side peek must descend through BOTH before
  * classifying an operand. */
-ae2f_inline_f static enum CXChildVisitResult s_aclexpr_util_unwrap_first(
-		CXCursor		c_cur,
-		ae2f_unused CXCursor	c_par,
-		CXClientData		rdwr_data
-		) {
-	*(CXCursor*)rdwr_data = c_cur;
-	return CXChildVisit_Break;
-}
 
 /** descend through ParenExpr / UnexposedExpr to the underlying expression.
  * a wrapper with no child stops the descent; bounded so a malformed cursor
@@ -31,8 +25,14 @@ ae2f_inline_f static CXCursor aclexpr_expr_unwrap(CXCursor c_cur) {
 			&& (c_cur.kind == CXCursor_ParenExpr
 				|| c_cur.kind == CXCursor_UnexposedExpr)) {
 		CXCursor c_next = clang_getNullCursor();
+		struct aclattr_getkinder	K;
 
-		clang_visitChildren(c_cur, s_aclexpr_util_unwrap_first, &c_next);
+		K.m_cursor		= &c_next;
+		K.m_res			= CXChildVisit_Break;
+		K.m_num_wanted		= 1;
+		K.m_num_grepped		= 0;
+
+		clang_visitChildren(c_cur, s_aclattr_getkinder_visit, &K);
 
 		if(clang_Cursor_isNull(c_next))
 			break;

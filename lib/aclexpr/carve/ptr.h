@@ -14,24 +14,14 @@
 
 #include <aclutil/capability.h>
 
+#include <aclattr/getkinder.h>
+
 /** first child cursor of an expression node: the operand of `x` in `&x`,
  * the operand of `q` in `*q`. */
 typedef struct {
 	CXCursor	m_c;
 	aclspv_bool_t	m_has;
 } aclexpr_opnd_t;
-
-ae2f_inline_f static enum CXChildVisitResult aclexpr_opnd_visit(
-		CXCursor			c_cur,
-		ae2f_unused CXCursor		c_par,
-		CXClientData			rdwr_data
-		) {
-	aclexpr_opnd_t* ae2f_restrict h = rdwr_data;
-
-	h->m_c = c_cur;
-	h->m_has = 1;
-	return CXChildVisit_Break;
-}
 
 /** first child cursor of an expression node.
  *
@@ -42,12 +32,21 @@ ae2f_inline_f static enum CXChildVisitResult aclexpr_opnd_visit(
 ae2f_inline_f static aclexpr_opnd_t aclexpr_opnd_first_child(
 		CXCursor	c_op
 		) {
-	aclexpr_opnd_t O;
+	aclexpr_opnd_t	O;
+	struct aclattr_getkinder	K;
 
 	O.m_c = clang_getNullCursor();
 	O.m_has = 0;
 
-	clang_visitChildren(c_op, aclexpr_opnd_visit, &O);
+	K.m_cursor		= &O.m_c;
+	K.m_res			= CXChildVisit_Break;
+	K.m_num_wanted		= 1;
+	K.m_num_grepped		= 0;
+
+	clang_visitChildren(c_op, s_aclattr_getkinder_visit, &K);
+
+	if(K.m_num_grepped)
+		O.m_has = 1;
 
 	return O;
 }
