@@ -30,7 +30,7 @@ __attribute__((annotate("aclspv_storage_class(12)")))
 
     Z *= 15;
 
-    *(r) = A & B;
+    *(r) = (A & B) + Z;
 }
 
 /**
