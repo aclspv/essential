@@ -103,10 +103,12 @@ aclspv_bool_t aclexpr_carve(
 
 	cgswtch(OPN_INITLIST) {
 		cgdefault(OP_FAILURE):
+		{
 			err_prefix();
-		err_call((void), fprintf(stderr, "something from somewhere %u\n", (unsigned)LST_SCALE_BUF[0]));
-		rdwr_data->m_ctx->m_err = rdwr_data->m_ctx->m_err ? rdwr_data->m_ctx->m_err : ACLSPV_COMPILE_UNHANDLED_CARVE;
-		return 1;
+			err_call((void), fprintf(stderr, "something from somewhere %u\n", (unsigned)LST_SCALE_BUF[0]));
+			rdwr_data->m_ctx->m_err = rdwr_data->m_ctx->m_err ? rdwr_data->m_ctx->m_err : ACLSPV_COMPILE_UNHANDLED_CARVE;
+			return 1;
+		}
 
 		cgcsdef(OP_SUCCESS):
 			return 0;

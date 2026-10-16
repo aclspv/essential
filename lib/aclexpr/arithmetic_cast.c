@@ -32,16 +32,19 @@ static enum ACLEXPR_RET_ s_non_literal_novec(
 	ae2fpat_assertassume(h_ctx);
 
 	ae2f_ifezerr(c_old_type) {
+		err_puts("old type is 0\n");
 		h_ctx->m_err = ACLSPV_COMPILE_ARITHMETIC_CAST_TYPE_IS_UNDEFINED_OLD;
 		return ACLEXPR_RET_FAILURE;
 	}
 
 	ae2f_ifezerr(c_new_type) {
+		err_puts("new type is 0\n");
 		h_ctx->m_err = ACLSPV_COMPILE_ARITHMETIC_CAST_TYPE_IS_UNDEFINED_NEW;
 		return ACLEXPR_RET_FAILURE;
 	}
 
 	ae2f_ifezerr(c_old_id) {
+		err_puts("old id is 0\n");
 		h_ctx->m_err = ACLSPV_COMPILE_ARITHMETIC_CAST_ID_IS_UNDEFINED_OLD;
 		return ACLEXPR_RET_FAILURE;
 	}
@@ -59,8 +62,9 @@ static enum ACLEXPR_RET_ s_non_literal_novec(
 				, ACLEXPR_RET_SUCCESS);
 	}
 
-	unless(aclty_is_simd(c_old_type, h_ctx) && aclty_is_simd(c_new_type, h_ctx))
+	unless(aclty_is_simd(c_old_type, h_ctx) && aclty_is_simd(c_new_type, h_ctx)) {
 		return ACLEXPR_RET_NOT_THE_CASE;
+	}
 
 	/** two are float */
 	if (aclid_is_float(c_old_type) && aclid_is_float(c_new_type)) {
@@ -73,8 +77,9 @@ static enum ACLEXPR_RET_ s_non_literal_novec(
 
 			ae2f_ifezerr(*r_newid = aclconst_specop(
 						&buf[0]
-						, 5, h_ctx))
+						, 5, h_ctx)) {
 				return ACLEXPR_RET_FAILURE;
+			}
 
 			return ACLEXPR_RET_SUCCESS_CONSTANT;
 		} else {
@@ -112,6 +117,7 @@ static enum ACLEXPR_RET_ s_non_literal_novec(
 						, aclutil_mk_constant_val_id(0, h_ctx));
 
 			ae2f_expected_but_else(VAL_ZERO) {
+				err_puts("val_zero\n");
 				return ACLEXPR_RET_FAILURE;
 			}
 
@@ -124,8 +130,9 @@ static enum ACLEXPR_RET_ s_non_literal_novec(
 				buf[4] = c_old_id;
 				buf[5] = VAL_ZERO;
 
-				ae2f_ifezerr(*r_newid = aclconst_specop(buf, 6, h_ctx))
+				ae2f_ifezerr(*r_newid = aclconst_specop(buf, 6, h_ctx)) {
 					return ACLEXPR_RET_FAILURE;
+				}
 
 				return ACLEXPR_RET_SUCCESS_CONSTANT;
 			} else {

@@ -43,6 +43,7 @@ aclexpr_carve_lbl_t aclexpr_carve1_arithmetic_cast(
 			default:
 			case ACLEXPR_RET_NOT_THE_CASE:
 			case ACLEXPR_RET_FAILURE:
+				err_puts("aclexpr_arithmetic_cast\n");
 				return c_lbl_err;
 
 			case ACLEXPR_RET_SUCCESS:

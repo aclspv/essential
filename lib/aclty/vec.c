@@ -77,7 +77,7 @@ struct aclutil_cxtp_veccfg_t	aclty_get_veccfg(
 		return R;
 	}
 
-	if(aclty_is_simd(c_ty_vec, h_ctx)) {
+	if(aclty_simd_elmtype(c_ty_vec, h_ctx) == c_ty_vec) {
 		struct aclutil_cxtp_veccfg_t	R;
 		R.m_num		= 1;
 		R.m_ty_elm	= c_ty_vec;

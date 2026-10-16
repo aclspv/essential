@@ -65,8 +65,9 @@ ae2f_inline_f static aclexpr_visit_lbl_t aclexpr_visit_op1_arithmetic_cast(
 
 			aclmemzero(&VEC[ACLEXPR_OPBINCFG_END + 1], sizeof(aclexpr_opbincfg_extra));
 
-			ae2f_ifezerr(VEC[ACLEXPR_OPBINCFG_RESTYID] = aclty_mk_by_type(
+			ae2f_ifezerr(VEC[ACLEXPR_OPBINCFG_RESTYID] = aclutil_mk_cxtp_by_type2(
 						clang_getCursorType(c_cur)
+						, h_ctx
 						)) {
 				err_puts("[s_cast_numeric] failed aclutil_mk_cxtp_by_cursor");
 				h_ctx->m_err = ACLSPV_COMPILE_ARITHMETIC_CAST_TYPE_IS_UNDEFINED_NEW;

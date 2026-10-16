@@ -69,7 +69,7 @@ ae2f_inline_f static aclspv_id_t aclty_simd_get_subtype(aclspv_id_t c0, aclspv_i
  * for scalars, aclty_simd_class returns c itself.
  * */
 ae2f_inline_f static aclspv_bool_t aclty_is_simd(aclspv_id_t c, h_aclspv_ctx_t h_ctx) {
-	return (aclspv_bool_t)!!(aclty_simd_class(c, h_ctx) != 0);
+	return (aclspv_bool_t)!!(aclty_simd_class(c, h_ctx));
 }
 
 #endif

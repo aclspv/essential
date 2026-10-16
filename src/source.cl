@@ -2,9 +2,9 @@ typedef int i32;
 typedef i32 __attribute__((ext_vector_type(4))) i32x4;
 typedef _Bool __attribute__((ext_vector_type(4))) boolx4;
 
-#if	1
+#if	0
 
-boolx4 t0_band128(const i32x4 A, const i32x4 B) {
+boolx4 t0_band128_norm(const i32x4 A, const i32x4 B) {
     i32x4 Z;
     Z[0] = 0; Z[1] = 0;
     Z[2] = 0; Z[3] = 0;
@@ -19,6 +19,18 @@ boolx4 t0_band128(const i32x4 A, const i32x4 B) {
 typedef int i32;
 
 #if	1
+
+void t0_band128(
+__attribute__((annotate("aclspv_storage_class(12)")))
+		  i32x4* r, const i32x4 A, const i32x4 B) {
+    i32x4 Z;
+    Z[0] = 1; Z[1] = 2;
+    Z[2] = 3; Z[3] = 4;
+
+    Z *= 15;
+
+    *(r) = A & B;
+}
 
 /**
  * r's size will be determined by spec constant with id 0.
@@ -253,6 +265,6 @@ void t12_entry_point_vertex(
     __attribute__((annotate("aclspv_storage_class(1)")))
     __attribute__((annotate("aclspv_bltin(42)")))
     int* in_vertidx
-) { return; }
+) { *out_pos = (f32x4)(float)*in_vertidx; return; }
 
 #endif
