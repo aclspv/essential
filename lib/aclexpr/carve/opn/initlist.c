@@ -259,7 +259,7 @@ aclexpr_carve_lbl_t aclexpr_carve_opn_initlist(
 
 	/** a scalar braced initializer `int x = { 3 }`: the element IS the
 	 * value (a 1-wide composite does not exist). */
-	if(EXPECTED == 1 && aclty_simd_elmtype(TY_RES, rdwr_data->m_ctx)) {
+	if(EXPECTED == 1 && aclty_simd_class(TY_RES, rdwr_data->m_ctx)) {
 		rdwr_prv_extra->m_type_original = TY_RES;
 		rdwr_prv_extra->m_mask_literal = MASK;
 		rdwr_prv_extra->m_literal = XTRA[0].m_literal;

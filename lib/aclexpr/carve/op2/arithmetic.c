@@ -52,7 +52,7 @@ ae2f_inline_f static ae2f_ccpure aclspv_opcode_t s_op_to_spv(
 		const h_aclspv_ctx_t	h_ctx
 		)
 {
-	aclspv_id_t	ID = aclty_simd_elmtype(c_id, h_ctx);
+	aclspv_id_t	ID = aclty_simd_class(c_id, h_ctx);
 
 	switch((enum S_ARITHMETIC_)c_op2) {
 		default:

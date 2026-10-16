@@ -31,6 +31,34 @@
 #include <aclattr/location.h>
 #include <aclattr/layout.h>
 
+
+/** aclspv_wrd_t* */
+static enum CXChildVisitResult	s_attr_bltin(
+		CXCursor h_cur,
+		ae2f_unused CXCursor h_parent,
+		CXClientData ae2f_restrict h_data) {
+	CXString TEXT;
+	enum CXChildVisitResult RES = CXChildVisit_Break;
+	const char* NEEDLE;
+	unsigned BLTIN;
+
+	unless(h_cur.kind == CXCursor_AnnotateAttr) return CXChildVisit_Recurse;
+	TEXT = clang_getCursorSpelling(h_cur);
+
+	unless(NEEDLE = strstr(TEXT.data, "aclspv_bltin")) {
+		RES = CXChildVisit_Continue;
+		goto LBL_FINI;
+	}
+
+	sscanf(NEEDLE, "aclspv_bltin ( %u )", &BLTIN);
+
+	*((aclspv_wrd_t* ae2f_restrict)h_data) = (aclspv_wrd_t)BLTIN;
+
+LBL_FINI:
+	clang_disposeString(TEXT);
+	return RES;
+}
+
 static enum CXChildVisitResult	s_attr_set(CXCursor h_cur, ae2f_unused CXCursor h_parent, CXClientData ae2f_restrict h_data) {
 	CXString TEXT;
 	enum CXChildVisitResult RES = CXChildVisit_Break;
@@ -68,7 +96,7 @@ static enum CXChildVisitResult	s_attr_bind_idx(CXCursor h_cur, ae2f_unused CXCur
 		goto LBL_FINI;
 	}
 
-	sscanf(NEEDLE, "aclspv_set ( %u )", &SET);
+	sscanf(NEEDLE, "aclspv_bind_idx ( %u )", &SET);
 
 	*((aclspv_wrd_t* ae2f_restrict)h_data) = (aclspv_wrd_t)SET;
 
@@ -635,7 +663,6 @@ enum CXChildVisitResult aclemit_fndecl_entp_arg(
 			 * on struct: this should be understood as a layout.
 			 * on anything: this should be understood as a thing inside a struct
 			 **/
-		case SpvStorageClassCrossWorkgroup:
 		case SpvStorageClassWorkgroup:
 			ae2f_ifezerr(var_type_id = aclty_mk_by_cursor_dummy(
 						h_cur
@@ -922,6 +949,7 @@ enum CXChildVisitResult aclemit_fndecl_entp_arg(
 		case SpvStorageClassOutput:
 			{
 				aclspv_wrd_t location = 0xFFFFFFFF;
+				aclspv_wrd_t bltin = SpvBuiltInMax;
 
 				var_native_type_id = aclty_mk_ptr(
 						var_elm_type_id
@@ -938,6 +966,12 @@ enum CXChildVisitResult aclemit_fndecl_entp_arg(
 				if(location == 0xFFFFFFFF)
 					location = 0;
 
+				clang_visitChildren(
+						h_cur
+						, s_attr_bltin
+						, &bltin
+						);
+
 				ae2f_ifezerr(CTX->m_count.m_decorate = aclutil_emitx_4(
 							&CTX->m_section.m_decorate
 							, CTX->m_count.m_decorate
@@ -948,6 +982,20 @@ enum CXChildVisitResult aclemit_fndecl_entp_arg(
 							)) {
 					_aclctx_err(DAT->m_ctx, ACLSPV_COMPILE_UNHANDLED_ARGS);
 					return CXChildVisit_Break;
+				}
+
+				if(bltin != SpvBuiltInMax) {
+					ae2f_ifezerr(CTX->m_count.m_decorate = aclutil_emitx_4(
+								&CTX->m_section.m_decorate
+								, CTX->m_count.m_decorate
+								, SpvOpDecorate
+								, var_id
+								, SpvDecorationBuiltIn
+								, bltin
+								)) {
+						_aclctx_err(DAT->m_ctx, ACLSPV_COMPILE_UNHANDLED_ARGS);
+						return CXChildVisit_Break;
+					}
 				}
 
 				ae2f_ifezerr(CTX->m_count.m_vars = util_emitx_variable(

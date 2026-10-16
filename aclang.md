@@ -133,7 +133,7 @@ void entry_point_vertex(
      * */
 
     /** bind number 0 **/
-    __attribute__((annotate("aclspv_storage_class(12)"))) int* sbo_int_rtarray /** struct { runtimearray<int> a; } */,
+    __attribute__((annotate("aclspv_storage_class(12)"))) int* sbo_int_struct /** struct { int a; } */,
     /** bind number 1 **/
     __attribute__((annotate("aclspv_storage_class(12)"))) struct {int c; }* sbo_struct /** struct { int c; }  } */,
 
@@ -200,10 +200,52 @@ typedef u32x2* __attribute__((annotate("aclspv_storage_class(12)"))) p_u32x2_sbo
 - could be used on bindable objects.  
 - when specified, specifing [binding index](#aclspv_bind_idx) is required.
 
+```c
+__attribute__((annotate("aclspv_execmodel(5)")))
+void entry_point_compute(
+    /*** 
+     * descriptor set 2, binding 0
+     * */
+    __attribute__((annotate("aclspv_storage_class(12)")))
+    __attribute__((annotate("aclspv_set(2)")))
+    __attribute__((annotate("aclspv_bind_idx(0)")))
+    struct { int data; }* sbo_data,
+
+    /*** 
+     * descriptor set 2, binding 1 (auto-incremented from 0 since bind_idx not specified)
+     * */
+    __attribute__((annotate("aclspv_storage_class(12)")))
+    __attribute__((annotate("aclspv_set(2)")))
+    struct { float value; }* sbo_value
+) { return; }
+```
+
 ### aclspv_bind_idx
 > `aclspv_bind_idx(idx : u32)`
 
 - specifies the binding index of bindable object.
+- could be used on bindable objects.
+- when specified, auto binding index resolver will not increment the index for next.
+
+```c
+__attribute__((annotate("aclspv_execmodel(5)")))
+void entry_point_compute(
+    /*** 
+     * explicit binding 5 — next bindable in same set starts at 6
+     * */
+    __attribute__((annotate("aclspv_storage_class(12)")))
+    __attribute__((annotate("aclspv_set(0)")))
+    __attribute__((annotate("aclspv_bind_idx(5)")))
+    struct { double x; }* sbo_explicit,
+
+    /*** 
+     * binding 6 (auto-incremented from 5 since bind_idx was specified above)
+     * */
+    __attribute__((annotate("aclspv_storage_class(12)")))
+    __attribute__((annotate("aclspv_set(0)")))
+    struct { double y; }* sbo_auto
+) { return; }
+```
 
 ### aclspv_wrkgroup_size
 > `aclspv_wrkgroup_size(x: u32, y: u32, z: u32)`  
@@ -318,6 +360,37 @@ i32 foo_read_32(struct foo* h_whatever) {
 ```c
 __attribute__((annotate("aclspv_layout(1)")))
 typedef struct { unsigned m_uint; } std140_uint_t;
+```
+
+### aclspv_bltin
+> `aclspv_bltin(bltin_number: u32)`
+
+> [!WARNING]  
+> this attribute will not resolve or check for execution model | capabilities.  
+> use standard macro to resolve or you should be aware of your choice.
+
+- specify an interface variable (input | output) is builtin variable.
+- see https://registry.khronos.org/SPIR-V/specs/unified1/SPIRV.html#BuiltIn
+
+```c
+__attribute__((annotate("aclspv_execmodel(0)")))
+void entry_point_vertex(
+    /*** 
+     * vertex shader builtin: position output
+     * SPIR-V BuiltIn: Position (37)
+     * */
+    __attribute__((annotate("aclspv_storage_class(3)")))
+    __attribute__((annotate("aclspv_bltin(37)")))
+    vec4 gl_Position,
+
+    /*** 
+     * vertex shader builtin: vertex index input
+     * SPIR-V BuiltIn: VertexIndex (44)
+     * */
+    __attribute__((annotate("aclspv_storage_class(1)")))
+    __attribute__((annotate("aclspv_bltin(44)")))
+    int gl_VertexIndex
+) { return; }
 ```
 
 # Restriction
