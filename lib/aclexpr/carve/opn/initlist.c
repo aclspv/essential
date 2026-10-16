@@ -153,7 +153,7 @@ aclexpr_carve_lbl_t aclexpr_carve_opn_initlist(
 			}
 			break;
 
-		case ACLTY_SIMD:
+		case ACLTY_VEC:
 			{
 				const struct aclutil_cxtp_veccfg_t V = aclty_get_veccfg(TY_RES, CTX(rdwr_data));
 				TY_ELM		= V.m_ty_elm;
@@ -259,7 +259,7 @@ aclexpr_carve_lbl_t aclexpr_carve_opn_initlist(
 
 	/** a scalar braced initializer `int x = { 3 }`: the element IS the
 	 * value (a 1-wide composite does not exist). */
-	if(EXPECTED == 1 && aclid_is_vectorisable(TY_RES)) {
+	if(EXPECTED == 1 && aclty_simd_elmtype(TY_RES, rdwr_data->m_ctx)) {
 		rdwr_prv_extra->m_type_original = TY_RES;
 		rdwr_prv_extra->m_mask_literal = MASK;
 		rdwr_prv_extra->m_literal = XTRA[0].m_literal;

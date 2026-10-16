@@ -17,7 +17,7 @@ ae2f_inline_f ae2f_ccpure static aclspv_bool_t s_ndeq(
 		const aclty_t* const ae2f_restrict B
 		)
 {
-	if(B->m_class != ACLTY_SIMD) return 0;
+	if(B->m_class != ACLTY_VEC) return 0;
 
 	if(B->m_info.m_vec.m_num != A->m_info.m_vec.m_num)
 		return 0;
@@ -77,7 +77,7 @@ struct aclutil_cxtp_veccfg_t	aclty_get_veccfg(
 		return R;
 	}
 
-	if(aclid_is_vectorisable(c_ty_vec)) {
+	if(aclty_is_simd(c_ty_vec, h_ctx)) {
 		struct aclutil_cxtp_veccfg_t	R;
 		R.m_num		= 1;
 		R.m_ty_elm	= c_ty_vec;
@@ -86,7 +86,7 @@ struct aclutil_cxtp_veccfg_t	aclty_get_veccfg(
 	}
 
 	while(IDX--
-			&& ((P[IDX].m_class != ACLTY_SIMD) || P[IDX].m_type_id != c_ty_vec)) 
+			&& ((P[IDX].m_class != ACLTY_VEC) || P[IDX].m_type_id != c_ty_vec)) 
 	{}
 
 	dbg_prefix(a);
@@ -124,7 +124,7 @@ aclspv_id_t aclty_mk_vec(
 
 	aclmemzero(&TAR, sizeof(TAR));
 
-	TAR.m_class = ACLTY_SIMD;
+	TAR.m_class = ACLTY_VEC;
 	TAR.m_info.m_vec.m_num = c_num_arr;
 	TAR.m_info.m_vec.m_type = c_type_elm;
 	TAR.m_alignof		= aclconst_align_from_size2(

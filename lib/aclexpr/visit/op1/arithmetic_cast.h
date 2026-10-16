@@ -73,12 +73,12 @@ ae2f_inline_f static aclexpr_visit_lbl_t aclexpr_visit_op1_arithmetic_cast(
 				return c_lbl_fail;
 			}
 
-			ae2f_ifezerr_strict(aclid_is_arithmetic(VEC[ACLEXPR_OPBINCFG_RESTYID], h_ctx)) {
+			ae2f_ifezerr_strict(aclty_is_simd(VEC[ACLEXPR_OPBINCFG_RESTYID], h_ctx)) {
 				err_prefix(a);
 				err_call((void)
 						, fprintf(
 							stderr
-							, "[s_cast_numeric::aclid_is_arithmetic] %u\n"
+							, "[s_cast_numeric::aclty_is_simd] %u\n"
 							, (unsigned)VEC[ACLEXPR_OPBINCFG_RESTYID]));
 
 				h_ctx->m_err = ACLSPV_COMPILE_ARITHMETIC_CAST_TYPE_IS_UNDEFINED_NEW;

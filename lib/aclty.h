@@ -10,6 +10,7 @@
 #include "./aclty/fn.h"
 #include "./aclty/by_type.h"
 #include "./aclty/by_cursor.h"
+#include "./aclty/simd.h"
 
 ae2f_ccpure	aclty_t*	aclty_find(const aclspv_id_t c, const h_aclspv_ctx_t h_ctx);
 aclconst_specsz			aclty_getsize(const aclspv_id_t c, const h_aclspv_ctx_t h_ctx);

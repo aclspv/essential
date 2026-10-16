@@ -59,7 +59,7 @@ static enum ACLEXPR_RET_ s_non_literal_novec(
 				, ACLEXPR_RET_SUCCESS);
 	}
 
-	unless(aclid_is_vectorisable(c_old_type) && aclid_is_vectorisable(c_new_type))
+	unless(aclty_is_simd(c_old_type, h_ctx) && aclty_is_simd(c_new_type, h_ctx))
 		return ACLEXPR_RET_NOT_THE_CASE;
 
 	/** two are float */
@@ -287,7 +287,7 @@ static enum ACLEXPR_RET_ s_non_literal_vec(
 	struct aclutil_cxtp_veccfg_t 
 		VCFG_OLD, VCFG_NEW;
 
-	unless(aclid_is_arithmetic(c_old_type, h_ctx) && aclid_is_arithmetic(c_new_type, h_ctx)) {
+	unless(aclty_is_simd(c_old_type, h_ctx) && aclty_is_simd(c_new_type, h_ctx)) {
 		warn_puts("[s_non_literal_vec::no_arithmetic]");
 		return ACLEXPR_RET_NOT_THE_CASE;
 	}
@@ -407,7 +407,7 @@ enum ACLEXPR_RET_ aclexpr_arithmetic_cast_literal(
 					, c_old_type, c_new_type
 				    )));
 
-	ae2f_expected_but_else(aclid_is_vectorisable(c_old_type) && aclid_is_vectorisable(c_new_type)) {
+	ae2f_expected_but_else(aclty_is_simd(c_old_type, h_ctx) && aclty_is_simd(c_new_type, h_ctx)) {
 		return ACLEXPR_RET_NOT_THE_CASE;
 	}
 

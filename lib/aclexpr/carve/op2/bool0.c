@@ -1,14 +1,16 @@
 /** boolean operator where two operands must be evaluated. */
 
 #include "./bool0.h"
-#include <util/constant.h>
 #include <aclconst/specop.h>
-#include <util/wrdemit.h>
+
+#include <util/log.h>
 #include <ae2f/pat/dbg.h>
 
 #include <aclcur/common.h>
 #include <aclexpr/curreg.h>
 #include <aclmem.h>
+#include <aclval.h>
+#include <aclty/simd.h>
 
 ae2f_inline_f static ae2f_ccconst aclspv_wrd_t	s_opcvrt(const aclspv_wrd_t c_op) {
 	switch(c_op) {
@@ -83,39 +85,39 @@ static aclspv_wrd_t s_decide_cast(const enum ACLSPV_ID_ c_id0, const enum ACLSPV
 
 	/** one is 0? */
 	unless(c_id0 && c_id1)
-		return ae2f_bll_sel_bool_naive1(B_id_default_t, c_id0, (B_id_default_t) c_id0, (B_id_default_t) c_id1);
+		return ae2f_bll_sel_bool_naive1(B_id_default_t, c_id0, c_id0, c_id1);
 
 	if(c_id0 == c_id1)
-		return (B_id_default_t) c_id0;
+		return (aclspv_id_t) c_id0;
 
-	ae2f_ifezerr(aclid_is_arithmetic((B_id_default_t) c_id0, h_ctx) & aclid_is_arithmetic((B_id_default_t) c_id1, h_ctx)) {
+	ae2f_ifezerr(aclty_is_simd(c_id0, h_ctx) & aclty_is_simd(c_id1, h_ctx)) {
 		dbg_puts("s_decide_cast 0\n");
 		return 0;
 	}
 
-	if(aclty_get_veccfg((B_id_default_t) c_id0, h_ctx).m_num != aclty_get_veccfg((B_id_default_t) c_id1, h_ctx).m_num) {
-		unless(aclty_get_veccfg((B_id_default_t) c_id0, h_ctx).m_num >> 1) {
-			return (B_id_default_t) c_id1;
-		} else unless(aclty_get_veccfg((B_id_default_t) c_id1, h_ctx).m_num >> 1) {
-			return (B_id_default_t) c_id0;
+	if(aclty_get_veccfg(c_id0, h_ctx).m_num != aclty_get_veccfg(c_id1, h_ctx).m_num) {
+		unless(aclty_get_veccfg(c_id0, h_ctx).m_num >> 1) {
+			return (aclspv_id_t) c_id1;
+		} else unless(aclty_get_veccfg(c_id1, h_ctx).m_num >> 1) {
+			return (aclspv_id_t) c_id0;
 		} { dbg_puts("s_decide_cast 0\n"); return 0; }
 	}
 
-	unless(aclid_is_vectorisable((B_id_default_t) c_id0)) {
+	unless(aclty_simd_class(c_id0, h_ctx)) {
 		return ae2f_bll_sel_bool1(B_id_default_t, s_decide_cast(
-					(enum ACLSPV_ID_) aclty_get_veccfg((B_id_default_t) c_id0, h_ctx).m_ty_elm
-					, (enum ACLSPV_ID_) aclty_get_veccfg((B_id_default_t) c_id1, h_ctx).m_ty_elm
+					(enum ACLSPV_ID_) aclty_simd_class(c_id0, h_ctx)
+					, (enum ACLSPV_ID_) aclty_simd_class(c_id1, h_ctx)
 					, h_ctx
-					), (B_id_default_t) c_id0, (B_id_default_t) c_id1);
+					), c_id0, c_id1);
 	}
 
-	unless((c_id0 == ACLSPV_ID_BOOL || aclid_is_int((B_id_default_t) c_id0)) && (c_id1 == ACLSPV_ID_BOOL || aclid_is_int((B_id_default_t) c_id1))) {
+	unless((c_id0 == ACLSPV_ID_BOOL || aclid_is_int(c_id0)) && (c_id1 == ACLSPV_ID_BOOL || aclid_is_int(c_id1))) {
 		dbg_puts("s_decide_cast 0\n");
 		return 0;
 	}
 
 	dbg_puts("s_decide_cast sint?");
-	return ae2f_bll_sel_bool1(aclspv_wrd_t, aclid_is_sint((aclspv_wrd_t)c_id0), (aclspv_wrd_t)c_id0, (aclspv_wrd_t)c_id1);
+	return ae2f_bll_sel_bool1(aclspv_wrd_t, aclid_is_sint(c_id0), c_id0, c_id1);
 }
 
 static aclexpr_carve_lbl_t s_iter(

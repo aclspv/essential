@@ -320,7 +320,7 @@ aclty_t* aclty_add_struct_mbr_std140(
 		ae2f_ifnezerr(mbrty)
 		switch((aclspv_wrd_t)mbrty->m_class) {
 			case ACLTY_STRUCT:
-			case ACLTY_SIMD:
+			case ACLTY_VEC:
 			case ACLTY_ARR:
 				mbrty->m_alignof = mbrty->m_alignof > 16
 					? mbrty->m_alignof

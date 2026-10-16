@@ -9,14 +9,6 @@
 
 #include <ae2f/pat/dbg.h>
 
-ae2f_ccconst aclspv_bool_t aclid_is_castable(const B_id_default_t c_id, const h_aclspv_ctx_t h_ctx) {
-	return aclid_is_arithmetic(c_id, h_ctx);
-}
-
-ae2f_ccconst aclspv_bool_t aclid_is_castable1(const B_id_default_t c_id0, const B_id_default_t c_id1, const h_aclspv_ctx_t h_ctx) {
-	return aclid_is_arithmetic(c_id0, h_ctx) && aclid_is_arithmetic(c_id1, h_ctx);
-}
-
 ae2f_ccconst aclspv_bool_t aclid_is_uint(const B_id_default_t c_id_default) {
 	switch(c_id_default) {
 		case ACLSPV_ID_U8:
@@ -224,20 +216,6 @@ ae2f_ccconst unsigned aclid_get_bit_width(const B_id_default_t c_id_default) {
 	}
 
 	ae2f_unreachable();
-}
-
-ae2f_ccconst aclspv_bool_t	aclid_is_vectorisable(const aclspv_id_t c_id) {
-	return c_id == ACLSPV_ID_BOOL || aclid_is_number(c_id);
-}
-
-aclspv_bool_t	aclid_is_arithmetic(const aclspv_id_t c_id, const h_aclspv_ctx_t h_ctx) 
-{
-	ae2fpat_assertassume(h_ctx);
-
-	if(aclty_get_veccfg(c_id, h_ctx).m_num > 1)
-		return 1;
-
-	return aclid_is_vectorisable(c_id);
 }
 
 #include <ae2f/bll.h>

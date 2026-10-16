@@ -511,7 +511,7 @@ enum CXChildVisitResult aclemit_fndecl_entp_arg(
 					case ACLTY_DCR:
 					case ACLTY_FN:
 					case ACLTY_FN_ARG:
-					case ACLTY_SIMD:
+					case ACLTY_VEC:
 					case ACLTY_RESERVED:
 					case ACLTY_STRUCT_MBR:
 					default:

@@ -121,7 +121,7 @@ ae2f_MAC((L, )) aclemit_body_vardecl(CXCursor h_cur, aclutil_fnctx* ae2f_restric
 				, (unsigned)L$$TYPE_PTR
 				));
 
-	if(aclid_is_vectorisable(L$$TYPEID))
+	if(aclty_is_simd(L$$TYPEID, CTX))
 	{
 		aclspv_id_t	L$$SPECID = 0xFFFFFFFF;
 

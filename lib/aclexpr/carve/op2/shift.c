@@ -1,8 +1,11 @@
 #include "./shift.h"
 
+#include <aclty.h>
+
 #include <aclexpr/carve/util.h>
-#include <aclcur/common.h>
 #include <aclexpr/curreg.h>
+
+#include <aclcur/common.h>
 #include <aclconst/specop.h>
 #include <aclmem.h>
 
@@ -46,7 +49,7 @@ ae2f_inline_f static ae2f_ccpure aclspv_opcode_t s_shift_to_spv(
 		const h_aclspv_ctx_t	h_ctx
 		)
 {
-	aclspv_id_t ID = aclid_is_vectorisable(c_id) ? c_id : aclty_get_veccfg(c_id, h_ctx).m_ty_elm;
+	aclspv_id_t ID = aclty_simd_elmtype(c_id, h_ctx);
 
 	switch(c_op2) {
 		default:

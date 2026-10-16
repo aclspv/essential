@@ -9,6 +9,8 @@ boolx4 t0_band128(const v4i32 A, const v4i32 B) {
     Z[0] = 0; Z[1] = 0;
     Z[2] = 0; Z[3] = 0;
 
+    Z *= 15;
+
     return A & B != Z;  
 }
 

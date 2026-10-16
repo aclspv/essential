@@ -15,7 +15,7 @@ enum ACLTY_ {
 	ACLTY_FN_ARG,
 
 	/** vector */
-	ACLTY_SIMD,
+	ACLTY_VEC,
 	ACLTY_ARR,
 	ACLTY_PTR,
 	ACLTY_STRUCT,
