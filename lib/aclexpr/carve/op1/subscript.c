@@ -169,6 +169,7 @@ aclexpr_carve_lbl_t aclexpr_carve2_subscript(
 		aclspv_id_t IDX;
 		aclspv_id_t TY_ELM;
 		aclspv_id_t TY_MID;
+		aclspv_id_t TY_VEC;
 		aclspv_id_t VIEW;
 		aclspv_id_t PTR;
 		h_aclcur_t P_REG;
@@ -219,6 +220,11 @@ aclexpr_carve_lbl_t aclexpr_carve2_subscript(
 		 * field still needed afterwards (to build the element pointer type),
 		 * so it is taken here while P_REG is known to be valid. */
 		STORAGE = P_REG->m_d.m_reg.m_storage_class;
+		/** the register's own (vector) type id, captured while P_REG is
+		 * still valid: a compound assignment through a vector element
+		 * rebuilds the whole vector, so OpVectorInsertDynamic's result type
+		 * and the l-value extra's m_vecelm.m_ty both need it. */
+		TY_VEC = P_REG->m_ty;
 
 		/** vector: OpVectorExtractDynamic — no access chain needed.
 		 * the vector value is resolved from the register (load for a
@@ -303,6 +309,16 @@ aclexpr_carve_lbl_t aclexpr_carve2_subscript(
 			*rdwr_prv_extra = rdwr_lst_extra[0];
 			rdwr_prv_extra->m_type_original = TY_ELM;
 			rdwr_prv_extra->m_mask_literal = 0;
+			/** record the l-value so a compound assignment (`v[i] += x`)
+			 * can store back: a vector element has no address, so the
+			 * store-back rebuilds the whole vector from the value this read
+			 * resolved and stores it to the register. */
+			rdwr_prv_extra->m_state0
+				|= (aclspv_wrd_t)ACLEXPR_OPCFGX_STATE0_LVALUE_VEC_ELM;
+			rdwr_prv_extra->m_extra.m_vecelm.m_reg = REG;
+			rdwr_prv_extra->m_extra.m_vecelm.m_idx = IDX;
+			rdwr_prv_extra->m_extra.m_vecelm.m_vec = VEC_VAL;
+			rdwr_prv_extra->m_extra.m_vecelm.m_ty = TY_VEC;
 
 			return c_lbl_success;
 		}
@@ -450,6 +466,11 @@ aclexpr_carve_lbl_t aclexpr_carve2_subscript(
 		*rdwr_prv_extra = rdwr_lst_extra[0];
 		rdwr_prv_extra->m_type_original = TY_ELM;
 		rdwr_prv_extra->m_mask_literal = 0;
+		/** record the view as the l-value, so a compound assignment
+		 * (`a[i] += x`) stores back through it. */
+		rdwr_prv_extra->m_state0
+			|= (aclspv_wrd_t)ACLEXPR_OPCFGX_STATE0_LVALUE_VIEW;
+		rdwr_prv_extra->m_extra.m_view.m_reg = VIEW;
 	}
 
 	return c_lbl_success;

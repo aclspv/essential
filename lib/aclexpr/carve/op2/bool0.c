@@ -7,6 +7,7 @@
 #include <ae2f/pat/dbg.h>
 
 #include <aclcur/common.h>
+#include <aclexpr/carve/lvalue.h>
 #include <aclexpr/curreg.h>
 #include <aclmem.h>
 #include <aclval.h>
@@ -399,23 +400,14 @@ aclexpr_carve_lbl_t aclexpr_carve2_bool0(
 	}
 
 	if(ISASS) {
-		CXCursor	CASSIGN		= rdwr_lst_extra->m_cursor;
-		const aclspv_id_t REG = aclexpr_curreg_find(
-				clang_getCursorReferenced(CASSIGN)
-				, rdwr_data->m_ctx
-				);
-
-		ae2f_ifezerr(REG) {
-			err_puts("[carve] no register for the assigned lvalue.");
-			rdwr_data->m_ctx->m_err = ACLSPV_COMPILE_UNHANDLED_CARVE;
-			return c_lbl_err;
-		}
-
-		ae2f_ifezerr(aclcur_store_reg(
-					REG, *rdwr_prv_idval, rdwr_data->m_ctx
-					)) {
-			err_puts("[carve] aclutil_assign_cursor_lval has been failed.");
-			rdwr_data->m_ctx->m_err = ACLSPV_COMPILE_UNHANDLED_CARVE;
+		/** view-rooted (`a[i] &= x`), vector element (`v[i] &= x`) or plain
+		 * variable: one shared store-back, keyed on what the l-value's own
+		 * read recorded on extra[0]. */
+		ae2f_ifezerr(aclexpr_lvalue_storeback(
+					rdwr_lst_extra
+					, *rdwr_prv_idval
+					, rdwr_data->m_ctx
+					, "[carve2::bool0] the l-value store back failed")) {
 			return c_lbl_err;
 		}
 	}

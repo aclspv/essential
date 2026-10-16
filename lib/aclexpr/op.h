@@ -112,6 +112,21 @@ typedef struct {
 		struct {
 			aclspv_id_t	m_reg;
 		} m_view;
+
+		/** the vector element a vector-subscript l-value read named
+		 * (`v[i]`), valid under
+		 * ACLEXPR_OPCFGX_STATE0_LVALUE_VEC_ELM. a vector is a value with no
+		 * address, so a compound assignment through this l-value is a
+		 * read-modify-write of the whole vector: m_vec is the vector value
+		 * the read extracted from, m_idx the element index value id, m_ty
+		 * the vector's own type id, and m_reg the base register the rebuilt
+		 * vector is stored back to. */
+		struct {
+			aclspv_id_t	m_reg;
+			aclspv_id_t	m_idx;
+			aclspv_id_t	m_vec;
+			aclspv_id_t	m_ty;
+		} m_vecelm;
 	} m_extra;
 } aclexpr_opbincfg_extra;
 
@@ -130,7 +145,12 @@ enum ACLEXPR_OPCFGX_STATE0_ {
 	 * `a[i]`): m_extra.m_view.m_reg is valid and names the view register. a
 	 * compound assignment through this l-value stores through the view
 	 * (aclcur_store_reg), not through a re-derived pointer. */
-	ACLEXPR_OPCFGX_STATE0_LVALUE_VIEW	= 0x10
+	ACLEXPR_OPCFGX_STATE0_LVALUE_VIEW	= 0x10,
+	/** this l-value is a vector element (`v[i]`): a vector is a value with
+	 * no address, so m_extra.m_vecelm is valid, and a compound assignment
+	 * through this l-value is a read-modify-write of the whole vector
+	 * (OpVectorInsertDynamic + store) rather than a store through a view. */
+	ACLEXPR_OPCFGX_STATE0_LVALUE_VEC_ELM	= 0x20
 };
 
 /**

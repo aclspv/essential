@@ -2,6 +2,7 @@
 
 #include <aclexpr/carve/util.h>
 #include <aclexpr/carve/ptr.h>
+#include <aclexpr/carve/lvalue.h>
 #include <aclcur/common.h>
 #include <aclcur/op.h>
 #include <aclexpr/curreg.h>
@@ -487,53 +488,15 @@ aclexpr_carve_lbl_t aclexpr_carve2_arithmetic(
 	}
 
 	if(IS_ASSIGN) {
-		CXCursor	CASSIGN		= rdwr_lst_extra->m_cursor;
-
-		/** view-rooted lvalue (`*q += x`, `p->m += x`, `(*p).m += x`,
-		 * `a[i] += x`): the read built the view naming the region, so the
-		 * store goes through it (aclcur_store_reg) exactly like a plain
-		 * variable's. this is the only lvalue store path left besides the
-		 * plain variable below. */
-		if(rdwr_lst_extra->m_state0
-				& (aclspv_wrd_t)ACLEXPR_OPCFGX_STATE0_LVALUE_VIEW) {
-			ae2f_ifezerr(aclcur_store_reg(
-						rdwr_lst_extra->m_extra.m_view.m_reg
-						, *rdwr_prv_idval
-						, rdwr_data->m_ctx)) {
-				err_puts("[carve2::arithmetic] store through the l-value view failed");
-				rdwr_data->m_ctx->m_err = ACLSPV_COMPILE_UNHANDLED_CARVE;
-				return c_lbl_err;
-			}
-
-			return c_lbl_success;
-		}
-
-		{
-		const aclspv_id_t REG = aclexpr_curreg_find(
-				clang_getCursorReferenced(CASSIGN)
-				, rdwr_data->m_ctx
-				);
-
-		dbg_puts("[carve2::arithmetic] assign mode");
-
-		ae2f_ifezerr(REG) {
-			err_puts("[carve2::arithmetic] no register for the lvalue");
-			rdwr_data->m_ctx->m_err = ACLSPV_COMPILE_UNHANDLED_CARVE;
+		/** view-rooted (`*q += x`, `p->m += x`, `a[i] += x`), vector element
+		 * (`v[i] += x`) or plain variable: one shared store-back, keyed on
+		 * what the l-value's own read recorded on extra[0]. */
+		ae2f_ifezerr(aclexpr_lvalue_storeback(
+					rdwr_lst_extra
+					, *rdwr_prv_idval
+					, rdwr_data->m_ctx
+					, "[carve2::arithmetic] the l-value store back failed")) {
 			return c_lbl_err;
-		}
-
-		ae2f_ifezerr(aclcur_store_reg(
-					REG, *rdwr_prv_idval, rdwr_data->m_ctx
-					)) {
-			err_puts("[carve] aclutil_assign_cursor_lval has been failed.");
-			rdwr_data->m_ctx->m_err = ACLSPV_COMPILE_UNHANDLED_CARVE;
-			return c_lbl_err;
-		}
-
-		dbg_call((void), fprintf(
-					stderr
-					, "[carve2::arithmetic] assigned %u\n"
-					, *rdwr_prv_idval));
 		}
 	}
 	return c_lbl_success;
