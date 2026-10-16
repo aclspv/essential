@@ -373,23 +373,26 @@ typedef struct { unsigned m_uint; } std140_uint_t;
 - see https://registry.khronos.org/SPIR-V/specs/unified1/SPIRV.html#BuiltIn
 
 ```c
+typedef float f32;
+typedef f32 __attribute__((ext_vector_type(4))) f32x4;
+
 __attribute__((annotate("aclspv_execmodel(0)")))
-void entry_point_vertex(
-    /*** 
+void t12_entry_point_vertex(
+    /***
      * vertex shader builtin: position output
-     * SPIR-V BuiltIn: Position (37)
+     * SPIR-V BuiltIn: Position (0)
      * */
     __attribute__((annotate("aclspv_storage_class(3)")))
-    __attribute__((annotate("aclspv_bltin(37)")))
-    vec4 gl_Position,
+    __attribute__((annotate("aclspv_bltin(0)")))
+    f32x4* gl_Position,
 
-    /*** 
+    /***
      * vertex shader builtin: vertex index input
-     * SPIR-V BuiltIn: VertexIndex (44)
+     * SPIR-V BuiltIn: VertexIndex (42)
      * */
     __attribute__((annotate("aclspv_storage_class(1)")))
-    __attribute__((annotate("aclspv_bltin(44)")))
-    int gl_VertexIndex
+    __attribute__((annotate("aclspv_bltin(42)")))
+    int* gl_VertexIndex
 ) { return; }
 ```
 

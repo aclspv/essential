@@ -13,6 +13,9 @@ aclspv_id_t aclty_simd_elmtype(aclspv_id_t c, h_aclspv_ctx_t h_ctx) {
 	{
 		aclty_t* ae2f_restrict p = aclty_find(c, h_ctx);
 
+		ae2f_ifezerr(p)
+			return 0;
+
 		switch(p->m_class) {
 			default:
 				ae2f_unreachable();
