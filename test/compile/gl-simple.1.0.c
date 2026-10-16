@@ -10,7 +10,7 @@
 int main(void);
 int main(void) {
 	struct CXUnsavedFile files[2];
-	const char *ARG[] = {"main.cl"};
+	const char *ARG[] = {"main.c"};
 	aclspv_compile_t RET;
 
 	aclspv_wrd_t *spirv0;
@@ -19,7 +19,7 @@ int main(void) {
 	acltestcfg();
 
 	files[0].Contents = s_src0;
-	files[0].Filename = "main.cl";
+	files[0].Filename = "main.c";
 	files[0].Length = sizeof(s_src0) - 1;
 
 	puts("main.cl::::::::::::::::::");

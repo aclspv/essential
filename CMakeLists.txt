@@ -4,7 +4,9 @@ enable_testing()
 
 project(aclspv VERSION 0)
 
-option(aclspv_llvm_from_source "it build llvm from source when set to true without trying to find clang." OFF)
+option(aclspv_llvm_from_source	"it build llvm from source when set to true without trying to find clang." OFF)
+option(aclspv_example		"build examples" OFF)
+option(aclspv_example_vk	"build vulkan examples" OFF)
 
 # Set this source directory as the tree root for project.
 set(ae2f_ProjRoot ${CMAKE_CURRENT_SOURCE_DIR} CACHE STRING "Tree root for project")
@@ -260,7 +262,13 @@ endif()
 
 ae2f_UltraErrWERROR(ae3f-aclspv PRIVATE)
 
+target_include_directories(ae3f-aclspv PUBLIC 
+	$<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/3rdinc>
+	)
+
 include(./cmake/predef.cmake)
+
+message(STATUS "[aclspv_predef]")
 
 aclspv_predef_switch(ae3f-aclspv "ACLSPV_OpCapabilityKernel" "1")
 aclspv_predef_switch(ae3f-aclspv "ACLSPV_OpCapabilityShader" "1")
@@ -269,6 +277,13 @@ aclspv_predef_switch(ae3f-aclspv "ACLSPV_SYMBOL" "1")
 aclspv_predef_switch(ae3f-aclspv "ACLSPV_ATOMIC_ID" 0)
 aclspv_predef_switch(ae3f-aclspv "ACLSPV_OPACC_IDX_MAX" 64)
 
-target_include_directories(ae3f-aclspv PUBLIC 
-	$<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/3rdinc>
+message(STATUS ""
+	"[aclspv]\n"
+	"\taclspv_llvm_from_source: ${aclspv_llvm_from_source}\n"
+	"\taclspv_example: ${aclspv_example}\n"
+	"\taclspv_example_vk: ${aclspv_example_vk}"
 	)
+
+if(${aclspv_example})
+	add_subdirectory(./example/)
+endif()

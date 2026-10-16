@@ -4,4 +4,6 @@ macro(aclspv_predef_switch tar switch default)
 	else()
 		target_compile_definitions(${tar} PRIVATE "__${switch}=${default}")
 	endif()
+
+	message(STATUS "\t ${switch}: ${default}")
 endmacro()

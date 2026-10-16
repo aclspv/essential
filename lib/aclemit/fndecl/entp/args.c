@@ -963,25 +963,40 @@ enum CXChildVisitResult aclemit_fndecl_entp_arg(
 						, &location
 						);
 
-				if(location == 0xFFFFFFFF)
-					location = 0;
-
 				clang_visitChildren(
 						h_cur
 						, s_attr_bltin
 						, &bltin
 						);
 
-				ae2f_ifezerr(CTX->m_count.m_decorate = aclutil_emitx_4(
-							&CTX->m_section.m_decorate
-							, CTX->m_count.m_decorate
-							, SpvOpDecorate
+				if(location == 0xFFFFFFFF && bltin == SpvBuiltInMax)
+					location = 0;
+
+
+				ae2f_ifezerr(CTX->m_count.m_vars = util_emitx_variable(
+							&CTX->m_section.m_vars
+							, CTX->m_count.m_vars
+							, var_native_type_id
 							, var_id = aclctx_newid(CTX)
-							, SpvDecorationLocation
-							, location
+							, storage_class
 							)) {
 					_aclctx_err(DAT->m_ctx, ACLSPV_COMPILE_UNHANDLED_ARGS);
 					return CXChildVisit_Break;
+				}
+
+
+				if(location != 0xFFFFFFFF) {
+					ae2f_ifezerr(CTX->m_count.m_decorate = aclutil_emitx_4(
+								&CTX->m_section.m_decorate
+								, CTX->m_count.m_decorate
+								, SpvOpDecorate
+								, var_id
+								, SpvDecorationLocation
+								, location
+								)) {
+						_aclctx_err(DAT->m_ctx, ACLSPV_COMPILE_UNHANDLED_ARGS);
+						return CXChildVisit_Break;
+					}
 				}
 
 				if(bltin != SpvBuiltInMax) {
@@ -996,17 +1011,6 @@ enum CXChildVisitResult aclemit_fndecl_entp_arg(
 						_aclctx_err(DAT->m_ctx, ACLSPV_COMPILE_UNHANDLED_ARGS);
 						return CXChildVisit_Break;
 					}
-				}
-
-				ae2f_ifezerr(CTX->m_count.m_vars = util_emitx_variable(
-							&CTX->m_section.m_vars
-							, CTX->m_count.m_vars
-							, var_native_type_id
-							, var_id
-							, storage_class
-							)) {
-					_aclctx_err(DAT->m_ctx, ACLSPV_COMPILE_UNHANDLED_ARGS);
-					return CXChildVisit_Break;
 				}
 			}
 

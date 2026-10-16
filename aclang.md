@@ -293,9 +293,13 @@ void entry_point_glcompute(void) {
 
 > `aclspv_location(location : u32)`
 
+> [!WARNING]  
+> you cannot specify this with [aclspv_bltin](#aclspv_bltin)
+
 - used on declaring arguments in entry point.
 - specifies the location of `input(1)` or `output(3)`  
-- when not specified, every input our output's location will be 0.  
+- when this and [aclspv_bltin](#aclspv_bltin) is not specified, every input our output's location will be 0.  
+- when [aclspv_bltin](#aclspv_bltin) is specified, location will not be specified.
 
 ```c
 __attribute__((annotate("aclspv_execmodel(0)")))
@@ -367,7 +371,10 @@ typedef struct { unsigned m_uint; } std140_uint_t;
 
 > [!WARNING]  
 > this attribute will not resolve or check for execution model | capabilities.  
-> use standard macro to resolve or you should be aware of your choice.
+> use standard macro to resolve or you should be aware of your choice.  
+
+> [!WARNING]  
+> you cannot specify this with [aclspv_location](#aclspv_location)
 
 - specify an interface variable (input | output) is builtin variable.
 - see https://registry.khronos.org/SPIR-V/specs/unified1/SPIRV.html#BuiltIn
