@@ -220,6 +220,88 @@ aclexpr_carve_lbl_t aclexpr_carve2_subscript(
 		 * so it is taken here while P_REG is known to be valid. */
 		STORAGE = P_REG->m_d.m_reg.m_storage_class;
 
+		/** vector: OpVectorExtractDynamic — no access chain needed.
+		 * the vector value is resolved from the register (load for a
+		 * memory variable, tracked value for a value register), then the
+		 * extract instruction produces the element value directly. */
+		if(aclexpr_sub_elm_is_vec(TY_ELM, CTX(rdwr_data))) {
+			aclspv_id_t	VEC_VAL;
+			aclspv_id_t	ELEM_VAL;
+
+			/** resolve the vector register to its value. */
+			ae2f_ifezerr(VEC_VAL = aclexpr_ptrval(REG, CTX(rdwr_data)))
+				return c_lbl_err;
+
+			/** `&v[i]`: the address-of wants the element's ADDRESS, not
+			 * its value. OpVectorExtractDynamic cannot produce an address
+			 * (vectors have no addressability), so we emit the extract and
+			 * wrap the result in OpCopyObject to produce a typed address
+			 * id — the same pattern the array path uses for &a[i]. */
+			if(rdwr_lst_extra[0].m_state0
+					& (aclspv_wrd_t)ACLEXPR_OPCFGX_STATE0_ADDR_OF_ELM) {
+				aclspv_id_t	TY_PTR;
+				aclspv_id_t	ID_ADDR;
+
+				ae2f_ifezerr(TY_PTR = aclty_mk_ptr(
+							TY_ELM
+							, (enum SpvStorageClass_)STORAGE
+							, CTX(rdwr_data))) {
+					err_puts("[carve1::subscript] the element pointer type failed");
+					return c_lbl_err;
+				}
+
+				ae2f_ifezerr(ELEM_VAL = aclcur_cfg_op2(
+							0
+							, SpvOpVectorExtractDynamic
+							, TY_ELM
+							, VEC_VAL
+							, IDX
+							, CTX(rdwr_data))) {
+					err_puts("[carve1::subscript] the vector extract failed");
+					return c_lbl_err;
+				}
+
+				ae2f_ifezerr(ID_ADDR = aclcur_cfg_op1(
+							0
+							, SpvOpCopyObject
+							, TY_PTR
+							, ELEM_VAL
+							, CTX(rdwr_data))) {
+					err_puts("[carve1::subscript] the element pointer value failed");
+					return c_lbl_err;
+				}
+
+				*rdwr_prv_idval = ID_ADDR;
+				*rdwr_prv_extra = rdwr_lst_extra[0];
+				rdwr_prv_extra->m_type_original = TY_PTR;
+				rdwr_prv_extra->m_mask_literal = 0;
+				rdwr_prv_extra->m_state0
+					|= (aclspv_wrd_t)ACLEXPR_OPCFGX_STATE0_ADDR_OF_ELM;
+
+				return c_lbl_success;
+			}
+
+			/** OpVectorExtractDynamic: result type = element type,
+			 * operands = vector value + index value. */
+			ae2f_ifezerr(ELEM_VAL = aclcur_cfg_op2(
+						0
+						, SpvOpVectorExtractDynamic
+						, TY_ELM
+						, VEC_VAL
+						, IDX
+						, CTX(rdwr_data))) {
+				err_puts("[carve1::subscript] the vector extract failed");
+				return c_lbl_err;
+			}
+
+			*rdwr_prv_idval = ELEM_VAL;
+			*rdwr_prv_extra = rdwr_lst_extra[0];
+			rdwr_prv_extra->m_type_original = TY_ELM;
+			rdwr_prv_extra->m_mask_literal = 0;
+
+			return c_lbl_success;
+		}
+
 		/** TY_MID set: the base is a pointer whose pointee is the
 		 * wrapped-runtime-array struct, and the chain must descend through
 		 * member 0 before the subscript index — two views. every other form
@@ -437,6 +519,54 @@ aclexpr_carve_lbl_t aclexpr_carve2_subscriptwrite(
 		 * arena) can invalidate, and the constant mint below runs first on
 		 * the two-level path. */
 		STORAGE = P_REG->m_d.m_reg.m_storage_class;
+
+		/** vector: OpVectorInsertDynamic — produce a new vector value
+		 * with the element inserted at the index, then store it back to
+		 * the register. mirrors the array path (view + aclcur_store_reg)
+		 * but uses insert + direct register store since vectors are
+		 * values, not memory objects addressed by an access chain. */
+		if(aclexpr_sub_elm_is_vec(TY_ELM, CTX(rdwr_data))) {
+			aclspv_id_t	VEC_VAL;
+			aclspv_id_t	NEW_VEC;
+
+			/** resolve the vector register to its value. */
+			ae2f_ifezerr(VEC_VAL = aclexpr_ptrval(REG, CTX(rdwr_data)))
+				return c_lbl_err;
+
+			/** OpVectorInsertDynamic: result = new vector, operands =
+			 * vector, element value, index (literal). */
+			ae2f_ifezerr(NEW_VEC = aclcur_cfg_op2i(
+						0
+						, SpvOpVectorInsertDynamic
+						, REG
+						, VEC_VAL
+						, X
+						, (aclspv_wrd_t)IDX
+						, CTX(rdwr_data))) {
+				err_puts("[carve1::subscriptwrite] the vector insert failed");
+				return c_lbl_err;
+			}
+
+			/** store the new vector back to the register:
+			 * aclcur_store_reg handles the register-level assignment
+			 * (phi for scoped, explicit store for non-scoped). */
+			ae2f_ifezerr(aclcur_store_reg(
+						REG
+						, NEW_VEC
+						, CTX(rdwr_data)
+						)) {
+				err_puts("[carve1::subscriptwrite] vector store failed");
+				return c_lbl_err;
+			}
+
+			*rdwr_prv_idval = NEW_VEC;
+			*rdwr_prv_extra = rdwr_lst_extra[1];
+			rdwr_prv_extra->m_type_original = REG;
+			rdwr_prv_extra->m_mask_literal = 0;
+			rdwr_prv_extra->m_literal = *r_ltrl;
+
+			return c_lbl_success;
+		}
 
 		/** the same two-level chain as the read path when the base is a
 		 * pointer to the wrapped-runtime-array struct. */

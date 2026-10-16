@@ -20,6 +20,7 @@ typedef int i32;
 
 #if	1
 
+__attribute__((annotate("aclspv_execmodel(0)")))
 void t0_band128(
 __attribute__((annotate("aclspv_storage_class(12)")))
 		  i32x4* r, const i32x4 A, const i32x4 B) {

@@ -109,6 +109,15 @@ ae2f_inline_f static aclspv_id_t aclexpr_arr_elm_ty(
 	return P_TY->m_info.m_arr.m_type;
 }
 
+/** returns non-zero when c_ty is a vector type. */
+ae2f_inline_f static aclspv_bool_t aclexpr_sub_elm_is_vec(
+		aclspv_id_t			c_ty,
+		h_aclspv_ctx_t			h_ctx
+		) {
+	const aclty_t* const ae2f_restrict P_TY = c_ty ? aclty_find(c_ty, h_ctx) : 0;
+	return P_TY && P_TY->m_class == ACLTY_VEC;
+}
+
 /** the SUBSCRIPT lvalue shape of one base register: the LEAF element type
  * and — for the frontend's wrapped-runtime-array idiom — the intermediate
  * view's type.
@@ -190,6 +199,10 @@ ae2f_inline_f static aclspv_id_t aclexpr_sub_elm_ty(
 			return 0;
 
 		switch((aclspv_wrd_t)P_TY->m_class) {
+			case ACLTY_VEC:
+				/** vector: one level, the element type. */
+				return P_TY->m_info.m_vec.m_type;
+
 			case ACLTY_ARR:
 				return P_TY->m_info.m_arr.m_type;
 
