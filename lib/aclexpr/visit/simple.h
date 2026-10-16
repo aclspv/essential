@@ -111,18 +111,32 @@ ae2f_inline_f static aclexpr_visit_lbl_t aclexpr_visit_op0_val(
 								return c_lbl_fail;
 						}
 
+						ae2f_unreachable();
+
 					case CXEval_Float:
 						dbg_puts(("Literal: double (float casted)"));
 						dbg_prefix(a);
 
 						if(aclspv_chck_capability_from_ctx(h_fnctx->m_ctx, SpvCapabilityFloat64)) {
-							EVRES.m_flt = (float)clang_EvalResult_getAsDouble(EVAL);
-							*wr_type_fetched = ACLSPV_ID_F32;
-							dbg_call(fprintf, (stderr, "Literal fetched: %f\n", (float)EVRES.m_flt));
-						} else {
 							EVRES.m_dbl = clang_EvalResult_getAsDouble(EVAL);
 							*wr_type_fetched = ACLSPV_ID_F64;
 							dbg_call(fprintf, (stderr, "Literal fetched: %f\n", (float)EVRES.m_dbl));
+
+							ae2f_ifezerr(*wr_newid = aclval_cfg_f64(
+										EVRES.m_dbl
+										, h_fnctx->m_ctx
+										))
+								return c_lbl_fail;
+						} else {
+							EVRES.m_flt = (float)clang_EvalResult_getAsDouble(EVAL);
+							*wr_type_fetched = ACLSPV_ID_F32;
+							dbg_call(fprintf, (stderr, "Literal fetched: %f\n", (float)EVRES.m_flt));
+
+							ae2f_ifezerr(*wr_newid = aclval_cfg_f32(
+										EVRES.m_flt
+										, h_fnctx->m_ctx
+										))
+								return c_lbl_fail;
 						}
 
 						clang_EvalResult_dispose(EVAL);
@@ -130,12 +144,6 @@ ae2f_inline_f static aclexpr_visit_lbl_t aclexpr_visit_op0_val(
 						ae2fpat_assertassume_strict(*wr_type_fetched);
 
 						*rwr_literal = EVRES;
-
-						ae2f_expected_but_else(*wr_newid = aclval_cfg_f32(
-									EVRES.m_flt
-									, h_fnctx->m_ctx
-									))
-							return c_lbl_fail;
 
 						return c_lbl_success;
 
@@ -172,7 +180,7 @@ ae2f_inline_f static aclexpr_visit_lbl_t aclexpr_visit_op0_val(
 				 * register's own stale label/loop state (phis, CHANGED)
 				 * must not force a runtime op. */
 				ae2f_ifezerr(*wr_newid = aclcur_load_reg(
-						REG, h_fnctx->m_ctx, rwr_literal))
+							REG, h_fnctx->m_ctx, rwr_literal))
 					return c_lbl_fail;
 
 				{

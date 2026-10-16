@@ -265,6 +265,6 @@ void t12_entry_point_vertex(
     __attribute__((annotate("aclspv_storage_class(1)")))
     __attribute__((annotate("aclspv_bltin(42)")))
     int* in_vertidx
-) { *out_pos = (f32x4)(float)*in_vertidx; return; }
+) { *out_pos = ((f32x4)(float)*in_vertidx) * 12.f; return; }
 
 #endif

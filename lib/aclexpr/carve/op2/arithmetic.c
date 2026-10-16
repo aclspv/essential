@@ -399,7 +399,7 @@ aclexpr_carve_lbl_t aclexpr_carve2_arithmetic(
 			|| aclid_is_float(aclty_get_veccfg(rdwr_prv_extra[1].m_type_original, rdwr_data->m_ctx).m_ty_elm)
 			) {
 		fixme_puts("this is float. make sure we can do it constantly with Kernel capability.");
-		rdwr_prv_extra->m_mask_literal &= ~(aclspv_wrd_t)ACLUTIL_LITERAL_CONSTANT;
+		rdwr_prv_extra->m_mask_literal &= ~(aclspv_wrd_t)(ACLUTIL_LITERAL_CONSTANT);
 	}
 
 	ae2f_ifezerr(rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_OPCODE] = s_op_to_spv(
