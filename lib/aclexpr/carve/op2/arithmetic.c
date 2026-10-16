@@ -257,7 +257,7 @@ ae2f_inline_f static ae2f_ccconst struct aclutil_ltrl_eval_t	s_eval2_ltrl(
 #undef	EXPR_TWO
 }
 
-static aclspv_wrd_t s_decide_cast(const enum ACLSPV_ID_ c_id0, const enum ACLSPV_ID_ c_id1, const h_aclspv_ctx_t h_ctx) {
+static aclspv_wrd_t s_decide_cast(const aclspv_id_t c_id0, const aclspv_id_t c_id1, const h_aclspv_ctx_t h_ctx) {
 	/** one is 0? */
 	unless(c_id0 && c_id1)
 		return ae2f_bll_sel_bool_naive1(B_id_default_t, c_id0, c_id0, c_id1);
@@ -278,8 +278,8 @@ static aclspv_wrd_t s_decide_cast(const enum ACLSPV_ID_ c_id0, const enum ACLSPV
 
 	unless(aclty_simd_class(c_id0, h_ctx)) {
 		return ae2f_bll_sel_bool1(B_id_default_t, s_decide_cast(
-				(enum ACLSPV_ID_) aclty_simd_class(c_id0, h_ctx)
-					, (enum ACLSPV_ID_) aclty_simd_class(c_id1, h_ctx)
+				aclty_simd_class(c_id0, h_ctx)
+					, aclty_simd_class(c_id1, h_ctx)
 					, h_ctx
 					), c_id0, c_id1);
 	}
@@ -320,8 +320,8 @@ aclexpr_carve_lbl_t aclexpr_carve2_arithmetic(
 		return c_lbl_err;
 
 	rdwr_prv_extra->m_type_original = rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_RESTYID] = s_decide_cast(
-			(enum ACLSPV_ID_) rdwr_lst_extra[0].m_type_original
-			, (enum ACLSPV_ID_) rdwr_lst_extra[1].m_type_original
+			rdwr_lst_extra[0].m_type_original
+			, rdwr_lst_extra[1].m_type_original
 			, CTX(rdwr_data)
 			);
 

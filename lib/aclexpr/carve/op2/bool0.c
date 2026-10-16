@@ -75,7 +75,7 @@ ae2f_inline_f static ae2f_ccconst aclspv_bool_t s_is_logical(const aclspv_wrd_t 
 	}
 }
 
-static aclspv_wrd_t s_decide_cast(const enum ACLSPV_ID_ c_id0, const enum ACLSPV_ID_ c_id1, const h_aclspv_ctx_t h_ctx) {
+static aclspv_wrd_t s_decide_cast(const aclspv_id_t c_id0, const aclspv_id_t c_id1, const h_aclspv_ctx_t h_ctx) {
 	dbg_prefix(a);
 	dbg_call(fprintf, (
 				stderr, "s_decide_cast(%lu, %lu)\n"
@@ -105,8 +105,8 @@ static aclspv_wrd_t s_decide_cast(const enum ACLSPV_ID_ c_id0, const enum ACLSPV
 
 	unless(aclty_simd_class(c_id0, h_ctx)) {
 		return ae2f_bll_sel_bool1(B_id_default_t, s_decide_cast(
-					(enum ACLSPV_ID_) aclty_simd_class(c_id0, h_ctx)
-					, (enum ACLSPV_ID_) aclty_simd_class(c_id1, h_ctx)
+					aclty_simd_class(c_id0, h_ctx)
+					, aclty_simd_class(c_id1, h_ctx)
 					, h_ctx
 					), c_id0, c_id1);
 	}
@@ -273,8 +273,8 @@ aclexpr_carve_lbl_t aclexpr_carve2_bool0(
 	const aclspv_bool_t ISASS = s_is_assign(rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_OPCODE]);
 
 	const aclspv_id_t TY_OPRND = s_ty_oprnd(s_decide_cast(
-				(enum ACLSPV_ID_) rdwr_lst_extra[0].m_type_original
-				, (enum ACLSPV_ID_) rdwr_lst_extra[1].m_type_original
+				rdwr_lst_extra[0].m_type_original
+				, rdwr_lst_extra[1].m_type_original
 				, (rdwr_data)->m_ctx
 				), s_is_logical(rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_OPCODE])
 			, rdwr_data->m_ctx);
@@ -286,8 +286,8 @@ aclexpr_carve_lbl_t aclexpr_carve2_bool0(
 
 	rdwr_prv_extra->m_type_original = rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_RESTYID]
 		= s_ty_out(s_decide_cast(
-					(enum ACLSPV_ID_) rdwr_lst_extra[0].m_type_original
-					, (enum ACLSPV_ID_) rdwr_lst_extra[1].m_type_original
+					rdwr_lst_extra[0].m_type_original
+					, rdwr_lst_extra[1].m_type_original
 					, (rdwr_data)->m_ctx
 					), s_is_logical(rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_OPCODE])
 				, rdwr_data->m_ctx);
