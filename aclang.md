@@ -78,6 +78,45 @@ i32 sum(const i32 rd[3] __attribute__((annotate("aclspv_specid(0)")))) {
 
 ```
 
+### aclspv_execmode
+> `aclspv_execmode0(mode : u32)`  
+> `aclspv_execmode1(mode : u32, o0 : u32 | id)`  
+> `aclspv_execmode2(mode : u32, o0 : u32 | id, o1 : u32 | id)`  
+> `aclspv_execmode3(mode : u32, o0 : u32 | id, o1 : u32 | id, o2 : u32 | id)`  
+
+> [!WARNING]  
+> using spec constant id on execution mode requires spir-v >= 1.2.  
+> these do not resolve capabilities and extensions automatically.
+
+> [!NOTE]  
+> 
+> for local size might be resolved specifically. see below:
+> - [aclspv_wrkgroup_size](#aclspv_wrkgroup_size)
+> - [aclspv_wrkgroup_size_id](#aclspv_wrkgroup_size_id)
+
+- attach an execution mode on an entry point function with arguments.
+- `mode` represents [execution mode number](https://registry.khronos.org/SPIR-V/specs/unified1/SPIRV.html#Execution_Mode).
+- execution mode may have extra operands. since i've seen max to three, `aclspv_execmode3` should be working fine for most of things.
+
+```c
+/**
+ * & means it is spec constant id (id).
+ * # means it is literal (u32).
+ * 
+ * therefore following line means it size should be
+ * o0: specified constant in id 1
+ * o1: 3
+ * o2: specified constant in id 2
+ */
+__attribute__((annotate("aclspv_execmode3(17, &1, #3, &2)")))
+__attribute__((annotate("aclspv_execmodel(5)")))            /** GLCompute */
+void entry_point_glcompute(void) {
+    return;
+}
+
+```
+
+
 ### aclspv_execmodel
 > `aclspv_execmodel(model : u32)`
 
@@ -253,7 +292,8 @@ void entry_point_compute(
 
 - specifies the entry point's workgroup size.
 - `x`, `y`, `z` must be a 32-bit integer as decimal literal.
-- This attribute is ignored when its execution model is not either `Kernel(6)` or `GLCompute(5)`.
+- this attribute is ignored when its execution model is not either `Kernel(6)` or `GLCompute(5)`.
+- this attribute adds execution mode on an given entry point. to attach others, see [execution mode](#aclspv_execmode)
 
 ```c
 __attribute__((annotate("aclspv_wrkgroup_size(1, 1, 1)")))  /** with workgroup size (1, 1, 1) */
@@ -271,6 +311,7 @@ void entry_point_glcompute(void) {
 
 - specifies the entry point's workgroup size, with not only literal, but an spec constant id.
 - to specify which is literal or specid, prefix is used.
+- this attribute adds execution mode on an given entry point. to attach others, see [execution mode](#aclspv_execmode)
 
 ```c
 /**

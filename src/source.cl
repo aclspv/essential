@@ -249,6 +249,7 @@ void t11_dedup_entry(
 typedef float f32;
 typedef f32 __attribute__((ext_vector_type(4))) f32x4;
 
+__attribute__((annotate("aclspv_execmode0(16)")))
 __attribute__((annotate("aclspv_execmodel(0)")))
 void t12_entry_point_vertex(
     /***
