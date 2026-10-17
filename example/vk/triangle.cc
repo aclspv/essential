@@ -537,7 +537,7 @@ int main(void) {
 				running = false;
 			if (evt.type == SDL_EVENT_WINDOW_CLOSE_REQUESTED)
 				running = false;
-			if (evt.type == SDL_EVENT_KEY_DOWN)
+			if (evt.type == SDL_EVENT_KEY_DOWN && evt.key.key == SDLK_Q)
 				running = false;
 		}
 
