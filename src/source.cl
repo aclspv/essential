@@ -249,7 +249,6 @@ void t11_dedup_entry(
 typedef float f32;
 typedef f32 __attribute__((ext_vector_type(4))) f32x4;
 
-__attribute__((annotate("aclspv_execmode0(16)")))
 __attribute__((annotate("aclspv_execmodel(0)")))
 void t12_entry_point_vertex(
     /***
@@ -268,5 +267,16 @@ void t12_entry_point_vertex(
     __attribute__((annotate("aclspv_bltin(42)")))
     int* in_vertidx
 ) { *out_pos = ((f32x4)(float)*in_vertidx) * 12.f; return; }
+
+__attribute__((annotate("aclspv_execmode0(7)")))
+__attribute__((annotate("aclspv_execmodel(4)")))
+void t13_fragment_main(
+    f32 pc_color_r,
+    __attribute__((annotate("aclspv_location(0)")))
+    __attribute__((annotate("aclspv_storage_class(3)")))
+    f32* out_color
+) {
+    *out_color = 1.f;
+}
 
 #endif

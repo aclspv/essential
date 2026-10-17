@@ -1,6 +1,6 @@
 project(aclspv_example_vk LANGUAGES C CXX)
 find_package(Vulkan REQUIRED)
-find_package(SDL2 REQUIRED)
+find_package(SDL3 REQUIRED)
 
 file(GLOB files "./*.c*")
 
@@ -10,6 +10,6 @@ foreach(file ${files})
 	target_link_libraries(${tar} PRIVATE
 		vulkan
 		ae3f-aclspv
-		SDL2
+		SDL3
 	)
 endforeach()

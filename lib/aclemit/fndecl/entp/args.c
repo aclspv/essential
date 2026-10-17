@@ -1036,7 +1036,7 @@ enum CXChildVisitResult aclemit_fndecl_entp_arg(
 
 
 		case SpvStorageClassPushConstant:
-			if(DAT->m_id_push_constant_struct_ty)
+			if(pc_idx_arg)
 				break;
 
 			ae2f_fallthrough;
