@@ -39,16 +39,6 @@ static const char src[] =
 "    __attribute__((annotate(\"aclspv_storage_class(3)\")))\n"
 "    f32x3* out_color\n"
 ") {\n"
-"    const f32x2 positions[3] = {\n"
-"        { 0.0f, 0.f - 0.5f },\n"
-"        { 0.5f,  0.5f },\n"
-"        { 0.f - 0.5f,  0.5f }\n"
-"    };\n"
-"    const f32x3 colors[3] = {\n"
-"        { 1.0f, 0.0f, 0.0f },\n"
-"        { 0.0f, 1.0f, 0.0f },\n"
-"        { 0.0f, 0.0f, 1.0f }\n"
-"    };\n"
 vert_idx_if("*in_vertidx == 0", 0.f, 0.f - 0.5f, 1.f, 0.f, 0.f)
 "else " vert_idx_if("*in_vertidx == 1", 0.5f, 0.5f, 0.f, 1.f, 0.f)
 "else " vert_idx_if("*in_vertidx == 2", 0.f - 0.5, 0.5f, 0.f, 0.f, 1.f)

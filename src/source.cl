@@ -280,3 +280,49 @@ void t13_fragment_main(
 }
 
 #endif
+
+__attribute__((annotate("aclspv_execmodel(0)")))
+void t14_vs_main(
+    /* push-constant parameters — become a single PushConstant block */
+    int pc_offset,
+    int pc_count,
+
+    /* storage-buffer arrays indexed by vertex index */
+    __attribute__((annotate("aclspv_storage_class(12)")))
+    const f32x4 in_pos[],
+
+    __attribute__((annotate("aclspv_storage_class(12)")))
+    const f32x3 in_color[],
+
+    /* builtin inputs */
+    __attribute__((annotate("aclspv_storage_class(1)")))
+    __attribute__((annotate("aclspv_bltin(42)")))
+    int* in_vertidx,
+
+    /* builtin outputs */
+    __attribute__((annotate("aclspv_storage_class(3)")))
+    __attribute__((annotate("aclspv_bltin(0)")))
+    f32x4* out_pos,
+
+    /* color output (no location — defaults to 0) */
+    __attribute__((annotate("aclspv_storage_class(3)")))
+    f32x3* out_color
+) {
+    int idx = *in_vertidx + pc_offset;
+    *out_pos = (in_pos[idx]);
+    *out_color = (in_color[idx]);
+}
+
+__attribute__((annotate("aclspv_execmode0(7)")))
+__attribute__((annotate("aclspv_execmodel(4)")))
+void t15_fs_main(
+    __attribute__((annotate("aclspv_storage_class(1)")))
+    f32x3* in_color,
+
+    __attribute__((annotate("aclspv_storage_class(3)")))
+    f32x4* out_color
+) {
+    f32x3 clr = *in_color;
+    f32x4 out = { clr[0], clr[1], clr[2], 1.0f };
+    *out_color = out;
+}

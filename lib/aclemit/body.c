@@ -19,6 +19,8 @@
 #include <util/literal.h>
 #include <.aclspv/util/u32_to_hex8.h>
 
+#include <aclctx/err.h>
+
 /** find the label id bound to a cursor: a defined label (LBL) or a forward-goto marker (J). */
 static aclspv_id_t s_body_lbl_find(CXCursor c_cur, h_aclspv_ctx_t h_ctx) {
 	aclspv_wrdcount_t i;
@@ -39,8 +41,10 @@ static aclspv_id_t s_body_lbl_find(CXCursor c_cur, h_aclspv_ctx_t h_ctx) {
 enum CXChildVisitResult aclemit_entp_body(CXCursor h_cur, ae2f_unused CXCursor h_parent, CXClientData rdwr_data) {
 #define	FNCTX		((aclutil_fnctx* ae2f_restrict) rdwr_data)
 #define	CTX		FNCTX->m_ctx
-#define	jmpfail(c_why)		{ (CTX)->m_err = (c_why); goto LBL_BREAK; }
+#define	jmpfail(c_why)		{ _aclctx_err(CTX, (c_why)); goto LBL_BREAK; }
 #define	jmpfail_msg(rd_why)	{ err_puts(rd_why); goto LBL_FAIL; }
+#define	ctxcheck(h)	ae2f_ifnezerr(h->m_err) { err_puts("ctx check failed.\n"); goto LBL_FAIL; }
+
 	const enum CXCursorKind KIND	= (h_cur).kind;
 	const CXString KINDSPELL	= clang_getCursorKindSpelling(KIND);
 	const CXString SPELL		= clang_getCursorSpelling(h_cur);
@@ -62,7 +66,7 @@ enum CXChildVisitResult aclemit_entp_body(CXCursor h_cur, ae2f_unused CXCursor h
 					, h_cur
 					, FNCTX
 					);
-			ae2f_cgoto2_strict(ae2f_expected_strict(!CTX->m_err), LBL_DONE, LBL_FAIL);
+			ctxcheck(CTX) else goto LBL_DONE;
 
 		case CXCursor_ReturnStmt:
 			FNCTX->m_state0 |= ACLUTIL_FNCTX_STATE0_FNRET;
@@ -128,7 +132,9 @@ enum CXChildVisitResult aclemit_entp_body(CXCursor h_cur, ae2f_unused CXCursor h
 				ae2f_ifnezerr(clang_Cursor_isNull(aclcur_set_cxcursor(LBL_ID, h_cur, CTX)))
 					jmpfail_msg("cursor was null (h_cur)\n");
 
-			} ae2f_cgoto2_strict(ae2f_expected_strict(!CTX->m_err), LBL_RECURSE, LBL_FAIL);
+			} 
+
+			ctxcheck(CTX) else goto LBL_RECURSE;
 		case CXCursor_GotoStmt:
 			{
 				CXCursor LBL_STMT = clang_getCursorReferenced(h_cur);
@@ -206,20 +212,21 @@ enum CXChildVisitResult aclemit_entp_body(CXCursor h_cur, ae2f_unused CXCursor h
 							, FNCTX))
 					jmpfail_msg("aclexpr_eval\n");
 			}
-			ae2f_cgoto2_strict(ae2f_expected_strict(!CTX->m_err), LBL_DONE, LBL_FAIL);
+
+
+			ctxcheck(CTX) else goto LBL_DONE;
 #endif
 		case CXCursor_IfStmt: 
 			_aclemit_body_if(IF, h_cur, FNCTX);
-			ae2f_cgoto2_strict(ae2f_expected_strict(!CTX->m_err), LBL_DONE, LBL_FAIL);
+			ctxcheck(CTX) else goto LBL_DONE;
 
 		case CXCursor_WhileStmt:
 			_aclemit_body_while(WHILE, h_cur, FNCTX);
-			ae2f_cgoto2_strict(ae2f_expected_strict(!CTX->m_err), LBL_DONE, LBL_FAIL);
+			ctxcheck(CTX) else goto LBL_DONE;
 
 		case CXCursor_BreakStmt:
 			ae2f_ifezerr(FNCTX->m_break_loop) {
-				CTX->m_err = ACLSPV_COMPILE_MET_INVAL_BRK;
-				goto LBL_FAIL;
+				jmpfail(ACLSPV_COMPILE_MET_INVAL_BRK);
 			}
 
 			ae2f_expected_but_else(aclcur_cfg_jmp(FNCTX->m_break_loop, CTX))
@@ -229,28 +236,26 @@ enum CXChildVisitResult aclemit_entp_body(CXCursor h_cur, ae2f_unused CXCursor h
 			ae2f_expected_but_else(aclcur_cfg_lbl(FNCTX->m_branch = CTX->m_id++, CTX))
 				jmpfail_msg("aclcur_cfg_lbl\n");
 			ae2f_ifnezerr(clang_Cursor_isNull(aclcur_set_cxcursor(FNCTX->m_branch, h_cur, CTX)))
-				goto LBL_FAIL;
+				jmpfail_msg("aclcur_set_cxcursor\n");
 
 			FNCTX->m_state0 &= ~(uint_leastenum_t)(ACLUTIL_FNCTX_STATE0_LBL_DO_SOMETHING);
-			ae2f_cgoto2_strict(ae2f_expected_strict(!CTX->m_err), LBL_DONE, LBL_FAIL);
+			ctxcheck(CTX) else goto LBL_DONE;
 
 		case CXCursor_ContinueStmt:
-			ae2f_ifezerr(FNCTX->m_continue_loop) {
-				CTX->m_err = ACLSPV_COMPILE_MET_INVAL_CONTINUE;
-				goto LBL_FAIL;
-			}
+			ae2f_ifezerr(FNCTX->m_continue_loop)
+				jmpfail(ACLSPV_COMPILE_MET_INVAL_CONTINUE);
 
-			ae2f_expected_but_else(aclcur_cfg_jmp(FNCTX->m_continue_loop, CTX))
-				goto LBL_FAIL;
+			ae2f_ifezerr(aclcur_cfg_jmp(FNCTX->m_continue_loop, CTX))
+				jmpfail_msg("aclcur_cfg_jmp\n");
 
 			/** just for branch */
-			ae2f_expected_but_else(aclcur_cfg_lbl(FNCTX->m_branch = CTX->m_id++, CTX))
-				goto LBL_FAIL;
+			ae2f_ifezerr(aclcur_cfg_lbl(FNCTX->m_branch = CTX->m_id++, CTX))
+				jmpfail_msg("aclcur_cfg_lbl\n");
 			ae2f_ifnezerr(clang_Cursor_isNull(aclcur_set_cxcursor(FNCTX->m_branch, h_cur, CTX)))
-				goto LBL_FAIL;
+				jmpfail_msg("aclcur_set_cxcursor\n");
 
 			FNCTX->m_state0 &= ~(uint_leastenum_t)(ACLUTIL_FNCTX_STATE0_LBL_DO_SOMETHING);
-			ae2f_cgoto2_strict(ae2f_expected_strict(!CTX->m_err), LBL_DONE, LBL_FAIL);
+			ctxcheck(CTX) else goto LBL_DONE;
 
 		case CXCursor_DoStmt:
 		case CXCursor_ForStmt:
