@@ -215,8 +215,16 @@ int main(void) {
 	fprintf(stderr, "physical device count: %lu\n", (unsigned long)phys_count);
 
 	std::vector<VkPhysicalDevice> phys_devs(phys_count);
+	VK_CHECK(vkEnumeratePhysicalDevices(instance, &phys_count, &phys_devs[0]));
+
 	VkPhysicalDevice& phys_dev = phys_devs[0];
-	VK_CHECK(vkEnumeratePhysicalDevices(instance, &phys_count, &phys_dev));
+	{
+		typedef uint32_t u32;
+		const char* name = getenv("IDX_PHYDEV");
+		u32 c = name ? atoi(name) : 0;
+		c %= phys_count;
+		phys_dev = phys_devs[c];
+	}
 
 	/* ── queue family ─────────────────────────────────────────────────── */
 	fputs("queue family\n", stderr);
