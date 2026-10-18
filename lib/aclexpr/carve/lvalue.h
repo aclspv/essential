@@ -42,19 +42,33 @@
  *
  * @return	non-zero when the store landed, 0 otherwise (m_err is set).
  * */
+
+#if	defined(NDEBUG) && NDEBUG
 ae2f_inline_f static aclspv_bool_t aclexpr_lvalue_storeback(
 		aclexpr_opbincfg_extra* ae2f_restrict	rdwr_lst_extra,
-		const aclspv_id_t			VAL,
+		const aclspv_id_t			c_val,
+		const h_aclspv_ctx_t			h_ctx
+		)
+#define	aclexpr_lvalue_storeback(rdwr_lst_extra, c_val, h_ctx, c_tag)	\
+		aclexpr_lvalue_storeback(rdwr_lst_extra, c_val, h_ctx)
+#else
+ae2f_inline_f static aclspv_bool_t aclexpr_lvalue_storeback(
+		aclexpr_opbincfg_extra* ae2f_restrict	rdwr_lst_extra,
+		const aclspv_id_t			c_val,
 		const h_aclspv_ctx_t			h_ctx,
 		const char*				c_tag
-		) {
+		)
+#define	aclexpr_lvalue_storeback(rdwr_lst_extra, c_val, h_ctx, c_tag)	\
+		aclexpr_lvalue_storeback(rdwr_lst_extra, c_val, h_ctx, c_tag)
+#endif
+{
 	/** view-rooted l-value: the read built the view naming the region, so
 	 * the store goes through it, exactly like a plain variable's. */
 	if(rdwr_lst_extra->m_state0
 			& (aclspv_wrd_t)ACLEXPR_OPCFGX_STATE0_LVALUE_VIEW) {
 		unless(aclcur_store_reg(
 					rdwr_lst_extra->m_extra.m_view.m_reg
-					, VAL
+					, c_val
 					, h_ctx)) {
 			err_puts(c_tag);
 			h_ctx->m_err = ACLSPV_COMPILE_UNHANDLED_CARVE;
@@ -81,7 +95,7 @@ ae2f_inline_f static aclspv_bool_t aclexpr_lvalue_storeback(
 					, SpvOpVectorInsertDynamic
 					, rdwr_lst_extra->m_extra.m_vecelm.m_ty
 					, rdwr_lst_extra->m_extra.m_vecelm.m_vec
-					, VAL
+					, c_val
 					, rdwr_lst_extra->m_extra.m_vecelm.m_idx
 					, h_ctx)) {
 			err_puts(c_tag);
@@ -115,7 +129,7 @@ ae2f_inline_f static aclspv_bool_t aclexpr_lvalue_storeback(
 		return 0;
 	}
 
-	unless(aclcur_store_reg(REG, VAL, h_ctx)) {
+	unless(aclcur_store_reg(REG, c_val, h_ctx)) {
 		err_puts(c_tag);
 		h_ctx->m_err = ACLSPV_COMPILE_UNHANDLED_CARVE;
 		return 0;
