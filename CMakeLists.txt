@@ -257,7 +257,9 @@ ae2f_CoreTestTentVerbose(ae3f-aclspv-test ./test/compile)
 ae2f_CoreTestTentVerbose(ae3f-aclspv-test ./test/util)
 
 if(ae2f_TEST)
-	target_link_libraries(Test-c-ae3f-aclspv-test-scale PRIVATE ae3f::aclspvCore)
+	target_link_libraries(Test-c-ae3f-aclspv-test-scale 
+		PRIVATE ae3f::aclspvCore
+		)
 endif()
 
 ae2f_UltraErrWERROR(ae3f-aclspv PRIVATE)

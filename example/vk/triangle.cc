@@ -9,6 +9,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <vector>
+
 #define vert_idx_if(c, p0, p1, c0, c1, c2) "if( " c " )"	\
 	"{"	\
 	"f32x4 pos4 = { " #p0 ", " #p1 ", 0.f, 1.f }; "	\
@@ -147,6 +149,7 @@ int main(void) {
 	fputs("compile is done\n", stderr);
 
 	/* ── SDL init ─────────────────────────────────────────────────────── */
+	fputs("sdl init\n", stderr);
 	if (!SDL_Init(SDL_INIT_VIDEO)) {
 		fprintf(stderr, "SDL_Init: %s\n", SDL_GetError());
 		return EXIT_FAILURE;
@@ -165,6 +168,7 @@ int main(void) {
 	SDL_ShowWindow(window);
 
 	/* ── Vulkan instance ──────────────────────────────────────────────── */
+	fputs("vulkan instance\n", stderr);
 	uint32_t ext_count;
 	const char * const *exts = SDL_Vulkan_GetInstanceExtensions(&ext_count);
 
@@ -189,7 +193,13 @@ int main(void) {
 	VkInstance instance;
 	VK_CHECK(vkCreateInstance(&inst_ci, NULL, &instance));
 
+	if(!instance) {
+		fputs("\t[X] instance is zero\n", stderr);
+		return EXIT_FAILURE;
+	}
+
 	/* ── surface ──────────────────────────────────────────────────────── */
+	fputs("surface\n", stderr);
 	VkSurfaceKHR surface;
 	if (!SDL_Vulkan_CreateSurface(window, instance, NULL, &surface)) {
 		fprintf(stderr, "SDL_Vulkan_CreateSurface: %s\n", SDL_GetError());
@@ -197,17 +207,23 @@ int main(void) {
 	}
 
 	/* ── physical device ──────────────────────────────────────────────── */
+	fputs("physical device\n", stderr);
 	uint32_t phys_count = 0;
 	vkEnumeratePhysicalDevices(instance, &phys_count, NULL);
 	if (phys_count == 0) { fprintf(stderr, "no physical device\n"); return EXIT_FAILURE; }
 
-	VkPhysicalDevice phys_dev;
-	vkEnumeratePhysicalDevices(instance, &phys_count, &phys_dev);
+	fprintf(stderr, "physical device count: %lu\n", (unsigned long)phys_count);
+
+	std::vector<VkPhysicalDevice> phys_devs(phys_count);
+	VkPhysicalDevice& phys_dev = phys_devs[0];
+	VK_CHECK(vkEnumeratePhysicalDevices(instance, &phys_count, &phys_dev));
 
 	/* ── queue family ─────────────────────────────────────────────────── */
+	fputs("queue family\n", stderr);
 	uint32_t qf_count = 0;
 	vkGetPhysicalDeviceQueueFamilyProperties(phys_dev, &qf_count, NULL);
-	VkQueueFamilyProperties *qfs = (VkQueueFamilyProperties *)malloc(qf_count * sizeof(*qfs));
+	std::vector<VkQueueFamilyProperties> qfsv(qf_count);
+	VkQueueFamilyProperties *qfs = &qfsv[0];
 	vkGetPhysicalDeviceQueueFamilyProperties(phys_dev, &qf_count, qfs);
 
 	int qf_idx = -1;
@@ -219,7 +235,6 @@ int main(void) {
 			break;
 		}
 	}
-	free(qfs);
 	if (qf_idx < 0) { fprintf(stderr, "no suitable queue family\n"); return EXIT_FAILURE; }
 
 	float qprio = 1.0f;
@@ -244,12 +259,14 @@ int main(void) {
 	vkGetDeviceQueue(device, (uint32_t)qf_idx, 0, &queue);
 
 	/* ── swapchain ────────────────────────────────────────────────────── */
+	fputs("swapchain\n", stderr);
 	VkSurfaceCapabilitiesKHR caps;
 	vkGetPhysicalDeviceSurfaceCapabilitiesKHR(phys_dev, surface, &caps);
 
 	uint32_t fmt_count = 0;
 	vkGetPhysicalDeviceSurfaceFormatsKHR(phys_dev, surface, &fmt_count, NULL);
-	VkSurfaceFormatKHR *fmts = (VkSurfaceFormatKHR *)malloc(fmt_count * sizeof(*fmts));
+	std::vector<VkSurfaceFormatKHR> fmtv(fmt_count);
+	VkSurfaceFormatKHR *fmts = &fmtv[0];
 	vkGetPhysicalDeviceSurfaceFormatsKHR(phys_dev, surface, &fmt_count, fmts);
 
 	VkSurfaceFormatKHR surf_fmt;
@@ -259,18 +276,17 @@ int main(void) {
 	} else {
 		surf_fmt = fmts[0];
 	}
-	free(fmts);
 
 	uint32_t mode_count = 0;
 	vkGetPhysicalDeviceSurfacePresentModesKHR(phys_dev, surface, &mode_count, NULL);
-	VkPresentModeKHR *modes = (VkPresentModeKHR *)malloc(mode_count * sizeof(*modes));
+	std::vector<VkPresentModeKHR> modev(mode_count);
+	VkPresentModeKHR *modes = &modev[0];
 	vkGetPhysicalDeviceSurfacePresentModesKHR(phys_dev, surface, &mode_count, modes);
 
 	VkPresentModeKHR present_mode = VK_PRESENT_MODE_FIFO_KHR;
 	for (uint32_t i = 0; i < mode_count; i++) {
 		if (modes[i] == VK_PRESENT_MODE_MAILBOX_KHR) { present_mode = modes[i]; break; }
 	}
-	free(modes);
 
 	VkExtent2D extent;
 	if (caps.currentExtent.width != (uint32_t)-1) {
@@ -307,10 +323,12 @@ int main(void) {
 
 	uint32_t sc_img_count;
 	vkGetSwapchainImagesKHR(device, swapchain, &sc_img_count, NULL);
-	VkImage *sc_images = (VkImage *)malloc(sc_img_count * sizeof(*sc_images));
+	std::vector<VkImage> sc_imgv(sc_img_count);
+	VkImage *sc_images = &sc_imgv[0];
 	vkGetSwapchainImagesKHR(device, swapchain, &sc_img_count, sc_images);
 
-	VkImageView *sc_views = (VkImageView *)malloc(sc_img_count * sizeof(*sc_views));
+	std::vector<VkImageView> sc_viewv(sc_img_count);
+	VkImageView *sc_views = &sc_viewv[0];
 	for (uint32_t i = 0; i < sc_img_count; i++) {
 		VkImageViewCreateInfo iv_ci = {};
 		iv_ci.sType           = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
@@ -324,6 +342,7 @@ int main(void) {
 	}
 
 	/* ── render pass ──────────────────────────────────────────────────── */
+	fputs("render pass\n", stderr);
 	VkAttachmentDescription att = {};
 	att.format        = surf_fmt.format;
 	att.samples       = VK_SAMPLE_COUNT_1_BIT;
@@ -363,12 +382,14 @@ int main(void) {
 	VK_CHECK(vkCreateRenderPass(device, &rp_ci, NULL, &rp));
 
 	/* ── pipeline layout ──────────────────────────────────────────────── */
+	fputs("pipeline layout\n", stderr);
 	VkPipelineLayoutCreateInfo pl_ci = {};
 	pl_ci.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
 	VkPipelineLayout pipeline_layout;
 	VK_CHECK(vkCreatePipelineLayout(device, &pl_ci, NULL, &pipeline_layout));
 
 	/* ── shader modules ───────────────────────────────────────────────── */
+	fputs("shader modules\n", stderr);
 	VkShaderModule vs_module, fs_module;
 
 	{
@@ -388,6 +409,7 @@ int main(void) {
 
 	/* ── graphics pipeline ────────────────────────────────────────────── */
 	/* vertex input — no vertex buffers, hardcoded triangle */
+	fputs("graphics pipeline\n", stderr);
 	VkPipelineVertexInputStateCreateInfo vi = {};
 	vi.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
 
@@ -472,7 +494,9 @@ int main(void) {
 	VK_CHECK(vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, 1, &gp_ci, NULL, &pipeline));
 
 	/* ── framebuffers ─────────────────────────────────────────────────── */
-	VkFramebuffer *framebuffers = (VkFramebuffer *)malloc(sc_img_count * sizeof(*framebuffers));
+	fputs("frame buffers\n", stderr);
+	std::vector<VkFramebuffer> fbv(sc_img_count);
+	VkFramebuffer *framebuffers = &fbv[0];
 	for (uint32_t i = 0; i < sc_img_count; i++) {
 		VkFramebufferCreateInfo fb_ci = {};
 		fb_ci.sType            = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
@@ -486,6 +510,7 @@ int main(void) {
 	}
 
 	/* ── command pool & buffers ───────────────────────────────────────── */
+	fputs("command pool & buffers\n", stderr);
 	VkCommandPoolCreateInfo cp_ci = {};
 	cp_ci.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
 	cp_ci.queueFamilyIndex = (uint32_t)qf_idx;
@@ -494,7 +519,8 @@ int main(void) {
 	VkCommandPool cmd_pool;
 	VK_CHECK(vkCreateCommandPool(device, &cp_ci, NULL, &cmd_pool));
 
-	VkCommandBuffer *cmd_bufs = (VkCommandBuffer *)malloc(sc_img_count * sizeof(VkCommandBuffer));
+	std::vector<VkCommandBuffer> cmd_bufv(sc_img_count);
+	VkCommandBuffer *cmd_bufs =  &cmd_bufv[0];
 	VkCommandBufferAllocateInfo cb_ai = {};
 	cb_ai.sType              = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
 	cb_ai.commandPool        = cmd_pool;
@@ -503,9 +529,14 @@ int main(void) {
 	VK_CHECK(vkAllocateCommandBuffers(device, &cb_ai, cmd_bufs));
 
 	/* ── semaphores & fence ───────────────────────────────────────────── */
-	VkSemaphore *image_avail_sems = (VkSemaphore *)malloc(sc_img_count * sizeof(VkSemaphore));
-	VkSemaphore *render_done_sems = (VkSemaphore *)malloc(sc_img_count * sizeof(VkSemaphore));
-	VkFence     *render_fences    = (VkFence *)malloc(sc_img_count * sizeof(VkFence));
+	fputs("semaphores & fence\n", stderr);
+
+	std::vector<VkSemaphore>	img_avail_semsv(sc_img_count), render_done_semsv(sc_img_count);
+	std::vector<VkFence>		render_fencev(sc_img_count);
+
+	VkSemaphore *image_avail_sems = &img_avail_semsv[0];
+	VkSemaphore *render_done_sems = &render_done_semsv[0];
+	VkFence     *render_fences    = &render_fencev[0];
 
 	{
 		VkSemaphoreCreateInfo se_ci = {};
@@ -635,7 +666,6 @@ int main(void) {
 
 	for (uint32_t i = 0; i < sc_img_count; i++)
 		vkDestroyFramebuffer(device, framebuffers[i], NULL);
-	free(framebuffers);
 
 	vkDestroyPipeline(device, pipeline, NULL);
 	vkDestroyPipelineLayout(device, pipeline_layout, NULL);
@@ -652,11 +682,6 @@ int main(void) {
 
 	for(uint32_t i = sc_img_count; i-->0; )vkDestroyImageView(device, sc_views[i], 0);
 
-	free(image_avail_sems);
-	free(render_done_sems);
-	free(render_fences);
-	free(cmd_bufs);
-
 	vkDestroyDevice(device, NULL);
 	vkDestroySurfaceKHR(instance, surface, NULL);
 	vkDestroyInstance(instance, NULL);
@@ -664,11 +689,6 @@ int main(void) {
 	SDL_DestroyWindow(window);
 	SDL_Vulkan_UnloadLibrary();
 	SDL_Quit();
-
-	free(vs_spirv);
-	free(fs_spirv);
-	free(sc_images);
-	free(sc_views);
 
 	return 0;
 }

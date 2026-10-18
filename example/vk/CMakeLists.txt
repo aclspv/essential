@@ -7,9 +7,9 @@ file(GLOB files "./*.c*")
 foreach(file ${files})
 	get_filename_component(tar ${file} NAME)
 	add_executable(${tar} ${file})
-	target_link_libraries(${tar} PRIVATE
-		vulkan
-		ae3f-aclspv
-		SDL3
+	target_link_libraries(${tar}
+		PRIVATE Vulkan::Vulkan
+		PRIVATE aclspv::aclspv
+		PRIVATE SDL3::SDL3
 	)
 endforeach()

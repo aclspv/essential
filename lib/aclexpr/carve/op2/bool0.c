@@ -297,8 +297,8 @@ aclexpr_carve_lbl_t aclexpr_carve2_bool0(
 	dbg_call(fprintf, (stderr, "restyid: %lu ; %lu\n"
 				, (unsigned long)rdwr_prv_extra->m_type_original
 				, (unsigned long)s_decide_cast(
-					(enum ACLSPV_ID_) rdwr_lst_extra[0].m_type_original
-					, (enum ACLSPV_ID_) rdwr_lst_extra[1].m_type_original
+					rdwr_lst_extra[0].m_type_original
+					, rdwr_lst_extra[1].m_type_original
 					, (rdwr_data)->m_ctx
 					)
 			  ));
