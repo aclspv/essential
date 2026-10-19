@@ -72,4 +72,18 @@ ae2f_inline_f static aclspv_bool_t aclty_is_simd(aclspv_id_t c, h_aclspv_ctx_t h
 	return (aclspv_bool_t)!!(aclty_simd_class(c, h_ctx));
 }
 
+/** check if `c` is simd class, therefore scalar type. */
+ae2f_inline_f ae2f_ccconst static aclspv_bool_t aclty_is_simd_class(aclspv_id_t c) {
+	return c != ACLSPV_ID_VOID && c < ACLSPV_ID_END;
+}
+
+
+/**
+ * returns a type with a class of `c_class` and structure as `c` has.
+ * for a class, see `aclty_simd_class`.
+ *
+ * returns 0 when failed.
+ * */
+aclspv_id_t aclty_simd_chxg_cls(aclspv_id_t c, aclspv_id_t c_class, h_aclspv_ctx_t h);
+
 #endif

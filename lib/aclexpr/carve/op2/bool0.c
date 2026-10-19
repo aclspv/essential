@@ -76,7 +76,9 @@ ae2f_inline_f static ae2f_ccconst aclspv_bool_t s_is_logical(const aclspv_wrd_t 
 	}
 }
 
-static aclspv_wrd_t s_decide_cast(const aclspv_id_t c_id0, const aclspv_id_t c_id1, const h_aclspv_ctx_t h_ctx) {
+static aclspv_id_t s_decide_cast(aclspv_id_t c_id0, aclspv_id_t c_id1, const h_aclspv_ctx_t h_ctx) {
+	aclspv_id_t cls0, cls1;
+
 	dbg_prefix(a);
 	dbg_call(fprintf, (
 				stderr, "s_decide_cast(%lu, %lu)\n"
@@ -84,41 +86,43 @@ static aclspv_wrd_t s_decide_cast(const aclspv_id_t c_id0, const aclspv_id_t c_i
 				, (unsigned long)c_id1
 				));
 
-	/** one is 0? */
-	unless(c_id0 && c_id1)
-		return ae2f_bll_sel_bool_naive1(B_id_default_t, c_id0, c_id0, c_id1);
-
 	if(c_id0 == c_id1)
 		return (aclspv_id_t) c_id0;
 
-	ae2f_ifezerr(aclty_is_simd(c_id0, h_ctx) & aclty_is_simd(c_id1, h_ctx)) {
+	/** one is 0? */
+	unless(c_id0 && c_id1)
+		return c_id0 ? c_id0 : c_id1;
+
+	if(c_id1 > c_id0) {
+		c_id0 ^= c_id1;
+		c_id1 ^= c_id0;
+		c_id0 ^= c_id1;
+	}
+
+	cls0 = aclty_simd_class(c_id0, h_ctx);
+	cls1 = aclty_simd_class(c_id1, h_ctx);
+
+	ae2f_ifezerr(cls0 && cls1) {
 		dbg_puts("s_decide_cast 0\n");
 		return 0;
 	}
 
-	if(aclty_get_veccfg(c_id0, h_ctx).m_num != aclty_get_veccfg(c_id1, h_ctx).m_num) {
-		unless(aclty_get_veccfg(c_id0, h_ctx).m_num >> 1) {
-			return (aclspv_id_t) c_id1;
-		} else unless(aclty_get_veccfg(c_id1, h_ctx).m_num >> 1) {
-			return (aclspv_id_t) c_id0;
-		} { dbg_puts("s_decide_cast 0\n"); return 0; }
+	if(aclty_simd_chxg_cls(c_id0, cls1, h_ctx) != c_id1) {
+		ae2f_ifneznrm(aclty_is_simd_class(c_id0))
+			return c_id1;
+		else	return 0;
 	}
 
-	unless(aclty_simd_class(c_id0, h_ctx)) {
-		return ae2f_bll_sel_bool1(B_id_default_t, s_decide_cast(
-					aclty_simd_class(c_id0, h_ctx)
-					, aclty_simd_class(c_id1, h_ctx)
-					, h_ctx
-					), c_id0, c_id1);
-	}
-
-	unless((c_id0 == ACLSPV_ID_BOOL || aclid_is_int(c_id0)) && (c_id1 == ACLSPV_ID_BOOL || aclid_is_int(c_id1))) {
+	ae2f_ifezerr(
+			(cls0 == ACLSPV_ID_BOOL || aclid_is_int(cls0)) 
+			&& (cls1 == ACLSPV_ID_BOOL || aclid_is_int(cls1))
+			) {
 		dbg_puts("s_decide_cast 0\n");
 		return 0;
 	}
 
 	dbg_puts("s_decide_cast sint?");
-	return ae2f_bll_sel_bool1(aclspv_wrd_t, aclid_is_sint(c_id0), c_id0, c_id1);
+	return aclid_is_sint(cls0) ? c_id0 : c_id1;
 }
 
 static aclexpr_carve_lbl_t s_iter(
@@ -177,28 +181,21 @@ static aclexpr_carve_lbl_t s_iter(
 	return c_lbl_success;
 }
 
-static aclspv_id_t	s_ty_oprnd(
+ae2f_inline_f static aclspv_id_t	s_ty_oprnd(
 		aclspv_id_t	c_ty_origin,
 		aclspv_bool_t	c_is_logical,
 		h_aclspv_ctx_t	h_ctx
 		) {
-	unless(c_is_logical)
-		return c_ty_origin; 
-
-	{
-		struct aclutil_cxtp_veccfg_t V = aclty_get_veccfg(c_ty_origin, h_ctx);
-		return aclty_mk_vec(ACLSPV_ID_BOOL, V.m_num, h_ctx);
-	}
+	return c_is_logical ? aclty_simd_chxg_cls(c_ty_origin, ACLSPV_ID_BOOL, h_ctx) : c_ty_origin;
 }
 
-static aclspv_id_t	s_ty_out(
+ae2f_inline_f static aclspv_id_t	s_ty_out(
 		aclspv_id_t	c_ty_origin,
 		aclspv_bool_t	c_is_logical,
 		h_aclspv_ctx_t	h_ctx
-		) { unless(c_is_logical) return c_ty_origin; else {
-	struct aclutil_cxtp_veccfg_t V = aclty_get_veccfg(c_ty_origin, h_ctx);
-	return aclty_mk_vec(ACLSPV_ID_BOOL, V.m_num, h_ctx);
-}}
+		) { 
+	return s_ty_oprnd(c_ty_origin, c_is_logical, h_ctx);
+}
 
 ae2f_inline_f static ae2f_ccconst struct aclutil_ltrl_eval_t	s_eval2_ltrl(
 		const aclutil_literal	c_oprndA,

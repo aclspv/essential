@@ -90,14 +90,10 @@ aclexpr_carve_lbl_t aclexpr_carve2_shift(
 	 * operand — never the common type of both operands. decide_cast would
 	 * mix in the shift count's type (mis-signing a `u32 << int`), and the
 	 * compound-assign store gate demands result == register type. */
-	{
-		const struct aclutil_cxtp_veccfg_t V = aclty_get_veccfg(
-				(aclspv_id_t) rdwr_lst_extra[0].m_type_original
-				, CTX(rdwr_data)
-				);
-		rdwr_prv_extra->m_type_original = rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_RESTYID]
-			= aclty_mk_vec(V.m_ty_elm, V.m_num, CTX(rdwr_data));
-	}
+	rdwr_prv_extra->m_type_original = rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_RESTYID]
+		= ae2f_expected_strict(aclty_is_simd(rdwr_lst_extra[0].m_type_original, rdwr_data->m_ctx))
+		? rdwr_lst_extra[0].m_type_original 
+		: 0;
 
 	ae2fpat_assertassume_strict(rdwr_lst_scale_buf);
 

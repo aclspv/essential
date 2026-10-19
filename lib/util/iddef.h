@@ -10,7 +10,7 @@
 /**
  * @brief type alias for `enum ID_DEFAULT_`
  * */
-typedef uint_leastenum_t B_id_default_t;
+typedef aclspv_id_t B_id_default_t;
 
 ae2f_ccconst aclspv_bool_t aclid_is_uint(const B_id_default_t c_id_default);
 ae2f_ccconst aclspv_bool_t aclid_is_sint(const B_id_default_t c_id_default);

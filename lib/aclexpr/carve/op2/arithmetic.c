@@ -258,43 +258,36 @@ ae2f_inline_f static ae2f_ccconst struct aclutil_ltrl_eval_t	s_eval2_ltrl(
 #undef	EXPR_TWO
 }
 
-static aclspv_wrd_t s_decide_cast(const aclspv_id_t c_id0, const aclspv_id_t c_id1, const h_aclspv_ctx_t h_ctx) {
+static aclspv_wrd_t s_decide_cast(aclspv_id_t c_id0, aclspv_id_t c_id1, const h_aclspv_ctx_t h_ctx) {
+	aclspv_id_t cls0, cls1; 
+
+	if(c_id0 == c_id1)
+		return c_id0;
+
+	/** sorting to make it simpler */
+	if(c_id1 < c_id0) {
+		c_id0 ^= c_id1;
+		c_id1 ^= c_id0;
+		c_id0 ^= c_id1;
+	}
+
+	cls0 = aclty_simd_class(c_id0, h_ctx), cls1 = aclty_simd_class(c_id1, h_ctx);
+
 	/** one is 0? */
-	unless(c_id0 && c_id1)
-		return ae2f_bll_sel_bool_naive1(B_id_default_t, c_id0, c_id0, c_id1);
+	unless(c_id0)
+		return c_id1;
 
-	unless(c_id0 ^ c_id1)
-		return (aclspv_id_t) c_id0;
-
-	unless(aclty_is_simd(c_id0, h_ctx) && aclty_is_simd(c_id1, h_ctx))
+	ae2f_ifezerr(cls0 && cls1)
 		return 0;
 
-	if(aclty_get_veccfg(c_id0, h_ctx).m_num ^ aclty_get_veccfg(c_id1, h_ctx).m_num) {
-		unless(aclty_get_veccfg(c_id0, h_ctx).m_num >> 1) {
-			return (aclspv_id_t) c_id1;
-		} else unless(aclty_get_veccfg(c_id1, h_ctx).m_num >> 1) {
-			return (aclspv_id_t) c_id0;
-		} return 0;
+	if(aclty_simd_chxg_cls(c_id0, cls1, h_ctx) != c_id1) {
+		/** shape is not same. if */	
+		ae2f_ifneznrm_strict(c_id0 == cls0) return c_id1;
+		return 0;
 	}
 
-	unless(aclty_simd_class(c_id0, h_ctx)) {
-		return ae2f_bll_sel_bool1(B_id_default_t, s_decide_cast(
-				aclty_simd_class(c_id0, h_ctx)
-					, aclty_simd_class(c_id1, h_ctx)
-					, h_ctx
-					), c_id0, c_id1);
-	}
-
-	if(aclid_is_float(c_id0) != aclid_is_float(c_id1))
-		return ae2f_bll_sel_bool1(B_id_default_t, aclid_is_float(c_id0), c_id0, c_id1);
-
-	if(aclid_is_int((aclspv_wrd_t) c_id0) && aclid_is_int((aclspv_wrd_t)c_id1) && aclid_is_sint((aclspv_wrd_t)c_id0) != aclid_is_sint((aclspv_wrd_t)c_id1))
-		return ae2f_bll_sel_bool1(aclspv_wrd_t, aclid_is_sint((aclspv_wrd_t)c_id0), c_id0, c_id1);
-
-	return ae2f_bll_sel_bool1(
-			B_id_default_t
-			, aclid_get_bit_width(c_id0) > aclid_get_bit_width(c_id1)
-			, c_id0 , c_id1);
+	/** shape is same */
+	return cls0 < cls1 ? c_id1 : c_id0;
 }
 
 aclexpr_carve_lbl_t aclexpr_carve2_arithmetic(
@@ -317,7 +310,7 @@ aclexpr_carve_lbl_t aclexpr_carve2_arithmetic(
 	 * ordinary integer / float arithmetic untouched, and the check is
 	 * gated on the logical flag alone so physical addressing keeps it. */
 	if(aclexpr_ptr_arith_fatal(rdwr_lst_extra[0].m_type_original, CTX(rdwr_data))
-	|| aclexpr_ptr_arith_fatal(rdwr_lst_extra[1].m_type_original, CTX(rdwr_data)))
+			|| aclexpr_ptr_arith_fatal(rdwr_lst_extra[1].m_type_original, CTX(rdwr_data)))
 		return c_lbl_err;
 
 	rdwr_prv_extra->m_type_original = rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_RESTYID] = s_decide_cast(
@@ -396,9 +389,9 @@ aclexpr_carve_lbl_t aclexpr_carve2_arithmetic(
 	OPITER(0u);
 
 	if(
-			aclid_is_float(aclty_get_veccfg(rdwr_prv_extra[0].m_type_original, rdwr_data->m_ctx).m_ty_elm)
-			|| aclid_is_float(aclty_get_veccfg(rdwr_prv_extra[1].m_type_original, rdwr_data->m_ctx).m_ty_elm)
-			) {
+			aclid_is_float(aclty_simd_class(rdwr_prv_extra[0].m_type_original, rdwr_data->m_ctx))
+			|| aclid_is_float(aclty_simd_class(rdwr_prv_extra[1].m_type_original, rdwr_data->m_ctx))
+	  ) {
 		fixme_puts("this is float. make sure we can do it constantly with Kernel capability.");
 		rdwr_prv_extra->m_mask_literal &= ~(aclspv_wrd_t)(ACLUTIL_LITERAL_CONSTANT);
 	}

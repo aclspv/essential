@@ -24,11 +24,9 @@ __attribute__((annotate("aclspv_execmodel(0)")))
 void t0_band128(
 __attribute__((annotate("aclspv_storage_class(12)")))
 		  i32x4* r, const i32x4 A, const i32x4 B) {
-    i32x4 Z;
-    Z[0] = 1; Z[1] = 2;
-    Z[2] = 3; Z[3] = 4;
-
-    Z *= 15;
+#if	1
+    i32x4 Z = { (i32)1, (i32)2, (i32)3, (i32)4 };
+#endif
 
     *(r) = (A & B) + Z;
 }
@@ -323,6 +321,8 @@ void t15_fs_main(
     f32x4* out_color
 ) {
     f32x3 clr = *in_color;
+    #if	1
     f32x4 out = { clr[0], clr[1], clr[2], 1.0f };
+    #endif
     *out_color = out;
 }

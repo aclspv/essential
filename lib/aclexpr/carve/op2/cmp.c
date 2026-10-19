@@ -15,51 +15,51 @@
 #include <ae2f/pat/dbg.h>
 #include <util/constant.h>
 
-static aclspv_wrd_t s_decide_cast(const aclspv_id_t c_id0, const aclspv_id_t c_id1, const h_aclspv_ctx_t h_ctx) {
+static aclspv_wrd_t s_decide_cast(aclspv_id_t c_id0, aclspv_id_t c_id1, const h_aclspv_ctx_t h_ctx) {
+	aclspv_id_t cls0, cls1;
+
+	dbg_prefix(a);
+	dbg_call(fprintf, (
+				stderr, "s_decide_cast(%lu, %lu)\n"
+				, (unsigned long)c_id0
+				, (unsigned long)c_id1
+				));
+
+	if(c_id0 == c_id1)
+		return (aclspv_id_t) c_id0;
+
 	/** one is 0? */
 	unless(c_id0 && c_id1)
-		return ae2f_bll_sel_bool_naive1(B_id_default_t, c_id0, c_id0, c_id1);
+		return c_id0 ? c_id0 : c_id1;
 
-	unless(c_id0 ^ c_id1)
-		return c_id0;
+	if(c_id1 > c_id0) {
+		c_id0 ^= c_id1;
+		c_id1 ^= c_id0;
+		c_id0 ^= c_id1;
+	}
 
-	unless(aclty_is_simd(c_id0, h_ctx) & aclty_is_simd(c_id1, h_ctx))
+	cls0 = aclty_simd_class(c_id0, h_ctx);
+	cls1 = aclty_simd_class(c_id1, h_ctx);
+
+	ae2f_ifezerr(cls0 && cls1) {
+		dbg_puts("s_decide_cast 0\n");
 		return 0;
-
-	if(aclty_get_veccfg(c_id0, h_ctx).m_num ^ aclty_get_veccfg(c_id1, h_ctx).m_num) {
-		unless(aclty_get_veccfg(c_id0, h_ctx).m_num >> 1) {
-			return (aclspv_id_t) c_id1;
-		} else unless(aclty_get_veccfg(c_id1, h_ctx).m_num >> 1) {
-			return (aclspv_id_t) c_id0;
-		} return 0;
 	}
 
-	unless(aclty_simd_class(c_id0, h_ctx)) {
-		return ae2f_bll_sel_bool1(B_id_default_t, s_decide_cast(
-				aclty_simd_class(c_id0, h_ctx)
-					, aclty_simd_class(c_id1, h_ctx)
-					, h_ctx
-					), c_id0, c_id1);
+	if(aclty_simd_chxg_cls(c_id0, cls1, h_ctx) != c_id1) {
+		ae2f_ifneznrm(aclty_is_simd_class(c_id0))
+			return c_id1;
+		else	return 0;
 	}
 
-	if(aclid_is_float(c_id0) != aclid_is_float(c_id1))
-		return ae2f_bll_sel_bool1(B_id_default_t, aclid_is_float(c_id0), c_id0, c_id1);
-
-	if(aclid_is_int((aclspv_wrd_t) c_id0) && aclid_is_int((aclspv_wrd_t)c_id1) && aclid_is_sint((aclspv_wrd_t)c_id0) != aclid_is_sint((aclspv_wrd_t)c_id1))
-		return ae2f_bll_sel_bool1(aclspv_wrd_t, aclid_is_sint((aclspv_wrd_t)c_id0), c_id0, c_id1);
-
-	return ae2f_bll_sel_bool1(
-			B_id_default_t
-			, aclid_get_bit_width(c_id0) > aclid_get_bit_width(c_id1)
-			, c_id0 , c_id1);
+	return cls0 < cls1 ? c_id1 : c_id0;
 }
 
 ae2f_inline_f static aclspv_id_t s_ty_cmp_result(
 		const aclspv_id_t	c_ty,
 		const h_aclspv_ctx_t	h_ctx
 		) {
-	const struct aclutil_cxtp_veccfg_t V = aclty_get_veccfg(c_ty, h_ctx);
-	return aclty_mk_vec(ACLSPV_ID_BOOL, V.m_num, h_ctx);
+	return aclty_simd_chxg_cls(c_ty, ACLSPV_ID_BOOL, h_ctx);
 }
 
 ae2f_inline_f static ae2f_ccconst aclspv_bool_t s_is_cmp_op(const aclspv_wrd_t x) {
@@ -79,8 +79,8 @@ ae2f_inline_f static ae2f_ccconst aclspv_bool_t s_is_cmp_op(const aclspv_wrd_t x
 
 #define CHECK unless(	\
 		s_is_cmp_op(	\
-				rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_OPCODE]	\
-				)) return c_lbl_continue
+			rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_OPCODE]	\
+			)) return c_lbl_continue
 
 ae2f_inline_f static ae2f_ccpure aclspv_opcode_t s_cmp_to_spv(
 		const aclspv_id_t	c_id,
@@ -173,11 +173,11 @@ aclexpr_carve_lbl_t aclexpr_carve2_cmp(
 
 	rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_RESID]	= *rdwr_prv_idval = CTX(rdwr_data)->m_id++;
 
-/** 
- * casts each operand into the decided result type before emitting the
- * compare node; the cast ids are allocated in OPITER(1) then OPITER(0)
- * order to keep the RESID/id order identical to the old arithmetic carve.
- * */
+	/** 
+	 * casts each operand into the decided result type before emitting the
+	 * compare node; the cast ids are allocated in OPITER(1) then OPITER(0)
+	 * order to keep the RESID/id order identical to the old arithmetic carve.
+	 * */
 #define	OPITER(NUM_OPRND) \
 	{										\
 		{	\
@@ -271,7 +271,7 @@ aclexpr_carve_lbl_t aclexpr_carve2_cmp(
 					, TY_RES
 					, rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_END]
 					, rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_END + 1]
-					, rdwr_data->m_ctx))
+						, rdwr_data->m_ctx))
 			return c_lbl_err;
 	}
 
