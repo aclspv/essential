@@ -234,19 +234,15 @@ ae2f_MAC((L, )) aclemit_body_vardecl(CXCursor h_cur, aclutil_fnctx* ae2f_restric
 			goto L$$LBL_END;
 		}
 
+		dbg_prefix(a);
+		dbg_call(fprintf, (stderr, "[vardecl]: VAR_INIT.kind: %d\n", (int)L$$VAR_INIT.kind));	
+		dbg_puts(("Variable has constructor.\n"));
+
 		{
-			fn_aclspv_get_expr_t*	L$$FN_GETEXPR = aclexpr_eval;
-
-			{
-				int L$$IS_BTCAST = 0;
-				clang_visitChildren(h_cur, aclattr_btcast, &L$$IS_BTCAST);
-				if(L$$IS_BTCAST) {
-					dbg_puts("btcast");
-					L$$FN_GETEXPR = aclexpr_eval_btcast;
-				}
-			}
-
-			dbg_puts(("Variable has constructor."));
+			fn_aclspv_get_expr_t*	L$$FN_GETEXPR;
+			aclspv_bool_t L$$IS_BTCAST = 0;
+			clang_visitChildren(h_cur, aclattr_btcast, &L$$IS_BTCAST);
+			L$$FN_GETEXPR = L$$IS_BTCAST ? aclexpr_eval_btcast : aclexpr_eval;
 
 			switch(L$$FN_GETEXPR(
 						&L$$INIT

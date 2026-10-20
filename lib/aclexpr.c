@@ -116,15 +116,12 @@ enum ACLEXPR_RET_ aclexpr_eval_btcast(
 	ae2fpat_assertassume_strict(!!SCALE_BOOT);
 	ae2fpat_assertassume_strict(!get_last_scale_from_vec(&CTX->m_tmp.m_v1)->m_id);
 
+	aclmemzero(SCALE_BOOT, sizeof(aclspv_wrd_t) * (ACLEXPR_OPBINCFG_END + 1) + sizeof(aclexpr_opbincfg_extra));
+
 	SCALE_BOOT[ACLEXPR_OPBINCFG_NUMOPRND]		= 1;
-	SCALE_BOOT[ACLEXPR_OPBINCFG_RESTYID]		= 0;
-	SCALE_BOOT[ACLEXPR_OPBINCFG_RESID]			= 0;
-	SCALE_BOOT[ACLEXPR_OPBINCFG_OPCODE]		= 0;
 #define INIT_EXTRA ((aclexpr_opbincfg_extra* ae2f_restrict)(void* ae2f_restrict)(&SCALE_BOOT[ACLEXPR_OPBINCFG_END + 1]))
 
 	INIT_EXTRA->m_mask_literal		= 3;
-	INIT_EXTRA->m_type_original		= 0;
-	INIT_EXTRA->m_literal.m_api_uintmax	= 0;
 
 #undef	INIT_EXTRA
 
@@ -298,15 +295,13 @@ enum ACLEXPR_RET_ aclexpr_eval(
 	ae2fpat_assertassume_strict(!!SCALE_BOOT);
 	ae2fpat_assertassume_strict(!get_last_scale_from_vec(&CTX->m_tmp.m_v1)->m_id);
 
+	aclmemzero(SCALE_BOOT, sizeof(aclspv_wrd_t) * (ACLEXPR_OPBINCFG_END + 1) + sizeof(aclexpr_opbincfg_extra));
+
 	SCALE_BOOT[ACLEXPR_OPBINCFG_NUMOPRND]		= 1;
-	SCALE_BOOT[ACLEXPR_OPBINCFG_RESTYID]		= 0;
-	SCALE_BOOT[ACLEXPR_OPBINCFG_RESID]			= 0;
-	SCALE_BOOT[ACLEXPR_OPBINCFG_OPCODE]		= 0;
+
 #define INIT_EXTRA ((aclexpr_opbincfg_extra* ae2f_restrict)(void* ae2f_restrict)(&SCALE_BOOT[ACLEXPR_OPBINCFG_END + 1]))
 
 	INIT_EXTRA->m_mask_literal		= 3;
-	INIT_EXTRA->m_type_original		= 0;
-	INIT_EXTRA->m_literal.m_api_uintmax	= 0;
 
 #undef	INIT_EXTRA
 

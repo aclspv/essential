@@ -19,7 +19,6 @@ enum CXChildVisitResult	aclemit_fndecl_bodycfg(
 	fnctx.m_ctx		= h_ctx;
 
 	h_ctx->m_count.m_fnimpl = 0;
-
 	{
 		/** the root label is bootstrapped by aclemit_root; at this point
 		 * it is the current (and only) label, so m_branch can take it. */
@@ -92,6 +91,9 @@ enum CXChildVisitResult	aclemit_fndecl_bodycfg(
 		h_ctx->m_err = ACLSPV_COMPILE_ALLOC_FAILED;
 		return CXChildVisit_Break;
 	}
+
+
+	h_ctx->m_num_cursor = 0;
 
 	fnctx.m_ctx->m_work_data	= fnctx.m_ctx;
 	fnctx.m_ctx->m_work_nxt		= aclemit_root;

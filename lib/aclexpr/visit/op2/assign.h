@@ -28,15 +28,14 @@ ae2f_inline_f static aclexpr_visit_lbl_t aclexpr_visit_op2_assign(
 		) {
 	x_scale* ae2f_restrict		NEW_SCALE;
 	aclspv_wrd_t* ae2f_restrict	VEC;
-	CXCursor				PEEK;
+	CXCursor			PEEK;
 
 	ae2fpat_assertunless(h_ctx) {
 		return c_lbl_fail;
 	}
 
-	unless(CXCursor_BinaryOperator == c_cur.kind && CXBinaryOperator_Assign == clang_getCursorBinaryOperatorKind(c_cur))
+	if(CXCursor_BinaryOperator != c_cur.kind || CXBinaryOperator_Assign != clang_getCursorBinaryOperatorKind(c_cur))
 		return c_lbl_pass;
-
 
 	NEW_SCALE = get_last_scale_from_vec(h_cmdscale);
 	NEW_SCALE = mk_scale_from_vec(
@@ -45,6 +44,7 @@ ae2f_inline_f static aclexpr_visit_lbl_t aclexpr_visit_op2_assign(
 			aclutil_count_to_sz(ACLEXPR_OPBINCFG_END + 2)
 			+ (sizeof(aclexpr_opbincfg_extra) * 2)
 			);
+
 	ae2f_expected_but_else(NEW_SCALE)
 		return c_lbl_fail;
 
@@ -72,6 +72,7 @@ ae2f_inline_f static aclexpr_visit_lbl_t aclexpr_visit_op2_assign(
 
 		clang_visitChildren(c_cur, s_aclattr_getkinder_visit, &K);
 	}
+
 	if(clang_Cursor_isNull(PEEK) == 0) {
 		switch((int)aclexpr_lvalue_kind(PEEK)) {
 			case ACLEXPR_LVALUEKIND_MEMBER:

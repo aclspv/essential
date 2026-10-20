@@ -1,6 +1,19 @@
+#if	0
+
 typedef int i32;
 typedef i32 __attribute__((ext_vector_type(4))) i32x4;
 typedef _Bool __attribute__((ext_vector_type(4))) boolx4;
+
+typedef unsigned int u32;
+typedef u32* __attribute__((annotate("aclspv_storage_class(12)"))) p_u32_sbo_t;
+typedef struct { u32 m_lsb; u32 m_hsb; } u32x2;
+typedef u32x2* __attribute__((annotate("aclspv_storage_class(12)"))) p_u32x2_sbo_t;
+typedef int i32;
+
+typedef int i32;
+
+typedef float f32;
+typedef f32 __attribute__((ext_vector_type(4))) f32x4;
 
 #if	0
 
@@ -15,8 +28,6 @@ boolx4 t0_band128_norm(const i32x4 A, const i32x4 B) {
 }
 
 #endif
-
-typedef int i32;
 
 #if	1
 
@@ -53,7 +64,12 @@ i32 t1_sum(const i32 rd[3] __attribute__((annotate("aclspv_specid(0)")))) {
 
 /** this is a normal function */
 void t2_norm_func(void) {
-    return;
+	int a = 3;
+	int b = 3;
+	int c = 2;
+	int d = 1;
+	int dc = 5;
+	return;
 }
 
 #endif
@@ -140,11 +156,6 @@ void t5_entry_point_vertex(
 
 #if	1
 
-typedef unsigned int u32;
-typedef u32* __attribute__((annotate("aclspv_storage_class(12)"))) p_u32_sbo_t;
-typedef struct { u32 m_lsb; u32 m_hsb; } u32x2;
-typedef u32x2* __attribute__((annotate("aclspv_storage_class(12)"))) p_u32x2_sbo_t;
-
 #endif
 
 #if	1
@@ -197,8 +208,6 @@ void t9_foo(__attribute__((annotate("aclspv_storage_class(3)"))) float* out) {
 
 #if	1
 
-typedef int i32;
-
 __attribute__((annotate("aclspv_execmodel(0)")))
 void t10_foo_read_32(
 		     __attribute__((annotate("aclspv_storage_class(1)"))) int* h_whatever,
@@ -244,8 +253,6 @@ void t11_dedup_entry(
 #endif
 
 #if	1
-typedef float f32;
-typedef f32 __attribute__((ext_vector_type(4))) f32x4;
 
 __attribute__((annotate("aclspv_execmodel(0)")))
 void t12_entry_point_vertex(
@@ -310,6 +317,8 @@ void t14_vs_main(
     *out_pos = (in_pos[idx]);
     *out_color = (in_color[idx]);
 }
+
+#endif
 
 __attribute__((annotate("aclspv_execmode0(7)")))
 __attribute__((annotate("aclspv_execmodel(4)")))

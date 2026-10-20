@@ -13,6 +13,8 @@
 #include <aclconst/specop.h>
 #include <aclcur/common.h>
 
+#include <aclctx/err.h>
+
 static enum ACLEXPR_RET_ s_non_literal_novec(
 		const aclspv_id_t	c_old_id,
 		const aclspv_id_t	c_old_type,
@@ -33,7 +35,7 @@ static enum ACLEXPR_RET_ s_non_literal_novec(
 
 	ae2f_ifezerr(c_old_type) {
 		err_puts("old type is 0\n");
-		h_ctx->m_err = ACLSPV_COMPILE_ARITHMETIC_CAST_TYPE_IS_UNDEFINED_OLD;
+		_aclctx_err(h_ctx, ACLSPV_COMPILE_ARITHMETIC_CAST_TYPE_IS_UNDEFINED_OLD);
 		return ACLEXPR_RET_FAILURE;
 	}
 
@@ -45,7 +47,7 @@ static enum ACLEXPR_RET_ s_non_literal_novec(
 
 	ae2f_ifezerr(c_old_id) {
 		err_puts("old id is 0\n");
-		h_ctx->m_err = ACLSPV_COMPILE_ARITHMETIC_CAST_ID_IS_UNDEFINED_OLD;
+		_aclctx_err(h_ctx, ACLSPV_COMPILE_ARITHMETIC_CAST_TYPE_IS_UNDEFINED_OLD);
 		return ACLEXPR_RET_FAILURE;
 	}
 
@@ -606,17 +608,17 @@ enum ACLEXPR_RET_ aclexpr_arithmetic_cast(
 	ae2fpat_assertassume(h_ctx);
 
 	ae2f_ifezerr(c_old_type) {
-		h_ctx->m_err = ACLSPV_COMPILE_ARITHMETIC_CAST_TYPE_IS_UNDEFINED_OLD;
+		_aclctx_err(h_ctx, ACLSPV_COMPILE_ARITHMETIC_CAST_TYPE_IS_UNDEFINED_OLD);
 		return ACLEXPR_RET_FAILURE;
 	}
 
 	ae2f_ifezerr(c_new_type) {
-		h_ctx->m_err = ACLSPV_COMPILE_ARITHMETIC_CAST_TYPE_IS_UNDEFINED_NEW;
+		_aclctx_err(h_ctx, ACLSPV_COMPILE_ARITHMETIC_CAST_TYPE_IS_UNDEFINED_NEW);
 		return ACLEXPR_RET_FAILURE;
 	}
 
 	ae2f_ifezerr(c_old_id) {
-		h_ctx->m_err = ACLSPV_COMPILE_ARITHMETIC_CAST_ID_IS_UNDEFINED_OLD;
+		_aclctx_err(h_ctx, ACLSPV_COMPILE_ARITHMETIC_CAST_TYPE_IS_UNDEFINED_OLD);
 		return ACLEXPR_RET_FAILURE;
 	}
 

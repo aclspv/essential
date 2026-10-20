@@ -9,7 +9,7 @@
 #include "./carve.h"
 
 #include "./visit/api.h"
-#include "./visit/simple.h"
+#include "./visit/val.h"
 #include "./visit/op1/arithmetic_cast.h"
 #include "./visit/op1/deref.h"
 #include "./visit/op1/incr.h"
@@ -192,7 +192,7 @@ enum CXChildVisitResult aclexpr_visit(
 				ae2fpat_assertassume(LST_SCALE_BUF);
 
 				LST_EXTRA
-					= (void* ae2f_restrict)(&LST_SCALE_BUF[(ACLEXPR_OPBINCFG_END + LST_SCALE_BUF[0])]);
+					= (void* ae2f_restrict)(&LST_SCALE_BUF[(ACLEXPR_OPBINCFG_END + LST_SCALE_BUF[ACLEXPR_OPBINCFG_NUMOPRND])]);
 
 				ae2f_ifnezerr_strict(NUM_CMDCOUNTERSTCK < 2) {
 					err_puts("[visit] NUM_CMDCOUNTERSTCK is fishy");

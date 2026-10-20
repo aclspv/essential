@@ -10,7 +10,7 @@
 #include <aclspv.h>
 
 /** 
- * @fn static enum CXChildVisitResult attr_execmodel(CXCursor h_cur, CXCursor h_parent, int* ae2f_restrict wr_is_btcast)
+ * @fn static enum CXChildVisitResult attr_execmodel(CXCursor h_cur, CXCursor h_parent, aclspv_bool_t* ae2f_restrict wr_is_btcast)
  * */
 static enum CXChildVisitResult aclattr_btcast(
 		CXCursor h_cur, 
@@ -27,7 +27,7 @@ static enum CXChildVisitResult aclattr_btcast(
 
 	if(h_cur.kind == CXCursor_AnnotateAttr && (NIDDLE = strstr(clang_getCString(ATTR_KIND), "aclspv_btcast"))) {
 		dbg_puts("s_attr_btcast::detected");
-		*((int* ae2f_restrict)wr_is_btcast) = 1;
+		*((aclspv_bool_t* ae2f_restrict)wr_is_btcast) = 1;
 
 		clang_disposeString(ATTR_KIND);
 		return CXChildVisit_Break;

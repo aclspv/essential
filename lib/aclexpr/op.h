@@ -140,17 +140,17 @@ enum ACLEXPR_OPCFGX_STATE0_ {
 	 * it reaches the address carve riding PRV_EXTRA — by which point
 	 * extra[0].m_cursor has been rewritten by the cascade to name the ARRAY,
 	 * and is of no use to tell the two apart. */
-	ACLEXPR_OPCFGX_STATE0_ADDR_OF_ELM	= 0x4,
+	ACLEXPR_OPCFGX_STATE0_ADDR_OF_ELM	= 0x2,
 	/** this l-value is a view-rooted l-value (`*p`, `p->m`, `(*p).m`,
 	 * `a[i]`): m_extra.m_view.m_reg is valid and names the view register. a
 	 * compound assignment through this l-value stores through the view
 	 * (aclcur_store_reg), not through a re-derived pointer. */
-	ACLEXPR_OPCFGX_STATE0_LVALUE_VIEW	= 0x10,
+	ACLEXPR_OPCFGX_STATE0_LVALUE_VIEW	= 0x4,
 	/** this l-value is a vector element (`v[i]`): a vector is a value with
 	 * no address, so m_extra.m_vecelm is valid, and a compound assignment
 	 * through this l-value is a read-modify-write of the whole vector
 	 * (OpVectorInsertDynamic + store) rather than a store through a view. */
-	ACLEXPR_OPCFGX_STATE0_LVALUE_VEC_ELM	= 0x20
+	ACLEXPR_OPCFGX_STATE0_LVALUE_VEC_ELM	= 0x8
 };
 
 /**
