@@ -1,6 +1,7 @@
 #include "./bool1.h"
 #include "./util.h"
 
+#include <aclval.h>
 #include <aclcur/common.h>
 #include <aclcur/reg/var.h>
 
@@ -10,7 +11,6 @@
 #include <ae2f/pat/dbg.h>
 
 #include <util/scale.h>
-#include <util/constant.h>
 
 aclspv_bool_t aclexpr_beforevisit2_bool1(
 		struct aclexpr_visit_data* const ae2f_restrict	rdwr_data,

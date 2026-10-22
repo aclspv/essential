@@ -1,6 +1,6 @@
 
 #include "./specsize.h"
-#include <util/constant.h>
+#include <aclval.h>
 #include <util/iddef.h>
 
 aclspv_bool_t aclconst_is_specsz_same(aclconst_specsz c_x, aclconst_specsz c_y, h_aclspv_ctx_t h_ctx) {

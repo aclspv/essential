@@ -7,7 +7,6 @@
 #include <aclattr/getkinder.h>
 #include <aclexpr/util/unwrap.h>
 
-#include <util/constant.h>
 #include <util/scale.h>
 #include <util/wrdemit.h>
 

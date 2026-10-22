@@ -2,8 +2,7 @@
  * @file repvec.c 
  * */
 
-#include "../constant.h"
-
+#include <aclval.h>
 #include <aclty.h>
 #include <aclcur/opX.h>
 #include <util/wrdemit.h>

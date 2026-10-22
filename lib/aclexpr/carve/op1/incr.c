@@ -1,12 +1,12 @@
 #include "./incr.h"
 
 #include <aclty.h>
+#include <aclval.h>
 #include <aclcur/common.h>
 #include <aclexpr/carve/ptr.h>
 #include <aclexpr/curreg.h>
 #include <aclconst/specop.h>
 
-#include <util/constant.h>
 #include <util/emitx.h>
 
 #if	1

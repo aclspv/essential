@@ -4,11 +4,11 @@
 #include <aclexpr/carve/ptr.h>
 
 #include <aclty.h>
+#include <aclval.h>
 #include <aclcur/common.h>
 #include <aclcur/op.h>
 #include <aclcur/load.h>
 
-#include <util/constant.h>
 
 aclexpr_carve_lbl_t aclexpr_carve1_memberread(
 		struct aclexpr_visit_data* const ae2f_restrict	rdwr_data,

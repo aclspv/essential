@@ -7,7 +7,6 @@
 #include <aclcur/common.h>
 #include <aclcur/load/get.h>
 
-#include <util/constant.h>
 #include <util/emitx.h>
 #include <util/wrdemit.h>
 #include <util/iddef.h>

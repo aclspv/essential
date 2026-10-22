@@ -3,8 +3,8 @@
  * @brief	Kind of single linked list where only last one could be resized.
  * */
 
-#ifndef pass_scale_h
-#define pass_scale_h
+#ifndef aclutil_scale_h
+#define aclutil_scale_h
 
 #include <aclspv.h>
 #include <aclmem.h>

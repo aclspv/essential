@@ -12,7 +12,6 @@
 #include <util/wrdemit.h>
 #include <ae2f/cc/switchctl.h>
 #include <ae2f/pat/dbg.h>
-#include <util/constant.h>
 
 enum S_ARITHMETIC_ {
 	S_ARITHMETIC_ADD	= ACLEXPR_OP2_ADD,

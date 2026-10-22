@@ -1,6 +1,8 @@
 #ifndef aclspv_const_spec_cc
 #define aclspv_const_spec_cc
 
+#include <aclval.h>
+
 #include <aclconst/specsize.h>
 #include <aclconst/specop.h>
 
@@ -8,7 +10,6 @@
 #include <util/wrd.h>
 #include <util/iddef.h>
 #include <util/emitx.h>
-#include <util/constant.h>
 
 ae2f_MAC((L, )) aclconst_specsize_op3_sel(
 		aclconst_specsz&	r,

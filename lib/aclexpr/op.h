@@ -36,6 +36,8 @@ enum ACLEXPR_OP_ {
 	/** dereference read (`*p`): OpLoad from the operand's pointer value. */
 	ACLEXPR_OP1_DEREF,
 
+	ACLEXPR_OP1_NRMATH32_RSQRT,
+
 	ACLEXPR_OP2_ADD,
 	ACLEXPR_OP2_ADDASS,
 	ACLEXPR_OP2_SUB,

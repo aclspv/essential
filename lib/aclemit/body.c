@@ -1,6 +1,5 @@
 #include "./body.h"
 #include <aclexpr.h>
-#include "util/log.h"
 #include <aclcur/common.h>
 #include <aclcur/ret.h>
 
@@ -10,11 +9,11 @@
 #include <.aclspv/util/mkname.h>
 
 #include <aclspv.h>
+#include <aclval.h>
 
 #include <ae2f/Keys.h>
 #include <ae2f/cgoto.h>
 
-#include <util/constant.h>
 #include <util/scale.h>
 #include <util/literal.h>
 #include <.aclspv/util/u32_to_hex8.h>

@@ -18,7 +18,6 @@
 
 #include <aclcur/opX.h>
 
-#include <util/constant.h>
 #include <util/scale.h>
 #include <util/wrdemit.h>
 

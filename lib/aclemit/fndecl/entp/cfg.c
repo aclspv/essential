@@ -6,8 +6,8 @@
 #include <aclattr/execmodel.h>
 
 #include <aclmem.h>
+#include <aclval.h>
 
-#include <util/constant.h>
 #include <util/emitx.h>
 #include <util/iddef.h>
 

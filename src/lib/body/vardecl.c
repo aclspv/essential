@@ -1,13 +1,13 @@
 #ifndef	aclemit_body_vardecl_c
 #define aclemit_body_vardecl_c
 
-#include <util/constant.h>
 #include <util/fnctx.h>
 #include <util/log.h>
 
 #include <aclattr/specid.h>
 #include <aclattr/btcast.h>
 
+#include <aclval.h>
 #include <aclexpr.h>
 #include <aclexpr/curreg.h>
 #include <aclcur/common.h>

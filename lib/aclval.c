@@ -1,7 +1,7 @@
 
-#include "./constant.h"
-#include "./emitx.h"
-#include "./iddef.h"
+#include <aclval.h>
+#include <util/emitx.h>
+#include <util/iddef.h>
 #include <ae2f/c90/stdbool.h>
 
 #include <ae2f/pat/dbg.h>

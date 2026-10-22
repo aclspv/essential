@@ -4,7 +4,6 @@
 #include "../../op.h"
 #include "../api.h"
 
-#include <util/constant.h>
 #include <util/scale.h>
 #include <util/wrdemit.h>
 

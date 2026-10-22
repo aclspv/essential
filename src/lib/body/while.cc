@@ -2,13 +2,13 @@
 #define aclemit_body_while_cc
 
 #include <util/fnctx.h>
-#include <util/constant.h>
 #include <util/emitx.h>
 #include <util/visitfromroot.h>
 
 #include <ae2f/cc.h>
 #include <ae2f/cgoto.h>
 
+#include <aclval.h>
 #include <aclexpr.h>
 #include <aclcur/common.h>
 #include <aclattr/getkinder.h>

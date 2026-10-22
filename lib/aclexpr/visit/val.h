@@ -7,7 +7,6 @@
 #define aclexpr_visit_val0_h
 
 #include <util/emitx.h>
-#include <util/constant.h>
 
 #include <aclexpr.h>
 #include <aclexpr/op.h>

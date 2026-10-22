@@ -13,7 +13,6 @@
 #include <util/wrdemit.h>
 #include <ae2f/cc/switchctl.h>
 #include <ae2f/pat/dbg.h>
-#include <util/constant.h>
 
 static aclspv_wrd_t s_decide_cast(aclspv_id_t c_id0, aclspv_id_t c_id1, const h_aclspv_ctx_t h_ctx) {
 	aclspv_id_t cls0, cls1;

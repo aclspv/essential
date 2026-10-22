@@ -7,7 +7,9 @@
 typedef	void* 			aclexpr_visit_lbl_t;
 #else
 #include <ae2f/c90/StdInt/enum.h>
-typedef uint_leastenum_t	aclexpr_visit_lbl_t;
+typedef aclspv_wrd_t		aclexpr_visit_lbl_t;
 #endif
+
+
 
 #endif

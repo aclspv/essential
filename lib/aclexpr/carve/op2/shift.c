@@ -13,7 +13,6 @@
 #include <util/wrdemit.h>
 #include <ae2f/cc/switchctl.h>
 #include <ae2f/pat/dbg.h>
-#include <util/constant.h>
 
 ae2f_inline_f static ae2f_ccconst aclspv_bool_t s_is_shift(const aclspv_wrd_t x) {
 	switch(x) {

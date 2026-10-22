@@ -3,8 +3,9 @@
 #include "./entp/cfg.h"
 #include "./body.h"
 
-#include <aclmem.h>
 #include <aclty.h>
+#include <aclval.h>
+#include <aclmem.h>
 #include <aclctx/err.h>
 #include <aclctx/id.h>
 
@@ -12,7 +13,6 @@
 #include <aclutil/capability.h>
 
 #include <util/fnctx.h>
-#include <util/constant.h>
 #include <util/iddef.h>
 #include <util/emitx.h>
 #include <util/entp.h>

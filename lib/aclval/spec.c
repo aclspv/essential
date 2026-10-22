@@ -1,4 +1,4 @@
-#include <util/constant.h>
+#include <aclval.h>
 
 aclspv_id_t	aclutil_mk_constant_spec_id(
 		const aclspv_wrd_t c_key, const aclspv_wrd_t c_val, 

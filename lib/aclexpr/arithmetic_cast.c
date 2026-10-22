@@ -5,10 +5,10 @@
 #include <util/literal.h>
 #include <util/iddef.h>
 #include <util/emitx.h>
-#include <util/constant.h>
 #include <util/wrdemit.h>
 
 #include <aclty.h>
+#include <aclval.h>
 #include <aclexpr.h>
 #include <aclconst/specop.h>
 #include <aclcur/common.h>

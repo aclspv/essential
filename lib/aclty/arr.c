@@ -8,7 +8,6 @@
 
 #include <util/emitx.h>
 #include <util/iddef.h>
-#include <util/constant.h>
 #include <aclutil/capability.h>
 
 #include <ae2f/pat/dbg.h>

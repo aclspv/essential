@@ -9,8 +9,6 @@
 #include <aclty.h>
 
 #include <util/log.h>
-#include <util/constant.h>
-
 #include <ae2f/bll.h>
 
 #if	1
