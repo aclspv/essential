@@ -14,18 +14,6 @@
 #include <ae2f/cc/switchctl.h>
 #include <ae2f/pat/dbg.h>
 
-ae2f_inline_f static ae2f_ccconst aclspv_bool_t s_is_shift(const aclspv_wrd_t x) {
-	switch(x) {
-		default:
-			return 0;
-
-		case ACLEXPR_OP2_SHL:
-		case ACLEXPR_OP2_SHLASS:
-		case ACLEXPR_OP2_SHR:
-		case ACLEXPR_OP2_SHRASS:
-			return 1;
-	}
-}
 
 ae2f_inline_f static ae2f_ccconst aclspv_bool_t s_is_shift_assign(const aclspv_wrd_t x) {
 	switch(x) {
@@ -37,11 +25,6 @@ ae2f_inline_f static ae2f_ccconst aclspv_bool_t s_is_shift_assign(const aclspv_w
 			return 1;
 	}
 }
-
-#define CHECK unless(	\
-		s_is_shift(	\
-			rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_OPCODE]	\
-			)) return c_lbl_continue
 
 ae2f_inline_f static ae2f_ccpure aclspv_opcode_t s_shift_to_spv(
 		const aclspv_id_t	c_id,
@@ -71,18 +54,13 @@ ae2f_inline_f static ae2f_ccpure aclspv_opcode_t s_shift_to_spv(
 	}
 }
 
-aclexpr_carve_lbl_t aclexpr_carve2_shift(
-		struct aclexpr_visit_data* const ae2f_restrict	rdwr_data,
-		aclspv_wrd_t* const ae2f_restrict		rdwr_prv_idval,
-		aclexpr_opbincfg_extra* const ae2f_restrict	rdwr_prv_extra,
-		ae2f_unused h_scale_t				h_lst_scale,
-		aclspv_wrd_t* const ae2f_restrict		rdwr_lst_scale_buf,
-		aclexpr_opbincfg_extra* ae2f_restrict		rdwr_lst_extra,
-		ae2f_unused aclutil_literal* ae2f_restrict	r_ltrl,
-		aclexpr_carve_lbl_t				c_lbl_continue,
-		aclexpr_carve_lbl_t				c_lbl_success,
-		aclexpr_carve_lbl_t				c_lbl_err
-		) { CHECK; {
+aclspv_bool_t aclexpr_carve2_shift(
+		struct aclexpr_visit_data	ae2fcc_arg_sarr_restrict(rdwr_data, 1),
+		aclspv_wrd_t			ae2fcc_arg_sarr_restrict(rdwr_prv_idval, 1),
+		aclexpr_opbincfg_extra		ae2fcc_arg_sarr_restrict(rdwr_prv_extra, 1),
+		aclspv_wrd_t			ae2fcc_arg_sarr_restrict(rdwr_lst_scale_buf, ACLEXPR_OPBINCFG_END + 2),
+		aclexpr_opbincfg_extra		ae2fcc_arg_sarr_restrict(rdwr_lst_extra, 2)
+		) {
 	const aclspv_bool_t IS_ASSIGN = s_is_shift_assign(rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_OPCODE]);
 
 	/** C99 6.5.7: the result of a shift has the (promoted) type of the LEFT
@@ -103,7 +81,7 @@ aclexpr_carve_lbl_t aclexpr_carve2_shift(
 					, (unsigned)rdwr_lst_extra[0].m_type_original
 					, (unsigned)rdwr_lst_extra[1].m_type_original));
 		rdwr_data->m_ctx->m_err = ACLSPV_COMPILE_UNHANDLED_CARVE;
-		return c_lbl_err;
+		return ACLEXPR_CARVE_NO;
 	}
 
 	rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_RESID]	= *rdwr_prv_idval = CTX(rdwr_data)->m_id++;
@@ -143,7 +121,7 @@ aclexpr_carve_lbl_t aclexpr_carve2_shift(
 				default:									\
 				case ACLEXPR_RET_FAILURE:								\
 				case ACLEXPR_RET_NOT_THE_CASE:							\
-														err_puts("[carve2::arithmetic_cast] OPITER"); return c_lbl_err;							\
+														err_puts("[carve2::arithmetic_cast] OPITER"); return ACLEXPR_CARVE_NO;							\
 				\
 				case ACLEXPR_RET_SUCCESS:								\
 															rdwr_prv_extra->m_mask_literal &= 0;			\
@@ -183,17 +161,17 @@ aclexpr_carve_lbl_t aclexpr_carve2_shift(
 				, CTX(rdwr_data)
 				)) {
 		err_puts("[carve2::shift] SpvOp went undefined (shift of non-integer)");
-		return c_lbl_err;
+		return ACLEXPR_CARVE_NO;
 	} else {
 		dbg_prefix(a);
 		dbg_call((void), (fprintf(stderr, "SpvOp_[%u]\n", rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_OPCODE])));
 	}
 
 	ae2f_ifnezerr_strict(rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_END] >= rdwr_data->m_ctx->m_id)
-		return c_lbl_err;
+		return ACLEXPR_CARVE_NO;
 
 	ae2f_ifnezerr_strict(rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_END + 1] >= rdwr_data->m_ctx->m_id)
-		return c_lbl_err;
+		return ACLEXPR_CARVE_NO;
 
 	{
 		/** the result type is the PLAIN common integer type — no bool
@@ -208,7 +186,7 @@ aclexpr_carve_lbl_t aclexpr_carve2_shift(
 					, rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_END + 1]
 					, rdwr_data->m_ctx)) {
 			err_puts("[carve2::shift] aclcur_cfg_op2");
-			return c_lbl_err;
+			return ACLEXPR_CARVE_NO;
 		}
 	}
 
@@ -221,11 +199,10 @@ aclexpr_carve_lbl_t aclexpr_carve2_shift(
 					, *rdwr_prv_idval
 					, rdwr_data->m_ctx
 					, "[carve2::shift] the l-value store back failed")) {
-			return c_lbl_err;
+			return ACLEXPR_CARVE_NO;
 		}
 	}
-	return c_lbl_success;
-}}
+	return ACLEXPR_CARVE_OK;
+}
 
-#undef	CHECK
 #undef	OPITER

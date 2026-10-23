@@ -23,17 +23,13 @@
  * emitted in the emit pass, which is what keeps it ordered after the
  * instructions its operands came from.
  * */
-aclexpr_carve_lbl_t aclexpr_carve2_derefwrite(
-		struct aclexpr_visit_data* const ae2f_restrict	rdwr_data,
-		aclspv_wrd_t* const ae2f_restrict	rdwr_prv_idval,
-		aclexpr_opbincfg_extra* const ae2f_restrict rdwr_prv_extra,
-		ae2f_unused h_scale_t			h_lst_scale,
-		aclspv_wrd_t* const ae2f_restrict	rdwr_lst_scale_buf,
-		aclexpr_opbincfg_extra* ae2f_restrict	rdwr_lst_extra,
-		aclutil_literal* ae2f_restrict		r_ltrl,
-		aclexpr_carve_lbl_t			c_lbl_continue,
-		aclexpr_carve_lbl_t			c_lbl_success,
-		aclexpr_carve_lbl_t			c_lbl_err
+aclspv_bool_t aclexpr_carve2_derefwrite(
+		struct aclexpr_visit_data	ae2fcc_arg_sarr_restrict(rdwr_data, 1),
+		aclspv_wrd_t			ae2fcc_arg_sarr_restrict(rdwr_prv_idval, 1),
+		aclexpr_opbincfg_extra		ae2fcc_arg_sarr_restrict(rdwr_prv_extra, 1),
+		aclspv_wrd_t			ae2fcc_arg_sarr_restrict(rdwr_lst_scale_buf, ACLEXPR_OPBINCFG_END + 2),
+		aclexpr_opbincfg_extra		ae2fcc_arg_sarr_restrict(rdwr_lst_extra, 2),
+		aclutil_literal			ae2fcc_arg_sarr_restrict(r_ltrl, 1)
 		) {
 	const CXCursor DREF = aclexpr_expr_unwrap(rdwr_lst_extra[0].m_cursor);
 	const aclspv_id_t X = rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_END + 1];
@@ -42,12 +38,9 @@ aclexpr_carve_lbl_t aclexpr_carve2_derefwrite(
 	aclspv_id_t PTR;
 	aclspv_id_t GHOST;
 
-	unless(rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_OPCODE] == (aclspv_wrd_t)ACLEXPR_OP2_DEREFWRITE)
-		return c_lbl_continue;
-
 	unless(clang_getCursorKind(DREF) == CXCursor_UnaryOperator) {
 		err_puts("[carve2::derefwrite] lvalue is not a dereference\n");
-		return c_lbl_err;
+		return ACLEXPR_CARVE_NO;
 	}
 
 	/** the lvalue short-circuited the child cascade, so extra[0] is still
@@ -56,7 +49,7 @@ aclexpr_carve_lbl_t aclexpr_carve2_derefwrite(
 
 	if(!OPND.m_has) {
 		err_puts("[carve2::derefwrite] dereference has no pointer operand\n");
-		return c_lbl_err;
+		return ACLEXPR_CARVE_NO;
 	}
 
 	ae2f_ifezerr(REG = aclexpr_opnd_reg(aclexpr_expr_unwrap(OPND.m_c), CTX(rdwr_data)))
@@ -64,7 +57,7 @@ aclexpr_carve_lbl_t aclexpr_carve2_derefwrite(
 
 	if(!REG || !X) {
 		err_puts("[carve2::derefwrite] no pointer register or no value\n");
-		return c_lbl_err;
+		return ACLEXPR_CARVE_NO;
 	}
 
 	/** refuse a non-pointer outright. without this the OpStore went through
@@ -72,12 +65,12 @@ aclexpr_carve_lbl_t aclexpr_carve2_derefwrite(
 	 * is structurally wrong rather than one that says what is missing. */
 	if(!aclexpr_ptr_require(REG, CTX(rdwr_data))) {
 		err_puts("[carve2::derefwrite] the deref operand is not a pointer");
-		return c_lbl_err;
+		return ACLEXPR_CARVE_NO;
 	}
 
 	ae2f_ifezerr(PTR = aclexpr_ptrval(REG, CTX(rdwr_data))) {
 		err_puts("[carve2::derefwrite] no pointer value\n");
-		return c_lbl_err;
+		return ACLEXPR_CARVE_NO;
 	}
 
 	/** D6/D7: store through the ghost the read builds for the same pointer
@@ -88,17 +81,17 @@ aclexpr_carve_lbl_t aclexpr_carve2_derefwrite(
 	 * before the instructions this store's operands come from. */
 	ae2f_ifezerr(GHOST = aclcur_reg_ghost(PTR, CTX(rdwr_data))) {
 		err_puts("[carve2::derefwrite] no ghost for the deref operand\n");
-		return c_lbl_err;
+		return ACLEXPR_CARVE_NO;
 	}
 
 	ae2f_ifezerr(aclcur_store_reg(GHOST, X, CTX(rdwr_data))) {
 		err_puts("[carve2::derefwrite] OpStore failed\n");
-		return c_lbl_err;
+		return ACLEXPR_CARVE_NO;
 	}
 
 	*rdwr_prv_idval = X;
 	*rdwr_prv_extra = rdwr_lst_extra[1];
 	rdwr_prv_extra->m_literal = *r_ltrl;
 
-	return c_lbl_success;
+	return ACLEXPR_CARVE_OK;
 }

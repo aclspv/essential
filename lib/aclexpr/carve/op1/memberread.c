@@ -10,24 +10,16 @@
 #include <aclcur/load.h>
 
 
-aclexpr_carve_lbl_t aclexpr_carve1_memberread(
-		struct aclexpr_visit_data* const ae2f_restrict	rdwr_data,
-		aclspv_wrd_t* const ae2f_restrict rdwr_prv_idval,
-		aclexpr_opbincfg_extra* const ae2f_restrict rdwr_prv_extra,
-		ae2f_unused h_scale_t			h_lst_scale,
-		aclspv_wrd_t* const ae2f_restrict	rdwr_lst_scale_buf,
-		aclexpr_opbincfg_extra* ae2f_restrict rdwr_lst_extra,
-		ae2f_unused aclutil_literal* ae2f_restrict r_ltrl,
-		aclexpr_carve_lbl_t			c_lbl_continue,
-		aclexpr_carve_lbl_t			c_lbl_success,
-		aclexpr_carve_lbl_t			c_lbl_err
+aclspv_bool_t aclexpr_carve1_memberread(
+		struct aclexpr_visit_data	ae2fcc_arg_sarr_restrict(rdwr_data, 1),
+		aclspv_wrd_t			ae2fcc_arg_sarr_restrict(rdwr_prv_idval, 1),
+		aclexpr_opbincfg_extra		ae2fcc_arg_sarr_restrict(rdwr_prv_extra, 1),
+		aclspv_wrd_t			ae2fcc_arg_sarr_restrict(rdwr_lst_scale_buf, ACLEXPR_OPBINCFG_END + 1),
+		aclexpr_opbincfg_extra		ae2fcc_arg_sarr_restrict(rdwr_lst_extra, 1)
 		) {
 	const aclspv_id_t V = rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_END + 0];
 	const aclspv_wrd_t IDX = (aclspv_wrd_t)rdwr_lst_extra[1].m_literal.m_u64;
 	const aclspv_id_t TY = rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_RESTYID];
-
-	unless(rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_OPCODE] == (aclspv_wrd_t)ACLEXPR_OP1_MEMBERREAD)
-		return c_lbl_continue;
 
 	/** ghost view lane (D6/D7): when the base is a pointer (`p->b`) or a
 	 * dereference (`(*p).b`), the member is an l-value of the storage the
@@ -48,12 +40,12 @@ aclexpr_carve_lbl_t aclexpr_carve1_memberread(
 
 		ae2f_ifezerr(VIEW) {
 			err_puts("[carve1::memberread] pointer-base member view could not be built");
-			return c_lbl_err;
+			return ACLEXPR_CARVE_NO;
 		}
 
 		ae2f_ifezerr(*rdwr_prv_idval = aclcur_load_reg(VIEW, CTX(rdwr_data), 0)) {
 			err_puts("[carve1::memberread] view load failed");
-			return c_lbl_err;
+			return ACLEXPR_CARVE_NO;
 		}
 
 		*rdwr_prv_extra = rdwr_lst_extra[0];
@@ -61,7 +53,7 @@ aclexpr_carve_lbl_t aclexpr_carve1_memberread(
 		rdwr_prv_extra->m_extra.m_view.m_reg = VIEW;
 		rdwr_prv_extra->m_state0 |= (aclspv_wrd_t)ACLEXPR_OPCFGX_STATE0_LVALUE_VIEW;
 
-		return c_lbl_success;
+		return ACLEXPR_CARVE_OK;
 	}
 
 	/** addressable-base view lane (D3/D5): when the base is a plain variable
@@ -85,7 +77,7 @@ aclexpr_carve_lbl_t aclexpr_carve1_memberread(
 		if(VIEW) {
 			ae2f_ifezerr(*rdwr_prv_idval = aclcur_load_reg(VIEW, CTX(rdwr_data), 0)) {
 				err_puts("[carve1::memberread] view load failed");
-				return c_lbl_err;
+				return ACLEXPR_CARVE_NO;
 			}
 
 			*rdwr_prv_extra = rdwr_lst_extra[0];
@@ -94,7 +86,7 @@ aclexpr_carve_lbl_t aclexpr_carve1_memberread(
 			rdwr_prv_extra->m_state0
 				|= (aclspv_wrd_t)ACLEXPR_OPCFGX_STATE0_LVALUE_VIEW;
 
-			return c_lbl_success;
+			return ACLEXPR_CARVE_OK;
 		}
 	}
 
@@ -117,7 +109,7 @@ aclexpr_carve_lbl_t aclexpr_carve1_memberread(
 					!P_TY || P_TY->m_class != ACLTY_STRUCT
 					|| IDX >= P_TY->m_info.m_struct.m_num_mbr) {
 				err_puts("[carve1::memberread] base is not a composite value with that member");
-				return c_lbl_err;
+				return ACLEXPR_CARVE_NO;
 			}
 		}
 	}
@@ -131,12 +123,12 @@ aclexpr_carve_lbl_t aclexpr_carve1_memberread(
 				, CTX(rdwr_data)
 				)) {
 		err_puts("[carve1::memberread] OpCompositeExtract failed");
-		return c_lbl_err;
+		return ACLEXPR_CARVE_NO;
 	}
 
 	*rdwr_prv_extra = rdwr_lst_extra[0];
 	rdwr_prv_extra->m_type_original = TY;
 
-	return c_lbl_success;
+	return ACLEXPR_CARVE_OK;
 }
 

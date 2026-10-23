@@ -5,18 +5,14 @@
 #include <aclexpr/curreg.h>
 #include <aclcur/load.h>
 
-aclexpr_carve_lbl_t aclexpr_carve2_assign(
-		struct aclexpr_visit_data* const ae2f_restrict	rdwr_data,
-		aclspv_wrd_t* const ae2f_restrict		rdwr_prv_idval,
-		aclexpr_opbincfg_extra* const ae2f_restrict	rdwr_prv_extra,
-		ae2f_unused h_scale_t				h_lst_scale,
-		aclspv_wrd_t* const ae2f_restrict		rdwr_lst_scale_buf,
-		aclexpr_opbincfg_extra* ae2f_restrict		rdwr_lst_extra,
-		aclutil_literal* ae2f_restrict			r_ltrl,
-		aclexpr_carve_lbl_t				c_lbl_continue,
-		aclexpr_carve_lbl_t				c_lbl_success,
-		aclexpr_carve_lbl_t				c_lbl_err
-		) { ae2f_ifnezerr_strict(rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_OPCODE] != ACLEXPR_OP2_ASSIGN) return c_lbl_continue; {
+aclspv_bool_t aclexpr_carve2_assign(
+		struct aclexpr_visit_data	ae2fcc_arg_sarr_restrict(rdwr_data, 1),
+		aclspv_wrd_t			ae2fcc_arg_sarr_restrict(rdwr_prv_idval, 1),
+		aclexpr_opbincfg_extra		ae2fcc_arg_sarr_restrict(rdwr_prv_extra, 1),
+		aclspv_wrd_t			ae2fcc_arg_sarr_restrict(rdwr_lst_scale_buf, ACLEXPR_OPBINCFG_END + 2),
+		aclexpr_opbincfg_extra		ae2fcc_arg_sarr_restrict(rdwr_lst_extra, 2),
+		aclutil_literal			ae2fcc_arg_sarr_restrict(r_ltrl, 1)
+		) { 
 	const aclspv_id_t REG = aclexpr_curreg_find(
 			clang_getCursorReferenced(rdwr_lst_extra->m_cursor)
 			, rdwr_data->m_ctx
@@ -26,12 +22,12 @@ aclexpr_carve_lbl_t aclexpr_carve2_assign(
 
 	ae2f_ifnezerr_strict(!REG) {
 		err_puts("[carve2::assign] no register for the lvalue.\n");
-		return c_lbl_err;
+		return ACLEXPR_CARVE_NO;
 	}
 
 	ae2f_ifezerr(p_reg) {
 		err_puts("register not found as node\n");
-		return c_lbl_err;
+		return ACLEXPR_CARVE_NO;
 	}
 
 	ae2f_ifezerr(aclcur_store_reg(
@@ -40,7 +36,7 @@ aclexpr_carve_lbl_t aclexpr_carve2_assign(
 			, rdwr_data->m_ctx
 			)) {
 		err_puts("[carve2::assign] assign cursor store has failed\n");
-		return c_lbl_err;
+		return ACLEXPR_CARVE_NO;
 	}
 
 	/* implicit load: mirror memberwrite so the just-stored value is
@@ -50,7 +46,7 @@ aclexpr_carve_lbl_t aclexpr_carve2_assign(
 			REG, rdwr_data->m_ctx, 0
 			)) {
 		err_puts("[carve2::assign] implicit load of the assigned value has failed\n");
-		return c_lbl_err;
+		return ACLEXPR_CARVE_NO;
 	}
 
 	/* implicit load: yield the stored value so the assign result
@@ -60,11 +56,11 @@ aclexpr_carve_lbl_t aclexpr_carve2_assign(
 			REG, rdwr_data->m_ctx, 0
 			)) {
 	err_puts("[carve2::assign] implicit load of the assigned value has failed\n");
-	return c_lbl_err;
+	return ACLEXPR_CARVE_NO;
 	}
 
 	*rdwr_prv_extra = rdwr_lst_extra[1];
 	rdwr_prv_extra->m_literal = *r_ltrl;
 
-	return c_lbl_success;
-}}
+	return ACLEXPR_CARVE_OK;
+}

@@ -14,8 +14,6 @@
 #include <ae2f/cc/switchctl.h>
 #include <ae2f/pat/dbg.h>
 
-#define CHECK unless(rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_OPCODE] == (aclspv_wrd_t)ACLEXPR_OPN_INITLIST) return c_lbl_continue
-
 /** one 3-word OpConstantNull in the types section; valid for every member
  * type, so union padding needs no per-type zero construction. */
 static aclspv_id_t s_mk_null(
@@ -40,18 +38,15 @@ static aclspv_id_t s_mk_null(
 	return ID;
 }
 
-aclexpr_carve_lbl_t aclexpr_carve_opn_initlist(
+aclspv_bool_t aclexpr_carve_opn_initlist(
 		struct aclexpr_visit_data* const ae2f_restrict	rdwr_data,
 		aclspv_wrd_t* const ae2f_restrict rdwr_prv_idval,
 		aclexpr_opbincfg_extra* const ae2f_restrict rdwr_prv_extra,
 		ae2f_unused h_scale_t			h_lst_scale,
 		aclspv_wrd_t* const ae2f_restrict	rdwr_lst_scale_buf,
 		aclexpr_opbincfg_extra* ae2f_restrict rdwr_lst_extra,
-		aclutil_literal* ae2f_restrict		r_ltrl,
-		aclexpr_carve_lbl_t			c_lbl_continue,
-		aclexpr_carve_lbl_t			c_lbl_success,
-		aclexpr_carve_lbl_t			c_lbl_err
-		) { CHECK; {
+		aclutil_literal* ae2f_restrict		r_ltrl
+		) {
 	const aclspv_wrd_t	N0	= rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_NUMOPRND];
 	aclspv_wrd_t		N	= N0;
 	const aclspv_id_t	TY_RES	= rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_RESTYID];
@@ -70,19 +65,19 @@ aclexpr_carve_lbl_t aclexpr_carve_opn_initlist(
 	/** opX holds at most ACLCUR_OPX_OPRND_CAP operands; empty lists carry no value here. */
 	ae2f_ifnezerr_strict(N == 0 || N > ACLCUR_OPX_OPRND_CAP) {
 		err_puts("[carve::opn::initlist] element count out of range");
-		return c_lbl_err;
+		return ACLEXPR_CARVE_NO;
 	}
 
 	ae2f_ifezerr(TY_RES) {
 		err_puts("[carve::opn::initlist] no result type");
-		return c_lbl_err;
+		return ACLEXPR_CARVE_NO;
 	}
 
 	P_TY = aclty_find(TY_RES, CTX(rdwr_data));
 
 	ae2f_ifezerr(P_TY) {
 		err_puts("[carve::opn::initlist] result type not found");
-		return c_lbl_err;
+		return ACLEXPR_CARVE_NO;
 	}
 
 	switch(P_TY->m_class) {
@@ -100,7 +95,7 @@ aclexpr_carve_lbl_t aclexpr_carve_opn_initlist(
 			CTX(rdwr_data)->m_err = CTX(rdwr_data)->m_err
 				? CTX(rdwr_data)->m_err
 				: ACLSPV_COMPILE_UNHANDLED_CARVE;
-			return c_lbl_err;
+			return ACLEXPR_CARVE_NO;
 
 		case ACLTY_STRUCT:
 			{
@@ -127,7 +122,7 @@ aclexpr_carve_lbl_t aclexpr_carve_opn_initlist(
 						&& N == 1 && EXPECTED > 1) {
 					ae2f_ifnezerr_strict(EXPECTED > ACLCUR_OPX_OPRND_CAP) {
 						err_puts("[carve::opn::initlist] union member count too large");
-						return c_lbl_err;
+						return ACLEXPR_CARVE_NO;
 					}
 
 					for(i = 1; i < EXPECTED; ++i) {
@@ -137,7 +132,7 @@ aclexpr_carve_lbl_t aclexpr_carve_opn_initlist(
 
 						ae2f_ifezerr(TY_I) {
 							err_puts("[carve::opn::initlist] union member type unresolved");
-							return c_lbl_err;
+							return ACLEXPR_CARVE_NO;
 						}
 
 						OP[i] = s_mk_null(TY_I, CTX(rdwr_data));
@@ -175,7 +170,7 @@ aclexpr_carve_lbl_t aclexpr_carve_opn_initlist(
 						(LB.m_val_mask & ACLUTIL_LITERAL_MASK_LITERAL)
 						!= ACLUTIL_LITERAL_MASK_LITERAL) {
 					err_puts("[carve::opn::initlist] array length is not a literal");
-					return c_lbl_err;
+					return ACLEXPR_CARVE_NO;
 				}
 
 				EXPECTED = (aclspv_wrd_t)LB.m_val_lit.m_u64;
@@ -188,7 +183,7 @@ aclexpr_carve_lbl_t aclexpr_carve_opn_initlist(
 	ae2f_ifnezerr_strict(P_TY->m_class != ACLTY_STRUCT) {
 		ae2f_ifezerr(TY_ELM) {
 			err_puts("[carve::opn::initlist] element type unresolved");
-			return c_lbl_err;
+			return ACLEXPR_CARVE_NO;
 		}
 	}
 
@@ -198,7 +193,7 @@ aclexpr_carve_lbl_t aclexpr_carve_opn_initlist(
 					, "[carve::opn::initlist] count mismatch: %u elements for a %u-wide aggregate\n"
 					, (unsigned)N
 					, (unsigned)EXPECTED));
-		return c_lbl_err;
+		return ACLEXPR_CARVE_NO;
 	}
 
 	*rdwr_prv_idval = CTX(rdwr_data)->m_id++;
@@ -221,7 +216,7 @@ aclexpr_carve_lbl_t aclexpr_carve_opn_initlist(
 		 * cast. */
 		ae2f_ifezerr(TY_I) {
 			err_puts("[carve::opn::initlist] struct member type unresolved");
-			return c_lbl_err;
+			return ACLEXPR_CARVE_NO;
 		}
 
 		switch(aclexpr_arithmetic_cast(
@@ -241,7 +236,7 @@ aclexpr_carve_lbl_t aclexpr_carve_opn_initlist(
 				err_call((void), fprintf(stderr
 							, "[carve::opn::initlist] element %u cast failed\n"
 							, (unsigned)i));
-				return c_lbl_err;
+				return ACLEXPR_CARVE_NO;
 
 			case ACLEXPR_RET_SUCCESS:
 				MASK &= 0;
@@ -264,7 +259,7 @@ aclexpr_carve_lbl_t aclexpr_carve_opn_initlist(
 		rdwr_prv_extra->m_literal = XTRA[0].m_literal;
 		*rdwr_prv_idval = OP[0];
 		*r_ltrl = rdwr_prv_extra->m_literal;
-		return c_lbl_success;
+		return ACLEXPR_CARVE_OK;
 	}
 
 	rdwr_prv_extra->m_type_original = TY_RES;
@@ -280,7 +275,7 @@ aclexpr_carve_lbl_t aclexpr_carve_opn_initlist(
 					, (aclspv_wrd_t)(ANCHOUR + 2 + N)
 					, 0)) {
 			err_puts("[carve::opn::initlist] emit OpConstantComposite");
-			return c_lbl_err;
+			return ACLEXPR_CARVE_NO;
 		}
 
 		aclutil_get_wrd_of_vec(&CTX(rdwr_data)->m_section.m_types)[ANCHOUR + 0]
@@ -297,7 +292,7 @@ aclexpr_carve_lbl_t aclexpr_carve_opn_initlist(
 
 		rdwr_prv_extra->m_mask_literal = ACLUTIL_LITERAL_MASK_CONSTANT;
 		*r_ltrl = rdwr_prv_extra->m_literal;
-		return c_lbl_success;
+		return ACLEXPR_CARVE_OK;
 	}
 
 	/** any runtime element: build an OpCompositeConstruct opX node so
@@ -311,11 +306,9 @@ aclexpr_carve_lbl_t aclexpr_carve_opn_initlist(
 				, CTX(rdwr_data)
 				)) {
 		err_puts("[carve::opn::initlist] aclcur_cfg_opx OpCompositeConstruct");
-		return c_lbl_err;
+		return ACLEXPR_CARVE_NO;
 	}
 
 	rdwr_prv_extra->m_mask_literal = ACLUTIL_LITERAL_MASK_RT;
-	return c_lbl_success;
-} ae2f_unreachable(); }
-
-#undef	CHECK
+	return ACLEXPR_CARVE_OK;
+}

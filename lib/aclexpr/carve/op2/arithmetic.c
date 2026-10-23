@@ -108,31 +108,6 @@ ae2f_inline_f static ae2f_ccpure aclspv_opcode_t s_op_to_spv(
 	}
 }
 
-ae2f_inline_f static ae2f_ccconst aclspv_bool_t s_checkhelper(const aclspv_wrd_t x) {
-	switch(x) {
-		default:
-			return 0;
-
-		case ACLEXPR_OP2_ADD:
-		case ACLEXPR_OP2_SUB:
-		case ACLEXPR_OP2_DIV:
-		case ACLEXPR_OP2_MUL:
-		case ACLEXPR_OP2_REM:
-		case ACLEXPR_OP2_ADDASS:
-		case ACLEXPR_OP2_SUBASS:
-		case ACLEXPR_OP2_DIVASS:
-		case ACLEXPR_OP2_MULASS:
-		case ACLEXPR_OP2_REMASS:
-
-			return 1;
-	}
-}
-
-#define CHECK unless(	\
-		s_checkhelper(	\
-				rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_OPCODE]	\
-				)) return c_lbl_continue
-
 ae2f_inline_f static ae2f_ccconst struct aclutil_ltrl_eval_t	s_eval2_ltrl(
 		const aclutil_literal	c_oprndA,
 		const aclutil_literal	c_oprndB,
@@ -270,7 +245,8 @@ static aclspv_wrd_t s_decide_cast(aclspv_id_t c_id0, aclspv_id_t c_id1, const h_
 		c_id0 ^= c_id1;
 	}
 
-	cls0 = aclty_simd_class(c_id0, h_ctx), cls1 = aclty_simd_class(c_id1, h_ctx);
+	cls0 = aclty_simd_class(c_id0, h_ctx);
+	cls1 = aclty_simd_class(c_id1, h_ctx);
 
 	/** one is 0? */
 	unless(c_id0)
@@ -289,20 +265,136 @@ static aclspv_wrd_t s_decide_cast(aclspv_id_t c_id0, aclspv_id_t c_id1, const h_
 	return cls0 < cls1 ? c_id1 : c_id0;
 }
 
-aclexpr_carve_lbl_t aclexpr_carve2_arithmetic(
-		struct aclexpr_visit_data* const ae2f_restrict	rdwr_data,
-		aclspv_wrd_t* const ae2f_restrict		rdwr_prv_idval,
-		aclexpr_opbincfg_extra* const ae2f_restrict	rdwr_prv_extra,
-		ae2f_unused h_scale_t				h_lst_scale,
-		aclspv_wrd_t* const ae2f_restrict		rdwr_lst_scale_buf,
-		aclexpr_opbincfg_extra* ae2f_restrict		rdwr_lst_extra,
-		aclutil_literal* ae2f_restrict			r_ltrl,
-		aclexpr_carve_lbl_t				c_lbl_continue,
-		aclexpr_carve_lbl_t				c_lbl_success,
-		aclexpr_carve_lbl_t				c_lbl_err
-		) { CHECK; {
-	const aclspv_bool_t IS_ASSIGN = s_is_assign(rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_OPCODE]);
+#include <ae2f/cc/arg_sarr.h>
 
+/** 0 when succeed */
+aclspv_bool_t aclexpr_carve2_arithmetic_do(
+		aclutil_literal			ae2fcc_arg_sarr_restrict(r_ltrl, 1),
+		aclexpr_opbincfg_extra		ae2fcc_arg_sarr_restrict(r_extra, 1),
+		aclspv_id_t			ae2fcc_arg_sarr_restrict(r_id, 1),
+		const aclexpr_opbincfg_extra	ae2fcc_arg_sarr_restrict(rd_extra, 2),
+		aclspv_wrd_t			ae2fcc_arg_sarr_restrict(rdwr_lst_scale_buf, ACLEXPR_OPBINCFG_END + 2),
+		h_aclspv_ctx_t			h_ctx
+		) {
+	if(
+			aclid_is_float(aclty_simd_class(rd_extra[0].m_type_original, h_ctx))
+			|| aclid_is_float(aclty_simd_class(rd_extra[1].m_type_original, h_ctx))
+	  ) {
+#if	__ACLSPV_OpCapabilityKernel
+		if(aclutil_add_capability_by_flag(h_ctx, SpvCapabilityKernel))
+#endif
+		{
+			fixme_puts("this is float. make sure we can do it constantly with Kernel capability.");
+			r_extra->m_mask_literal &= ~(aclspv_wrd_t)(ACLUTIL_LITERAL_CONSTANT);
+		}
+	}
+
+	ae2f_ifezerr(rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_OPCODE] = s_op_to_spv(
+				ACLEXPR_OPBINCFG_RESTYID[rdwr_lst_scale_buf]
+				, (ACLEXPR_OPBINCFG_OPCODE[rdwr_lst_scale_buf])
+				, h_ctx
+				)) {
+		err_puts(("[carve2::arithmetic] SpvOp went undefined"));
+		return 1;
+	} else {
+		dbg_prefix(a);
+		dbg_call((void), (fprintf(stderr, "SpvOp_[%u]\n", rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_OPCODE])));
+	}
+
+	ae2f_ifnezerr_strict(rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_END] >= h_ctx->m_id)
+		return 1;
+
+	ae2f_ifnezerr_strict(rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_END + 1] >= h_ctx->m_id)
+		return 1;
+
+	switch(r_extra->m_mask_literal) {
+		case ACLUTIL_LITERAL_MASK_LITERAL:
+		case ACLUTIL_LITERAL_LITERAL:
+			{
+				struct aclutil_ltrl_eval_t EVAL_LIT
+					= s_eval2_ltrl(
+							rd_extra[0].m_literal
+							, rd_extra[1].m_literal
+							, (enum SpvOp_)rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_OPCODE]
+							,(enum ACLSPV_ID_)rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_RESTYID]
+						      );
+
+				ae2f_ifnezerr_strict(EVAL_LIT.m_found) {
+					dbg_puts(("The result is literal."));
+					*r_ltrl =  r_extra->m_literal = EVAL_LIT.m_ret;
+					r_extra->m_type_original = rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_RESTYID];
+
+					ae2f_ifezerr(*r_id = aclval_cfg_by_enum(EVAL_LIT.m_ret.m_api_uintmax, h_ctx
+								, (enum ACLSPV_ID_)rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_RESTYID])) {
+						err_puts("[carve2::arithmetic] aclutil_mk_constant_val_by_enum");
+						return 1;
+					}
+
+					dbg_prefix();
+					dbg_call((void), fprintf(stderr, "literal id: %u\n", *r_id));
+					break;
+				} else {
+					err_puts("[carve2::arithmetic] EVAL_LIT");
+					return 1;
+				}
+			}
+
+			break;
+
+
+		case ACLUTIL_LITERAL_MASK_CONSTANT:
+			ae2f_ifezerr(*r_id = aclconst_specop(
+						rdwr_lst_scale_buf
+						, 6
+						, h_ctx)) return 1;
+			break;
+
+		case ACLUTIL_LITERAL_MASK_RT:
+			/** runtime: the operation is a graph node, flushed by aclcur_emit(). */
+			{
+				aclspv_id_t TY_RES = rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_RESTYID];
+
+				ae2f_ifezerr(*r_id = aclcur_cfg_op2(
+							rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_RESID]
+							, (enum SpvOp_)rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_OPCODE]
+							, TY_RES
+							, rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_END]
+							, rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_END + 1]
+							, h_ctx))
+					return 1;
+			}
+
+			break;
+
+		default:
+			err_puts(("unknown literal"));
+			ae2f_unreachable();
+	}
+
+	if(s_is_assign(rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_OPCODE])) {
+		/** view-rooted (`*q += x`, `p->m += x`, `a[i] += x`), vector element
+		 * (`v[i] += x`) or plain variable: one shared store-back, keyed on
+		 * what the l-value's own read recorded on extra[0]. */
+		ae2f_ifezerr(aclexpr_lvalue_storeback(
+					r_extra
+					, *r_id
+					, h_ctx
+					, "[carve2::arithmetic] the l-value store back failed")) {
+			return 1;
+		}
+	}
+
+	return 0;
+}
+
+aclspv_bool_t aclexpr_carve2_arithmetic(
+		struct aclexpr_visit_data	ae2fcc_arg_sarr_restrict(rdwr_data, 1),
+		aclspv_wrd_t			ae2fcc_arg_sarr_restrict(rdwr_prv_idval, 1),
+		aclexpr_opbincfg_extra		ae2fcc_arg_sarr_restrict(rdwr_prv_extra, 1),
+		aclspv_wrd_t			ae2fcc_arg_sarr_restrict(rdwr_lst_scale_buf, ACLEXPR_OPBINCFG_END + 2),
+		aclexpr_opbincfg_extra		ae2fcc_arg_sarr_restrict(rdwr_lst_extra, 2),
+		aclutil_literal			ae2fcc_arg_sarr_restrict(r_ltrl, 1)
+		) {
 	/** pointer arithmetic (`p + n`, `p - n`, `p += n`, `p -= n`, `p - q`):
 	 * a fatal error in the logical addressing model, where a pointer is a
 	 * plain id with no address to offset. the ACLTY_PTR operand test keeps
@@ -310,7 +402,7 @@ aclexpr_carve_lbl_t aclexpr_carve2_arithmetic(
 	 * gated on the logical flag alone so physical addressing keeps it. */
 	if(aclexpr_ptr_arith_fatal(rdwr_lst_extra[0].m_type_original, CTX(rdwr_data))
 			|| aclexpr_ptr_arith_fatal(rdwr_lst_extra[1].m_type_original, CTX(rdwr_data)))
-		return c_lbl_err;
+		return ACLEXPR_CARVE_NO;
 
 	rdwr_prv_extra->m_type_original = rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_RESTYID] = s_decide_cast(
 			rdwr_lst_extra[0].m_type_original
@@ -320,7 +412,6 @@ aclexpr_carve_lbl_t aclexpr_carve2_arithmetic(
 
 	rdwr_prv_extra->m_mask_literal = rdwr_lst_extra[0].m_mask_literal & rdwr_lst_extra[1].m_mask_literal;
 
-	ae2fpat_assertassume_strict(rdwr_lst_scale_buf);
 
 	ae2f_ifezerr(rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_RESTYID]) {
 		err_puts("[carve2::arithmetic] no result type");
@@ -328,7 +419,7 @@ aclexpr_carve_lbl_t aclexpr_carve2_arithmetic(
 		err_call((void), fprintf(stderr, "[carve2::arithmetic] opcode: %u %u\n"
 					, (unsigned)rdwr_lst_extra[0].m_type_original
 					, (unsigned)rdwr_lst_extra[1].m_type_original));
-		return c_lbl_err;
+		return ACLEXPR_CARVE_NO;
 	}
 
 	rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_RESID]	= *rdwr_prv_idval = CTX(rdwr_data)->m_id++;
@@ -361,7 +452,7 @@ aclexpr_carve_lbl_t aclexpr_carve2_arithmetic(
 				default:									\
 				case ACLEXPR_RET_FAILURE:								\
 				case ACLEXPR_RET_NOT_THE_CASE:							\
-														err_puts("[carve2::arithmetic_cast] OPITER"); return c_lbl_err;							\
+														err_puts("[carve2::arithmetic_cast] OPITER"); return ACLEXPR_CARVE_NO;							\
 				\
 				case ACLEXPR_RET_SUCCESS:								\
 															rdwr_prv_extra->m_mask_literal &= 0;			\
@@ -387,109 +478,9 @@ aclexpr_carve_lbl_t aclexpr_carve2_arithmetic(
 	OPITER(1u);
 	OPITER(0u);
 
-	if(
-			aclid_is_float(aclty_simd_class(rdwr_prv_extra[0].m_type_original, rdwr_data->m_ctx))
-			|| aclid_is_float(aclty_simd_class(rdwr_prv_extra[1].m_type_original, rdwr_data->m_ctx))
-	  ) {
-		fixme_puts("this is float. make sure we can do it constantly with Kernel capability.");
-		rdwr_prv_extra->m_mask_literal &= ~(aclspv_wrd_t)(ACLUTIL_LITERAL_CONSTANT);
-	}
-
-	ae2f_ifezerr(rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_OPCODE] = s_op_to_spv(
-				ACLEXPR_OPBINCFG_RESTYID[rdwr_lst_scale_buf]
-				, (ACLEXPR_OPBINCFG_OPCODE[rdwr_lst_scale_buf])
-				, CTX(rdwr_data)
-				)) {
-		err_puts(("[carve2::arithmetic] SpvOp went undefined"));
-		return c_lbl_err;
-	} else {
-		dbg_prefix(a);
-		dbg_call((void), (fprintf(stderr, "SpvOp_[%u]\n", rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_OPCODE])));
-	}
-
-	ae2f_ifnezerr_strict(rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_END] >= rdwr_data->m_ctx->m_id)
-		return c_lbl_err;
-
-	ae2f_ifnezerr_strict(rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_END + 1] >= rdwr_data->m_ctx->m_id)
-		return c_lbl_err;
-
-	switch(rdwr_prv_extra->m_mask_literal) {
-		case ACLUTIL_LITERAL_MASK_LITERAL:
-		case ACLUTIL_LITERAL_LITERAL:
-			{
-				struct aclutil_ltrl_eval_t EVAL_LIT
-					= s_eval2_ltrl(
-							rdwr_lst_extra[0].m_literal
-							, rdwr_lst_extra[1].m_literal
-							, (enum SpvOp_)rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_OPCODE]
-							,(enum ACLSPV_ID_)rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_RESTYID]
-						      );
-
-				ae2f_ifnezerr_strict(EVAL_LIT.m_found) {
-					dbg_puts(("The result is literal."));
-					*r_ltrl = rdwr_prv_extra->m_literal = EVAL_LIT.m_ret;
-					rdwr_prv_extra->m_type_original = rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_RESTYID];
-
-
-					ae2f_ifezerr(*rdwr_prv_idval = aclval_cfg_by_enum(EVAL_LIT.m_ret.m_api_uintmax, rdwr_data->m_ctx
-								, (enum ACLSPV_ID_)rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_RESTYID])) {
-						err_puts("[carve2::arithmetic] aclutil_mk_constant_val_by_enum");
-						return c_lbl_err;
-					}
-
-
-					dbg_prefix();
-					dbg_call((void), fprintf(stderr, "literal id: %u\n", *rdwr_prv_idval));
-					break;
-				} else {
-					err_puts("[carve2::arithmetic] EVAL_LIT");
-					return c_lbl_err;
-				}
-			}
-
-			break;
-
-
-		case ACLUTIL_LITERAL_MASK_CONSTANT:
-			ae2f_ifezerr(*rdwr_prv_idval = aclconst_specop(
-						rdwr_lst_scale_buf
-						, 6
-						, rdwr_data->m_ctx)) return c_lbl_err;
-			break;
-
-		case ACLUTIL_LITERAL_MASK_RT:
-			/** runtime: the operation is a graph node, flushed by aclcur_emit(). */
-			{
-				aclspv_id_t TY_RES = rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_RESTYID];
-
-				ae2f_ifezerr(*rdwr_prv_idval = aclcur_cfg_op2(
-							rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_RESID]
-							, (enum SpvOp_)rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_OPCODE]
-							, TY_RES
-							, rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_END]
-							, rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_END + 1]
-							, rdwr_data->m_ctx))
-					return c_lbl_err;
-			}
-
-			break;
-
-		default:
-			err_puts(("unknown literal"));
-			ae2f_unreachable();
-	}
-
-	if(IS_ASSIGN) {
-		/** view-rooted (`*q += x`, `p->m += x`, `a[i] += x`), vector element
-		 * (`v[i] += x`) or plain variable: one shared store-back, keyed on
-		 * what the l-value's own read recorded on extra[0]. */
-		ae2f_ifezerr(aclexpr_lvalue_storeback(
-					rdwr_lst_extra
-					, *rdwr_prv_idval
-					, rdwr_data->m_ctx
-					, "[carve2::arithmetic] the l-value store back failed")) {
-			return c_lbl_err;
-		}
-	}
-	return c_lbl_success;
-}}
+	return aclexpr_carve2_arithmetic_do(
+			r_ltrl, rdwr_prv_extra
+			, rdwr_prv_idval, rdwr_lst_extra
+			, rdwr_lst_scale_buf, rdwr_data->m_ctx
+			);
+}

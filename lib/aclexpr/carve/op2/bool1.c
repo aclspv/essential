@@ -5,18 +5,13 @@
 
 #include <aclty.h>
 
-aclexpr_carve_lbl_t aclexpr_carve2_bool1(
-		struct aclexpr_visit_data* const ae2f_restrict	rdwr_data,
-		aclspv_wrd_t* const ae2f_restrict		rdwr_prv_idval,
-		aclexpr_opbincfg_extra* const ae2f_restrict	rdwr_prv_extra,
-		ae2f_unused h_scale_t				h_lst_scale,
-		aclspv_wrd_t* const ae2f_restrict		rdwr_lst_scale_buf,
-		aclexpr_opbincfg_extra* ae2f_restrict		rdwr_lst_extra,
-		ae2f_unused aclutil_literal* ae2f_restrict	r_ltrl,
-		aclexpr_carve_lbl_t				c_lbl_continue,
-		aclexpr_carve_lbl_t				c_lbl_success,
-		aclexpr_carve_lbl_t				c_lbl_err
-		) { const aclspv_wrd_t OPC = rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_OPCODE]; if(OPC == ACLEXPR_OP2_AND_L || OPC == ACLEXPR_OP2_OR_L)  {
+aclspv_bool_t aclexpr_carve2_bool1(
+		struct aclexpr_visit_data	ae2fcc_arg_sarr_restrict(rdwr_data, 1),
+		aclspv_wrd_t			ae2fcc_arg_sarr_restrict(rdwr_prv_idval, 1),
+		aclexpr_opbincfg_extra		ae2fcc_arg_sarr_restrict(rdwr_prv_extra, 1),
+		aclspv_wrd_t			ae2fcc_arg_sarr_restrict(rdwr_lst_scale_buf, ACLEXPR_OPBINCFG_END + 2),
+		aclexpr_opbincfg_extra		ae2fcc_arg_sarr_restrict(rdwr_lst_extra, 2)
+		) { 
 	/** op0 has been evaluated as boolean-like. */
 
 	switch(aclexpr_arithmetic_cast(
@@ -33,7 +28,7 @@ aclexpr_carve_lbl_t aclexpr_carve2_bool1(
 		case ACLEXPR_RET_NOT_THE_CASE:
 		case ACLEXPR_RET_FAILURE:
 			err_puts("cast to boolean has been failed.");
-			return c_lbl_err;
+			return ACLEXPR_CARVE_NO;
 
 		case ACLEXPR_RET_SUCCESS:
 		case ACLEXPR_RET_SUCCESS_CONSTANT:
@@ -50,27 +45,27 @@ aclexpr_carve_lbl_t aclexpr_carve2_bool1(
 			rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_RESID]
 			, rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_END + 1]
 			, rdwr_data->m_ctx
-			)) return c_lbl_err;
+			)) return ACLEXPR_CARVE_NO;
 
 	/** now we can branch shit */
 	ae2f_ifezerr(aclcur_cfg_jmp(rdwr_data->m_fnctx->m_branch, rdwr_data->m_ctx))
-		return c_lbl_err;
+		return ACLEXPR_CARVE_NO;
 
 	/** merge block. */
 	ae2f_ifezerr(aclcur_cfg_lbl(rdwr_data->m_fnctx->m_branch, rdwr_data->m_ctx))
-		return c_lbl_err;
+		return ACLEXPR_CARVE_NO;
 
 	ae2f_ifezerr(*rdwr_prv_idval = aclcur_load_reg(
 			rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_RESID]
 			, rdwr_data->m_ctx
 			, 0
-			)) return c_lbl_err;
+			)) return ACLEXPR_CARVE_NO;
 
 	ae2f_ifnezerr_strict(aclcur_cfg_load_phi(
 			*rdwr_prv_idval
 			, rdwr_lst_extra[0].m_extra.m_bool1.m_parent
 			, rdwr_data->m_ctx
-			)) return c_lbl_err;
+			)) return ACLEXPR_CARVE_NO;
 
 	rdwr_prv_extra->m_mask_literal	= 0;
 	rdwr_prv_extra->m_type_original	= ACLSPV_ID_BOOL;
@@ -86,5 +81,5 @@ aclexpr_carve_lbl_t aclexpr_carve2_bool1(
 			, *rdwr_data->m_ctx
 			, rdwr_data->m_ctx->m_tmp.m_v0);
 
-	return c_lbl_success;
-} return c_lbl_continue; }
+	return ACLEXPR_CARVE_OK;
+}

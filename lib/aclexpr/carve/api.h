@@ -4,25 +4,9 @@
 #include <aclexpr/carve.h>
 #include <util/scale.h>
 #include <util/cgoto.h>
+#include <ae2f/cc/arg_sarr.h>
 
-#if	aclspv_cgoto
-typedef	void* 			aclexpr_carve_lbl_t;
-#else
-#include <ae2f/c90/StdInt/enum.h>
-typedef uint_leastenum_t	aclexpr_carve_lbl_t;
-#endif
-
-typedef aclexpr_carve_lbl_t aclexpr_carve_api_t(
-		struct aclexpr_visit_data* const ae2f_restrict	rdwr_data,
-		aclspv_wrd_t* const ae2f_restrict		rdwr_prv_idval,
-		aclexpr_opbincfg_extra* const ae2f_restrict	rdwr_prv_extra,
-		h_scale_t					h_lst_scale,
-		aclspv_wrd_t* const ae2f_restrict		rdwr_lst_scale_buf,
-		aclexpr_opbincfg_extra* ae2f_restrict		rdwr_lst_extra,
-		aclutil_literal* ae2f_restrict			r_ltrl,
-		aclexpr_carve_lbl_t				c_lbl_continue,
-		aclexpr_carve_lbl_t				c_lbl_success,
-		aclexpr_carve_lbl_t				c_lbl_err
-		);
+#define ACLEXPR_CARVE_OK	0
+#define	ACLEXPR_CARVE_NO	1
 
 #endif

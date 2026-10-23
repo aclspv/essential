@@ -8,7 +8,15 @@
 
 #include <aclexpr/carve/api.h>
 
-aclexpr_carve_api_t	aclexpr_carve_opn_initlist;
+aclspv_bool_t aclexpr_carve_opn_initlist(
+		struct aclexpr_visit_data* const ae2f_restrict	rdwr_data,
+		aclspv_wrd_t* const ae2f_restrict rdwr_prv_idval,
+		aclexpr_opbincfg_extra* const ae2f_restrict rdwr_prv_extra,
+		ae2f_unused h_scale_t			h_lst_scale,
+		aclspv_wrd_t* const ae2f_restrict	rdwr_lst_scale_buf,
+		aclexpr_opbincfg_extra* ae2f_restrict rdwr_lst_extra,
+		aclutil_literal* ae2f_restrict		r_ltrl
+		);
 
 #endif
 

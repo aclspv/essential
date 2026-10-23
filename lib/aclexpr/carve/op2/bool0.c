@@ -57,25 +57,6 @@ ae2f_inline_f static ae2f_ccconst aclspv_bool_t s_is_assign(const aclspv_wrd_t c
 	}
 }
 
-ae2f_inline_f static ae2f_ccconst aclspv_bool_t s_is_logical(const aclspv_wrd_t c) {
-	switch(c) {
-		case ACLEXPR_OP2_AND_L:
-		case ACLEXPR_OP2_OR_L:
-			return 1;
-
-		case ACLEXPR_OP2_AND_A:
-		case ACLEXPR_OP2_OR_A:
-		case ACLEXPR_OP2_XOR_A:
-		case ACLEXPR_OP2_AND:
-		case ACLEXPR_OP2_OR:
-		case ACLEXPR_OP2_XOR:
-			return 0;
-
-		default:
-			ae2fpat_assertassume(0);
-	}
-}
-
 static aclspv_id_t s_decide_cast(aclspv_id_t c_id0, aclspv_id_t c_id1, const h_aclspv_ctx_t h_ctx) {
 	aclspv_id_t cls0, cls1;
 
@@ -84,7 +65,7 @@ static aclspv_id_t s_decide_cast(aclspv_id_t c_id0, aclspv_id_t c_id1, const h_a
 				stderr, "s_decide_cast(%lu, %lu)\n"
 				, (unsigned long)c_id0
 				, (unsigned long)c_id1
-				));
+			  ));
 
 	if(c_id0 == c_id1)
 		return (aclspv_id_t) c_id0;
@@ -116,7 +97,7 @@ static aclspv_id_t s_decide_cast(aclspv_id_t c_id0, aclspv_id_t c_id1, const h_a
 	ae2f_ifezerr(
 			(cls0 == ACLSPV_ID_BOOL || aclid_is_int(cls0)) 
 			&& (cls1 == ACLSPV_ID_BOOL || aclid_is_int(cls1))
-			) {
+		    ) {
 		dbg_puts("s_decide_cast 0\n");
 		return 0;
 	}
@@ -125,16 +106,14 @@ static aclspv_id_t s_decide_cast(aclspv_id_t c_id0, aclspv_id_t c_id1, const h_a
 	return aclid_is_sint(cls0) ? c_id0 : c_id1;
 }
 
-static aclexpr_carve_lbl_t s_iter(
+static aclspv_bool_t s_iter(
 		aclspv_wrd_t					c_idx_oprnd,
 		aclspv_id_t					c_type_oprnd,
 		struct aclexpr_visit_data* const ae2f_restrict	rdwr_data,
 		aclexpr_opbincfg_extra* const ae2f_restrict	rdwr_prv_extra,
 		ae2f_unused h_scale_t				h_lst_scale,
 		aclspv_wrd_t* const ae2f_restrict		rdwr_lst_scale_buf,
-		aclexpr_opbincfg_extra* ae2f_restrict		rdwr_lst_extra,
-		aclexpr_carve_lbl_t				c_lbl_success,
-		aclexpr_carve_lbl_t				c_lbl_err
+		aclexpr_opbincfg_extra* ae2f_restrict		rdwr_lst_extra
 		)
 {										
 	if(rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_RESTYID] != rdwr_lst_extra[c_idx_oprnd].m_type_original) {
@@ -163,7 +142,7 @@ static aclexpr_carve_lbl_t s_iter(
 			default:
 			case ACLEXPR_RET_FAILURE:
 			case ACLEXPR_RET_NOT_THE_CASE:
-				err_puts("[carve2::arithmetic_cast] OPITER"); return c_lbl_err;
+				err_puts("[carve2::arithmetic_cast] OPITER"); return ACLEXPR_CARVE_NO;
 
 			case ACLEXPR_RET_SUCCESS:
 				rdwr_prv_extra->m_mask_literal &= 0;
@@ -178,23 +157,21 @@ static aclexpr_carve_lbl_t s_iter(
 		}
 	}
 
-	return c_lbl_success;
+	return ACLEXPR_CARVE_OK;
 }
 
 ae2f_inline_f static aclspv_id_t	s_ty_oprnd(
 		aclspv_id_t	c_ty_origin,
-		aclspv_bool_t	c_is_logical,
 		h_aclspv_ctx_t	h_ctx
 		) {
-	return c_is_logical ? aclty_simd_chxg_cls(c_ty_origin, ACLSPV_ID_BOOL, h_ctx) : c_ty_origin;
+	return aclty_simd_chxg_cls(c_ty_origin, ACLSPV_ID_BOOL, h_ctx);
 }
 
 ae2f_inline_f static aclspv_id_t	s_ty_out(
 		aclspv_id_t	c_ty_origin,
-		aclspv_bool_t	c_is_logical,
 		h_aclspv_ctx_t	h_ctx
 		) { 
-	return s_ty_oprnd(c_ty_origin, c_is_logical, h_ctx);
+	return s_ty_oprnd(c_ty_origin, h_ctx);
 }
 
 ae2f_inline_f static ae2f_ccconst struct aclutil_ltrl_eval_t	s_eval2_ltrl(
@@ -255,30 +232,24 @@ ae2f_inline_f static ae2f_ccconst struct aclutil_ltrl_eval_t	s_eval2_ltrl(
 #undef	EXPR_TWO
 }
 
-aclexpr_carve_lbl_t aclexpr_carve2_bool0(
-		struct aclexpr_visit_data* const ae2f_restrict	rdwr_data,
-		aclspv_wrd_t* const ae2f_restrict		rdwr_prv_idval,
-		aclexpr_opbincfg_extra* const ae2f_restrict	rdwr_prv_extra,
-		ae2f_unused h_scale_t				h_lst_scale,
-		aclspv_wrd_t* const ae2f_restrict		rdwr_lst_scale_buf,
-		aclexpr_opbincfg_extra* ae2f_restrict		rdwr_lst_extra,
-		aclutil_literal* ae2f_restrict			r_ltrl,
-		aclexpr_carve_lbl_t				c_lbl_continue,
-		aclexpr_carve_lbl_t				c_lbl_success,
-		aclexpr_carve_lbl_t				c_lbl_err
-		) { const aclspv_wrd_t OPNATIVE = s_opcvrt(rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_OPCODE]); ae2fcc_unless(OPNATIVE) return c_lbl_continue; {
-
+aclspv_bool_t aclexpr_carve2_bool0(
+		struct aclexpr_visit_data	ae2fcc_arg_sarr_restrict(rdwr_data, 1),
+		aclspv_wrd_t			ae2fcc_arg_sarr_restrict(rdwr_prv_idval, 1),
+		aclexpr_opbincfg_extra		ae2fcc_arg_sarr_restrict(rdwr_prv_extra, 1),
+		h_scale_t			h_lst_scale,
+		aclspv_wrd_t			ae2fcc_arg_sarr_restrict(rdwr_lst_scale_buf, ACLEXPR_OPBINCFG_END + 2),
+		aclexpr_opbincfg_extra		ae2fcc_arg_sarr_restrict(rdwr_lst_extra, 2),
+		aclutil_literal			ae2fcc_arg_sarr_restrict(r_ltrl, 1)
+		) {
+	aclspv_wrd_t OPNATIVE = s_opcvrt(rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_OPCODE]);
 	const aclspv_bool_t ISASS = s_is_assign(rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_OPCODE]);
 
 	const aclspv_id_t TY_OPRND = s_ty_oprnd(s_decide_cast(
 				rdwr_lst_extra[0].m_type_original
 				, rdwr_lst_extra[1].m_type_original
 				, (rdwr_data)->m_ctx
-				), s_is_logical(rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_OPCODE])
+				)
 			, rdwr_data->m_ctx);
-
-	if(s_is_logical(rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_OPCODE]) && TY_OPRND == ACLSPV_ID_BOOL)
-		return c_lbl_continue;
 
 	rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_RESID] = *rdwr_prv_idval = (rdwr_data)->m_ctx->m_id++;
 
@@ -287,7 +258,7 @@ aclexpr_carve_lbl_t aclexpr_carve2_bool0(
 					rdwr_lst_extra[0].m_type_original
 					, rdwr_lst_extra[1].m_type_original
 					, (rdwr_data)->m_ctx
-					), s_is_logical(rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_OPCODE])
+					)
 				, rdwr_data->m_ctx);
 
 	dbg_prefix(a);
@@ -310,7 +281,7 @@ aclexpr_carve_lbl_t aclexpr_carve2_bool0(
 		err_call((void), fprintf(stderr, "[carve2::bool] opcode: %u %u\n"
 					, (unsigned)rdwr_lst_extra[0].m_type_original
 					, (unsigned)rdwr_lst_extra[1].m_type_original));
-		return c_lbl_err;
+		return ACLEXPR_CARVE_NO;
 	}
 
 	ae2f_ifnezerr_strict(s_iter(
@@ -318,22 +289,21 @@ aclexpr_carve_lbl_t aclexpr_carve2_bool0(
 				, rdwr_data, rdwr_prv_extra
 				, h_lst_scale, rdwr_lst_scale_buf
 				, rdwr_lst_extra
-				, c_lbl_success, c_lbl_err) == c_lbl_err)
-		return c_lbl_err;
+				))
+		return ACLEXPR_CARVE_NO;
 
 	ae2f_ifnezerr_strict(s_iter(
 				1, TY_OPRND
 				, rdwr_data, rdwr_prv_extra
 				, h_lst_scale, rdwr_lst_scale_buf
-				, rdwr_lst_extra
-				, c_lbl_success, c_lbl_err) == c_lbl_err)
-		return c_lbl_err;
+				, rdwr_lst_extra))
+		return ACLEXPR_CARVE_NO;
 
 	ae2f_ifnezerr_strict(rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_END] >= rdwr_data->m_ctx->m_id)
-		return c_lbl_err;
+		return ACLEXPR_CARVE_NO;
 
 	ae2f_ifnezerr_strict(rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_END + 1] >= rdwr_data->m_ctx->m_id)
-		return c_lbl_err;
+		return ACLEXPR_CARVE_NO;
 
 	rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_OPCODE] = OPNATIVE;
 
@@ -358,7 +328,7 @@ aclexpr_carve_lbl_t aclexpr_carve2_bool0(
 					ae2f_ifezerr(*rdwr_prv_idval = aclval_cfg_by_enum(EVAL_LIT.m_ret.m_api_uintmax, rdwr_data->m_ctx
 								,(enum ACLSPV_ID_)rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_RESTYID])) {
 						err_puts("[carve2::bool] aclutil_mk_constant_val_by_enum");
-						return c_lbl_err;
+						return ACLEXPR_CARVE_NO;
 					}
 
 
@@ -366,7 +336,7 @@ aclexpr_carve_lbl_t aclexpr_carve2_bool0(
 					dbg_call((void), fprintf(stderr, "literal id: %u\n", *rdwr_prv_idval));
 				} else {
 					err_puts("[carve2::bool] EVAL_LIT");
-					return c_lbl_err;
+					return ACLEXPR_CARVE_NO;
 				}
 
 				break;
@@ -381,14 +351,14 @@ aclexpr_carve_lbl_t aclexpr_carve2_bool0(
 						, rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_END]
 						, rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_END + 1]
 						, rdwr_data->m_ctx))
-				return c_lbl_err;
+				return ACLEXPR_CARVE_NO;
 			break;
 
 		case ACLUTIL_LITERAL_MASK_CONSTANT:
 			ae2f_ifezerr(*rdwr_prv_idval = aclconst_specop(
 						rdwr_lst_scale_buf
 						, 6
-						, rdwr_data->m_ctx)) return c_lbl_err;
+						, rdwr_data->m_ctx)) return ACLEXPR_CARVE_NO;
 			break;
 
 		default:
@@ -405,9 +375,9 @@ aclexpr_carve_lbl_t aclexpr_carve2_bool0(
 					, *rdwr_prv_idval
 					, rdwr_data->m_ctx
 					, "[carve2::bool0] the l-value store back failed")) {
-			return c_lbl_err;
+			return ACLEXPR_CARVE_NO;
 		}
 	}
 
-	return c_lbl_success;
-}}
+	return ACLEXPR_CARVE_OK;
+}
