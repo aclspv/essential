@@ -48,17 +48,6 @@ aclspv_bool_t aclexpr_carve(
 	NUM_OPRND = LST_SCALE_BUF[ACLEXPR_OPBINCFG_NUMOPRND];
 	LST_EXTRA = (void* ae2f_restrict)(LST_SCALE_BUF + NUM_OPRND + ACLEXPR_OPBINCFG_END);
 
-	/****************************************************
-	 * Contributor: https://github.com/dxdxffgg99
-	 *
-	 * Message:
-	 * I'm sorry. 
-	 * I shouldn't have shown Dalmuri the VM code I made. 
-	 * I'll gladly accept any criticism, so please contact me on Discord. 
-	 * 	-The person who showed Dalmurii the Computed Goto-
-	 *
-	 **************************************************** */
-
 	dbg_prefix();
 	dbg_call((void), fprintf(stderr, "[aclexpr::carve] oprnd %u opcode %u\n"
 				, (unsigned)LST_SCALE_BUF[ACLEXPR_OPBINCFG_NUMOPRND]
@@ -67,7 +56,7 @@ aclspv_bool_t aclexpr_carve(
 
 	switch((enum ACLEXPR_OP_)LST_SCALE_BUF[ACLEXPR_OPBINCFG_OPCODE]) {
 		case ACLEXPR_OPN_INITLIST:
-			return (aclexpr_carve_opn_initlist(
+			return (aclspv_bool_t)ae2f_expected_not_strict(aclexpr_carve_opn_initlist(
 						rdwr_data
 						, rdwr_prv_idval
 						, rdwr_prv_extra
@@ -87,7 +76,7 @@ aclspv_bool_t aclexpr_carve(
 		case ACLEXPR_OP2_REMASS:
 		case ACLEXPR_OP2_DIV:
 		case ACLEXPR_OP2_DIVASS:
-			return (aclexpr_carve2_arithmetic(
+			return (aclspv_bool_t)ae2f_expected_not_strict(aclexpr_carve2_arithmetic(
 						rdwr_data
 						, rdwr_prv_idval
 						, rdwr_prv_extra
@@ -102,7 +91,7 @@ aclspv_bool_t aclexpr_carve(
 		case ACLEXPR_OP2_SGE:
 		case ACLEXPR_OP2_EQ:
 		case ACLEXPR_OP2_NE:
-			return (aclexpr_carve2_cmp(
+			return (aclspv_bool_t)ae2f_expected_not_strict(aclexpr_carve2_cmp(
 						rdwr_data
 						, rdwr_prv_idval
 						, rdwr_prv_extra
@@ -113,7 +102,7 @@ aclspv_bool_t aclexpr_carve(
 
 		case ACLEXPR_OP2_AND_L:
 		case ACLEXPR_OP2_OR_L:
-			return (aclexpr_carve2_bool1(
+			return (aclspv_bool_t)ae2f_expected_not_strict(aclexpr_carve2_bool1(
 						rdwr_data
 						, rdwr_prv_idval
 						, rdwr_prv_extra
@@ -127,7 +116,7 @@ aclspv_bool_t aclexpr_carve(
 		case ACLEXPR_OP2_AND:
 		case ACLEXPR_OP2_OR:
 		case ACLEXPR_OP2_XOR:
-			return (aclexpr_carve2_bool0(
+			return (aclspv_bool_t)ae2f_expected_not_strict(aclexpr_carve2_bool0(
 						rdwr_data
 						, rdwr_prv_idval
 						, rdwr_prv_extra
@@ -141,7 +130,7 @@ aclspv_bool_t aclexpr_carve(
 		case ACLEXPR_OP2_SHLASS:
 		case ACLEXPR_OP2_SHR:
 		case ACLEXPR_OP2_SHRASS:
-			return (aclexpr_carve2_shift(
+			return (aclspv_bool_t)ae2f_expected_not_strict(aclexpr_carve2_shift(
 						rdwr_data
 						, rdwr_prv_idval
 						, rdwr_prv_extra
@@ -150,7 +139,7 @@ aclspv_bool_t aclexpr_carve(
 						));
 
 		case ACLEXPR_OP2_ASSIGN:
-			return (aclexpr_carve2_assign(
+			return (aclspv_bool_t)ae2f_expected_not_strict(aclexpr_carve2_assign(
 						rdwr_data
 						, rdwr_prv_idval
 						, rdwr_prv_extra
@@ -160,7 +149,7 @@ aclspv_bool_t aclexpr_carve(
 						));
 
 		case ACLEXPR_OP1_ADDRESS:
-			return (aclexpr_carve1_address(
+			return (aclspv_bool_t)ae2f_expected_not_strict(aclexpr_carve1_address(
 						rdwr_data
 						, rdwr_prv_idval
 						, rdwr_prv_extra
@@ -169,7 +158,7 @@ aclspv_bool_t aclexpr_carve(
 						));
 
 		case ACLEXPR_OP1_DEREF:
-			return (aclexpr_carve1_deref(
+			return (aclspv_bool_t)ae2f_expected_not_strict(aclexpr_carve1_deref(
 						rdwr_data
 						, rdwr_prv_idval
 						, rdwr_prv_extra
@@ -177,7 +166,7 @@ aclspv_bool_t aclexpr_carve(
 						));
 
 		case ACLEXPR_OP2_DEREFWRITE:
-			return (aclexpr_carve2_derefwrite(
+			return (aclspv_bool_t)ae2f_expected_not_strict(aclexpr_carve2_derefwrite(
 						rdwr_data
 						, rdwr_prv_idval
 						, rdwr_prv_extra
@@ -187,7 +176,7 @@ aclspv_bool_t aclexpr_carve(
 						));
 
 		case ACLEXPR_OP2_SUBSCRIPT:
-			return (aclexpr_carve2_subscript(
+			return (aclspv_bool_t)ae2f_expected_not_strict(aclexpr_carve2_subscript(
 						rdwr_data
 						, rdwr_prv_idval
 						, rdwr_prv_extra
@@ -197,7 +186,7 @@ aclspv_bool_t aclexpr_carve(
 						));
 
 		case ACLEXPR_OP2_SUBSCRIPTWRITE:
-			return (aclexpr_carve2_subscriptwrite(
+			return (aclspv_bool_t)ae2f_expected_not_strict(aclexpr_carve2_subscriptwrite(
 						rdwr_data
 						, rdwr_prv_idval
 						, rdwr_prv_extra
@@ -210,7 +199,7 @@ aclspv_bool_t aclexpr_carve(
 		case ACLEXPR_OP1_POSTINC:
 		case ACLEXPR_OP1_PREDEC:
 		case ACLEXPR_OP1_PREINC:
-			return (aclexpr_carve1_incr(
+			return (aclspv_bool_t)ae2f_expected_not_strict(aclexpr_carve1_incr(
 						rdwr_data
 						, rdwr_prv_idval
 						, rdwr_prv_extra
@@ -220,7 +209,7 @@ aclspv_bool_t aclexpr_carve(
 						));
 
 		case ACLEXPR_OP1_EXPLICIT_CAST:
-			return (aclexpr_carve1_arithmetic_cast(
+			return (aclspv_bool_t)ae2f_expected_not_strict(aclexpr_carve1_arithmetic_cast(
 						rdwr_data
 						, rdwr_prv_idval
 						, rdwr_prv_extra
@@ -230,7 +219,7 @@ aclspv_bool_t aclexpr_carve(
 						));
 
 		case ACLEXPR_OP1_MEMBERREAD:
-			return (aclexpr_carve1_memberread(
+			return (aclspv_bool_t)ae2f_expected_not_strict(aclexpr_carve1_memberread(
 						rdwr_data
 						, rdwr_prv_idval
 						, rdwr_prv_extra
@@ -239,7 +228,7 @@ aclspv_bool_t aclexpr_carve(
 						));
 
 		case ACLEXPR_OP2_MEMBERWRITE:
-			return (aclexpr_carve2_memberwrite(
+			return (aclspv_bool_t)ae2f_expected_not_strict(aclexpr_carve2_memberwrite(
 						rdwr_data
 						, rdwr_prv_idval
 						, rdwr_prv_extra

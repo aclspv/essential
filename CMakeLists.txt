@@ -278,6 +278,7 @@ aclspv_predef_switch(ae3f-aclspv "ACLSPV_CHECK_EXTRA" "1")
 aclspv_predef_switch(ae3f-aclspv "ACLSPV_SYMBOL" "1")
 aclspv_predef_switch(ae3f-aclspv "ACLSPV_ATOMIC_ID" 0)
 aclspv_predef_switch(ae3f-aclspv "ACLSPV_OPACC_IDX_MAX" 64)
+aclspv_predef_switch(ae3f-aclspv "ACLSPV_MATH_NR" 0)
 
 message(STATUS ""
 	"[aclspv]\n"
