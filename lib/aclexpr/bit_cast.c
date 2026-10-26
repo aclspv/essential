@@ -20,10 +20,10 @@ static enum ACLEXPR_RET_ s_cast_bit(
 		aclspv_id_t				c_new_type,
 		const h_aclspv_ctx_t			h_ctx
 		) {
-	ae2fpat_assertassume(h_ctx);
-
 	aclconst_specsz old_sz = aclty_getsize(c_old_type, h_ctx);
 	aclconst_specsz new_sz = aclty_getsize(c_new_type, h_ctx);
+
+	ae2fpat_assertassume(h_ctx);
 
 	if(old_sz.m_id) return ACLEXPR_RET_FAILURE;
 	if(new_sz.m_id) return ACLEXPR_RET_FAILURE;
@@ -124,7 +124,7 @@ enum ACLEXPR_RET_ aclexpr_bit_cast(
 	if(c_flag_literal & ACLUTIL_LITERAL_LITERAL) {
 		dbg_puts("literal\n");
 		*r_new_literal_opt = c_old_literal;
-		return ae2f_expected(*r_newid = aclval_cfg_by_enum(c_old_literal.m_u64, h_ctx, c_new_type))
+		return ae2f_expected(*r_newid = aclval_cfg_by_enum(c_old_literal.m_u64, h_ctx, (enum ACLSPV_ID_)c_new_type))
 			? ACLEXPR_RET_SUCCESS_LITERAL
 			: ACLEXPR_RET_FAILURE;
 	} else return s_cast_bit(c_old_id, c_old_type, c_flag_literal, r_newid, c_new_type, h_ctx);

@@ -184,6 +184,11 @@ ae2f_CoreLibTentConfigCustom(
 	${head_gen}
 	)
 
+target_include_directories(aclspv-common
+	INTERFACE ${spirv_inc}
+	INTERFACE ${clang_inc}
+	)
+
 add_subdirectory(src)
 include(./cmake/abitent.cmake)
 
@@ -211,12 +216,16 @@ if(${aclspv_essential_shared})
 		inc			aclspv
 		${PROJECT_SOURCE_DIR}/cfg/aclspv-essential.cmake.in
 		)
+
+	set(ACLSPV_SHARED 1)
 else()
 	ae2f_CoreLibTentConfigCustom(
 		essential	STATIC
 		inc			aclspv
 		${PROJECT_SOURCE_DIR}/cfg/aclspv-essential.cmake.in
 		)
+
+	set(ACLSPV_SHARED 0)
 endif()
 
 target_link_libraries(aclspv-essential
@@ -280,7 +289,15 @@ ae2f_CoreTestTentVerbose(aclspv-essential-test ./test/util)
 
 if(ae2f_TEST)
 	target_link_libraries(Test-c-aclspv-essential-test-scale 
-		PRIVATE aclspv::common-essential
+		PRIVATE	$<BUILD_INTERFACE:aclspv::aclconst>
+		PRIVATE	$<BUILD_INTERFACE:aclspv::aclcur>
+		PRIVATE	$<BUILD_INTERFACE:aclspv::aclexpr>
+		PRIVATE	$<BUILD_INTERFACE:aclspv::aclemit>
+		PRIVATE	$<BUILD_INTERFACE:aclspv::aclmem>
+		PRIVATE	$<BUILD_INTERFACE:aclspv::aclty>
+		PRIVATE	$<BUILD_INTERFACE:aclspv::aclval>
+		PRIVATE	$<BUILD_INTERFACE:aclspv::util>
+		PRIVATE $<BUILD_INTERFACE:aclspv::common-essential>
 		)
 endif()
 
@@ -288,13 +305,15 @@ include(./cmake/predef.cmake)
 
 message(STATUS "[aclspv_essential_predef]")
 
-aclspv_predef_switch(aclspv-common-essential INTERFACE	"ACLSPV_OpCapabilityKernel" "0")
-aclspv_predef_switch(aclspv-common-essential INTERFACE	"ACLSPV_OpCapabilityShader" "1")
-aclspv_predef_switch(aclspv-common-essential INTERFACE	"ACLSPV_CHECK_EXTRA" "1")
-aclspv_predef_switch(aclspv-common-essential INTERFACE	"ACLSPV_SYMBOL" "1")
-aclspv_predef_switch(aclspv-common-essential INTERFACE	"ACLSPV_ATOMIC_ID" 0)
-aclspv_predef_switch(aclspv-common-essential INTERFACE	"ACLSPV_OPACC_IDX_MAX" 64)
-aclspv_predef_switch(aclspv-aclexpr	PRIVATE		"ACLSPV_MATH_NR" 1)
+
+aclspv_predef_switch(aclspv-common		INTERFACE "ACLSPV_SHARED"		1)
+aclspv_predef_switch(aclspv-common-essential 	INTERFACE "ACLSPV_OpCapabilityKernel" "0")
+aclspv_predef_switch(aclspv-common-essential	INTERFACE "ACLSPV_OpCapabilityShader" "1")
+aclspv_predef_switch(aclspv-common-essential	INTERFACE "ACLSPV_CHECK_EXTRA" "1")
+aclspv_predef_switch(aclspv-common-essential	INTERFACE "ACLSPV_SYMBOL" "1")
+aclspv_predef_switch(aclspv-common-essential	INTERFACE "ACLSPV_ATOMIC_ID" 0)
+aclspv_predef_switch(aclspv-common-essential	INTERFACE "ACLSPV_OPACC_IDX_MAX" 64)
+aclspv_predef_switch(aclspv-aclexpr	PRIVATE		"ACLSPV_MATH_NR" 0)	# not ready
 aclspv_predef_switch(aclspv-aclexpr	PRIVATE		"ACLSPV_MATH_NR_RSQRTF_MAGIC"	0x5f375a86)
 aclspv_predef_switch(aclspv-aclexpr	PRIVATE		"ACLSPV_MATH_NR_IT"		2)
 

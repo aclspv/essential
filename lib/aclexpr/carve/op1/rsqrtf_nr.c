@@ -19,10 +19,10 @@ typedef union { f32 m_f; u32 m_u; } f32_u;
 
 static aclutil_literal rsqrtf_nr(aclutil_literal c) {
 	f32_u u;
-	u.m_f = c.m_flt;
-	const f32 chalf = u.m_f * 0.5f;
+	f32 chalf;
 	int i;
-
+	u.m_f = c.m_flt;
+	chalf = u.m_f * 0.5f;
 	u.m_u = __ACLSPV_MATH_NR_RSQRTF_MAGIC - (u.m_u >> 1);
 
 	for(i = __ACLSPV_MATH_NR_IT; i --> 0; ) {
@@ -106,23 +106,25 @@ static aclutil_literal rsqrtf_nr(aclutil_literal c) {
 	/* non-literal: emit NR sequence as runtime ops (constant-folding only for LITERAL case) */
 	rdwr_prv_extra->m_mask_literal = 0;
 
+	aclspv_id_t x_half_id, x_u32_id, shifted_id, startup_u32_id;
+
 	/* x_half = x * 0.5 */
-	aclspv_id_t x_half_id = aclcur_cfg_op2(
+	x_half_id = aclcur_cfg_op2(
 			0, SpvOpFMul, f32_like_ty, x_id, half_id, ctx);
 	ae2f_ifezerr(x_half_id) return ACLEXPR_CARVE_NO;
 
 	/* x_u32 = bitcast(x) */
-	aclspv_id_t x_u32_id = aclcur_cfg_op1(
+	x_u32_id = aclcur_cfg_op1(
 			0, SpvOpBitcast, u32_like_ty, x_id, ctx);
 	ae2f_ifezerr(x_u32_id) return ACLEXPR_CARVE_NO;
 
 	/* shifted = x_u32 >> 1 */
-	aclspv_id_t shifted_id = aclcur_cfg_op2(
+	shifted_id = aclcur_cfg_op2(
 			0, SpvOpShiftRightLogical, u32_like_ty, x_u32_id, one_id, ctx);
 	ae2f_ifezerr(shifted_id) return ACLEXPR_CARVE_NO;
 
 	/* startup_u32 = magic - shifted */
-	aclspv_id_t startup_u32_id = aclcur_cfg_op2(
+	startup_u32_id = aclcur_cfg_op2(
 			0, SpvOpISub, u32_like_ty, magic_id, shifted_id, ctx);
 	ae2f_ifezerr(startup_u32_id) return ACLEXPR_CARVE_NO;
 

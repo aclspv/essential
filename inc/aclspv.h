@@ -26,7 +26,7 @@
 #	define	ACLSPVLIB	0
 #endif
 
-#if	ae2f_IS_SHARED
+#if	__ACLSPV_SHARED
 #	if ACLSPVLIB
 #		define ACLSPV_ABI_LINK	ae2f_impl
 #	else
