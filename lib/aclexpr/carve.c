@@ -237,6 +237,11 @@ aclspv_bool_t aclexpr_carve(
 						, RET_LITERAL
 						));
 
+#if	__ACLSPV_MATH_NR
+		case ACLEXPR_OP1_RSQRTF_NR:
+
+#endif
+
 		default:
 			ae2f_unreachable();
 	}

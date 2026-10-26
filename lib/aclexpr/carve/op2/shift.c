@@ -72,8 +72,6 @@ aclspv_bool_t aclexpr_carve2_shift(
 		? rdwr_lst_extra[0].m_type_original 
 		: 0;
 
-	ae2fpat_assertassume_strict(rdwr_lst_scale_buf);
-
 	ae2f_ifezerr(rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_RESTYID]) {
 		err_puts("[carve2::shift] no result type");
 		err_prefix(0);

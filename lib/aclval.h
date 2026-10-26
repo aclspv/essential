@@ -42,8 +42,10 @@ typedef struct {
 
 	/** @brief @see UTIL_CV_TY_, UTIL_CV_NBYTE_ */
 	aclspv_id_t		m_const_ids[ACLVAL_TY_MAX][ACLVAL_NBYTE_MAX];
-
 	aclspv_id_t		m_const_val_bool;
+
+	/** nil value. type id is key. */
+	aclspv_id_t		m_nil;
 	
 	/**
 	 * SpvStorageClass
@@ -153,7 +155,7 @@ struct aclutil_mk_constant_repvec_t {
 };
 
 /** @brief repeating vector */
-struct aclutil_mk_constant_repvec_t	aclutil_mk_constant_repvec_id(const aclspv_id_t	c_id_ty, const aclspv_id_t c_val, const aclspv_wrd_t c_literal_mask, h_aclspv_ctx_t h_ctx);
+struct aclutil_mk_constant_repvec_t	aclval_cfg_vec_broadcast(const aclspv_id_t	c_id_ty, const aclspv_id_t c_val, const aclspv_wrd_t c_literal_mask, h_aclspv_ctx_t h_ctx);
 
 
 ae2f_unused ae2f_inline_f static aclspv_id_t	aclval_cfg_by_enum(const u64_least c_val, h_aclspv_ctx_t h_ctx, enum ACLSPV_ID_ c_ty) {

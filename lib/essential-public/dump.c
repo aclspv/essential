@@ -4,6 +4,8 @@
 
 #include <.aclspv/util/vcopr.h>
 
+enum { N_MEMMODEL = 3 };
+
 ACLSPV_ABI_IMPL aclspv_compile_t aclspv_dump_ctx_output1(
 		const x_aclspv_ctx* ae2f_restrict		h_ctx,
 		aclspv_wrd_t* ae2f_restrict const	rdwr_count_ret,
@@ -18,7 +20,7 @@ ACLSPV_ABI_IMPL aclspv_compile_t aclspv_dump_ctx_output1(
 	NUM_RET	
 		= h_ctx->m_count.m_capability
 		+ h_ctx->m_count.m_ext
-		+ h_ctx->m_count.m_memmodel
+		+ N_MEMMODEL
 		+ h_ctx->m_count.m_entp
 		+ h_ctx->m_count.m_execmode
 		+ h_ctx->m_count.m_name
@@ -55,28 +57,32 @@ ACLSPV_ABI_IMPL aclspv_compile_t aclspv_dump_ctx_output1(
 			+ h_ctx->m_count.m_capability
 		  );
 
-	copybinary(m_memmodel,		ret + 5 
+	{
+		aclspv_wrd_t* ae2f_restrict ptmp = ret + 5
 			+ h_ctx->m_count.m_capability 
-			+ h_ctx->m_count.m_ext
-		  );
+			+ h_ctx->m_count.m_ext;
+		ptmp[0] = aclspv_opcode_to_wrd(SpvOpMemoryModel, 2);
+		ptmp[1] = h_ctx->m_usrcfg.m_mdl_addr;
+		ptmp[2] = h_ctx->m_usrcfg.m_mdl_mem;
+	}
 
 	copybinary(m_entp,		ret + 5 
 			+ h_ctx->m_count.m_capability 
 			+ h_ctx->m_count.m_ext
-			+ h_ctx->m_count.m_memmodel
+			+ N_MEMMODEL
 		  );
 
 	copybinary(m_execmode,		ret + 5 
 			+ h_ctx->m_count.m_capability 
 			+ h_ctx->m_count.m_ext
-			+ h_ctx->m_count.m_memmodel
+			+ N_MEMMODEL
 			+ h_ctx->m_count.m_entp
 		  );
 
 	copybinary(m_name,		ret + 5 
 			+ h_ctx->m_count.m_capability 
 			+ h_ctx->m_count.m_ext
-			+ h_ctx->m_count.m_memmodel
+			+ N_MEMMODEL
 			+ h_ctx->m_count.m_entp
 			+ h_ctx->m_count.m_execmode
 		  );
@@ -84,7 +90,7 @@ ACLSPV_ABI_IMPL aclspv_compile_t aclspv_dump_ctx_output1(
 	copybinary(m_decorate,		ret + 5 
 			+ h_ctx->m_count.m_capability 
 			+ h_ctx->m_count.m_ext
-			+ h_ctx->m_count.m_memmodel
+			+ N_MEMMODEL
 			+ h_ctx->m_count.m_entp
 			+ h_ctx->m_count.m_execmode
 			+ h_ctx->m_count.m_name
@@ -93,7 +99,7 @@ ACLSPV_ABI_IMPL aclspv_compile_t aclspv_dump_ctx_output1(
 	copybinary(m_types,		ret + 5 
 			+ h_ctx->m_count.m_capability 
 			+ h_ctx->m_count.m_ext
-			+ h_ctx->m_count.m_memmodel
+			+ N_MEMMODEL
 			+ h_ctx->m_count.m_entp
 			+ h_ctx->m_count.m_execmode
 			+ h_ctx->m_count.m_name
@@ -103,7 +109,7 @@ ACLSPV_ABI_IMPL aclspv_compile_t aclspv_dump_ctx_output1(
 	copybinary(m_vars,		ret + 5 
 			+ h_ctx->m_count.m_capability 
 			+ h_ctx->m_count.m_ext
-			+ h_ctx->m_count.m_memmodel
+			+ N_MEMMODEL
 			+ h_ctx->m_count.m_entp
 			+ h_ctx->m_count.m_execmode
 			+ h_ctx->m_count.m_name
@@ -114,7 +120,7 @@ ACLSPV_ABI_IMPL aclspv_compile_t aclspv_dump_ctx_output1(
 	copybinary(m_fndef,		ret + 5 
 			+ h_ctx->m_count.m_capability 
 			+ h_ctx->m_count.m_ext
-			+ h_ctx->m_count.m_memmodel
+			+ N_MEMMODEL
 			+ h_ctx->m_count.m_entp
 			+ h_ctx->m_count.m_execmode
 			+ h_ctx->m_count.m_name
@@ -146,7 +152,7 @@ ACLSPV_ABI_IMPL aclspv_compile_t aclspv_dump_ctx_output(
 	NUM_RET	
 		= h_ctx->m_count.m_capability
 		+ h_ctx->m_count.m_ext
-		+ h_ctx->m_count.m_memmodel
+		+ N_MEMMODEL
 		+ h_ctx->m_count.m_entp
 		+ h_ctx->m_count.m_execmode
 		+ h_ctx->m_count.m_name

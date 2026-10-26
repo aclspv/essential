@@ -1,4 +1,4 @@
-#if	0
+#if	1
 
 typedef int i32;
 typedef i32 __attribute__((ext_vector_type(4))) i32x4;
@@ -333,5 +333,41 @@ void t15_fs_main(
     #if	1
     f32x4 out = { clr[0], clr[1], clr[2], 1.0f };
     #endif
+    *out_color = out;
+}
+
+typedef float f32;
+typedef f32 __attribute__((ext_vector_type(4))) f32x4;
+typedef f32 __attribute__((ext_vector_type(3))) f32x3;
+typedef f32 __attribute__((ext_vector_type(2))) f32x2;
+
+__attribute__((annotate("aclspv_execmodel(0)")))
+void t16_vs_main(
+    __attribute__((annotate("aclspv_storage_class(1)")))
+    __attribute__((annotate("aclspv_bltin(42)")))
+    int* in_vertidx,
+
+    __attribute__((annotate("aclspv_storage_class(3)")))
+    __attribute__((annotate("aclspv_bltin(0)")))
+    f32x4* out_pos,
+
+    __attribute__((annotate("aclspv_location(0)")))
+    __attribute__((annotate("aclspv_storage_class(3)")))
+    f32x3* out_color
+) {
+if( *in_vertidx == 0 ){f32x4 pos4 = { 0.f, 0.f - 0.5f, 0.f, 1.f }; f32x3 clr = { 1.f, 0.f, 0.f };*out_pos = pos4; *out_color = clr;}else if( *in_vertidx == 1 ){f32x4 pos4 = { 0.5f, 0.5f, 0.f, 1.f }; f32x3 clr = { 0.f, 1.f, 0.f };*out_pos = pos4; *out_color = clr;}else if( *in_vertidx == 2 ){f32x4 pos4 = { 0.f - 0.5, 0.5f, 0.f, 1.f }; f32x3 clr = { 0.f, 0.f, 1.f };*out_pos = pos4; *out_color = clr;}}
+
+__attribute__((annotate("aclspv_execmode0(7)")))
+__attribute__((annotate("aclspv_execmodel(4)")))
+void t17_fs_main(
+    __attribute__((annotate("aclspv_location(0)")))
+    __attribute__((annotate("aclspv_storage_class(1)")))
+    f32x3* in_color,
+
+    __attribute__((annotate("aclspv_location(0)")))
+    __attribute__((annotate("aclspv_storage_class(3)")))
+    f32x4* out_color
+) {
+f32x3 clr = *in_color;    f32x4 out = { clr[0], clr[1], clr[2], 1.0f };
     *out_color = out;
 }

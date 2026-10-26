@@ -43,6 +43,18 @@ enum ACLEXPR_RET_ aclexpr_arithmetic_cast(
 		const h_aclspv_ctx_t	h_ctx
 		);
 
+enum ACLEXPR_RET_ aclexpr_bit_cast(
+		const aclspv_id_t	c_old_id,
+		const aclspv_id_t	c_old_type,
+		const aclutil_ltrlmask_t	c_flag_literal,
+		const aclexpr_literal	c_old_literal,
+
+		aclspv_id_t* ae2f_restrict	r_newid,
+		aclspv_id_t		c_new_type,
+		aclexpr_literal* ae2f_restrict r_new_literal_opt,
+		const h_aclspv_ctx_t	h_ctx
+		);
+
 enum ACLEXPR_RET_ aclexpr_arithmetic_cast_literal(
 		const aclspv_id_t	c_old_type,
 		const aclexpr_literal	c_old_literal,

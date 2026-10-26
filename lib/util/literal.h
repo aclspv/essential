@@ -20,12 +20,17 @@ enum ACLUTIL_LITERAL_ {
 typedef aclspv_wrd_t	aclutil_ltrlmask_t;
 typedef union {
 	int		m_api_int;
-	intmax_t	m_api_intmax;
-	uintmax_t	m_api_uintmax;
 
-	uint_least64_t	m_u64;
+	aclspv_swrd2_t	m_api_intmax;
+	aclspv_wrd2_t	m_api_uintmax;
+
+	aclspv_wrd2_t	m_u64;
+
 	double		m_dbl;
 	float		m_flt;
+
+	aclspv_wrd_t	m_wrd;
+	aclspv_wrd2_t	m_wrd2;
 } aclutil_literal;
 
 struct aclutil_ltrl_eval_t {

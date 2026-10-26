@@ -1,0 +1,9 @@
+@PACKAGE_INIT@
+
+include(CMakeFindDependencyMacro)
+
+include(CMakePackageConfigHelpers)
+include("${CMAKE_CURRENT_LIST_DIR}/aclspv-aclvalTargets.cmake")
+
+find_dependency(common-essential REQUIRED)
+link_libraries(aclspv::common-essential)

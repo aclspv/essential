@@ -421,7 +421,6 @@ typedef struct a_aclspv_ctx {
 		aclspv_wrdcount_t
 			m_capability,
 			m_ext,
-			m_memmodel,
 			m_entp,
 			m_execmode,
 			m_name,
@@ -464,7 +463,6 @@ typedef struct a_aclspv_ctx {
 		x_aclspv_vec
 			m_capability,
 			m_ext,
-			m_memmodel,
 			m_entp,
 			m_execmode,
 			m_name,

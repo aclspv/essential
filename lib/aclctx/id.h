@@ -17,8 +17,10 @@ ae2f_inline_f static aclspv_id_t aclctx_newid(h_aclspv_ctx_t h) {
 	aclspv_id_t new_ = h->m_id++;
 #endif
 
+#if	1
 	ae2f_ifnezerr_strict(new_ <= new_ - 1)
 		return 0;
+#endif
 
 	return new_;
 }

@@ -102,6 +102,8 @@ typedef struct {
 	aclspv_wrd_t	m_mask_literal;
 	aclutil_literal	m_literal;
 	CXCursor	m_cursor;
+
+	/** see ACLEXPR_OPCFGX_STATE0_ */
 	aclspv_wrd_t	m_state0;
 
 	union {

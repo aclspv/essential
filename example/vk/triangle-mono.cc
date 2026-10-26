@@ -41,7 +41,7 @@ static const char src[] =
 ") {\n"
 vert_idx_if("*in_vertidx == 0", 0.f, 0.f - 0.5f, 1.f, 0.f, 0.f)
 "else " vert_idx_if("*in_vertidx == 1", 0.5f, 0.5f, 0.f, 1.f, 0.f)
-"else " vert_idx_if("*in_vertidx == 2", 0.f - 0.5, 0.5f, 0.f, 0.f, 1.f)
+"else " vert_idx_if("*in_vertidx == 2", 0.f - 0.5f, 0.5f, 0.f, 0.f, 1.f)
 "}\n"
 "\n"
 "__attribute__((annotate(\"aclspv_execmode0(7)\")))\n"

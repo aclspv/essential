@@ -9,7 +9,7 @@ foreach(file ${files})
 	add_executable(${tar} ${file})
 	target_link_libraries(${tar}
 		PRIVATE Vulkan::Vulkan
-		PRIVATE aclspv::aclspv
+		PRIVATE aclspv::essential
 		PRIVATE SDL3::SDL3
 	)
 endforeach()

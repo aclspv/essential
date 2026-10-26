@@ -137,23 +137,23 @@ ae2f_inline_f static ae2f_ccconst struct aclutil_ltrl_eval_t	s_eval2_ltrl(
 				EXPR_TWO(%, m_api_intmax, SpvOpSRem); return RET;
 
 				case SpvOpSLessThan:
-					RET.m_ret.m_api_intmax = c_oprndA.m_api_intmax < c_oprndB.m_api_intmax;
-					RET.m_found = 1; return RET;
+				RET.m_ret.m_api_intmax = c_oprndA.m_api_intmax < c_oprndB.m_api_intmax;
+				RET.m_found = 1; return RET;
 				case SpvOpSLessThanEqual:
-					RET.m_ret.m_api_intmax = c_oprndA.m_api_intmax <= c_oprndB.m_api_intmax;
-					RET.m_found = 1; return RET;
+				RET.m_ret.m_api_intmax = c_oprndA.m_api_intmax <= c_oprndB.m_api_intmax;
+				RET.m_found = 1; return RET;
 				case SpvOpSGreaterThan:
-					RET.m_ret.m_api_intmax = c_oprndA.m_api_intmax > c_oprndB.m_api_intmax;
-					RET.m_found = 1; return RET;
+				RET.m_ret.m_api_intmax = c_oprndA.m_api_intmax > c_oprndB.m_api_intmax;
+				RET.m_found = 1; return RET;
 				case SpvOpSGreaterThanEqual:
-					RET.m_ret.m_api_intmax = c_oprndA.m_api_intmax >= c_oprndB.m_api_intmax;
-					RET.m_found = 1; return RET;
+				RET.m_ret.m_api_intmax = c_oprndA.m_api_intmax >= c_oprndB.m_api_intmax;
+				RET.m_found = 1; return RET;
 				case SpvOpIEqual:
-					RET.m_ret.m_api_intmax = c_oprndA.m_api_intmax == c_oprndB.m_api_intmax;
-					RET.m_found = 1; return RET;
+				RET.m_ret.m_api_intmax = c_oprndA.m_api_intmax == c_oprndB.m_api_intmax;
+				RET.m_found = 1; return RET;
 				case SpvOpINotEqual:
-					RET.m_ret.m_api_intmax = c_oprndA.m_api_intmax != c_oprndB.m_api_intmax;
-					RET.m_found = 1; return RET;
+				RET.m_ret.m_api_intmax = c_oprndA.m_api_intmax != c_oprndB.m_api_intmax;
+				RET.m_found = 1; return RET;
 
 				default:
 				RET.m_ret.m_u64 = 0;
@@ -174,23 +174,23 @@ ae2f_inline_f static ae2f_ccconst struct aclutil_ltrl_eval_t	s_eval2_ltrl(
 				EXPR_TWO(%, m_api_uintmax, SpvOpSRem); return RET;
 
 				case SpvOpSLessThan:
-					RET.m_ret.m_api_uintmax = c_oprndA.m_api_uintmax < c_oprndB.m_api_uintmax;
-					RET.m_found = 1; return RET;
+				RET.m_ret.m_api_uintmax = c_oprndA.m_api_uintmax < c_oprndB.m_api_uintmax;
+				RET.m_found = 1; return RET;
 				case SpvOpSLessThanEqual:
-					RET.m_ret.m_api_uintmax = c_oprndA.m_api_uintmax <= c_oprndB.m_api_uintmax;
-					RET.m_found = 1; return RET;
+				RET.m_ret.m_api_uintmax = c_oprndA.m_api_uintmax <= c_oprndB.m_api_uintmax;
+				RET.m_found = 1; return RET;
 				case SpvOpSGreaterThan:
-					RET.m_ret.m_api_uintmax = c_oprndA.m_api_uintmax > c_oprndB.m_api_uintmax;
-					RET.m_found = 1; return RET;
+				RET.m_ret.m_api_uintmax = c_oprndA.m_api_uintmax > c_oprndB.m_api_uintmax;
+				RET.m_found = 1; return RET;
 				case SpvOpSGreaterThanEqual:
-					RET.m_ret.m_api_uintmax = c_oprndA.m_api_uintmax >= c_oprndB.m_api_uintmax;
-					RET.m_found = 1; return RET;
+				RET.m_ret.m_api_uintmax = c_oprndA.m_api_uintmax >= c_oprndB.m_api_uintmax;
+				RET.m_found = 1; return RET;
 				case SpvOpIEqual:
-					RET.m_ret.m_api_uintmax = c_oprndA.m_api_uintmax == c_oprndB.m_api_uintmax;
-					RET.m_found = 1; return RET;
+				RET.m_ret.m_api_uintmax = c_oprndA.m_api_uintmax == c_oprndB.m_api_uintmax;
+				RET.m_found = 1; return RET;
 				case SpvOpINotEqual:
-					RET.m_ret.m_api_uintmax = c_oprndA.m_api_uintmax != c_oprndB.m_api_uintmax;
-					RET.m_found = 1; return RET;
+				RET.m_ret.m_api_uintmax = c_oprndA.m_api_uintmax != c_oprndB.m_api_uintmax;
+				RET.m_found = 1; return RET;
 
 				default:
 				RET.m_ret.m_u64 = 0;
@@ -240,9 +240,10 @@ static aclspv_wrd_t s_decide_cast(aclspv_id_t c_id0, aclspv_id_t c_id1, const h_
 
 	/** sorting to make it simpler */
 	if(c_id1 < c_id0) {
-		c_id0 ^= c_id1;
-		c_id1 ^= c_id0;
-		c_id0 ^= c_id1;
+		aclspv_id_t tmp;
+		tmp = c_id0;
+		c_id0 = c_id1;
+		c_id1 = tmp;
 	}
 
 	cls0 = aclty_simd_class(c_id0, h_ctx);
@@ -285,7 +286,14 @@ aclspv_bool_t aclexpr_carve2_arithmetic_do(
 #endif
 		{
 			fixme_puts("this is float. make sure we can do it constantly with Kernel capability.");
-			r_extra->m_mask_literal &= ~(aclspv_wrd_t)(ACLUTIL_LITERAL_CONSTANT);
+			/** preserve LITERAL path for constant folding (aclval_cfg_by_enum)
+			 * so that OpConstant is emitted in dominating section instead of
+			 * OpFSub inside one if-arm only. Fixes dominance error in
+			 * chained if-else (t16_vs_main / gl-simple test). */
+			if ((r_extra->m_mask_literal & ACLUTIL_LITERAL_LITERAL) == 0)
+				r_extra->m_mask_literal = ACLUTIL_LITERAL_MASK_RT;
+			else
+				r_extra->m_mask_literal &= ~(aclspv_wrd_t)(ACLUTIL_LITERAL_CONSTANT);
 		}
 	}
 
@@ -387,14 +395,15 @@ aclspv_bool_t aclexpr_carve2_arithmetic_do(
 	return 0;
 }
 
-aclspv_bool_t aclexpr_carve2_arithmetic(
-		struct aclexpr_visit_data	ae2fcc_arg_sarr_restrict(rdwr_data, 1),
-		aclspv_wrd_t			ae2fcc_arg_sarr_restrict(rdwr_prv_idval, 1),
-		aclexpr_opbincfg_extra		ae2fcc_arg_sarr_restrict(rdwr_prv_extra, 1),
-		aclspv_wrd_t			ae2fcc_arg_sarr_restrict(rdwr_lst_scale_buf, ACLEXPR_OPBINCFG_END + 2),
-		aclexpr_opbincfg_extra		ae2fcc_arg_sarr_restrict(rdwr_lst_extra, 2),
-		aclutil_literal			ae2fcc_arg_sarr_restrict(r_ltrl, 1)
-		) {
+	aclspv_bool_t aclexpr_carve2_arithmetic(
+			struct aclexpr_visit_data	ae2fcc_arg_sarr_restrict(rdwr_data, 1),
+			aclspv_wrd_t			ae2fcc_arg_sarr_restrict(r_prv_idval, 1),
+			aclexpr_opbincfg_extra		ae2fcc_arg_sarr_restrict(rdwr_prv_extra, 1),
+			aclspv_wrd_t			ae2fcc_arg_sarr_restrict(rdwr_lst_scale_buf, ACLEXPR_OPBINCFG_END + 2),
+			aclexpr_opbincfg_extra		ae2fcc_arg_sarr_restrict(rdwr_lst_extra, 2),
+			aclutil_literal			ae2fcc_arg_sarr_restrict(r_ltrl, 1)
+			) 
+{
 	/** pointer arithmetic (`p + n`, `p - n`, `p += n`, `p -= n`, `p - q`):
 	 * a fatal error in the logical addressing model, where a pointer is a
 	 * plain id with no address to offset. the ACLTY_PTR operand test keeps
@@ -422,7 +431,7 @@ aclspv_bool_t aclexpr_carve2_arithmetic(
 		return ACLEXPR_CARVE_NO;
 	}
 
-	rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_RESID]	= *rdwr_prv_idval = CTX(rdwr_data)->m_id++;
+	rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_RESID]	= *r_prv_idval = CTX(rdwr_data)->m_id++;
 
 #define	OPITER(NUM_OPRND) \
 	{										\
@@ -468,7 +477,7 @@ aclspv_bool_t aclexpr_carve2_arithmetic(
 		dbg_prefix(i);											\
 		dbg_call((void), fprintf(stderr, "deepbin2-%u[%u]{%u} and literal mask %p [%u]{%u}\n"		\
 					, NUM_OPRND	\
-					, *rdwr_prv_idval, rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_END + NUM_OPRND]	\
+					, *r_prv_idval, rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_END + NUM_OPRND]	\
 					, (void*)&rdwr_lst_extra[NUM_OPRND].m_mask_literal				\
 					, rdwr_lst_extra[NUM_OPRND].m_mask_literal					\
 					, rdwr_prv_extra->m_mask_literal					\
@@ -480,7 +489,7 @@ aclspv_bool_t aclexpr_carve2_arithmetic(
 
 	return aclexpr_carve2_arithmetic_do(
 			r_ltrl, rdwr_prv_extra
-			, rdwr_prv_idval, rdwr_lst_extra
+			, r_prv_idval, rdwr_lst_extra
 			, rdwr_lst_scale_buf, rdwr_data->m_ctx
 			);
 }

@@ -5,6 +5,7 @@ enable_testing()
 project(aclspv VERSION 0)
 
 option(aclspv_llvm_from_source	"it build llvm from source when set to true without trying to find clang." OFF)
+option(aclspv_essential_shared	"build aclspv::assential as shared object" ON)
 option(aclspv_example		"build examples" OFF)
 option(aclspv_example_vk	"build vulkan examples" OFF)
 
@@ -110,11 +111,6 @@ else()
 		${llvm_Wh}/llvm
 		${ae2f_BinRoot}/${ae2f_submod}/llvm/llvm-project/llvm
 		)
-
-	#	add_subdirectory(
-	#		${llvm_Wh}/clang
-	#		${ae2f_BinRoot}/${ae2f_submod}/llvm/llvm-project/clang
-	#		)
 endif()
 
 
@@ -179,42 +175,60 @@ foreach(header ${clang_headers})
 	set(head_gen ${head_gen} ${header_out})
 endforeach()
 
-file(GLOB aclspv-inc ${PROJECT_SOURCE_DIR}/inc/*)
-file(GLOB_RECURSE aclspv-src ${PROJECT_SOURCE_DIR}/lib/*)
-
 ae2f_CoreLibTentConfigCustom(
-	aclspv-common	INTERFACE
-	inc ae3f
+	common	INTERFACE
+	inc aclspv
 	${PROJECT_SOURCE_DIR}/cfg/aclspv-common.cmake.in
 	inc/aclspv.h
 	inc/aclspv.hh
 	${head_gen}
 	)
 
-ae2f_CoreLibTentConfigCustom(
-	aclspv ${ae2f_LIBPREFIX}
-	inc ae3f
-	${PROJECT_SOURCE_DIR}/cfg/aclspv.cmake.in
-	${aclspv-src} ${aclspv-inc}
+add_subdirectory(src)
+include(./cmake/abitent.cmake)
+
+aclspv_abitent(aclconst)
+aclspv_abitent(aclcur)
+aclspv_abitent(aclexpr)
+aclspv_abitent(aclemit)
+aclspv_abitent(aclmem)
+aclspv_abitent(aclty)
+aclspv_abitent(aclval)
+aclspv_abitent(util)
+
+aclspv_abitent(essential-public)
+
+file(GLOB aclspv-inc ${PROJECT_SOURCE_DIR}/inc/*)
+file(GLOB_RECURSE aclspv-src ${PROJECT_SOURCE_DIR}/lib/*)
+
+target_link_libraries(aclspv-essential-public
+	PRIVATE	$<BUILD_INTERFACE:aclspv::common>
 	)
 
-add_subdirectory(src)
+ae2f_CoreLibTentConfigCustom(
+	essential	SHARED
+	inc			aclspv
+	${PROJECT_SOURCE_DIR}/cfg/aclspv-essential.cmake.in
+	)
 
-add_library(aclspv		ALIAS ae3f-aclspv)
-add_library(aclspv::aclspv	ALIAS ae3f-aclspv)
+target_link_libraries(aclspv-essential
+	PUBLIC	aclspv::common
+	PRIVATE	$<BUILD_INTERFACE:aclspv::aclconst>
+	PRIVATE	$<BUILD_INTERFACE:aclspv::aclcur>
+	PRIVATE	$<BUILD_INTERFACE:aclspv::aclexpr>
+	PRIVATE	$<BUILD_INTERFACE:aclspv::aclemit>
+	PRIVATE	$<BUILD_INTERFACE:aclspv::aclmem>
+	PRIVATE	$<BUILD_INTERFACE:aclspv::aclty>
+	PRIVATE	$<BUILD_INTERFACE:aclspv::aclval>
+	PRIVATE	$<BUILD_INTERFACE:aclspv::util>
+	PRIVATE $<BUILD_INTERFACE:aclspv::essential-public>
+	)
 
-target_link_libraries(ae3f-aclspv-common
+target_link_libraries(aclspv-common
 	INTERFACE	libclang
 	INTERFACE	ae2f::Core
 	INTERFACE	ae2f::Sys
 	INTERFACE	$<BUILD_INTERFACE:SPIRV-Headers::SPIRV-Headers>
-	)
-
-target_compile_definitions(ae3f-aclspv PRIVATE ACLSPVLIB=1)
-
-target_link_libraries(ae3f-aclspv
-	PRIVATE		ae3f::aclspvCore
-	PUBLIC		ae3f::aclspv-common
 	)
 
 ae2f_FileRaw_init(1 100)
@@ -231,58 +245,55 @@ ae2f_FileRaw_Run_One2(
 	"OCLBASE"
 	)
 
-add_custom_target(ae3f-aclspv-test-gen ALL
+add_custom_target(aclspv-essential-test-gen ALL
 	SOURCES
 	${PROJECT_BINARY_DIR}/testinc/.acltest/source.h
 	${PROJECT_BINARY_DIR}/testinc/.acltest/ocl.h
 	./test/inc/acltest/onefile.h
 	)
 
-add_library(ae3f-aclspv-test INTERFACE)
+add_library(aclspv-essential-test INTERFACE)
 
 if(ae2f_TEST)
-	target_link_libraries(ae3f-aclspv-test 
-		INTERFACE ae3f-aclspv
+	target_link_libraries(aclspv-essential-test 
+		INTERFACE aclspv::essential
 		)
 endif()
 
-add_dependencies(ae3f-aclspv-test ae3f-aclspv-test-gen)
+add_dependencies(aclspv-essential-test aclspv-essential-test-gen)
 
-target_include_directories(ae3f-aclspv-test 
+target_include_directories(aclspv-essential-test
 	INTERFACE $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/testinc/>
 	INTERFACE $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/test/inc/>
 	)
 
-ae2f_CoreTestTentVerbose(ae3f-aclspv-test ./test/compile)
-ae2f_CoreTestTentVerbose(ae3f-aclspv-test ./test/util)
+ae2f_CoreTestTentVerbose(aclspv-essential-test ./test/compile)
+ae2f_CoreTestTentVerbose(aclspv-essential-test ./test/util)
 
 if(ae2f_TEST)
-	target_link_libraries(Test-c-ae3f-aclspv-test-scale 
-		PRIVATE ae3f::aclspvCore
+	target_link_libraries(Test-c-aclspv-essential-test-scale 
+		PRIVATE aclspv::common-essential
 		)
 endif()
 
-ae2f_UltraErrWERROR(ae3f-aclspv PRIVATE)
-
-target_include_directories(ae3f-aclspv PUBLIC 
-	$<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/3rdinc>
-	)
-
 include(./cmake/predef.cmake)
 
-message(STATUS "[aclspv_predef]")
+message(STATUS "[aclspv_essential_predef]")
 
-aclspv_predef_switch(ae3f-aclspv "ACLSPV_OpCapabilityKernel" "1")
-aclspv_predef_switch(ae3f-aclspv "ACLSPV_OpCapabilityShader" "1")
-aclspv_predef_switch(ae3f-aclspv "ACLSPV_CHECK_EXTRA" "1")
-aclspv_predef_switch(ae3f-aclspv "ACLSPV_SYMBOL" "1")
-aclspv_predef_switch(ae3f-aclspv "ACLSPV_ATOMIC_ID" 0)
-aclspv_predef_switch(ae3f-aclspv "ACLSPV_OPACC_IDX_MAX" 64)
-aclspv_predef_switch(ae3f-aclspv "ACLSPV_MATH_NR" 0)
+aclspv_predef_switch(aclspv-common-essential INTERFACE	"ACLSPV_OpCapabilityKernel" "0")
+aclspv_predef_switch(aclspv-common-essential INTERFACE	"ACLSPV_OpCapabilityShader" "1")
+aclspv_predef_switch(aclspv-common-essential INTERFACE	"ACLSPV_CHECK_EXTRA" "1")
+aclspv_predef_switch(aclspv-common-essential INTERFACE	"ACLSPV_SYMBOL" "1")
+aclspv_predef_switch(aclspv-common-essential INTERFACE	"ACLSPV_ATOMIC_ID" 0)
+aclspv_predef_switch(aclspv-common-essential INTERFACE	"ACLSPV_OPACC_IDX_MAX" 64)
+aclspv_predef_switch(aclspv-aclexpr	PRIVATE		"ACLSPV_MATH_NR" 0)
+aclspv_predef_switch(aclspv-aclexpr	PRIVATE		"ACLSPV_MATH_NR_RSQRTF_MAGIC"	0x5f375a86)
+aclspv_predef_switch(aclspv-aclexpr	PRIVATE		"ACLSPV_MATH_NR_IT"		2)
 
 message(STATUS ""
-	"[aclspv]\n"
+	"[aclspv_essential]\n"
 	"\taclspv_llvm_from_source: ${aclspv_llvm_from_source}\n"
+	"\taclspv_essential_shared: ${aclspv_essential_shared}\n"
 	"\taclspv_example: ${aclspv_example}\n"
 	"\taclspv_example_vk: ${aclspv_example_vk}"
 	)

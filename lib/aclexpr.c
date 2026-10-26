@@ -143,127 +143,20 @@ enum ACLEXPR_RET_ aclexpr_eval_btcast(
 	(void)aclutil_visitfromroot(c_cur, aclexpr_visit, &DATA);
 	ae2f_ifnezerr(CTX->m_err) return ACLEXPR_RET_FAILURE;
 
+	unless(c_type_req)
+		return ae2f_bll_sel_bool1(uint_fastenum_t, DATA.m_literal_flag & 2, ACLEXPR_RET_SUCCESS_LITERAL, 0u)
+		| ae2f_bll_sel_bool1(uint_fastenum_t, DATA.m_literal_flag & 1, ACLEXPR_RET_SUCCESS_CONSTANT, ACLEXPR_RET_SUCCESS);
+
 	/** bitcast is not required when two types are exactly same */
-	unless(DATA.m_tyid_current != c_type_req)
-		return	aclexpr_arithmetic_cast(
-				DATA.m_id_ret
-				, DATA.m_tyid_current
-				, DATA.m_id_ret
-				, DATA.m_ret_literal 
-				, ret_id
-				, c_type_req
-				, wr_literal_opt
-				, CTX);
-
-	ae2f_expected_but_else(aclid_is_number(c_type_req) 
-			&& aclid_is_number(DATA.m_tyid_current)) {
-		return ACLEXPR_RET_NOT_THE_CASE;
-	}
-
-	if(DATA.m_literal_flag & ACLUTIL_LITERAL_LITERAL) {
-		if(wr_literal_opt)
-			*wr_literal_opt = DATA.m_ret_literal;
-
-		return aclexpr_arithmetic_cast_literal(
-				c_type_req
-				, DATA.m_ret_literal
-				, ret_id
-				, c_type_req
-				, wr_literal_opt
-				, CTX
-				);
-	}
-
-	/** NON-LITERAL */
-	{
-		const aclspv_id_t	TYPE_SRC = aclid_getty_uint(
-				aclid_get_bit_width(DATA.m_tyid_current)
-				);
-
-		const aclspv_id_t	TYPE_DST = aclid_getty_uint(aclid_get_bit_width(c_type_req));
-
-		aclspv_id_t	VAL_SRC = 0;
-		typedef const aclspv_id_t* ae2f_restrict ptr_id_t;
-
-		ptr_id_t VAL_SRC_PTR, TYPE_SRC_PTR;
-		aclspv_id_t	VAL_DST;
-
-		ae2f_expected_but_else(aclid_mk_default_id(TYPE_DST, CTX)
-				&& aclid_mk_default_id(TYPE_SRC, CTX)) {
-			return ACLEXPR_RET_FAILURE;
-		}
-
-		unless(aclid_is_int(DATA.m_tyid_current)) {
-			/** the bitcast must be a value-flow node: direct stream
-			 * emission would place the instruction at the raw-stream
-			 * end — possibly ahead of the current block's own nodes —
-			 * and would not reference-count the source node, whose
-			 * zero-ref elision would leave the bitcast's operand
-			 * undefined. */
-			ae2f_expected_but_else(VAL_SRC = aclcur_cfg_op1(
-						CTX->m_id++
-						, SpvOpBitcast
-						, TYPE_SRC
-						, DATA.m_id_ret
-						, CTX
-						))
-				return ACLEXPR_RET_FAILURE;
-
-			VAL_SRC_PTR = &VAL_SRC;
-			TYPE_SRC_PTR = &TYPE_SRC;
-		} else {
-			VAL_SRC_PTR = &DATA.m_id_ret;
-			TYPE_SRC_PTR = &DATA.m_tyid_current;
-		}
-
-		ae2fpat_assertassume(aclid_is_int(*TYPE_SRC_PTR));
-		switch(aclexpr_arithmetic_cast_non_literal(
-					*VAL_SRC_PTR
-					, *TYPE_SRC_PTR
-					, 0
-					, &VAL_DST
-					, TYPE_DST
-					, CTX
-					)) {
-			default:
-			case ACLEXPR_RET_NOT_THE_CASE:
-				return ACLEXPR_RET_NOT_THE_CASE;
-			case ACLEXPR_RET_FAILURE:
-				return ACLEXPR_RET_FAILURE;
-
-			case ACLEXPR_RET_SUCCESS:
-			case ACLEXPR_RET_SUCCESS_CONSTANT:
-			case ACLEXPR_RET_SUCCESS_LITERAL:
-				break;
-		}
-
-		ae2fpat_assertassume(aclid_is_uint(TYPE_DST));
-
-		unless(aclid_is_int(c_type_req)) {
-			/** node-based, like the source bitcast above. */
-			ae2f_expected_but_else(*ret_id = aclcur_cfg_op1(
-						CTX->m_id++
-						, SpvOpBitcast
-						, c_type_req
-						, VAL_DST
-						, CTX
-						))
-				return ACLEXPR_RET_FAILURE;
-
-			return ACLEXPR_RET_SUCCESS;
-		} else {
-			return aclexpr_arithmetic_cast_non_literal(
-					VAL_DST
-					, TYPE_DST
-					, 0
-					, ret_id
-					, c_type_req
-					, CTX
-					);
-		}
-	}
-
-	ae2f_unreachable();
+	return	aclexpr_bit_cast(
+			DATA.m_id_ret
+			, DATA.m_tyid_current
+			, DATA.m_id_ret
+			, DATA.m_ret_literal 
+			, ret_id
+			, c_type_req
+			, wr_literal_opt
+			, CTX);
 }
 
 enum ACLEXPR_RET_ aclexpr_eval(

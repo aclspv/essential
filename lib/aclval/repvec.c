@@ -17,7 +17,7 @@ ae2f_inline_f static struct aclutil_mk_constant_repvec_t ae2f_ccconst s_mkret(co
 	return R;
 }
 
-struct aclutil_mk_constant_repvec_t	aclutil_mk_constant_repvec_id(
+struct aclutil_mk_constant_repvec_t	aclval_cfg_vec_broadcast(
 		const aclspv_id_t	c_id_ty,
 		const aclspv_id_t c_val,
 		const aclspv_wrd_t c_literal,
