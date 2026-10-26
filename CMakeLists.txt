@@ -205,11 +205,19 @@ target_link_libraries(aclspv-essential-public
 	PRIVATE	$<BUILD_INTERFACE:aclspv::common>
 	)
 
-ae2f_CoreLibTentConfigCustom(
-	essential	SHARED
-	inc			aclspv
-	${PROJECT_SOURCE_DIR}/cfg/aclspv-essential.cmake.in
-	)
+if(${aclspv_essential_shared})
+	ae2f_CoreLibTentConfigCustom(
+		essential	SHARED
+		inc			aclspv
+		${PROJECT_SOURCE_DIR}/cfg/aclspv-essential.cmake.in
+		)
+else()
+	ae2f_CoreLibTentConfigCustom(
+		essential	STATIC
+		inc			aclspv
+		${PROJECT_SOURCE_DIR}/cfg/aclspv-essential.cmake.in
+		)
+endif()
 
 target_link_libraries(aclspv-essential
 	PUBLIC	aclspv::common
@@ -286,7 +294,7 @@ aclspv_predef_switch(aclspv-common-essential INTERFACE	"ACLSPV_CHECK_EXTRA" "1")
 aclspv_predef_switch(aclspv-common-essential INTERFACE	"ACLSPV_SYMBOL" "1")
 aclspv_predef_switch(aclspv-common-essential INTERFACE	"ACLSPV_ATOMIC_ID" 0)
 aclspv_predef_switch(aclspv-common-essential INTERFACE	"ACLSPV_OPACC_IDX_MAX" 64)
-aclspv_predef_switch(aclspv-aclexpr	PRIVATE		"ACLSPV_MATH_NR" 0)
+aclspv_predef_switch(aclspv-aclexpr	PRIVATE		"ACLSPV_MATH_NR" 1)
 aclspv_predef_switch(aclspv-aclexpr	PRIVATE		"ACLSPV_MATH_NR_RSQRTF_MAGIC"	0x5f375a86)
 aclspv_predef_switch(aclspv-aclexpr	PRIVATE		"ACLSPV_MATH_NR_IT"		2)
 

@@ -24,6 +24,7 @@
 
 #include "./beforevisit.h"
 
+
 enum {
 	OP2_ARITHMETIC,
 	OP2_CMP,

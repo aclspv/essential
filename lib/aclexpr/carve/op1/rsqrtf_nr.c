@@ -2,8 +2,12 @@
 
 #include <aclty.h>
 #include "./rsqrtf_nr.h"
-#include <aclexpr/carve/op2/arithmetic.h>
-#include <aclexpr/carve/op2/shift.h>
+
+#include <aclexpr/carve/util.h>
+#include <aclval.h>
+#include <aclcur/op.h>
+
+#include <util/literal.h>
 
 typedef float f32;
 typedef aclspv_wrd_t u32;
@@ -11,175 +15,145 @@ typedef aclspv_wrd_t u32;
 typedef f32 f32_check[sizeof(f32) == 4];
 typedef u32 u32_check[sizeof(u32) == 4];
 
-#include <util/literal.h>
-
 typedef union { f32 m_f; u32 m_u; } f32_u;
 
 static aclutil_literal rsqrtf_nr(aclutil_literal c) {
-	const f32 chalf = c.m_flt * 0.5f;
+	f32_u u;
+	u.m_f = c.m_flt;
+	const f32 chalf = u.m_f * 0.5f;
 	int i;
 
-	c.m_wrd = __ACLSPV_MATH_NR_RSQRTF_MAGIC - (c.m_wrd >> 1);
+	u.m_u = __ACLSPV_MATH_NR_RSQRTF_MAGIC - (u.m_u >> 1);
 
 	for(i = __ACLSPV_MATH_NR_IT; i --> 0; ) {
-		const f32 y2 = c.m_flt * c.m_flt;
-		c.m_flt = c.m_flt * (1.5f - (chalf * y2));
+		const f32 y2 = u.m_f * u.m_f;
+		u.m_f = u.m_f * (1.5f - (chalf * y2));
 	}
-	
+
+	c.m_flt = u.m_f;
+	c.m_wrd = u.m_u;
 	return c;
 }
 
 	aclspv_bool_t aclexpr_carve_op1_rsqrtf_nr(
 			struct aclexpr_visit_data	ae2fcc_arg_sarr_restrict(rdwr_data, 1),
-			aclspv_id_t			ae2fcc_arg_sarr_restrict(r_prv_idval, 1),
-			aclexpr_opbincfg_extra		ae2fcc_arg_sarr_restrict(r_prv_extra, 1),
+			aclspv_wrd_t			ae2fcc_arg_sarr_restrict(rdwr_prv_idval, 1),
+			aclexpr_opbincfg_extra		ae2fcc_arg_sarr_restrict(rdwr_prv_extra, 1),
 			aclspv_wrd_t			ae2fcc_arg_sarr_restrict(rdwr_lst_scale_buf, ACLEXPR_OPBINCFG_END + 1),
 			aclexpr_opbincfg_extra		ae2fcc_arg_sarr_restrict(rdwr_lst_extra, 1),
 			aclutil_literal			ae2fcc_arg_sarr_restrict(r_ltrl, 1)
 			)
 {
-	aclexpr_opbincfg_extra x = {0,};
-	aclexpr_opbincfg_extra x_half = {0,};
-	aclexpr_opbincfg_extra x_u32 = {0,};
-	aclexpr_opbincfg_extra x_u32_half = {0,};
-	aclexpr_opbincfg_extra magic = {0,};
-	aclexpr_opbincfg_extra one = {0, };
-	aclexpr_opbincfg_extra half = {0, };
-	aclexpr_opbincfg_extra nr_startup = {0, };
-
-	aclexpr_opbincfg_extra buf_extra[2];
-
 	aclspv_id_t f32_like_ty, u32_like_ty;
 	aclspv_id_t x_id;
-	aclspv_id_t x_u32_id;
-	aclspv_id_t x_u32_half_id;
-	aclspv_id_t magic_id;
-	aclspv_id_t one_id;
-	aclspv_id_t half_id;
-	aclspv_id_t nr_startup_id;
+	aclspv_id_t half_id, threehalf_id, magic_id, one_id;
 
-	aclspv_wrd_t buf[ACLEXPR_OPBINCFG_END + 2];
+	h_aclspv_ctx_t ctx = rdwr_data->m_ctx;
 
-	magic.m_literal.m_wrd = __ACLSPV_MATH_NR_RSQRTF_MAGIC;
-	magic.m_mask_literal = ACLUTIL_LITERAL_MASK_LITERAL;
-	magic.m_type_original = ACLSPV_ID_U32;
-	magic_id = aclval_cfg_by_enum(__ACLSPV_MATH_NR_RSQRTF_MAGIC, rdwr_data->m_ctx, ACLSPV_ID_U32);
-
-	one.m_literal.m_wrd = 1;
-	one.m_mask_literal = ACLUTIL_LITERAL_MASK_LITERAL;
-	one.m_type_original = ACLSPV_ID_U32;
-	one_id = aclval_cfg_by_enum(1, rdwr_data->m_ctx, ACLSPV_ID_U32);
-
-	half.m_literal.m_flt = 0.5f;
-	half.m_mask_literal = ACLUTIL_LITERAL_MASK_LITERAL;
-	half.m_type_original = ACLSPV_ID_F32;
-	half_id = aclval_cfg_f32(0.5f, rdwr_data->m_ctx);
-
-	r_prv_extra->m_mask_literal = (aclspv_wrd_t)ACLUTIL_LITERAL_LITERAL;
-
-	ae2f_ifezerr(aclty_is_simd(rdwr_lst_extra[0].m_type_original, rdwr_data->m_ctx)) {
+	ae2f_ifezerr(aclty_is_simd(rdwr_lst_extra[0].m_type_original, ctx)) {
 		return ACLEXPR_CARVE_NO;
 	}
 
 	ae2f_ifezerr(f32_like_ty = aclty_simd_chxg_cls(
 				rdwr_lst_extra[0].m_type_original
-				, aclid_mk_default_id(ACLSPV_ID_F32, rdwr_data->m_ctx)
-				, rdwr_data->m_ctx
+				, aclid_mk_default_id(ACLSPV_ID_F32, ctx)
+				, ctx
 				)) return ACLEXPR_CARVE_NO;
 
 	ae2f_ifezerr(u32_like_ty = aclty_simd_chxg_cls(
 				rdwr_lst_extra[0].m_type_original
-				, aclid_mk_default_id(ACLSPV_ID_U32, rdwr_data->m_ctx)
-				, rdwr_data->m_ctx
+				, aclid_mk_default_id(ACLSPV_ID_U32, ctx)
+				, ctx
 				)) return ACLEXPR_CARVE_NO;
 
-	switch(aclexpr_arithmetic_cast(
-				rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_END]
-				, rdwr_lst_extra->m_type_original
-				, rdwr_lst_extra->m_mask_literal
-				, rdwr_lst_extra->m_literal
-				, &x_id
-				, f32_like_ty
-				, &x.m_literal
-				, rdwr_data->m_ctx)) {
-		default:
-			ae2f_unreachable();
+	rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_RESTYID] = f32_like_ty;
 
-		case ACLEXPR_RET_NOT_THE_CASE:
-		case ACLEXPR_RET_FAILURE:
-			return ACLEXPR_CARVE_NO;
+	/* scalar seeds */
+	magic_id = aclval_cfg_by_enum(__ACLSPV_MATH_NR_RSQRTF_MAGIC, ctx, ACLSPV_ID_U32);
+	one_id = aclval_cfg_by_enum(1, ctx, ACLSPV_ID_U32);
+	half_id = aclval_cfg_f32(0.5f, ctx);
+	threehalf_id = aclval_cfg_f32(1.5f, ctx);
 
-		case ACLEXPR_RET_SUCCESS:
-		case ACLEXPR_RET_SUCCESS_CONSTANT:
-		case ACLEXPR_RET_SUCCESS_LITERAL:
-			break;
+	/* broadcast to match operand shape (no-op for scalar) */
+	{
+		struct aclutil_mk_constant_repvec_t br;
+		br = aclval_cfg_vec_broadcast(u32_like_ty, magic_id, ACLUTIL_LITERAL_MASK_LITERAL, ctx);
+		magic_id = br.m_id;
+		br = aclval_cfg_vec_broadcast(u32_like_ty, one_id, ACLUTIL_LITERAL_MASK_LITERAL, ctx);
+		one_id = br.m_id;
+		br = aclval_cfg_vec_broadcast(f32_like_ty, half_id, ACLUTIL_LITERAL_MASK_LITERAL, ctx);
+		half_id = br.m_id;
+		br = aclval_cfg_vec_broadcast(f32_like_ty, threehalf_id, ACLUTIL_LITERAL_MASK_LITERAL, ctx);
+		threehalf_id = br.m_id;
 	}
 
-	switch(aclexpr_arithmetic_cast(
-				rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_END]
-				, rdwr_lst_extra->m_type_original
-				, rdwr_lst_extra->m_mask_literal
-				, rdwr_lst_extra->m_literal
-				, &x_u32_id
-				, u32_like_ty
-				, &x_u32.m_literal
-				, rdwr_data->m_ctx)) {
-		default:
-			ae2f_unreachable();
+	x_id = rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_END];
 
-		case ACLEXPR_RET_NOT_THE_CASE:
-		case ACLEXPR_RET_FAILURE:
+	rdwr_prv_extra->m_type_original = f32_like_ty;
+
+	if (rdwr_lst_extra[0].m_mask_literal & (aclspv_wrd_t)ACLUTIL_LITERAL_LITERAL) {
+		aclutil_literal res = rsqrtf_nr(rdwr_lst_extra[0].m_literal);
+		*r_ltrl = res;
+		rdwr_prv_extra->m_literal = res;
+		rdwr_prv_extra->m_mask_literal = ACLUTIL_LITERAL_MASK_LITERAL;
+
+		ae2f_ifezerr(*rdwr_prv_idval = aclval_cfg_f32(res.m_flt, ctx)) {
 			return ACLEXPR_CARVE_NO;
-
-		case ACLEXPR_RET_SUCCESS_LITERAL:
-			*r_ltrl = rsqrtf_nr(x.m_literal);
-			*r_prv_idval = aclval_cfg_f32(r_ltrl->m_flt, rdwr_data->m_ctx);
-
-			{
-				*r_prv_extra = one;
-				r_prv_extra->m_type_original = ACLSPV_ID_F32;
-			}
-
-			return ACLEXPR_CARVE_OK;
-
-		case ACLEXPR_RET_SUCCESS:
-		case ACLEXPR_RET_SUCCESS_CONSTANT:
-			break;
+		}
+		return ACLEXPR_CARVE_OK;
 	}
 
-	buf[ACLEXPR_OPBINCFG_SPECCONSTANTOP]	= aclspv_opcode_to_wrd(SpvOpSpecConstantOp, ACLEXPR_OPBINCFG_END + 1);
-	buf[ACLEXPR_OPBINCFG_RESTYID]		= u32_like_ty;
-	buf[ACLEXPR_OPBINCFG_OPCODE]		= ACLEXPR_OP2_SHR;
-	buf[ACLEXPR_OPBINCFG_NUMOPRND]		= 2;
-	buf[ACLEXPR_OPBINCFG_END]		= x_u32_id;
-	buf[ACLEXPR_OPBINCFG_END + 1]		= one_id;
+	/* non-literal: emit NR sequence as runtime ops (constant-folding only for LITERAL case) */
+	rdwr_prv_extra->m_mask_literal = 0;
 
-	buf_extra[0] = x_u32;
-	buf_extra[1] = one;
+	/* x_half = x * 0.5 */
+	aclspv_id_t x_half_id = aclcur_cfg_op2(
+			0, SpvOpFMul, f32_like_ty, x_id, half_id, ctx);
+	ae2f_ifezerr(x_half_id) return ACLEXPR_CARVE_NO;
 
-	ae2f_ifnezerr_strict(aclexpr_carve2_shift(
-				rdwr_data
-				, &x_u32_half_id
-				, &x_u32_half
-				, &buf[0]
-				, &buf_extra[0]))
-		return ACLEXPR_CARVE_NO;
+	/* x_u32 = bitcast(x) */
+	aclspv_id_t x_u32_id = aclcur_cfg_op1(
+			0, SpvOpBitcast, u32_like_ty, x_id, ctx);
+	ae2f_ifezerr(x_u32_id) return ACLEXPR_CARVE_NO;
 
-	buf[ACLEXPR_OPBINCFG_OPCODE]	= ACLEXPR_OP2_SUB;
-	buf[ACLEXPR_OPBINCFG_END]	= magic_id;
-	buf[ACLEXPR_OPBINCFG_END + 1]	= x_u32_half_id;
+	/* shifted = x_u32 >> 1 */
+	aclspv_id_t shifted_id = aclcur_cfg_op2(
+			0, SpvOpShiftRightLogical, u32_like_ty, x_u32_id, one_id, ctx);
+	ae2f_ifezerr(shifted_id) return ACLEXPR_CARVE_NO;
 
-	buf_extra[0] = magic;
-	buf_extra[1] = x_u32_half;
+	/* startup_u32 = magic - shifted */
+	aclspv_id_t startup_u32_id = aclcur_cfg_op2(
+			0, SpvOpISub, u32_like_ty, magic_id, shifted_id, ctx);
+	ae2f_ifezerr(startup_u32_id) return ACLEXPR_CARVE_NO;
 
-	ae2f_ifnezerr_strict(aclexpr_carve2_arithmetic(
-				rdwr_data
-				, &nr_startup_id
-				, &nr_startup
-				, &buf[0]
-				, &buf_extra[0]
-				, &nr_startup.m_literal))
-		return ACLEXPR_CARVE_NO;
+	/* y = bitcast(startup) */
+	aclspv_id_t y_id = aclcur_cfg_op1(
+			0, SpvOpBitcast, f32_like_ty, startup_u32_id, ctx);
+	ae2f_ifezerr(y_id) return ACLEXPR_CARVE_NO;
+
+	/* unrolled NR iters: y = y * (1.5 - (x_half * y*y)) */
+	int it;
+	for (it = __ACLSPV_MATH_NR_IT; it > 0; --it) {
+		aclspv_id_t y2 = aclcur_cfg_op2(
+				0, SpvOpFMul, f32_like_ty, y_id, y_id, ctx);
+		ae2f_ifezerr(y2) return ACLEXPR_CARVE_NO;
+
+		aclspv_id_t tmp = aclcur_cfg_op2(
+				0, SpvOpFMul, f32_like_ty, x_half_id, y2, ctx);
+		ae2f_ifezerr(tmp) return ACLEXPR_CARVE_NO;
+
+		aclspv_id_t sub = aclcur_cfg_op2(
+				0, SpvOpFSub, f32_like_ty, threehalf_id, tmp, ctx);
+		ae2f_ifezerr(sub) return ACLEXPR_CARVE_NO;
+
+		y_id = aclcur_cfg_op2(
+				0, SpvOpFMul, f32_like_ty, y_id, sub, ctx);
+		ae2f_ifezerr(y_id) return ACLEXPR_CARVE_NO;
+	}
+
+	*rdwr_prv_idval = y_id;
+	*r_ltrl = rdwr_prv_extra->m_literal; /* zeroed */
+	return ACLEXPR_CARVE_OK;
 }
 #else
 typedef int dummy_t;

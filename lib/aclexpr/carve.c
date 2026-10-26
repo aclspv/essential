@@ -5,6 +5,9 @@
 #include "./carve/op1/incr.h"
 #include "./carve/op1/memberread.h"
 #include "./carve/op1/subscript.h"
+#if	__ACLSPV_MATH_NR
+#include "./carve/op1/rsqrtf_nr.h"
+#endif
 #include "./carve/opn/initlist.h"
 #include "./carve/op2/arithmetic.h"
 #include "./carve/op2/cmp.h"
@@ -239,6 +242,14 @@ aclspv_bool_t aclexpr_carve(
 
 #if	__ACLSPV_MATH_NR
 		case ACLEXPR_OP1_RSQRTF_NR:
+			return (aclspv_bool_t)ae2f_expected_not_strict(aclexpr_carve_op1_rsqrtf_nr(
+						rdwr_data
+						, rdwr_prv_idval
+						, rdwr_prv_extra
+						, LST_SCALE_BUF
+						, LST_EXTRA
+						, RET_LITERAL
+						));
 
 #endif
 

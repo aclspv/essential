@@ -369,5 +369,5 @@ void t17_fs_main(
     f32x4* out_color
 ) {
 f32x3 clr = *in_color;    f32x4 out = { clr[0], clr[1], clr[2], 1.0f };
-    *out_color = out;
+*out_color = out;
 }
