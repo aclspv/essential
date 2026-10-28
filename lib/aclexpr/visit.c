@@ -16,6 +16,7 @@
 #include "./visit/op1/memberread.h"
 #include "./visit/op1/subscript.h"
 #include "./visit/op1/neg.h"
+#include "./visit/op1/plus.h"
 #include "./visit/opn/initlist.h"
 #include "./visit/op2/arithmetic.h"
 #include "./visit/op2/assign.h"
@@ -38,12 +39,14 @@ enum {
 	OP1_MEMBERREAD,
 	OP1_DEREF,
 	OP1_NEG,
+	OP1_PLUS,
 	OPN_INITLIST,
 	OP0_,
 	OP0_VAL,
 	OP_FAIL,
 	OP_FALL,
 	OP_RECURSE,
+	OP_RECURSE_NOTHIN,
 	OP1_NEG_SUCCESS,
 	OP_ENTRY_POINT
 };
@@ -161,6 +164,11 @@ enum CXChildVisitResult aclexpr_visit(
 			return CXChildVisit_Recurse;
 		}
 
+		cgcsdef(OP_RECURSE_NOTHIN):
+		{
+			return CXChildVisit_Recurse;
+		}
+
 		cgcsdef(OP0_):
 		{
 			dbg_puts("[visit] OP0_");
@@ -250,7 +258,7 @@ enum CXChildVisitResult aclexpr_visit(
 					aclexpr_beforevisit(rdwr_data, GETLASTEL_CMDCOUNTERSTCK(a).m_count_oprnd)
 					? cgcase(OP_FAIL)
 					: cgcase(OPN_INITLIST)
-					);
+			     );
 		}
 
 		cgcsdef(OPN_INITLIST):
@@ -337,22 +345,29 @@ enum CXChildVisitResult aclexpr_visit(
 						, &CMDSTCK_SCALE
 						, cgcase(OP1_NEG_SUCCESS)
 						, cgcase(OP_FAIL)
-						, cgcase(OP1_INCR)
+						, cgcase(OP1_PLUS)
 						));
 		}
 
 		cgcsdef(OP1_NEG_SUCCESS):
 		{
 			ae2f_ifnezerr_strict(s_aclmem_cgrow2(
-					&CMDCOUNTERSTCK
-					, NUM_CMDCOUNTERSTCK + 1
-					, sizeof(aclexpr_cmdcounterstckelm)
-					, ACLSPV_COMPILE_ALLOC_FAILED_EXPR
-				       )) return CXChildVisit_Break;
+						&CMDCOUNTERSTCK
+						, NUM_CMDCOUNTERSTCK + 1
+						, sizeof(aclexpr_cmdcounterstckelm)
+						, ACLSPV_COMPILE_ALLOC_FAILED_EXPR
+						)) return CXChildVisit_Break;
 
 			(void)++NUM_CMDCOUNTERSTCK;
 			GETLASTEL_CMDCOUNTERSTCK(a).m_count_oprnd = 1;
 			return CXChildVisit_Recurse;
+		}
+
+		cgcsdef(OP1_PLUS):
+		{
+			cgjmp(aclexpr_visit_op1_plus(h_cur
+						, cgcase(OP_RECURSE_NOTHIN)
+						, cgcase(OP1_INCR)))
 		}
 
 		cgcsdef(OP1_INCR):

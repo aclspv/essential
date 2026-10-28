@@ -355,7 +355,23 @@ void t16_vs_main(
     __attribute__((annotate("aclspv_storage_class(3)")))
     f32x3* out_color
 ) {
-if( *in_vertidx == 0 ){f32x4 pos4 = { 0.f, 0.f - 0.5f, 0.f, 1.f }; f32x3 clr = { 1.f, 0.f, 0.f };*out_pos = pos4; *out_color = clr;}else if( *in_vertidx == 1 ){f32x4 pos4 = { 0.5f, 0.5f, 0.f, 1.f }; f32x3 clr = { 0.f, 1.f, 0.f };*out_pos = pos4; *out_color = clr;}else if( *in_vertidx == 2 ){f32x4 pos4 = { 0.f - 0.5, 0.5f, 0.f, 1.f }; f32x3 clr = { 0.f, 0.f, 1.f };*out_pos = pos4; *out_color = clr;}}
+	if( *in_vertidx == 0 ){
+		f32x4 pos4 = { 0.f, 0.f - 0.5f, 0.f, 1.f };
+		f32x3 clr = { 1.f, 0.f, 0.f };
+		*out_pos = pos4;
+		*out_color = clr;
+	} else if( *in_vertidx == 1 ){
+		f32x4 pos4 = { 0.5f, 0.5f, 0.f, 1.f };
+		f32x3 clr = { 0.f, 1.f, 0.f };
+		*out_pos = pos4;
+		*out_color = clr;
+	} else if( *in_vertidx == 2 ){
+		f32x4 pos4 = { 0.f - 0.5, 0.5f, 0.f, 1.f };
+		f32x3 clr = { 0.f, 0.f, 1.f };
+		*out_pos = pos4;
+		*out_color = clr;
+	}
+}
 
 __attribute__((annotate("aclspv_execmode0(7)")))
 __attribute__((annotate("aclspv_execmodel(4)")))
@@ -368,6 +384,6 @@ void t17_fs_main(
     __attribute__((annotate("aclspv_storage_class(3)")))
     f32x4* out_color
 ) {
-f32x3 clr = *in_color;    f32x4 out = { clr[0], clr[1], clr[2], -1.f };
+f32x3 clr = *in_color;    f32x4 out = { +clr[0], -clr[1], +clr[2], -1.f };
 *out_color = out;
 }
