@@ -107,8 +107,6 @@ ae2f_inline_f static aclexpr_visit_lbl_t aclexpr_visit_op2_arithmetic(
 		VEC[ACLEXPR_OPBINCFG_OPCODE] = (aclspv_wrd_t) OPCODE;
 
 		aclmemzero(&VEC[ACLEXPR_OPBINCFG_END + 2], sizeof(aclexpr_opbincfg_extra) << 1);
-
-		((aclexpr_opbincfg_extra* ae2f_restrict)(void* ae2f_restrict)(&VEC[(ACLEXPR_OPBINCFG_END + 2)]))->m_mask_literal = 3;
 	}
 
 	return c_lbl_success;

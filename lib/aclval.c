@@ -113,6 +113,8 @@ aclspv_id_t aclval_cfg_bool(
 	return C->m_const_val_bool = h_ctx->m_id++;
 }
 
+#include <aclval/nil.h>
+
 aclspv_id_t aclval_cfg(
 		const aclspv_wrd2_t	c_val,
 		h_aclspv_ctx_t		h_ctx,
@@ -125,9 +127,11 @@ aclspv_id_t aclval_cfg(
 		{ 0, ACLSPV_ID_F16, ACLSPV_ID_F32, ACLSPV_ID_F64 }
 	};
 
+	aclval_t* ae2f_restrict C;
 
-#if	1
-	aclval_t* ae2f_restrict const C = aclval_cfg_node(c_val, h_ctx);
+	unless(c_val) {
+		return aclval_cfg_nil(MAP[c_idx_ty][c_idx_nbyte], h_ctx);
+	}
 
 	if(c_idx_nbyte <= ACLVAL_NBYTE_4 && c_val >> 32) {
 		return aclval_cfg(
@@ -137,6 +141,8 @@ aclspv_id_t aclval_cfg(
 				, c_idx_ty);
 	}
 
+	C = aclval_cfg_node(c_val, h_ctx);
+
 	ae2f_ifezerr(C)	return 0;
 	ae2f_ifezerr(aclid_mk_default_id((B_id_default_t) MAP[c_idx_ty][c_idx_nbyte], h_ctx))
 		return 0;
@@ -144,7 +150,7 @@ aclspv_id_t aclval_cfg(
 	if(C->m_const_ids[c_idx_ty][c_idx_nbyte]) return C->m_const_ids[c_idx_ty][c_idx_nbyte];
 
 	if(c_idx_nbyte == ACLVAL_NBYTE_8) {
-		ae2f_expected_but_else(h_ctx->m_count.m_types = aclutil_emitx_5(
+		ae2f_ifezerr(h_ctx->m_count.m_types = aclutil_emitx_5(
 					&h_ctx->m_section.m_types
 					, h_ctx->m_count.m_types
 					, SpvOpConstant
@@ -154,7 +160,7 @@ aclspv_id_t aclval_cfg(
 					, (u32_least)((c_val >> 32) & 0xFFFFFFFF)
 					)) return 0;
 	} else {
-		ae2f_expected_but_else(h_ctx->m_count.m_types = aclutil_emitx_4(
+		ae2f_ifezerr(h_ctx->m_count.m_types = aclutil_emitx_4(
 					&h_ctx->m_section.m_types
 					, h_ctx->m_count.m_types
 					, SpvOpConstant
@@ -165,7 +171,6 @@ aclspv_id_t aclval_cfg(
 	}
 
 	return C->m_const_ids[c_idx_ty][c_idx_nbyte] = h_ctx->m_id++;
-#endif
 }
 
 aclval_spec_t ae2f_ccpure aclval_get_spec(

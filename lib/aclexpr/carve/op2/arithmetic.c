@@ -133,7 +133,6 @@ ae2f_inline_f static ae2f_ccconst struct aclutil_ltrl_eval_t	s_eval2_ltrl(
 				EXPR_TWO(-, m_api_intmax, SpvOpISub); return RET;
 				EXPR_TWO(*, m_api_intmax, SpvOpIMul); return RET;
 				EXPR_TWO(/, m_api_intmax, SpvOpSDiv); return RET;
-				EXPR_TWO(/, m_api_intmax, SpvOpUDiv); return RET;
 				EXPR_TWO(%, m_api_intmax, SpvOpSRem); return RET;
 
 				case SpvOpSLessThan:
@@ -169,7 +168,6 @@ ae2f_inline_f static ae2f_ccconst struct aclutil_ltrl_eval_t	s_eval2_ltrl(
 				EXPR_TWO(+, m_api_uintmax, SpvOpIAdd); return RET;
 				EXPR_TWO(-, m_api_uintmax, SpvOpISub); return RET;
 				EXPR_TWO(*, m_api_uintmax, SpvOpIMul); return RET;
-				EXPR_TWO(/, m_api_uintmax, SpvOpSDiv); return RET;
 				EXPR_TWO(/, m_api_uintmax, SpvOpUDiv); return RET;
 				EXPR_TWO(%, m_api_uintmax, SpvOpSRem); return RET;
 
@@ -267,6 +265,61 @@ static aclspv_wrd_t s_decide_cast(aclspv_id_t c_id0, aclspv_id_t c_id1, const h_
 }
 
 #include <ae2f/cc/arg_sarr.h>
+#include <aclval/nil.h>
+static aclspv_bool_t s_negate(
+		aclexpr_opbincfg_extra		ae2fcc_arg_sarr_restrict(r_extra, 1),
+		aclspv_id_t			ae2fcc_arg_sarr_restrict(r_id, 1),
+		const aclexpr_opbincfg_extra	ae2fcc_arg_sarr_restrict(rd_extra, 2),
+		aclspv_wrd_t ae2fcc_arg_sarr_restrict(rdwr_lst_scale_buf, ACLEXPR_OPBINCFG_END + 2),
+		h_aclspv_ctx_t			h_ctx
+		)
+{
+	const aclspv_wrd_t opcode_old = rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_OPCODE];
+
+	unless(aclval_cfg_nil(
+				rd_extra[0].m_type_original
+				, h_ctx) == rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_END]) {
+		*r_id = 0;
+		return 0;
+	}
+
+	switch(opcode_old) {
+		case SpvOpFSub:
+			rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_OPCODE] = SpvOpFNegate;
+			break;
+
+		case SpvOpISub:
+			rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_OPCODE] = SpvOpSNegate;
+			break;
+
+		default:
+			return 0;
+	}
+
+	switch(r_extra->m_mask_literal) {
+		default:
+		case ACLUTIL_LITERAL_MASK_LITERAL:
+		case ACLUTIL_LITERAL_LITERAL:
+			*r_id = 0;
+			rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_OPCODE] = opcode_old;
+
+			return 0;
+
+		case ACLUTIL_LITERAL_CONSTANT:
+			rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_END] = rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_END + 1];
+			return !(*r_id = aclconst_specop(rdwr_lst_scale_buf, 5, h_ctx));
+
+		case ACLUTIL_LITERAL_RT:
+			return !(*r_id = aclcur_cfg_op1(0
+						, (enum SpvOp_)rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_OPCODE]
+						, rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_RESTYID]
+						, rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_END + 1]
+						, h_ctx
+						));
+	}
+
+	ae2f_unreachable();
+}
 
 /** 0 when succeed */
 aclspv_bool_t aclexpr_carve2_arithmetic_do(
@@ -277,6 +330,8 @@ aclspv_bool_t aclexpr_carve2_arithmetic_do(
 		aclspv_wrd_t			ae2fcc_arg_sarr_restrict(rdwr_lst_scale_buf, ACLEXPR_OPBINCFG_END + 2),
 		h_aclspv_ctx_t			h_ctx
 		) {
+	const aclspv_bool_t IS_ASSIGN = s_is_assign(rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_OPCODE]);
+
 	if(
 			aclid_is_float(aclty_simd_class(rd_extra[0].m_type_original, h_ctx))
 			|| aclid_is_float(aclty_simd_class(rd_extra[1].m_type_original, h_ctx))
@@ -315,7 +370,12 @@ aclspv_bool_t aclexpr_carve2_arithmetic_do(
 	ae2f_ifnezerr_strict(rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_END + 1] >= h_ctx->m_id)
 		return 1;
 
-	switch(r_extra->m_mask_literal) {
+#if	1
+	ae2f_ifnezerr(s_negate(r_extra, r_id, rd_extra, rdwr_lst_scale_buf, h_ctx))
+		return 1;
+#endif
+
+	unless(*r_id) switch(r_extra->m_mask_literal) {
 		case ACLUTIL_LITERAL_MASK_LITERAL:
 		case ACLUTIL_LITERAL_LITERAL:
 			{
@@ -358,6 +418,7 @@ aclspv_bool_t aclexpr_carve2_arithmetic_do(
 			break;
 
 		case ACLUTIL_LITERAL_MASK_RT:
+
 			/** runtime: the operation is a graph node, flushed by aclcur_emit(). */
 			{
 				aclspv_id_t TY_RES = rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_RESTYID];
@@ -379,7 +440,7 @@ aclspv_bool_t aclexpr_carve2_arithmetic_do(
 			ae2f_unreachable();
 	}
 
-	if(s_is_assign(rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_OPCODE])) {
+	if(IS_ASSIGN) {
 		/** view-rooted (`*q += x`, `p->m += x`, `a[i] += x`), vector element
 		 * (`v[i] += x`) or plain variable: one shared store-back, keyed on
 		 * what the l-value's own read recorded on extra[0]. */

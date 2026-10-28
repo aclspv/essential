@@ -107,6 +107,15 @@ struct aclexpr_visit_data {
 	aclutil_literal			m_ret_literal;
 };
 
+
+typedef struct {
+	aclspv_wrd_t	m_id_req;
+} aclexprstck;
+
+typedef struct {
+	aclspv_wrd_t	m_count_oprnd;
+} aclexpr_cmdcounterstckelm;
+
 enum CXChildVisitResult aclexpr_visit(
 		CXCursor h_cur,
 		ae2f_unused CXCursor h_parent,

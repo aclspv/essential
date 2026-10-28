@@ -16,10 +16,6 @@ function(aclspv_abitent prm_postfix)
 		PUBLIC		aclspv::common
 		)
 
-	target_include_directories(aclspv-${prm_postfix} PRIVATE
-		$<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/3rdinc>
-		)
-
 	ae2f_UltraErrWERROR(aclspv-${prm_postfix} PRIVATE)
 
 	if(${aclspv_essential_shared})

@@ -181,7 +181,8 @@ ae2f_CoreLibTentConfigCustom(
 	${PROJECT_SOURCE_DIR}/cfg/aclspv-common.cmake.in
 	inc/aclspv.h
 	inc/aclspv.hh
-	${head_gen}
+	${spirv_headers}
+	${clang_headers}
 	)
 
 target_include_directories(aclspv-common

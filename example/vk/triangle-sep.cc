@@ -39,7 +39,7 @@ static const char vertex_src[] =
 "    __attribute__((annotate(\"aclspv_storage_class(3)\")))\n"
 "    f32x3* out_color\n"
 ") {\n"
-vert_idx_if("*in_vertidx == 0", 0.f, 0.f - 0.5f, 1.f, 0.f, 0.f)
+vert_idx_if("*in_vertidx == 0", 0.f, -0.5f, 1.f, 0.f, 0.f)
 "else " vert_idx_if("*in_vertidx == 1", 0.5f, 0.5f, 0.f, 1.f, 0.f)
 "else " vert_idx_if("*in_vertidx == 2", 0.f - 0.5, 0.5f, 0.f, 0.f, 1.f)
 "}\n";

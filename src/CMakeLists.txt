@@ -9,6 +9,7 @@ ae2f_Macro_Lib_V2_REL(
 	inc/.aclspv ".h"
 	${PROJECT_SOURCE_DIR}/../cfg/aclspv-common-essential.cmake.in
 	inc ON
+	${head_gen}
 	)
 
 target_link_libraries(aclspv-common-essential
@@ -17,4 +18,7 @@ target_link_libraries(aclspv-common-essential
 	)
 
 ae2f_CoreTestTentVerbose(aclspv-common-essential ./test/dummy)
-target_include_directories(aclspv-common-essential INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../lib>)
+target_include_directories(aclspv-common-essential
+	INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../lib>
+	INTERFACE $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/3rdinc>
+	)

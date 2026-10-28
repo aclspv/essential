@@ -15,6 +15,7 @@
 #include "./visit/op1/incr.h"
 #include "./visit/op1/memberread.h"
 #include "./visit/op1/subscript.h"
+#include "./visit/op1/neg.h"
 #include "./visit/opn/initlist.h"
 #include "./visit/op2/arithmetic.h"
 #include "./visit/op2/assign.h"
@@ -36,12 +37,14 @@ enum {
 	OP1_SUBSCRIPT,
 	OP1_MEMBERREAD,
 	OP1_DEREF,
+	OP1_NEG,
 	OPN_INITLIST,
 	OP0_,
 	OP0_VAL,
 	OP_FAIL,
 	OP_FALL,
 	OP_RECURSE,
+	OP1_NEG_SUCCESS,
 	OP_ENTRY_POINT
 };
 
@@ -62,19 +65,11 @@ enum CXChildVisitResult aclexpr_visit(
 #define	CMDSTCK_SCALE	CTX->m_tmp.m_v1
 #define	CMDCOUNTERSTCK	CTX->m_tmp.m_v2
 
-	typedef struct {
-		aclspv_wrd_t	m_id_req;
-	} exprstck;
-
-	typedef struct {
-		aclspv_wrd_t	m_count_oprnd;
-	} cmdcounterstckelm;
-
 	ae2f_unused typedef char s_ASSRT_ELMSIZE[
-		sizeof(exprstck) == sizeof(cmdcounterstckelm) && sizeof(cmdcounterstckelm) == sizeof(u32_least)
+		sizeof(aclexprstck) == sizeof(aclexpr_cmdcounterstckelm) && sizeof(aclexpr_cmdcounterstckelm) == sizeof(u32_least)
 	];
 
-#define	BUF_CMDCOUNTERSTCK(a)	((cmdcounterstckelm* ae2f_restrict)(CMDCOUNTERSTCK).m_p)
+#define	BUF_CMDCOUNTERSTCK(a)	((aclexpr_cmdcounterstckelm* ae2f_restrict)(CMDCOUNTERSTCK).m_p)
 #define	GETLASTEL_CMDCOUNTERSTCK(a)	BUF_CMDCOUNTERSTCK()[NUM_CMDCOUNTERSTCK - 1]
 #define	GETLASTEL_CMDCOUNTERSTCK_PRV(a)	BUF_CMDCOUNTERSTCK()[NUM_CMDCOUNTERSTCK - 2]
 
@@ -157,7 +152,7 @@ enum CXChildVisitResult aclexpr_visit(
 			ae2f_ifnezerr_strict(s_aclmem_cgrow2(
 					&CMDCOUNTERSTCK
 					, NUM_CMDCOUNTERSTCK + 1
-					, sizeof(cmdcounterstckelm)
+					, sizeof(aclexpr_cmdcounterstckelm)
 					, ACLSPV_COMPILE_ALLOC_FAILED_EXPR
 				       )) return CXChildVisit_Break;
 
@@ -251,7 +246,6 @@ enum CXChildVisitResult aclexpr_visit(
 
 		cgcsdef(OP_ENTRY_POINT):
 		{
-			dbg_puts("[visit] OP_ENTRY_POINT");
 			cgjmp(
 					aclexpr_beforevisit(rdwr_data, GETLASTEL_CMDCOUNTERSTCK(a).m_count_oprnd)
 					? cgcase(OP_FAIL)
@@ -261,7 +255,6 @@ enum CXChildVisitResult aclexpr_visit(
 
 		cgcsdef(OPN_INITLIST):
 		{
-			dbg_puts("[visit] OPN_INITLIST");
 			cgjmp(aclexpr_visit_opn_initlist(
 						h_cur, CTX
 						, &CMDSTCK_SCALE
@@ -273,7 +266,6 @@ enum CXChildVisitResult aclexpr_visit(
 
 		cgcsdef(OP2_ARITHMETIC): 
 		{
-			dbg_puts("[visit] OP2_ARITHMETIC");
 			cgjmp(aclexpr_visit_op2_arithmetic(
 						h_cur, CTX
 						, &CMDSTCK_SCALE
@@ -285,7 +277,6 @@ enum CXChildVisitResult aclexpr_visit(
 
 		cgcsdef(OP2_CMP):
 		{
-			dbg_puts("[visit] OP2_CMP");
 			cgjmp(aclexpr_visit_op2_cmp(
 						h_cur, CTX
 						, &CMDSTCK_SCALE
@@ -297,7 +288,6 @@ enum CXChildVisitResult aclexpr_visit(
 
 		cgcsdef(OP2_SHIFT):
 		{
-			dbg_puts("[visit] OP2_SHIFT");
 			cgjmp(aclexpr_visit_op2_shift(
 						h_cur, CTX
 						, &CMDSTCK_SCALE
@@ -309,7 +299,6 @@ enum CXChildVisitResult aclexpr_visit(
 
 		cgcsdef(OP2_BOOL0):
 		{
-			dbg_puts("[visit] OP2_BOOL0");
 			cgjmp(aclexpr_visit_op2_bool0(
 						h_cur, CTX
 						, &CMDSTCK_SCALE
@@ -321,7 +310,6 @@ enum CXChildVisitResult aclexpr_visit(
 
 		cgcsdef(OP2_ASSIGN):
 		{
-			dbg_puts("[visit] OP2_ASSIGN");
 			cgjmp(aclexpr_visit_op2_assign(
 						h_cur, CTX
 						, &CMDSTCK_SCALE
@@ -333,19 +321,42 @@ enum CXChildVisitResult aclexpr_visit(
 
 		cgcsdef(OP1_ARITHMETIC_CAST):
 		{
-			dbg_puts("[visit] OP1_ARITHMETIC_CAST");
 			cgjmp(aclexpr_visit_op1_arithmetic_cast(
 						h_cur, CTX
 						, &CMDSTCK_SCALE
 						, cgcase(OP_RECURSE)
 						, cgcase(OP_FAIL)
+						, cgcase(OP1_NEG)
+						));
+		}
+
+		cgcsdef(OP1_NEG):
+		{
+			cgjmp(aclexpr_visit_op1_neg(
+						h_cur, CTX
+						, &CMDSTCK_SCALE
+						, cgcase(OP1_NEG_SUCCESS)
+						, cgcase(OP_FAIL)
 						, cgcase(OP1_INCR)
 						));
 		}
 
+		cgcsdef(OP1_NEG_SUCCESS):
+		{
+			ae2f_ifnezerr_strict(s_aclmem_cgrow2(
+					&CMDCOUNTERSTCK
+					, NUM_CMDCOUNTERSTCK + 1
+					, sizeof(aclexpr_cmdcounterstckelm)
+					, ACLSPV_COMPILE_ALLOC_FAILED_EXPR
+				       )) return CXChildVisit_Break;
+
+			(void)++NUM_CMDCOUNTERSTCK;
+			GETLASTEL_CMDCOUNTERSTCK(a).m_count_oprnd = 1;
+			return CXChildVisit_Recurse;
+		}
+
 		cgcsdef(OP1_INCR):
 		{
-			dbg_puts("[visit] OP1_INCR");
 			cgjmp(aclexpr_visit_op1_incr(
 						h_cur, CTX
 						, &CMDSTCK_SCALE
@@ -357,7 +368,6 @@ enum CXChildVisitResult aclexpr_visit(
 
 		cgcsdef(OP1_SUBSCRIPT):
 		{
-			dbg_puts("[visit] OP1_SUBSCRIPT");
 			cgjmp(aclexpr_visit_op1_subscript(
 						h_cur, CTX
 						, &CMDSTCK_SCALE
@@ -371,7 +381,6 @@ enum CXChildVisitResult aclexpr_visit(
 
 		cgcsdef(OP1_DEREF):
 		{
-			dbg_puts("[visit] OP1_DEREF");
 			cgjmp(aclexpr_visit_op1_deref(
 						h_cur, CTX
 						, &CMDSTCK_SCALE
@@ -385,7 +394,6 @@ enum CXChildVisitResult aclexpr_visit(
 
 		cgcsdef(OP1_MEMBERREAD):
 		{
-			dbg_puts("[visit] OP1_MEMBERREAD");
 			cgjmp(aclexpr_visit_op1_memberread(
 						h_cur, CTX
 						, &CMDSTCK_SCALE
@@ -399,7 +407,6 @@ enum CXChildVisitResult aclexpr_visit(
 
 		cgcsdef(OP0_VAL):
 		{
-			dbg_puts("[visit] OP0_VAL");
 			cgjmp(aclexpr_visit_op0_val(
 						h_cur, BASE->m_fnctx
 						, &LST_EXTRA[GETLASTEL_CMDCOUNTERSTCK(a).m_count_oprnd]

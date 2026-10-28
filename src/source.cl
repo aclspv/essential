@@ -368,6 +368,6 @@ void t17_fs_main(
     __attribute__((annotate("aclspv_storage_class(3)")))
     f32x4* out_color
 ) {
-f32x3 clr = *in_color;    f32x4 out = { clr[0], clr[1], clr[2], 1.0f };
+f32x3 clr = *in_color;    f32x4 out = { clr[0], clr[1], clr[2], -1.f };
 *out_color = out;
 }
