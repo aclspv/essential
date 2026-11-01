@@ -4,6 +4,8 @@
 #include <ae2f/cc.h>
 #include <ae2f/cgoto.h>
 
+#include <aclspv.h>
+
 ae2f_always_inline static enum CXChildVisitResult aclutil_visitfromroot(
 		CXCursor	c_cursor,
 		CXCursorVisitor	fn_visit,

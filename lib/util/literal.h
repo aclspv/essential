@@ -1,7 +1,7 @@
 #ifndef aclutil_literal_h
 #define aclutil_literal_h
 
-#include "./iddef.h"
+#include <aclspv.h>
 
 enum ACLUTIL_LITERAL_MASK_ {
 	ACLUTIL_LITERAL_MASK_RT,
@@ -37,7 +37,5 @@ struct aclutil_ltrl_eval_t {
 	aclutil_literal	m_ret;
 	aclspv_bool_t	m_found;
 };
-
-
 
 #endif

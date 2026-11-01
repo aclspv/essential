@@ -6,8 +6,6 @@
 #ifndef aclexpr_visit_val0_h
 #define aclexpr_visit_val0_h
 
-#include <util/emitx.h>
-
 #include <aclexpr.h>
 #include <aclexpr/op.h>
 

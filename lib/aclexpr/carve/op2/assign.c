@@ -1,5 +1,4 @@
 #include "./assign.h"
-#include <util/iddef.h>
 #include <util/log.h>
 #include <aclcur/common.h>
 #include <aclexpr/curreg.h>

@@ -7,7 +7,7 @@
 #include <aclexpr/curreg.h>
 #include <aclconst/specop.h>
 
-#include <util/emitx.h>
+#include <aclutil/emitx.h>
 
 #if	1
 
@@ -39,7 +39,7 @@
 		if(aclexpr_ptr_arith_fatal(rdwr_lst_extra->m_type_original, rdwr_data->m_ctx))
 			return ACLEXPR_CARVE_NO;
 
-		ae2f_ifezerr(aclid_is_int(aclty_get_veccfg(rdwr_lst_extra->m_type_original, rdwr_data->m_ctx).m_ty_elm)) {
+		ae2f_ifezerr(aclty_is_sclr_int(aclty_get_veccfg(rdwr_lst_extra->m_type_original, rdwr_data->m_ctx).m_ty_elm)) {
 			err_puts("[carve1::incr] no integer detected.");
 			return ACLEXPR_CARVE_NO;
 		}

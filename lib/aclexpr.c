@@ -8,10 +8,10 @@
 #include <ae2f/pat/dbg.h>
 
 #include <util/scale.h>
-#include <util/emitx.h>
 #include <util/log.h>
-#include <util/iddef.h>
 #include <util/visitfromroot.h>
+
+#include <aclutil/emitx.h>
 
 enum ACLEXPR_RET_ aclspv_get_expr2(
 		aclspv_id_t* ae2f_restrict const	ret_id

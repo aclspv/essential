@@ -3,7 +3,7 @@
 #ifndef __lib_build_entp
 #define __lib_build_entp
 
-#include <util/wrd.h>
+#include <aclspv.h>
 
 typedef struct {
 	aclspv_id_t	m_id;

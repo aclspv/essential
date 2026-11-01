@@ -6,7 +6,7 @@
 #include <ae2f/Keys.h>
 #include <stdio.h>
 #include <string.h>
-#include <util/wrd.h>
+#include <aclspv.h>
 
 static enum CXChildVisitResult	s_attr_specid(CXCursor h_cur, ae2f_unused CXCursor h_parent, CXClientData ae2f_restrict wr_specid) {
 	CXString TEXT;

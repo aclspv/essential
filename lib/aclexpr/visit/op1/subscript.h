@@ -8,7 +8,7 @@
 #include <aclexpr/util/unwrap.h>
 
 #include <util/scale.h>
-#include <util/wrdemit.h>
+#include <aclutil/wrdemit.h>
 
 #include <aclty.h>
 #include <aclmem.h>

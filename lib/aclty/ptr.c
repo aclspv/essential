@@ -1,8 +1,7 @@
 #include "./ptr.h"
 #include "./implutil.h"
 
-#include <util/iddef.h>
-#include <util/emitx.h>
+#include <aclutil/emitx.h>
 
 #include <aclutil/capability.h>
 #include <aclcfg/ptr.h>

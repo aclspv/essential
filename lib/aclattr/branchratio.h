@@ -1,12 +1,11 @@
 #ifndef	aclattr_branchratio_h
 #define aclattr_branchratio_h
 
+#include <aclspv.h>
 #include <ae2f/Keys.h>
 #include <util/log.h>
-#include <util/wrd.h>
 #include <string.h>
 #include <stdio.h>
-
 
 /** 
  * @param wr_ratio : aclspv_wrd_t[2] { true_weight , false_weight }

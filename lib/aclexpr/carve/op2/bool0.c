@@ -57,6 +57,8 @@ ae2f_inline_f static ae2f_ccconst aclspv_bool_t s_is_assign(const aclspv_wrd_t c
 	}
 }
 
+#include <aclty/sclr.h>
+
 static aclspv_id_t s_decide_cast(aclspv_id_t c_id0, aclspv_id_t c_id1, const h_aclspv_ctx_t h_ctx) {
 	aclspv_id_t cls0, cls1;
 
@@ -80,30 +82,30 @@ static aclspv_id_t s_decide_cast(aclspv_id_t c_id0, aclspv_id_t c_id1, const h_a
 		c_id0 ^= c_id1;
 	}
 
-	cls0 = aclty_simd_class(c_id0, h_ctx);
-	cls1 = aclty_simd_class(c_id1, h_ctx);
+	cls0 = aclty_get_simd_sclr(c_id0, h_ctx);
+	cls1 = aclty_get_simd_sclr(c_id1, h_ctx);
 
 	ae2f_ifezerr(cls0 && cls1) {
 		dbg_puts("s_decide_cast 0\n");
 		return 0;
 	}
 
-	if(aclty_simd_chxg_cls(c_id0, cls1, h_ctx) != c_id1) {
-		ae2f_ifneznrm(aclty_is_simd_class(c_id0))
+	if(aclty_simd_chxg_sclr(c_id0, cls1, h_ctx) != c_id1) {
+		ae2f_ifneznrm(aclty_is_sclr(c_id0))
 			return c_id1;
 		else	return 0;
 	}
 
 	ae2f_ifezerr(
-			(cls0 == ACLSPV_ID_BOOL || aclid_is_int(cls0)) 
-			&& (cls1 == ACLSPV_ID_BOOL || aclid_is_int(cls1))
+			(cls0 == ACLSPV_ID_BOOL || aclty_is_sclr_int(cls0)) 
+			&& (cls1 == ACLSPV_ID_BOOL || aclty_is_sclr_int(cls1))
 		    ) {
 		dbg_puts("s_decide_cast 0\n");
 		return 0;
 	}
 
 	dbg_puts("s_decide_cast sint?");
-	return aclid_is_sint(cls0) ? c_id0 : c_id1;
+	return aclty_is_sclr_sint(cls0) ? c_id0 : c_id1;
 }
 
 static aclspv_bool_t s_iter(
@@ -164,7 +166,7 @@ ae2f_inline_f static aclspv_id_t	s_ty_oprnd(
 		aclspv_id_t	c_ty_origin,
 		h_aclspv_ctx_t	h_ctx
 		) {
-	return aclty_simd_chxg_cls(c_ty_origin, ACLSPV_ID_BOOL, h_ctx);
+	return aclty_simd_chxg_sclr(c_ty_origin, ACLSPV_ID_BOOL, h_ctx);
 }
 
 ae2f_inline_f static aclspv_id_t	s_ty_out(

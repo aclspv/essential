@@ -1,7 +1,7 @@
 #include <aclspv.h>
 #include <ae2f/cc.h>
 #include <ae2f/bll.h>
-#include <util/emitx.h>
+#include <aclutil/emitx.h>
 
 ACLSPV_ABI_IMPL ae2f_ccpure aclspv_bool_t aclspv_chck_capability_from_ctx(
 		const x_aclspv_ctx* const ae2f_restrict	rd_ctx,

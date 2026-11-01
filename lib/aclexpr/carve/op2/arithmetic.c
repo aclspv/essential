@@ -9,7 +9,7 @@
 #include <aclconst/specop.h>
 #include <aclmem.h>
 
-#include <util/wrdemit.h>
+#include <aclutil/wrdemit.h>
 #include <ae2f/cc/switchctl.h>
 #include <ae2f/pat/dbg.h>
 
@@ -52,7 +52,7 @@ ae2f_inline_f static ae2f_ccpure aclspv_opcode_t s_op_to_spv(
 		const h_aclspv_ctx_t	h_ctx
 		)
 {
-	aclspv_id_t	ID = aclty_simd_class(c_id, h_ctx);
+	aclspv_id_t	ID = aclty_get_simd_sclr(c_id, h_ctx);
 
 	switch((enum S_ARITHMETIC_)c_op2) {
 		default:
@@ -60,49 +60,49 @@ ae2f_inline_f static ae2f_ccpure aclspv_opcode_t s_op_to_spv(
 
 		case S_ARITHMETIC_ADD:
 		case S_ARITHMETIC_ADDX:
-			if(aclid_is_int(ID))
+			if(aclty_is_sclr_int(ID))
 				return SpvOpIAdd;
-			else if(aclid_is_float(ID))
+			else if(aclty_is_sclr_flt(ID))
 				return SpvOpFAdd;
 			else return 0;
 
 		case S_ARITHMETIC_DIV:
 		case S_ARITHMETIC_DIVX:
-			if(aclid_is_sint(ID))
+			if(aclty_is_sclr_sint(ID))
 				return SpvOpSDiv;
-			else if (aclid_is_uint(ID))
+			else if (aclty_is_sclr_uint(ID))
 				return SpvOpUDiv;
-			else if(aclid_is_float(ID))
+			else if(aclty_is_sclr_flt(ID))
 				return SpvOpFDiv;
 			else return 0;
 
 		case S_ARITHMETIC_MUL:
 		case S_ARITHMETIC_MULX:
-			if(aclid_is_sint(ID))
+			if(aclty_is_sclr_sint(ID))
 				return SpvOpIMul;
-			else if (aclid_is_uint(ID))
+			else if (aclty_is_sclr_uint(ID))
 				return SpvOpIMul;
-			else if(aclid_is_float(ID))
+			else if(aclty_is_sclr_flt(ID))
 				return SpvOpFMul;
 			else return 0;
 
 		case S_ARITHMETIC_REM:
 		case S_ARITHMETIC_REMX:
-			if(aclid_is_sint(ID))
+			if(aclty_is_sclr_sint(ID))
 				return SpvOpSRem;
-			else if (aclid_is_uint(ID))
+			else if (aclty_is_sclr_uint(ID))
 				return SpvOpUMod;
-			else if(aclid_is_float(ID))
+			else if(aclty_is_sclr_flt(ID))
 				return SpvOpFMod;
 			else return 0;
 
 		case S_ARITHMETIC_SUB:
 		case S_ARITHMETIC_SUBX:
-			if(aclid_is_sint(ID))
+			if(aclty_is_sclr_sint(ID))
 				return SpvOpISub;
-			else if (aclid_is_uint(ID))
+			else if (aclty_is_sclr_uint(ID))
 				return SpvOpISub;
-			else if(aclid_is_float(ID))
+			else if(aclty_is_sclr_flt(ID))
 				return SpvOpFSub;
 			else return 0;
 	}
@@ -244,8 +244,8 @@ static aclspv_wrd_t s_decide_cast(aclspv_id_t c_id0, aclspv_id_t c_id1, const h_
 		c_id1 = tmp;
 	}
 
-	cls0 = aclty_simd_class(c_id0, h_ctx);
-	cls1 = aclty_simd_class(c_id1, h_ctx);
+	cls0 = aclty_get_simd_sclr(c_id0, h_ctx);
+	cls1 = aclty_get_simd_sclr(c_id1, h_ctx);
 
 	/** one is 0? */
 	unless(c_id0)
@@ -254,7 +254,7 @@ static aclspv_wrd_t s_decide_cast(aclspv_id_t c_id0, aclspv_id_t c_id1, const h_
 	ae2f_ifezerr(cls0 && cls1)
 		return 0;
 
-	if(aclty_simd_chxg_cls(c_id0, cls1, h_ctx) != c_id1) {
+	if(aclty_simd_chxg_sclr(c_id0, cls1, h_ctx) != c_id1) {
 		/** shape is not same. if */	
 		ae2f_ifneznrm_strict(c_id0 == cls0) return c_id1;
 		return 0;
@@ -333,8 +333,8 @@ aclspv_bool_t aclexpr_carve2_arithmetic_do(
 	const aclspv_bool_t IS_ASSIGN = s_is_assign(rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_OPCODE]);
 
 	if(
-			aclid_is_float(aclty_simd_class(rd_extra[0].m_type_original, h_ctx))
-			|| aclid_is_float(aclty_simd_class(rd_extra[1].m_type_original, h_ctx))
+			aclty_is_sclr_flt(aclty_get_simd_sclr(rd_extra[0].m_type_original, h_ctx))
+			|| aclty_is_sclr_flt(aclty_get_simd_sclr(rd_extra[1].m_type_original, h_ctx))
 	  ) {
 #if	__ACLSPV_OpCapabilityKernel
 		if(aclutil_add_capability_by_flag(h_ctx, SpvCapabilityKernel))

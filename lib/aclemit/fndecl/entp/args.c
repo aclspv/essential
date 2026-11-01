@@ -4,9 +4,7 @@
 #include <ae2f/pat/dbg.h>
 
 #include <util/scale.h>
-#include <util/wrdemit.h>
-#include <util/emitx.h>
-#include <util/iddef.h>
+#include <aclutil/emitx.h>
 
 #include <aclty.h>
 #include <aclval.h>

@@ -20,5 +20,4 @@ target_link_libraries(aclspv-common-essential
 ae2f_CoreTestTentVerbose(aclspv-common-essential ./test/dummy)
 target_include_directories(aclspv-common-essential
 	INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../lib>
-	INTERFACE $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/3rdinc>
 	)

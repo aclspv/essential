@@ -3,9 +3,7 @@
 #include <ae2f/cc/arg_sarr.h>
 
 #include <util/literal.h>
-#include <util/iddef.h>
-#include <util/emitx.h>
-#include <util/wrdemit.h>
+#include <aclutil/wrdemit.h>
 
 #include <aclty.h>
 #include <aclty/simd/cls.h>
@@ -17,6 +15,8 @@
 
 #include <aclctx/id.h>
 #include <aclctx/err.h>
+
+#include <aclutil/emitx.h>
 
 /** c_old_type and c_new_type's shape MUST BE SAME */
 static enum ACLEXPR_RET_ s_cast_arithmetic(
@@ -64,7 +64,7 @@ static enum ACLEXPR_RET_ s_cast_arithmetic(
 		const aclspv_wrd_t
 			OPCODE = aclty_is_simd_uint(c_new_type, h_ctx) ? SpvOpUConvert : SpvOpSConvert;
 
-		unless(aclty_get_simd_bit_width(c_old_type, h_ctx) != aclty_get_simd_bit_width(c_new_type, h_ctx)) {
+		unless(aclty_get_simd_sclr_width(c_old_type, h_ctx) != aclty_get_simd_sclr_width(c_new_type, h_ctx)) {
 			const aclspv_id_t	VAL_ZERO = aclval_cfg_nil(c_old_type, h_ctx); 
 
 			ae2f_ifezerr(VAL_ZERO) {
@@ -127,7 +127,7 @@ static enum ACLEXPR_RET_ s_cast_arithmetic(
 		ae2f_unreachable();
 	}
 
-	if(aclty_simd_class(c_new_type, h_ctx) == ACLSPV_ID_BOOL 
+	if(aclty_get_simd_sclr(c_new_type, h_ctx) == ACLSPV_ID_BOOL 
 			&& (aclty_is_simd_int(c_old_type, h_ctx) || aclty_is_simd_flt(c_old_type, h_ctx))) {
 		aclspv_id_t	V0 = aclval_cfg_nil(c_old_type, h_ctx);
 		aclspv_wrd_t	OPCODE = aclty_is_simd_int(c_old_type, h_ctx)
@@ -163,13 +163,16 @@ static enum ACLEXPR_RET_ s_cast_arithmetic(
 		}
 	}
 
-	if((aclty_is_simd_int(c_new_type, h_ctx)) &&  aclty_simd_class(c_old_type, h_ctx) == ACLSPV_ID_BOOL) {
+	if((aclty_is_simd_int(c_new_type, h_ctx)) &&  aclty_get_simd_sclr(c_old_type, h_ctx) == ACLSPV_ID_BOOL) {
 		aclspv_id_t		V0, V1, V1_CLS;
 
 		ae2f_ifezerr(V0 = aclval_cfg_nil(c_new_type, h_ctx))
 			return ACLEXPR_RET_FAILURE;
 
-		ae2f_ifezerr(V1_CLS = aclval_cfg_by_enum(1, h_ctx, (enum ACLSPV_ID_) aclty_simd_class(c_new_type, h_ctx)))
+		ae2f_ifezerr(V1_CLS = aclval_cfg_by_enum(
+					1
+					, h_ctx
+					, (enum ACLSPV_ID_) aclty_get_simd_sclr(c_new_type, h_ctx)))
 			return ACLEXPR_RET_FAILURE;
 
 		ae2f_ifezerr(V1 = aclty_simd_broadcast(V1_CLS, c_new_type, ACLUTIL_LITERAL_CONSTANT, h_ctx))
@@ -242,15 +245,15 @@ enum ACLEXPR_RET_ aclexpr_arithmetic_cast_non_literal(
 		aclspv_id_t				c_new_type,
 		const h_aclspv_ctx_t			h_ctx
 		) {
-	if(aclty_simd_chxg_cls(
+	if(aclty_simd_chxg_sclr(
 				c_old_type
-				, aclty_simd_class(c_new_type, h_ctx)
+				, aclty_get_simd_sclr(c_new_type, h_ctx)
 				, h_ctx) == c_new_type) {
 		return s_cast_arithmetic(c_old_id, c_old_type, c_flag_literal, r_newid, c_new_type, h_ctx);
 	}
 
-	ae2f_ifneznrm(aclty_is_simd_class(c_old_type)) {
-		const aclspv_id_t old_ty_shaped = aclty_simd_chxg_cls(c_new_type, c_old_type, h_ctx);
+	ae2f_ifneznrm(aclty_is_sclr(c_old_type)) {
+		const aclspv_id_t old_ty_shaped = aclty_simd_chxg_sclr(c_new_type, c_old_type, h_ctx);
 		return s_cast_arithmetic(
 				aclty_simd_broadcast(
 					c_old_id
@@ -284,14 +287,14 @@ enum ACLEXPR_RET_ aclexpr_arithmetic_cast_literal(
 					, c_old_type, c_new_type
 				    )));
 
-	ae2f_expected_but_else(aclid_mk_default_id(c_old_type, h_ctx) 
-			&& aclid_mk_default_id(c_new_type, h_ctx))
+	ae2f_expected_but_else(aclty_mk_default(c_old_type, h_ctx) 
+			&& aclty_mk_default(c_new_type, h_ctx))
 		return ACLEXPR_RET_NOT_THE_CASE;
 
 	dbg_puts("start literal cast evaluation");
-	if(aclid_is_float(c_old_type) && aclid_is_int(c_new_type)) {
+	if(aclty_is_sclr_flt(c_old_type) && aclty_is_sclr_int(c_new_type)) {
 		dbg_puts(("Cast (float -> int)"));
-		switch(aclid_get_bit_width(c_old_type)) {
+		switch(aclty_get_sclr_width(c_old_type)) {
 			case 64:
 				dbg_prefix();
 				dbg_call(fprintf, (stderr, "Cast from literal(double): %f\n", (float)c_old_literal.m_dbl));
@@ -310,10 +313,10 @@ enum ACLEXPR_RET_ aclexpr_arithmetic_cast_literal(
 		dbg_prefix();
 		dbg_call(fprintf, (stderr, "Result literal(intmax): %ld\n", (long)RESULT.m_api_intmax));
 	}
-	else if(aclid_is_int(c_old_type) && aclid_is_float(c_new_type)) {
+	else if(aclty_is_sclr_int(c_old_type) && aclty_is_sclr_flt(c_new_type)) {
 		dbg_prefix(a);
 		dbg_call((void), (fprintf(stderr, "Cast (int -> float): %ld\n", (long)c_old_literal.m_api_intmax)));
-		switch(aclid_get_bit_width(c_new_type)) {
+		switch(aclty_get_sclr_width(c_new_type)) {
 			case 64:
 				RESULT.m_dbl = (double)c_old_literal.m_api_intmax;
 				dbg_prefix();
@@ -331,9 +334,9 @@ enum ACLEXPR_RET_ aclexpr_arithmetic_cast_literal(
 		}
 	}
 
-	else if(aclid_is_float(c_old_type) && aclid_is_float(c_new_type) && c_old_type != c_new_type) {
+	else if(aclty_is_sclr_flt(c_old_type) && aclty_is_sclr_flt(c_new_type) && c_old_type != c_new_type) {
 		dbg_puts("two are float");
-		switch(aclid_get_bit_width(c_new_type)) {
+		switch(aclty_get_sclr_width(c_new_type)) {
 			case 64:
 				RESULT.m_dbl = c_old_literal.m_flt;
 				break;
@@ -345,15 +348,15 @@ enum ACLEXPR_RET_ aclexpr_arithmetic_cast_literal(
 				return ACLEXPR_RET_FAILURE;
 		}
 	}
-	else if(aclid_is_int(c_old_type) && c_new_type == ACLSPV_ID_BOOL) {
+	else if(aclty_is_sclr_int(c_old_type) && c_new_type == ACLSPV_ID_BOOL) {
 		dbg_puts("int -> bool");
 		RESULT.m_u64 = !!c_old_literal.m_api_uintmax;
 		*r_newid = aclval_cfg_bool((aclspv_bool_t)RESULT.m_u64, h_ctx);
 		if(wr_new_literal_opt) *wr_new_literal_opt = RESULT;
 		return ACLEXPR_RET_SUCCESS_LITERAL;
-	} else if(aclid_is_float(c_old_type) && c_new_type == ACLSPV_ID_BOOL) {
+	} else if(aclty_is_sclr_flt(c_old_type) && c_new_type == ACLSPV_ID_BOOL) {
 		dbg_puts("float -> bool");
-		switch(aclid_get_bit_width(c_old_type)) {
+		switch(aclty_get_sclr_width(c_old_type)) {
 			case 64:
 				RESULT.m_api_int = !!(i64_least)c_old_literal.m_dbl;
 				break;
@@ -368,7 +371,7 @@ enum ACLEXPR_RET_ aclexpr_arithmetic_cast_literal(
 		RESULT.m_u64 = !!c_old_literal.m_api_uintmax;
 		if(wr_new_literal_opt) *wr_new_literal_opt = RESULT;
 		return ACLEXPR_RET_SUCCESS_LITERAL;
-	} else if (aclid_is_int(c_new_type) && c_old_type == ACLSPV_ID_BOOL) {
+	} else if (aclty_is_sclr_int(c_new_type) && c_old_type == ACLSPV_ID_BOOL) {
 		dbg_puts("bool -> int");
 		RESULT.m_api_uintmax = c_old_literal.m_api_uintmax;
 		*r_newid = aclval_cfg_by_enum(
@@ -378,9 +381,9 @@ enum ACLEXPR_RET_ aclexpr_arithmetic_cast_literal(
 				);
 		if(wr_new_literal_opt) *wr_new_literal_opt = RESULT;
 		return ACLEXPR_RET_SUCCESS_LITERAL;
-	} else if (aclid_is_float(c_new_type) && c_old_type == ACLSPV_ID_BOOL) {
+	} else if (aclty_is_sclr_flt(c_new_type) && c_old_type == ACLSPV_ID_BOOL) {
 		dbg_puts("bool -> float");
-		switch(aclid_get_bit_width(c_old_type)) {
+		switch(aclty_get_sclr_width(c_old_type)) {
 			case 64:
 				RESULT.m_dbl = (double)(c_old_literal.m_api_uintmax);
 				break;
@@ -475,7 +478,7 @@ enum ACLEXPR_RET_ aclexpr_arithmetic_cast(
 		const uint_fastenum_t	CND_LIT = c_flag_literal & ACLUTIL_LITERAL_LITERAL;
 		*r_newid = c_old_id;
 
-		if(r_new_literal_opt)
+		if(r_new_literal_opt && CND_LIT)
 			*r_new_literal_opt = c_old_literal;
 
 		if (CND_LIT)
@@ -503,9 +506,8 @@ enum ACLEXPR_RET_ aclexpr_arithmetic_cast(
 		return ACLEXPR_RET_NOT_THE_CASE;
 	}
 
-	(void)aclid_mk_default_id(c_new_type, h_ctx);
-	(void)aclid_mk_default_id(c_old_type, h_ctx);
-
+	(void)aclty_mk_default(c_new_type, h_ctx);
+	(void)aclty_mk_default(c_old_type, h_ctx);
 
 	dbg_prefix();
 	dbg_call((void), fprintf(stderr, "[arithmetic_cast] (%u : %u) -> (? : %u)\n"

@@ -5,7 +5,7 @@
 #include <aclexpr/op.h>
 
 #include <util/scale.h>
-#include <util/wrdemit.h>
+#include <aclutil/wrdemit.h>
 
 #include <ae2f/cc/memset.h>
 

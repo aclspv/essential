@@ -2,9 +2,6 @@
 #include "./aclty.h"
 #include <ae2f/pat/dbg.h>
 
-#include <util/iddef.h>
-
-
 ae2f_ccpure	aclty_t* aclty_find(const aclspv_id_t c, const h_aclspv_ctx_t h_ctx) {
 	ae2fpat_assertassume_strict(h_ctx);
 
@@ -36,7 +33,7 @@ aclconst_specsz	aclty_getsize(const aclspv_id_t c, const h_aclspv_ctx_t h_ctx) {
 
 	{
 		r.m_id = 0;
-		r.m_lit.m_wrd = (aclid_get_bit_width(c) + 7) >> 3;
+		r.m_lit.m_wrd = (aclty_get_sclr_width(c) + 7) >> 3;
 		return r;
 	}
 }
@@ -48,5 +45,5 @@ ae2f_ccpure	aclspv_wrd_t	aclty_getalign(const aclspv_id_t c, const h_aclspv_ctx_
 		return cxtp->m_alignof;
 	}
 
-	return (aclid_get_bit_width(c) + 7) >> 3;
+	return (aclty_get_sclr_width(c) + 7) >> 3;
 }

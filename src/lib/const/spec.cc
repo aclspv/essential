@@ -7,9 +7,9 @@
 #include <aclconst/specop.h>
 
 #include <ae2f/pat/macrofunc.h>
-#include <util/wrd.h>
-#include <util/iddef.h>
-#include <util/emitx.h>
+#include <aclutil/emitx.h>
+
+#include <aclty/sclr.h>
 
 ae2f_MAC((L, )) aclconst_specsize_op3_sel(
 		aclconst_specsz&	r,
@@ -18,8 +18,8 @@ ae2f_MAC((L, )) aclconst_specsize_op3_sel(
 		const aclconst_specsz	c_f,
 		h_aclspv_ctx_t		h_ctx
 		) { do {
-	aclspv_id_t		L$$size_ty = aclid_mk_default_id(
-			aclid_getty_uint(
+	aclspv_id_t		L$$size_ty = aclty_mk_default(
+			aclty_get_sclr_uint(
 				h_ctx->m_usrcfg.m_byte_size_type << 3
 				)
 			, h_ctx
@@ -87,8 +87,8 @@ ae2f_MAC((L, )) aclconst_specsize_op2_bool(
 		aclconst_specsz		(fn_op_lit)(aclconst_specsz& r, const aclconst_specsz c_x, const aclconst_specsz c_y),
 		h_aclspv_ctx_t		h_ctx
 		) {
-	aclspv_id_t		L$$size_ty = aclid_mk_default_id(
-			aclid_getty_uint(
+	aclspv_id_t		L$$size_ty = aclty_mk_default(
+			aclty_get_sclr_uint(
 				h_ctx->m_usrcfg.m_byte_size_type << 3
 				)
 			, h_ctx
@@ -117,7 +117,7 @@ ae2f_MAC((L, )) aclconst_specsize_op2_bool(
 			L$$v0 = aclval_cfg_by_enum(0, h_ctx, (enum ACLSPV_ID_)L$$size_ty);
 			L$$v1 = aclval_cfg_by_enum(1, h_ctx, (enum ACLSPV_ID_)L$$size_ty);
 
-			ae2f_ifezerr(aclid_mk_default_id(ACLSPV_ID_BOOL, h_ctx))
+			ae2f_ifezerr(aclty_mk_default(ACLSPV_ID_BOOL, h_ctx))
 				break;
 
 			ae2f_ifezerr((L$$X).m_id && L$$Y.m_id && L$$v0 && L$$v1)
@@ -170,8 +170,8 @@ ae2f_MAC((L, )) aclconst_specsize_op2(
 		aclconst_specsz		(fn_op_lit)(aclconst_specsz& r, const aclconst_specsz c_x, const aclconst_specsz c_y),
 		h_aclspv_ctx_t		h_ctx
 		) {
-	aclspv_id_t		L$$size_ty = aclid_mk_default_id(
-			aclid_getty_uint(
+	aclspv_id_t		L$$size_ty = aclty_mk_default(
+			aclty_get_sclr_uint(
 				(h_ctx)->m_usrcfg.m_byte_size_type << 3
 				)
 			, h_ctx
@@ -230,8 +230,8 @@ ae2f_MAC((L, )) aclconst_specsize_op1(
 		aclconst_specsz		(fn_op_lit)(aclconst_specsz& r, const aclconst_specsz c),
 		h_aclspv_ctx_t		h_ctx
 		) {
-	aclspv_id_t		L$$size_ty = aclid_mk_default_id(
-			aclid_getty_uint(
+	aclspv_id_t		L$$size_ty = aclty_mk_default(
+			aclty_get_sclr_uint(
 				(h_ctx)->m_usrcfg.m_byte_size_type << 3
 				)
 			, h_ctx

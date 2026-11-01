@@ -1,8 +1,8 @@
 #ifndef aclattr_getkinder_h
 #define aclattr_getkinder_h
 
-#include <util/wrd.h>
 #include <ae2f/pat/dbg.h>
+#include <aclspv.h>
 
 struct aclattr_getkinder {
 	CXCursor* ae2f_restrict	m_cursor;

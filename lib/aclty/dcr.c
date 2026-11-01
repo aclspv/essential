@@ -70,7 +70,7 @@ void aclty_free_dcr(aclty_t* ae2f_restrict fini, h_aclspv_ctx_t h_ctx) {
 }
 
 
-#include <util/wrdemit.h>
+#include <aclutil/emitx.h>
 
 aclspv_bool_t aclty_build_dcr(const aclty_t* ae2f_restrict rd, aclspv_id_t c_id, h_aclspv_ctx_t h_ctx) {
 	while(rd->m_class == ACLTY_DCR) {

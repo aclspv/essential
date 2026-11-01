@@ -1,5 +1,6 @@
 #include "./val.h"
 #include <aclval.h>
+#include <aclty/sclr.h>
 
 /** 
  * binary expression with 1 operators.
@@ -63,13 +64,13 @@ aclexpr_visit_lbl_t aclexpr_visit_op0_val(
 
 						ae2fpat_assertassume_strict(*wr_type_fetched);
 
-						ae2f_expected_but_else(aclid_mk_default_id(
+						ae2f_ifezerr(aclty_mk_default(
 									*wr_type_fetched
 									, h_fnctx->m_ctx)) {
 							return c_lbl_fail;
 						}
 
-						switch(aclid_get_bit_width(*wr_type_fetched)) {
+						switch(aclty_get_sclr_width(*wr_type_fetched)) {
 							case 32:
 								dbg_puts("I32");
 								ae2f_expected_but_else(*wr_newid = aclutil_mk_constant_val_id(

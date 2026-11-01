@@ -1,10 +1,12 @@
 /** @file visit.c */
 
-#include <util/emitx.h>
 #include <util/scale.h>
 
 #include <aclmem.h>
 #include <aclexpr/op.h>
+
+#include <aclctx/id.h>
+#include <aclctx/err.h>
 
 #include "./carve.h"
 
@@ -26,6 +28,7 @@
 
 #include "./beforevisit.h"
 
+#include <aclutil/emitx.h>
 
 enum {
 	OP2_ARITHMETIC,
@@ -110,7 +113,9 @@ enum CXChildVisitResult aclexpr_visit(
 
 	LST_EXTRA = (void* ae2f_restrict)(&LST_SCALE_BUF[(ACLEXPR_OPBINCFG_END + LST_SCALE_BUF[0])]);
 
+#if	0
 	ID_REQ = CTX->m_id++;
+#endif
 	LST_EXTRA[GETLASTEL_CMDCOUNTERSTCK(a).m_count_oprnd].m_mask_literal = ACLUTIL_LITERAL_MASK_LITERAL;
 
 	/** Recurse filter */
@@ -200,7 +205,7 @@ enum CXChildVisitResult aclexpr_visit(
 
 				ae2f_ifnezerr_strict(NUM_CMDCOUNTERSTCK < 2) {
 					err_puts("[visit] NUM_CMDCOUNTERSTCK is fishy");
-					CTX->m_err = CTX->m_err ? CTX->m_err : ACLSPV_COMPILE_UNHANDLED_VISIT;
+					_aclctx_err(CTX, ACLSPV_COMPILE_UNHANDLED_VISIT);
 					return CXChildVisit_Break;
 				}
 
@@ -217,7 +222,7 @@ enum CXChildVisitResult aclexpr_visit(
 					return CXChildVisit_Break;
 
 				ae2f_ifezerr(IDVAL_PRV) {
-					CTX->m_err = CTX->m_err ? CTX->m_err : ACLSPV_COMPILE_UNHANDLED_VISIT;
+					_aclctx_err(CTX, ACLSPV_COMPILE_UNHANDLED_VISIT);
 					return CXChildVisit_Break;
 				}
 
@@ -242,9 +247,9 @@ enum CXChildVisitResult aclexpr_visit(
 				LST_EXTRA[GETLASTEL_CMDCOUNTERSTCK(a).m_count_oprnd] = PRV_EXTRA;
 
 				ID_REQ = LST_SCALE_BUF[GETLASTEL_CMDCOUNTERSTCK(a).m_count_oprnd + ACLEXPR_OPBINCFG_END] = IDVAL_PRV;
-				TYPE_CAST_CURRENT = PRV_EXTRA.m_type_original;
-				IS_NOT_CONSTANT	&= PRV_EXTRA.m_mask_literal;
-				*RET_LITERAL = PRV_EXTRA.m_literal;
+				BASE->m_tyid_current = PRV_EXTRA.m_type_original;
+				BASE->m_literal_flag	&= PRV_EXTRA.m_mask_literal;
+				BASE->m_ret_literal	= PRV_EXTRA.m_literal;
 
 				(void)(LST_SCALE->m_id && ++GETLASTEL_CMDCOUNTERSTCK(a).m_count_oprnd);
 			}

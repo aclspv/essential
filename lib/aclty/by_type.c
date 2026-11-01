@@ -1,7 +1,6 @@
 #include "./by_type.h"
 #include "./vec.h"
 
-#include <util/iddef.h>
 #include <util/log.h>
 
 #include <ae2f/bll.h>
@@ -44,6 +43,8 @@ ae2f_ccconst aclspv_id_t aclty_mk_by_type(const CXType c_ty) {
 	}
 }
 
+#include <aclty/default.h>
+
 aclspv_id_t aclutil_mk_cxtp_by_type2(
 		const CXType		c_type,
 		const h_aclspv_ctx_t	h_ctx
@@ -53,7 +54,7 @@ aclspv_id_t aclutil_mk_cxtp_by_type2(
 	{
 		const aclspv_id_t D = aclty_mk_by_type(TYPE);
 		if(D) {
-			return aclid_mk_default_id(D, h_ctx);
+			return aclty_mk_default(D, h_ctx);
 		}
 	}
 
@@ -66,12 +67,10 @@ aclspv_id_t aclutil_mk_cxtp_by_type2(
 				const CXType ELM		= clang_getElementType(TYPE);
 				const intmax_t _ELMCOUNT	= clang_getNumElements(TYPE);
 				const aclspv_wrd_t ELMCOUNT	= 
-					ae2f_bll_sel_bool_naive1(
-							aclspv_wrd_t
-							, (umax)(_ELMCOUNT) & ~(umax)ACLSPV_MASK_WRD
-							, 1 
-							,(aclspv_wrd_t)_ELMCOUNT
-							);
+							(aclspv_wrdmax_t)(_ELMCOUNT) & ~(aclspv_wrdmax_t)0xFFFFFFFF
+							? (aclspv_wrd_t)1 
+							: (aclspv_wrd_t)_ELMCOUNT
+							;
 
 				const aclspv_id_t	ELMID = aclty_mk_by_type(ELM);
 

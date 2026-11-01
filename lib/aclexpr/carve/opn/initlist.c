@@ -7,12 +7,11 @@
 #include <aclcur/common.h>
 #include <aclcur/load/get.h>
 
-#include <util/emitx.h>
-#include <util/wrdemit.h>
-#include <util/iddef.h>
+#include <aclutil/wrdemit.h>
 
 #include <ae2f/cc/switchctl.h>
 #include <ae2f/pat/dbg.h>
+#include <aclutil/emitx.h>
 
 /** one 3-word OpConstantNull in the types section; valid for every member
  * type, so union padding needs no per-type zero construction. */
@@ -253,7 +252,7 @@ aclspv_bool_t aclexpr_carve_opn_initlist(
 
 	/** a scalar braced initializer `int x = { 3 }`: the element IS the
 	 * value (a 1-wide composite does not exist). */
-	if(EXPECTED == 1 && aclty_simd_class(TY_RES, rdwr_data->m_ctx)) {
+	if(EXPECTED == 1 && aclty_get_simd_sclr(TY_RES, rdwr_data->m_ctx)) {
 		rdwr_prv_extra->m_type_original = TY_RES;
 		rdwr_prv_extra->m_mask_literal = MASK;
 		rdwr_prv_extra->m_literal = XTRA[0].m_literal;

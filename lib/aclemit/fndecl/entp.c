@@ -13,8 +13,7 @@
 #include <aclutil/capability.h>
 
 #include <util/fnctx.h>
-#include <util/iddef.h>
-#include <util/emitx.h>
+#include <aclutil/emitx.h>
 #include <util/entp.h>
 #include <util/scale.h>
 #include <util/log.h>
@@ -133,7 +132,7 @@ enum CXChildVisitResult aclemit_fndecl_entp(
 
 	{
 		const aclspv_id_t	id_void_func = aclty_mk_fn(
-				aclid_mk_default_id(
+				aclty_mk_default(
 					ACLSPV_ID_VOID
 					, ctx
 					)

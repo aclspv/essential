@@ -38,7 +38,7 @@ aclspv_id_t aclty_simd_elmtype(aclspv_id_t c, h_aclspv_ctx_t h_ctx) {
 	}
 }
 
-aclspv_id_t aclty_simd_chxg_cls(aclspv_id_t c, aclspv_id_t c_class, h_aclspv_ctx_t h) {
+aclspv_id_t aclty_simd_chxg_sclr(aclspv_id_t c, aclspv_id_t c_class, h_aclspv_ctx_t h) {
 	ae2f_ifezerr(c)		return 0;
 	ae2f_ifezerr(c_class)	return 0;
 	ae2f_ifezerr(c_class)	return 0;
@@ -82,17 +82,23 @@ aclspv_id_t aclty_simd_chxg_cls(aclspv_id_t c, aclspv_id_t c_class, h_aclspv_ctx
 	}
 }
 
-aclspv_id_t aclty_simd_broadcast(aclspv_id_t c, aclspv_id_t c_ty, aclspv_wrd_t c_literal_mask, h_aclspv_ctx_t h) {
+#include <aclctx/err.h>
+#include <ae2f/pat/dbg.h>
+
+aclspv_id_t aclty_simd_broadcast(aclspv_id_t c, aclty_id_t c_ty, aclspv_wrd_t c_literal_mask, h_aclspv_ctx_t h) {
 	ae2f_ifezerr(c)		return 0;
 	ae2f_ifezerr(c_ty)	return 0;
 	ae2f_ifezerr(h)		return 0;
 	ae2f_ifnezerr_strict(c_ty == ACLSPV_ID_VOID) return 0;
-	if(c_ty < (aclspv_id_t)ACLSPV_ID_END) {
-		return c;
+
+	ae2fpat_assertassumeunless(c_ty >= (aclspv_id_t)ACLSPV_ID_END) {
+		/** should be a HARD ERROR */
+		_aclctx_err(h, ACLSPV_COMPILE_UNHANDLED);
+		return 0;
 	}
 
 	{
-		aclty_t* ae2f_restrict p = aclty_find(c, h);
+		aclty_t* ae2f_restrict p = aclty_find(c_ty, h);
 
 		ae2f_ifezerr(p)
 			return 0;

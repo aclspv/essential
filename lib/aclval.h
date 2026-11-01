@@ -1,8 +1,8 @@
 #ifndef	aclval_h
 #define aclval_h
 
-#include <util/wrd.h>
 #include <aclctx/id.h>
+#include <acldef.h>
 
 
 enum ACLVAL_NBYTE_ {

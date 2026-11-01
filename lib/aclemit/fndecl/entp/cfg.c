@@ -5,11 +5,16 @@
 #include <aclattr/wrkgroup.h>
 #include <aclattr/execmodel.h>
 
+#include <aclspv.h>
 #include <aclmem.h>
 #include <aclval.h>
 
-#include <util/emitx.h>
-#include <util/iddef.h>
+#include <aclty/sclr.h>
+
+#include <ae2f/cc/branches/naive.h>
+#include <ae2f/cc.h>
+
+#include <aclutil/emitx.h>
 
 
 typedef struct {
@@ -145,7 +150,7 @@ static enum CXChildVisitResult s_execmode(CXCursor c, ae2f_unused CXCursor u0, C
 				aclval_spec_t nd = aclval_get_spec(p->m_ctx, buf[3 + i]);
 				ae2f_ifezerr(nd.m_val) goto ERR;
 				if(nd.m_val) {								
-					ae2f_ifezerr_strict(aclid_is_int((B_id_default_t) nd.m_ty)) {
+					ae2f_ifezerr_strict(aclty_is_sclr_int((aclty_default_t) nd.m_ty)) {
 						p->m_ctx->m_err = ACLSPV_COMPILE_WORKGROUP_SIZE_NO_INT;
 						goto ERR;
 					}						
@@ -219,7 +224,7 @@ aclutil_entp_t aclemit_fndecl_entp_cfg(CXCursor h_parent, h_aclspv_ctx_t CTX) {
 			aclval_spec_t nd = aclval_get_spec(CTX, XYZ.m_##K_idx);	\
 			ae2f_ifezerr(nd.m_val) goto LBL_ABRT;						\
 			if(nd.m_val) {								\
-				ae2f_ifezerr_strict(aclid_is_int((B_id_default_t) nd.m_ty)) {	\
+				ae2f_ifezerr_strict(aclty_is_sclr_int(nd.m_ty)) {	\
 					CTX->m_err = ACLSPV_COMPILE_WORKGROUP_SIZE_NO_INT;	\
 					goto LBL_ABRT;						\
 				}								\

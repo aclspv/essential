@@ -5,7 +5,7 @@
 #include <aclval.h>
 #include <aclty.h>
 #include <aclcur/opX.h>
-#include <util/wrdemit.h>
+#include <aclutil/wrdemit.h>
 #include <util/literal.h>
 
 #include <ae2f/pat/dbg.h>

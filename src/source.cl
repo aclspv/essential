@@ -387,3 +387,18 @@ void t17_fs_main(
 f32x3 clr = *in_color;    f32x4 out = { +clr[0], -clr[1], +clr[2], -1.f };
 *out_color = out;
 }
+
+__attribute__((annotate("aclspv_execmode0(7)")))
+__attribute__((annotate("aclspv_execmodel(4)")))
+void t18_ini(void) {
+	int a;
+	_Bool c;
+
+	if(c) {
+		a = 2;
+	} else {
+		a = 3;
+	}
+
+	if(a == 2) {}
+}

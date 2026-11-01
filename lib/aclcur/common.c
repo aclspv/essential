@@ -2,6 +2,7 @@
 #include "./util.h"
 #include "./lbl.h"
 
+#include <aclctx/id.h>
 #include <aclmem.h>
 
 aclspv_id_t	aclcur_cfg_node2(aclspv_id_t c_newid, h_aclspv_ctx_t h_ctx, aclspv_bool_t c) {
@@ -57,7 +58,7 @@ aclspv_id_t	aclcur_cfg_node2(aclspv_id_t c_newid, h_aclspv_ctx_t h_ctx, aclspv_b
 			p->m_lbl = p_lbl_cur->m_id;
 		}
 
-		return p->m_id = c_newid ? c_newid : h_ctx->m_id++;
+		return p->m_id = c_newid ? c_newid : aclctx_newid(h_ctx);
 	}
 
 	ae2f_unreachable();

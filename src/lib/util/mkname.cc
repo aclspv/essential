@@ -6,8 +6,8 @@
 #include <ae2f/cgoto.h>
 #include <ae2f/pat/dbg.h>
 
-#include <util/wrd.h>
-#include <util/emitx.h>
+#include <acldef.h>
+#include <aclutil/emitx.h>
 #include <string.h>
 
 #include <ae2f/pat/macrofunc.h>

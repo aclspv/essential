@@ -3,7 +3,7 @@
 #include <ae2f/cgoto.h>
 #include <ae2f/cc/switchctl.h>
 #include <string.h>
-#include <util/emitx.h>
+#include <aclutil/emitx.h>
 #include <.aclspv/util/vcopr.h>
 #include <util/log.h>
 

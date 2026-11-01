@@ -2,7 +2,7 @@
 #include "../implutil.h"
 #include "../dcr.h"
 #include "./arg.h"
-#include <util/wrdemit.h>
+#include <aclutil/emitx.h>
 
 /*** helper: are two function types equivalent? */
 static ae2f_ccpure aclspv_bool_t	s_is_fn_same(

@@ -6,8 +6,7 @@
 #include <aclexpr.h>
 #include <aclctx/err.h>
 
-#include <util/emitx.h>
-#include <util/iddef.h>
+#include <aclutil/emitx.h>
 #include <aclutil/capability.h>
 
 #include <ae2f/pat/dbg.h>
@@ -146,7 +145,7 @@ aclty_t* aclty_build_arr(
 	}
 
 	if(!rdwr_arr->m_info.m_arr.m_num.m_id && rdwr_arr->m_info.m_arr.m_num.m_lit.m_max) {
-		const aclspv_id_t SIZE_TY = aclid_getty_uint(h_ctx->m_usrcfg.m_byte_size_type << 3);
+		const aclspv_id_t SIZE_TY = aclty_get_sclr_uint(h_ctx->m_usrcfg.m_byte_size_type << 3);
 		ae2f_ifezerr(SIZE_TY)	return 0;
 
 		ae2f_ifezerr(rdwr_arr->m_info.m_arr.m_num.m_id = aclval_cfg_by_enum(
@@ -261,8 +260,8 @@ aclty_t* aclty_cfg_arr(
 		) {
 	aclty_t            tar;
 	aclconst_specsz		size_elm;
-	aclspv_id_t		size_ty = aclid_mk_default_id(
-			aclid_getty_uint(
+	aclspv_id_t		size_ty = aclty_mk_default(
+			aclty_get_sclr_uint(
 				h_ctx->m_usrcfg.m_byte_size_type << 3
 				)
 			, h_ctx

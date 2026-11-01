@@ -107,8 +107,8 @@ enum ACLEXPR_RET_ aclexpr_bit_cast(
 		return ACLEXPR_RET_NOT_THE_CASE;
 	}
 
-	(void)aclid_mk_default_id(c_new_type, h_ctx);
-	(void)aclid_mk_default_id(c_old_type, h_ctx);
+	(void)aclty_mk_default(c_new_type, h_ctx);
+	(void)aclty_mk_default(c_old_type, h_ctx);
 
 
 	dbg_prefix();
@@ -118,7 +118,7 @@ enum ACLEXPR_RET_ aclexpr_bit_cast(
 				, (unsigned) c_new_type
 				));
 
-	unless(aclty_is_simd_class(c_old_type) && aclty_is_simd_class(c_new_type))
+	unless(aclty_is_sclr(c_old_type) && aclty_is_sclr(c_new_type))
 		return s_cast_bit(c_old_id, c_old_type, c_flag_literal, r_newid, c_new_type, h_ctx);
 
 	if(c_flag_literal & ACLUTIL_LITERAL_LITERAL) {

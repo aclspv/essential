@@ -1,7 +1,7 @@
 #include "./specop.h"
-#include <util/wrdemit.h>
 #include <aclmem.h>
 #include <ae2f/cc/assume.h>
+#include <aclutil/emitx.h>
 
 static aclspv_id_t s_app(
 		const aclspv_wrd_t* ae2f_restrict	rd_wrds,

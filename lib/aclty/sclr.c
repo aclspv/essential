@@ -1,16 +1,11 @@
-/** @file iddef.c */
+#include "./sclr.h"
 
-#include "./iddef.h"
-#include "./emitx.h"
-
+#include <aclutil/emitx.h>
 #include <aclutil/capability.h>
-
-#include <aclty.h>
-
 #include <ae2f/pat/dbg.h>
 
-ae2f_ccconst aclspv_bool_t aclid_is_uint(const B_id_default_t c_id_default) {
-	switch(c_id_default) {
+ae2f_ccconst aclspv_bool_t aclty_is_sclr_uint(const aclty_sclr_t c) {
+	switch(c) {
 		case ACLSPV_ID_U8:
 		case ACLSPV_ID_U16:
 		case ACLSPV_ID_U32:
@@ -33,8 +28,8 @@ ae2f_ccconst aclspv_bool_t aclid_is_uint(const B_id_default_t c_id_default) {
 	ae2f_unreachable();
 }
 
-ae2f_ccconst aclspv_bool_t aclid_is_sint(const B_id_default_t c_id_default) {
-	switch(c_id_default) {
+ae2f_ccconst aclspv_bool_t aclty_is_sclr_sint(const aclty_sclr_t c) {
+	switch(c) {
 		case ACLSPV_ID_I32:
 		case ACLSPV_ID_I8:
 		case ACLSPV_ID_I16:
@@ -58,8 +53,8 @@ ae2f_ccconst aclspv_bool_t aclid_is_sint(const B_id_default_t c_id_default) {
 }
 
 
-ae2f_ccconst aclspv_bool_t aclid_is_signed(const B_id_default_t c_id_default) {
-	switch(c_id_default) {
+ae2f_ccconst aclspv_bool_t aclty_is_sclr_signed(const aclty_sclr_t c) {
+	switch(c) {
 		case ACLSPV_ID_I32:
 		case ACLSPV_ID_I8:
 		case ACLSPV_ID_I16:
@@ -79,11 +74,11 @@ ae2f_ccconst aclspv_bool_t aclid_is_signed(const B_id_default_t c_id_default) {
 	}
 }
 
-ae2f_ccconst aclspv_bool_t aclid_is_int(const B_id_default_t c_id_default) {
-	return aclid_is_uint(c_id_default) | aclid_is_sint(c_id_default);
+ae2f_ccconst aclspv_bool_t aclty_is_sclr_int(const aclty_default_t c_id_default) {
+	return aclty_is_sclr_uint(c_id_default) || aclty_is_sclr_sint(c_id_default);
 }
 
-ae2f_ccconst aclspv_bool_t aclid_is_float(const B_id_default_t c_id_default) {
+ae2f_ccconst aclspv_bool_t aclty_is_sclr_flt(const aclty_default_t c_id_default) {
 	switch(c_id_default) {
 		case ACLSPV_ID_F16:
 		case ACLSPV_ID_F32:
@@ -108,7 +103,7 @@ ae2f_ccconst aclspv_bool_t aclid_is_float(const B_id_default_t c_id_default) {
 	ae2f_unreachable();
 }
 
-ae2f_ccconst aclspv_bool_t aclid_is_default(const B_id_default_t c_id_default) {
+ae2f_ccconst aclspv_bool_t aclty_is_default(const aclty_default_t c_id_default) {
 	switch(c_id_default) {
 		case ACLSPV_ID_F16:
 		case ACLSPV_ID_F32:
@@ -132,11 +127,11 @@ ae2f_ccconst aclspv_bool_t aclid_is_default(const B_id_default_t c_id_default) {
 }
 
 ae2f_ccconst aclspv_bool_t 
-aclid_is_number(const B_id_default_t c_id_default) {
-	return aclid_is_int(c_id_default) || aclid_is_float(c_id_default);
+aclty_is_sclr_num(const aclty_default_t c_id_default) {
+	return aclty_is_sclr_int(c_id_default) || aclty_is_sclr_flt(c_id_default);
 }
 
-ae2f_ccconst B_id_default_t aclid_getty_float(unsigned bit_width) {
+ae2f_ccconst aclty_default_t aclty_get_sclr_flt(unsigned bit_width) {
 	switch(bit_width) {
 		case 16:
 			return ACLSPV_ID_F16;
@@ -151,7 +146,7 @@ ae2f_ccconst B_id_default_t aclid_getty_float(unsigned bit_width) {
 	ae2f_unreachable();
 }
 
-ae2f_ccconst B_id_default_t aclid_getty_sint(unsigned bit_width) {
+ae2f_ccconst aclty_default_t aclty_get_sclr_sint(unsigned bit_width) {
 	switch(bit_width) {
 		case 8:
 			return ACLSPV_ID_I8;
@@ -168,7 +163,7 @@ ae2f_ccconst B_id_default_t aclid_getty_sint(unsigned bit_width) {
 	ae2f_unreachable();
 }
 
-ae2f_ccconst B_id_default_t aclid_getty_uint(unsigned bit_width) {
+ae2f_ccconst aclty_default_t aclty_get_sclr_uint(unsigned bit_width) {
 	switch(bit_width) {
 		case 8:
 			return ACLSPV_ID_U8;
@@ -185,7 +180,7 @@ ae2f_ccconst B_id_default_t aclid_getty_uint(unsigned bit_width) {
 	ae2f_unreachable();
 }
 
-ae2f_ccconst unsigned aclid_get_bit_width(const B_id_default_t c_id_default) {
+ae2f_ccconst aclspv_uiter_t aclty_get_sclr_width(const aclty_default_t c_id_default) {
 	switch(c_id_default) {
 		case ACLSPV_ID_BOOL:
 			return 1;
@@ -222,8 +217,8 @@ ae2f_ccconst unsigned aclid_get_bit_width(const B_id_default_t c_id_default) {
 
 
 
-aclspv_id_t aclid_mk_default_id(
-		const B_id_default_t	c_id_default,
+aclspv_id_t aclty_mk_default(
+		const aclty_default_t	c_id_default,
 		h_aclspv_ctx_t	h_ctx
 		)
 {
@@ -414,15 +409,15 @@ aclspv_id_t aclid_mk_default_id(
 }
 
 
-ae2f_ccconst B_id_default_t aclid_number_cvtbitcount(const B_id_default_t c_id, const unsigned bitcount) {
-	if(aclid_is_uint(c_id))
-		return aclid_getty_uint(bitcount);
+ae2f_ccconst aclty_default_t aclty_cvt_sclr_width(const aclty_default_t c_id, const unsigned bitcount) {
+	if(aclty_is_sclr_uint(c_id))
+		return aclty_get_sclr_uint(bitcount);
 
-	if(aclid_is_sint(c_id))
-		return aclid_getty_sint(bitcount);
+	if(aclty_is_sclr_sint(c_id))
+		return aclty_get_sclr_sint(bitcount);
 
-	if(aclid_is_float(c_id))
-		return aclid_getty_float(bitcount);
+	if(aclty_is_sclr_flt(c_id))
+		return aclty_get_sclr_flt(bitcount);
 
-	return 0;
+	return (aclty_default_t)ae2f_expected_not(0);
 }

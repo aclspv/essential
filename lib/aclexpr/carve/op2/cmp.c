@@ -10,7 +10,7 @@
 #include <aclconst/specop.h>
 #include <aclmem.h>
 
-#include <util/wrdemit.h>
+#include <aclutil/wrdemit.h>
 #include <ae2f/cc/switchctl.h>
 #include <ae2f/pat/dbg.h>
 
@@ -37,16 +37,16 @@ static aclspv_wrd_t s_decide_cast(aclspv_id_t c_id0, aclspv_id_t c_id1, const h_
 		c_id0 ^= c_id1;
 	}
 
-	cls0 = aclty_simd_class(c_id0, h_ctx);
-	cls1 = aclty_simd_class(c_id1, h_ctx);
+	cls0 = aclty_get_simd_sclr(c_id0, h_ctx);
+	cls1 = aclty_get_simd_sclr(c_id1, h_ctx);
 
 	ae2f_ifezerr(cls0 && cls1) {
 		dbg_puts("s_decide_cast 0\n");
 		return 0;
 	}
 
-	if(aclty_simd_chxg_cls(c_id0, cls1, h_ctx) != c_id1) {
-		ae2f_ifneznrm(aclty_is_simd_class(c_id0))
+	if(aclty_simd_chxg_sclr(c_id0, cls1, h_ctx) != c_id1) {
+		ae2f_ifneznrm(aclty_is_sclr(c_id0))
 			return c_id1;
 		else	return 0;
 	}
@@ -58,7 +58,7 @@ ae2f_inline_f static aclspv_id_t s_ty_cmp_result(
 		const aclspv_id_t	c_ty,
 		const h_aclspv_ctx_t	h_ctx
 		) {
-	return aclty_simd_chxg_cls(c_ty, ACLSPV_ID_BOOL, h_ctx);
+	return aclty_simd_chxg_sclr(c_ty, ACLSPV_ID_BOOL, h_ctx);
 }
 
 ae2f_inline_f static ae2f_ccpure aclspv_opcode_t s_cmp_to_spv(
@@ -67,51 +67,51 @@ ae2f_inline_f static ae2f_ccpure aclspv_opcode_t s_cmp_to_spv(
 		const h_aclspv_ctx_t	h_ctx
 		)
 {
-	aclspv_id_t ID = aclty_simd_class(c_id, h_ctx);
+	aclspv_id_t ID = aclty_get_simd_sclr(c_id, h_ctx);
 
 	switch(c_op2) {
 		default:
 			return 0;
 
 		case ACLEXPR_OP2_SLT:
-			if(aclid_is_int(ID))
+			if(aclty_is_sclr_int(ID))
 				return SpvOpSLessThan;
-			else if(aclid_is_float(ID))
+			else if(aclty_is_sclr_flt(ID))
 				return SpvOpFOrdLessThan;
 			else return 0;
 
 		case ACLEXPR_OP2_SLE:
-			if(aclid_is_int(ID))
+			if(aclty_is_sclr_int(ID))
 				return SpvOpSLessThanEqual;
-			else if(aclid_is_float(ID))
+			else if(aclty_is_sclr_flt(ID))
 				return SpvOpFOrdLessThanEqual;
 			else return 0;
 
 		case ACLEXPR_OP2_SGT:
-			if(aclid_is_int(ID))
+			if(aclty_is_sclr_int(ID))
 				return SpvOpSGreaterThan;
-			else if(aclid_is_float(ID))
+			else if(aclty_is_sclr_flt(ID))
 				return SpvOpFOrdGreaterThan;
 			else return 0;
 
 		case ACLEXPR_OP2_SGE:
-			if(aclid_is_int(ID))
+			if(aclty_is_sclr_int(ID))
 				return SpvOpSGreaterThanEqual;
-			else if(aclid_is_float(ID))
+			else if(aclty_is_sclr_flt(ID))
 				return SpvOpFOrdGreaterThanEqual;
 			else return 0;
 
 		case ACLEXPR_OP2_EQ:
-			if(aclid_is_int(ID))
+			if(aclty_is_sclr_int(ID))
 				return SpvOpIEqual;
-			else if(aclid_is_float(ID))
+			else if(aclty_is_sclr_flt(ID))
 				return SpvOpFOrdEqual;
 			else return 0;
 
 		case ACLEXPR_OP2_NE:
-			if(aclid_is_int(ID))
+			if(aclty_is_sclr_int(ID))
 				return SpvOpINotEqual;
-			else if(aclid_is_float(ID))
+			else if(aclty_is_sclr_flt(ID))
 				return SpvOpFOrdNotEqual;
 			else return 0;
 	}
@@ -233,7 +233,7 @@ aclspv_bool_t aclexpr_carve2_cmp(
 		aclspv_id_t TY_RES = rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_RESTYID];
 		TY_RES = s_ty_cmp_result(TY_RES, rdwr_data->m_ctx);
 
-		ae2f_ifezerr(aclid_mk_default_id(ACLSPV_ID_BOOL, rdwr_data->m_ctx))
+		ae2f_ifezerr(aclty_mk_default(ACLSPV_ID_BOOL, rdwr_data->m_ctx))
 			return ACLEXPR_CARVE_NO;
 
 		rdwr_prv_extra->m_type_original = TY_RES;

@@ -1,6 +1,9 @@
 #ifndef	aclcur_common_h
 #define aclcur_common_h
 
+#include <acldef.h>
+#include <aclty/common.h>
+
 #include "../aclcur.h"
 #include "./lbl.h"
 #include "./j.h"
@@ -32,7 +35,7 @@ struct aclcur {
 
 	/** enum ACLCUR_FLAG0_ */
 	aclspv_wrd_t	m_flag0;
-	aclspv_id_t	m_id;
+	aclcur_id_t	m_id;
 
 	/** current label */
 	aclspv_id_t	m_lbl;
@@ -69,7 +72,9 @@ struct aclcur {
 	aclspv_wrd_t	m_val_mask;
 };
 
-aclspv_id_t		aclcur_cfg_node2(aclspv_id_t c_newid, h_aclspv_ctx_t h_ctx, aclspv_bool_t c_toskip);
+typedef aclspv_id_t aclcur_id_t;
+
+aclcur_id_t aclcur_cfg_node2(aclspv_id_reserved_t c_newid, h_aclspv_ctx_t h_ctx, aclspv_bool_t c_toskip);
 
 /** 
  * this assigns new id
@@ -81,9 +86,9 @@ static ae2f_inline_f aclspv_id_t aclcur_cfg_node(aclspv_id_t c, h_aclspv_ctx_t h
 	return aclcur_cfg_node2(c, h_ctx, 0);
 }
 
-ae2f_ccpure aclcur_t*	aclcur_get_node(aclspv_id_t c, const x_aclspv_ctx* ae2f_restrict h_ctx);
-ae2f_ccpure aclcur_t* aclcur_get_node_prv(aclspv_id_t c, const x_aclspv_ctx* ae2f_restrict h_ctx);
-ae2f_ccpure aclcur_t* aclcur_get_node_nxt(aclspv_id_t c, const x_aclspv_ctx* ae2f_restrict h_ctx);
+ae2f_ccpure aclcur_t*	aclcur_get_node(aclcur_id_t c, const x_aclspv_ctx* ae2f_restrict h_ctx);
+ae2f_ccpure aclcur_t* aclcur_get_node_prv(aclcur_id_t c, const x_aclspv_ctx* ae2f_restrict h_ctx);
+ae2f_ccpure aclcur_t* aclcur_get_node_nxt(aclcur_id_t c, const x_aclspv_ctx* ae2f_restrict h_ctx);
 
 /** 
  * sets the c's cursor to c_cur.
@@ -93,6 +98,6 @@ ae2f_ccpure aclcur_t* aclcur_get_node_nxt(aclspv_id_t c, const x_aclspv_ctx* ae2
  * : null cursor `clang_getNullCursor` when no id was found.
  * : a cursor it have previously had.
  * */
-CXCursor aclcur_set_cxcursor(aclspv_id_t c, const CXCursor c_cur, h_aclspv_ctx_t h_ctx);
+CXCursor aclcur_set_cxcursor(aclcur_id_t c, const CXCursor c_cur, h_aclspv_ctx_t h_ctx);
 
 #endif

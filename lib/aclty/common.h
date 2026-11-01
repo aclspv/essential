@@ -3,7 +3,6 @@
 
 #include <aclspv.h>
 #include <aclconst/specsize.h>
-#include <util/wrd.h>
 
 
 enum ACLTY_ {
@@ -41,32 +40,35 @@ enum ACLTY_FIELD0_OFF_ {
 /** see ACLTY_FIELD0_ */
 typedef aclspv_wrd_t	aclty_field0_t;
 
+/** data type id */
+typedef aclspv_id_t aclty_id_t;
+
 typedef struct {
 	union {
 		struct {
 			aclconst_specsz	m_num;
-			aclspv_id_t	m_type;
+			aclty_id_t	m_type;
 			aclspv_wrd_t	m_dcr, m_num_dcr;
 		} m_arr;
 
 		struct {
-			aclspv_id_t	m_type;
+			aclty_id_t	m_type;
 			aclspv_wrd_t	m_num;
 		} m_vec;
 
 		struct {
-			aclspv_id_t		m_type;
+			aclty_id_t		m_type;
 			enum SpvStorageClass_	m_storage;
 		} m_ptr;
 
 		struct {
-			aclspv_id_t	m_ret_id;
+			aclty_id_t	m_ret_id;
 			aclspv_wrd_t	m_num_dcr, m_dcr;
 			aclspv_wrd_t	m_num_arg, m_arg;
 		} m_fn;
 
 		struct {
-			aclspv_id_t	m_prm_id;
+			aclty_id_t	m_prm_id;
 			aclspv_wrd_t	m_nxt;
 			aclspv_wrd_t	m_idx;
 		} m_fn_arg;
@@ -80,7 +82,7 @@ typedef struct {
 
 		struct {
 			aclconst_specsz	m_pad;
-			aclspv_id_t	m_id_mbr;
+			aclty_id_t	m_id_mbr;
 			aclspv_wrd_t	m_idx;
 			aclspv_wrd_t	m_nxt;
 			aclspv_wrd_t	m_dcr, m_num_dcr;
@@ -96,7 +98,7 @@ typedef struct {
 	/** constant value id */
 	aclconst_specsz		m_sizeof;
 
-	aclspv_id_t		m_type_id;
+	aclty_id_t		m_type_id;
 	/** constant value */
 	aclspv_wrd_t		m_alignof;
 

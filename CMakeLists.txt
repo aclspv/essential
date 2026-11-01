@@ -200,7 +200,6 @@ aclspv_abitent(aclemit)
 aclspv_abitent(aclmem)
 aclspv_abitent(aclty)
 aclspv_abitent(aclval)
-aclspv_abitent(util)
 
 aclspv_abitent(essential-public)
 
@@ -238,7 +237,6 @@ target_link_libraries(aclspv-essential
 	PRIVATE	$<BUILD_INTERFACE:aclspv::aclmem>
 	PRIVATE	$<BUILD_INTERFACE:aclspv::aclty>
 	PRIVATE	$<BUILD_INTERFACE:aclspv::aclval>
-	PRIVATE	$<BUILD_INTERFACE:aclspv::util>
 	PRIVATE $<BUILD_INTERFACE:aclspv::essential-public>
 	)
 
@@ -276,6 +274,10 @@ if(ae2f_TEST)
 	target_link_libraries(aclspv-essential-test 
 		INTERFACE aclspv::essential
 		)
+
+	target_include_directories(aclspv-essential-test
+		INTERFACE $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/3rdinc>
+		)
 endif()
 
 add_dependencies(aclspv-essential-test aclspv-essential-test-gen)
@@ -297,7 +299,6 @@ if(ae2f_TEST)
 		PRIVATE	$<BUILD_INTERFACE:aclspv::aclmem>
 		PRIVATE	$<BUILD_INTERFACE:aclspv::aclty>
 		PRIVATE	$<BUILD_INTERFACE:aclspv::aclval>
-		PRIVATE	$<BUILD_INTERFACE:aclspv::util>
 		PRIVATE $<BUILD_INTERFACE:aclspv::common-essential>
 		)
 endif()

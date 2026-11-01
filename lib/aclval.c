@@ -1,7 +1,6 @@
 
 #include <aclval.h>
-#include <util/emitx.h>
-#include <util/iddef.h>
+#include <aclutil/emitx.h>
 #include <ae2f/c90/stdbool.h>
 
 #include <ae2f/pat/dbg.h>
@@ -90,6 +89,7 @@ aclval_t*  aclval_cfg_node2(
 }
 
 #include <ae2f/bll.h>
+#include <aclty/default.h>
 
 aclspv_id_t aclval_cfg_bool(
 		const aclspv_bool_t c_val,
@@ -99,7 +99,7 @@ aclspv_id_t aclval_cfg_bool(
 	ae2f_ifezerr(C) return 0;
 	if(C->m_const_val_bool) return C->m_const_val_bool;
 
-	ae2f_expected_but_else(aclid_mk_default_id(ACLSPV_ID_BOOL, h_ctx))
+	ae2f_ifnezerr(aclty_mk_default(ACLSPV_ID_BOOL, h_ctx))
 		return 0;
 
 	ae2f_expected_but_else(h_ctx->m_count.m_types = aclutil_emitx_3(
@@ -144,7 +144,7 @@ aclspv_id_t aclval_cfg(
 	C = aclval_cfg_node(c_val, h_ctx);
 
 	ae2f_ifezerr(C)	return 0;
-	ae2f_ifezerr(aclid_mk_default_id((B_id_default_t) MAP[c_idx_ty][c_idx_nbyte], h_ctx))
+	ae2f_ifezerr(aclty_mk_default((aclty_default_t) MAP[c_idx_ty][c_idx_nbyte], h_ctx))
 		return 0;
 
 	if(C->m_const_ids[c_idx_ty][c_idx_nbyte]) return C->m_const_ids[c_idx_ty][c_idx_nbyte];
@@ -201,7 +201,7 @@ aclval_spec_t aclval_cfg_spec(
 	aclval_t* ae2f_restrict const C = aclval_cfg_node(c_idx_specconst, h_ctx);
 
 	ae2f_expected_but_else(C)	return ZERO;
-	ae2f_expected_but_else(aclid_mk_default_id((B_id_default_t) MAP[c_idx_ty][c_idx_nbyte], h_ctx))
+	ae2f_expected_but_else(aclty_mk_default((aclty_default_t) MAP[c_idx_ty][c_idx_nbyte], h_ctx))
 		return ZERO;
 
 	if(C->m_spec_constant.m_val)

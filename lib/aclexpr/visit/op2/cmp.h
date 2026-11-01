@@ -9,7 +9,7 @@
 #define	aclexpr_visit_op2_cmp_h
 
 #include <util/scale.h>
-#include <util/emitx.h>
+#include <aclutil/emitx.h>
 #include <util/log.h>
 
 #include <aclexpr.h>

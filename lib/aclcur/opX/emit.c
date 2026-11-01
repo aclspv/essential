@@ -2,7 +2,7 @@
 #include "../common.h"
 #include "../util.h"
 #include <ae2f/cc/assume.h>
-#include <util/wrdemit.h>
+#include <aclutil/wrdemit.h>
 
 #if	__ACLSPV_CHECK_EXTRA
 #define	s_assume(c, c_err) ae2f_ifezerr(c) { err_puts("assumed failed: " #c); return (c_err); }

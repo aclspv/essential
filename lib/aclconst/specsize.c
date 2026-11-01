@@ -1,7 +1,7 @@
 
 #include "./specsize.h"
 #include <aclval.h>
-#include <util/iddef.h>
+#include <aclty/sclr.h>
 
 aclspv_bool_t aclconst_is_specsz_same(aclconst_specsz c_x, aclconst_specsz c_y, h_aclspv_ctx_t h_ctx) {
 	if(c_x.m_id && c_y.m_id) {
@@ -13,8 +13,8 @@ aclspv_bool_t aclconst_is_specsz_same(aclconst_specsz c_x, aclconst_specsz c_y, 
 	}
 
 	{
-		aclspv_id_t	szty = aclid_getty_uint(h_ctx->m_usrcfg.m_byte_size_type << 3);
-		ae2f_ifezerr(aclid_mk_default_id(szty, h_ctx)) {
+		aclspv_id_t	szty = aclty_get_sclr_uint(h_ctx->m_usrcfg.m_byte_size_type << 3);
+		ae2f_ifezerr(aclty_mk_default(szty, h_ctx)) {
 			h_ctx->m_err = ACLSPV_COMPILE_ALLOC_FAILED_ID;
 			return 0;
 		}

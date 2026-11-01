@@ -3,7 +3,7 @@
 #ifndef lib_build_fn_h
 #define lib_build_fn_h
 
-#include "./wrd.h"
+#include <aclspv.h>
 
 typedef struct {
 	/* @brief Result ID for function */

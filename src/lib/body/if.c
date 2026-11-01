@@ -8,8 +8,7 @@
 #include <aclcur/common.h>
 
 #include <aclemit/body.h>
-
-#include <util/emitx.h>
+#include <aclutil/emitx.h>
 #include <util/fnctx.h>
 #include <util/visitfromroot.h>
 

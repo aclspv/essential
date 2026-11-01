@@ -10,7 +10,7 @@
 #include <aclconst/specop.h>
 #include <aclmem.h>
 
-#include <util/wrdemit.h>
+#include <aclutil/wrdemit.h>
 #include <ae2f/cc/switchctl.h>
 #include <ae2f/pat/dbg.h>
 
@@ -32,7 +32,7 @@ ae2f_inline_f static ae2f_ccpure aclspv_opcode_t s_shift_to_spv(
 		const h_aclspv_ctx_t	h_ctx
 		)
 {
-	aclspv_id_t ID = aclty_simd_class(c_id, h_ctx);
+	aclspv_id_t ID = aclty_get_simd_sclr(c_id, h_ctx);
 
 	switch(c_op2) {
 		default:
@@ -40,15 +40,15 @@ ae2f_inline_f static ae2f_ccpure aclspv_opcode_t s_shift_to_spv(
 
 		case ACLEXPR_OP2_SHL:
 		case ACLEXPR_OP2_SHLASS:
-			if(aclid_is_int(ID))
+			if(aclty_is_sclr_int(ID))
 				return SpvOpShiftLeftLogical;
 			else return 0;
 
 		case ACLEXPR_OP2_SHR:
 		case ACLEXPR_OP2_SHRASS:
-			if(aclid_is_sint(ID))
+			if(aclty_is_sclr_sint(ID))
 				return SpvOpShiftRightArithmetic;
-			else if(aclid_is_uint(ID))
+			else if(aclty_is_sclr_uint(ID))
 				return SpvOpShiftRightLogical;
 			else return 0;
 	}

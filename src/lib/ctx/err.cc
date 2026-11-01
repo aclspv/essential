@@ -15,10 +15,9 @@ ae2f_MAC() aclctx_err(
 	}
 
 	err_prefix(());
-	err_call(fprintf, (stderr, "err %u on line %d\n"
+	err_call(fprintf, (stderr, "err %u\n"
 				, ae2f_static_cast(unsigned, ((h)->m_err))
-				, ae2f_static_cast(int, __LINE__))
-			);
+			));
 }
 
 #endif

@@ -2,7 +2,7 @@
 #define aclemit_body_while_cc
 
 #include <util/fnctx.h>
-#include <util/emitx.h>
+#include <aclutil/emitx.h>
 #include <util/visitfromroot.h>
 
 #include <ae2f/cc.h>

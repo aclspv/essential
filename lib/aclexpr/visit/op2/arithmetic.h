@@ -7,12 +7,13 @@
 #define aclexpr_visit_basic_numeric_operation_h
 
 #include <util/scale.h>
-#include <util/emitx.h>
 #include <util/log.h>
 
 #include <aclexpr.h>
 #include <aclexpr/visit/api.h>
 #include <aclexpr/op.h>
+
+#include <aclutil/emitx.h>
 
 #include <aclmem.h>
 

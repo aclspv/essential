@@ -3,8 +3,7 @@
 #include "../aclty.h"
 
 #include <util/log.h>
-#include <util/iddef.h>
-#include <util/emitx.h>
+#include <aclutil/emitx.h>
 #include <ae2f/pat/dbg.h>
 
 #include <aclmem.h>
@@ -154,7 +153,7 @@ aclspv_id_t aclty_mk_vec(
 		return c_type_elm;
 	}
 
-	(void)(aclid_mk_default_id(c_type_elm, h_ctx));
+	(void)(aclty_mk_default(c_type_elm, h_ctx));
 
 	{
 		const struct __ret ID = s_ret(h_ctx, &TAR); 

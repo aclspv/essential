@@ -1,7 +1,7 @@
 /** @file wrdemit.h @brief word emission utilities */
 
-#ifndef build_wrdemit_h
-#define build_wrdemit_h
+#ifndef aclutil_wrdemit_h
+#define aclutil_wrdemit_h
 
 
 #include <ae2f/c90/lmts.h>
@@ -9,9 +9,8 @@
 #include <aclmem.h>
 
 #include <.aclspv/util/vcopr.h>
-
-#include "./wrd.h"
-#include "./log.h"
+#include <acldef.h>
+#include <util/log.h>
 
 #include <assert.h>
 
