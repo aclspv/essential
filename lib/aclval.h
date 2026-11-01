@@ -3,7 +3,7 @@
 
 #include <aclctx/id.h>
 #include <acldef.h>
-
+#include <aclty/common.h>
 
 enum ACLVAL_NBYTE_ {
 	ACLVAL_NBYTE_1,
@@ -33,7 +33,8 @@ ae2f_ccconst static ae2f_inline_f enum ACLSPV_ID_ s_aclval_ty(
 }
 
 typedef struct {
-	aclspv_id_t	m_val, m_ty;
+	aclspv_vid_t	m_val;
+	aclty_id_t	m_ty;
 } aclval_spec_t;
 
 typedef struct {
@@ -42,10 +43,10 @@ typedef struct {
 
 	/** @brief @see UTIL_CV_TY_, UTIL_CV_NBYTE_ */
 	aclspv_id_t		m_const_ids[ACLVAL_TY_MAX][ACLVAL_NBYTE_MAX];
-	aclspv_id_t		m_const_val_bool;
+	aclspv_vid_t		m_const_val_bool;
 
 	/** nil value. type id is key. */
-	aclspv_id_t		m_nil;
+	aclspv_vid_t		m_nil;
 	
 	/**
 	 * SpvStorageClass
@@ -65,14 +66,13 @@ typedef struct {
 
 	aclval_spec_t	m_spec_constant;
 
-	aclspv_id_t		m_repvec;
+	aclspv_vid_t		m_repvec;
 	aclspv_wrd_t		m_repvec_literal_mask;
 } aclval_t;
 
 typedef aclval_t* ae2f_restrict p_aclval_t;
 
-
-aclspv_id_t aclval_cfg(
+aclspv_vid_t aclval_cfg(
 		const aclspv_wrd2_t		c_val,
 		h_aclspv_ctx_t		h_ctx,
 		enum ACLVAL_NBYTE_	c_idx_nbyte,
@@ -92,7 +92,7 @@ aclval_spec_t aclval_cfg_spec(
 		aclspv_wrd_t		c_idx_specconst
 		);
 
-aclspv_id_t aclval_cfg_bool(
+aclspv_vid_t aclval_cfg_bool(
 		const aclspv_bool_t c_val,
 		h_aclspv_ctx_t h_ctx
 		);
@@ -114,48 +114,53 @@ aclspv_wrd_t aclval_cfg_bindidx(
 		aclspv_wrd_t c_storage_class,
 		h_aclspv_ctx_t h_ctx);
 
-aclspv_id_t aclval_cfg_f32(
+aclspv_vid_t aclval_cfg_f32(
 		const float c_val, 
 		h_aclspv_ctx_t h_ctx
 		);
 
 
-aclspv_id_t aclval_cfg_f64(
+aclspv_vid_t aclval_cfg_f64(
 		const double c_val, h_aclspv_ctx_t h_ctx);
 
-aclspv_id_t	aclutil_mk_constant_spec_id(
+aclspv_vid_t	aclutil_mk_constant_spec_id(
 		const aclspv_wrd_t c_key, const aclspv_wrd_t c_val, 
 		h_aclspv_ctx_t h_ctx
 		);
 
-aclspv_id_t aclutil_mk_specconstant_bool_id(
+aclspv_vid_t aclutil_mk_specconstant_bool_id(
 		const aclspv_wrd_t	c_idx_spec,
 		const aclspv_bool_t	c_val,
 		h_aclspv_ctx_t h_ctx
 		);
 
-aclspv_id_t	aclutil_mk_constant_spec64_id(
+aclspv_vid_t	aclutil_mk_constant_spec64_id(
 		const aclspv_wrd_t c_key, 
-		const u64_least c_val,
+		const aclspv_wrd2_t c_val,
 		h_aclspv_ctx_t h_ctx
 		);
 
-aclspv_id_t	aclutil_mk_constant_spec_id_f64(
+aclspv_vid_t	aclutil_mk_constant_spec_id_f64(
 		const aclspv_wrd_t c_key, 
 		const double c_val, h_aclspv_ctx_t h_ctx);
 
 
-aclspv_id_t	aclutil_mk_constant_spec_id_f32(
+aclspv_vid_t	aclutil_mk_constant_spec_id_f32(
 		const aclspv_wrd_t c_key, 
 		const float c_val, h_aclspv_ctx_t h_ctx);
 
 struct aclutil_mk_constant_repvec_t {
-	aclspv_id_t	m_id;
+	aclspv_vid_t	m_id;
 	aclspv_wrd_t	m_literal_mask;
 };
 
 /** @brief repeating vector */
-struct aclutil_mk_constant_repvec_t	aclval_cfg_vec_broadcast(const aclspv_id_t	c_id_ty, const aclspv_id_t c_val, const aclspv_wrd_t c_literal_mask, h_aclspv_ctx_t h_ctx);
+struct aclutil_mk_constant_repvec_t	aclval_cfg_vec_broadcast(
+		const aclty_id_t c_id_ty,
+		const aclspv_vid_t c_val,
+		const aclspv_wrd_t c_literal_mask,
+		h_aclspv_ctx_t h_ctx
+		);
 
 
 ae2f_unused ae2f_inline_f static aclspv_id_t	aclval_cfg_by_enum(const u64_least c_val, h_aclspv_ctx_t h_ctx, enum ACLSPV_ID_ c_ty) {
@@ -186,9 +191,9 @@ ae2f_unused ae2f_inline_f static aclspv_id_t	aclval_cfg_by_enum(const u64_least 
 	}
 }
 
-ae2f_unused ae2f_inline_f static aclspv_id_t	aclutil_mk_specconstant_val_by_enum(
+ae2f_unused ae2f_inline_f static aclspv_vid_t	aclutil_mk_specconstant_val_by_enum(
 		const aclspv_wrd_t c_key,
-		const u64_least c_val,
+		const aclspv_wrd2_t c_val,
 		h_aclspv_ctx_t h_ctx,
 		enum ACLSPV_ID_ c_ty
 		) {

@@ -17,6 +17,9 @@
 #include "./opX.h"
 #include "./emit.h"
 
+
+typedef aclspv_id_t aclcur_id_t;
+
 struct aclcur {
 	union {
 		aclcur_lbl_t	m_lbl;
@@ -71,8 +74,6 @@ struct aclcur {
 	 * */
 	aclspv_wrd_t	m_val_mask;
 };
-
-typedef aclspv_id_t aclcur_id_t;
 
 aclcur_id_t aclcur_cfg_node2(aclspv_id_reserved_t c_newid, h_aclspv_ctx_t h_ctx, aclspv_bool_t c_toskip);
 

@@ -114,6 +114,7 @@ aclspv_id_t aclval_cfg_bool(
 }
 
 #include <aclval/nil.h>
+#include <aclty/sclr.h>
 
 aclspv_id_t aclval_cfg(
 		const aclspv_wrd2_t	c_val,
@@ -121,7 +122,7 @@ aclspv_id_t aclval_cfg(
 		enum ACLVAL_NBYTE_	c_idx_nbyte,
 		enum ACLVAL_TY_	c_idx_ty
 		) {
-	const enum ACLSPV_ID_ MAP[ACLVAL_TY_MAX][ACLVAL_NBYTE_MAX] = {
+	const aclty_sclr_t MAP[ACLVAL_TY_MAX][ACLVAL_NBYTE_MAX] = {
 		{ ACLSPV_ID_I8, ACLSPV_ID_I16, ACLSPV_ID_I32, ACLSPV_ID_I64 },
 		{ ACLSPV_ID_U8, ACLSPV_ID_U16, ACLSPV_ID_U32, ACLSPV_ID_U64 },
 		{ 0, ACLSPV_ID_F16, ACLSPV_ID_F32, ACLSPV_ID_F64 }
@@ -131,14 +132,6 @@ aclspv_id_t aclval_cfg(
 
 	unless(c_val) {
 		return aclval_cfg_nil(MAP[c_idx_ty][c_idx_nbyte], h_ctx);
-	}
-
-	if(c_idx_nbyte <= ACLVAL_NBYTE_4 && c_val >> 32) {
-		return aclval_cfg(
-				c_val & 0xFFFFFFFF
-				, h_ctx
-				, c_idx_nbyte
-				, c_idx_ty);
 	}
 
 	C = aclval_cfg_node(c_val, h_ctx);
@@ -156,17 +149,17 @@ aclspv_id_t aclval_cfg(
 					, SpvOpConstant
 					, (aclspv_wrd_t) MAP[c_idx_ty][c_idx_nbyte]
 					, h_ctx->m_id
-					, (u32_least)(c_val & 0xFFFFFFFF)
-					, (u32_least)((c_val >> 32) & 0xFFFFFFFF)
+					, (aclspv_wrd_t)(c_val & 0xFFFFFFFF)
+					, (aclspv_wrd_t)((c_val >> 32) & 0xFFFFFFFF)
 					)) return 0;
 	} else {
 		ae2f_ifezerr(h_ctx->m_count.m_types = aclutil_emitx_4(
 					&h_ctx->m_section.m_types
 					, h_ctx->m_count.m_types
 					, SpvOpConstant
-					, (uint_least32_t) MAP[c_idx_ty][c_idx_nbyte]
+					, MAP[c_idx_ty][c_idx_nbyte]
 					, h_ctx->m_id
-					, (u32_least)(c_val & 0xFFFFFFFF)
+					, (aclspv_wrd_t)(c_val & 0xFFFFFFFF)
 					)) return 0;
 	}
 
@@ -192,7 +185,7 @@ aclval_spec_t aclval_cfg_spec(
 
 	const aclval_spec_t	ZERO = {0, 0};
 
-	const enum ACLSPV_ID_ MAP[ACLVAL_TY_MAX][ACLVAL_NBYTE_MAX] = {
+	const aclty_sclr_t MAP[ACLVAL_TY_MAX][ACLVAL_NBYTE_MAX] = {
 		{ ACLSPV_ID_I8, ACLSPV_ID_I16, ACLSPV_ID_I32, ACLSPV_ID_I64 },
 		{ ACLSPV_ID_U8, ACLSPV_ID_U16, ACLSPV_ID_U32, ACLSPV_ID_U64 },
 		{ 0, ACLSPV_ID_F16, ACLSPV_ID_F32, ACLSPV_ID_F64 }
@@ -214,17 +207,17 @@ aclval_spec_t aclval_cfg_spec(
 					, SpvOpSpecConstant
 					, (aclspv_wrd_t) MAP[c_idx_ty][c_idx_nbyte]
 					, h_ctx->m_id
-					, (u32_least)(c_val & 0xFFFFFFFF)
-					, (u32_least)((c_val >> 32) & 0xFFFFFFFF)
+					, (aclspv_wrd_t)(c_val & 0xFFFFFFFF)
+					, (aclspv_wrd_t)((c_val >> 32) & 0xFFFFFFFF)
 					)) return ZERO;
 	} else {
 		ae2f_expected_but_else(h_ctx->m_count.m_types = aclutil_emitx_4(
 					&h_ctx->m_section.m_types
 					, h_ctx->m_count.m_types
 					, SpvOpSpecConstant
-					, (uint_least32_t) MAP[c_idx_ty][c_idx_nbyte]
+					, (aclspv_wrd_t) MAP[c_idx_ty][c_idx_nbyte]
 					, h_ctx->m_id
-					, (u32_least)(c_val & 0xFFFFFFFF)
+					, (aclspv_wrd_t)(c_val & 0xFFFFFFFF)
 					)) return ZERO;
 	}
 
