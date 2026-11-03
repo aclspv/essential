@@ -30,6 +30,18 @@ static enum ACLEXPR_RET_ s_cast_arithmetic(
 {
 	ae2fpat_assertassume(h_ctx);
 
+	/** same type; a conversion is meaningless and `FConvert` would even be invalid. */
+	if(c_old_type == c_new_type) {
+		*r_newid = c_old_id;
+
+		if(c_flag_literal & ACLUTIL_LITERAL_LITERAL)
+			return ACLEXPR_RET_SUCCESS_LITERAL;
+
+		return (c_flag_literal & ACLUTIL_LITERAL_CONSTANT)
+			? ACLEXPR_RET_SUCCESS_CONSTANT
+			: ACLEXPR_RET_SUCCESS;
+	}
+
 	/** two are float */
 	if (aclty_is_simd_flt(c_old_type, h_ctx) && aclty_is_simd_flt(c_new_type, h_ctx)) {
 		if(c_flag_literal & ACLUTIL_LITERAL_CONSTANT) {

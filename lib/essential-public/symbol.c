@@ -7,7 +7,7 @@
 
 ACLSPV_ABI_IMPL 
 aclspv_id_t aclspv_cfg_symbol(
-		const char ae2fcc_arg_sarr_restrict(rd, ae2f_NONE),
+		const char* ae2f_restrict rd,
 		aclspv_wrd_t c,
 		aclspv_id_t	c_new,
 		h_aclspv_ctx_t h
@@ -37,7 +37,9 @@ aclspv_id_t aclspv_cfg_symbol(
 	i = 0; while(i < lenchunk) {
 		const wrd_t read_opn = (chunk[i] >> 16) & 0xFFFF;
 		wrd_t j;
-		if(opn != read_opn) continue;	/** word count mismatch */
+
+		/** word count mismatch */
+		if(opn != read_opn) { i += read_opn; continue; }
 		for(j = opn; j --> 0 && STRWRD(rd, j, c) != chunk[i + 2]; ) ae2fcc_pause();
 		if(j > opn) { puts("found"); return chunk[i + 1]; };
 
@@ -53,8 +55,5 @@ aclspv_id_t aclspv_cfg_symbol(
 	chunk = h->m_section.m_name_symbol.m_p;
 	chunk[lenchunk] = (opn << 16) | (wrd_t)(SpvOpName);
 	aclmemcpy(&chunk[lenchunk + 2], rd, c);
-
-
-
 	return (chunk[lenchunk + 1] = c_new && c_new < h->m_id ? c_new : aclctx_newid(h));
 }

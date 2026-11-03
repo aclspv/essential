@@ -65,7 +65,8 @@ static ae2f_inline aclspv_sz_t aclutil_emit_wrd(
 		return 0;
 	}
 
-	CND = ae2f_expected_strict(h_wrds->m_p && (aclutil_sz_to_count(h_wrds->m_sz) <= UINT_MAX));
+	/** c_mask for `ae2f_bll_sel_ptr` must be all-ones/all-zeros, not 1/0. */
+	CND = ae2f_bll_from_bool1(uptr, ae2f_expected(h_wrds->m_p && (aclutil_sz_to_count(h_wrds->m_sz) <= UINT_MAX)));
 
 	*ae2f_bll_sel_ptr(
 			aclspv_wrd_t* ae2f_restrict
@@ -73,7 +74,12 @@ static ae2f_inline aclspv_sz_t aclutil_emit_wrd(
 			, &aclutil_get_wrd_of_vec(h_wrds)[c_wrdcount]
 			, &DUMMY) = c_wrd;
 
-	return ae2f_expected_strict(CND) ? c_wrdcount + 1 : 0u;
+	return ae2f_bll_sel(
+			aclspv_wrd_t
+			, (aclspv_sz_t)CND
+			, c_wrdcount + 1
+			, 0u
+			);
 }
 
 #define	aclspv_mk_noprnds(c_num_opprm)	\

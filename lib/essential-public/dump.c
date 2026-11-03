@@ -6,6 +6,22 @@
 
 enum { N_MEMMODEL = 3 };
 
+/** total word count of the binary. single source of truth for allocator and dumper. */
+static aclspv_wrd_t s_dump_num_wrd(const x_aclspv_ctx* ae2f_restrict h_ctx) {
+	return	 h_ctx->m_count.m_capability
+		+ h_ctx->m_count.m_ext
+		+ N_MEMMODEL
+		+ h_ctx->m_count.m_entp
+		+ h_ctx->m_count.m_execmode
+		+ h_ctx->m_count.m_name
+		+ h_ctx->m_count.m_name_symbol
+		+ h_ctx->m_count.m_decorate
+		+ h_ctx->m_count.m_types
+		+ h_ctx->m_count.m_vars
+		+ h_ctx->m_count.m_fndef
+		+ 5;
+}
+
 ACLSPV_ABI_IMPL aclspv_compile_t aclspv_dump_ctx_output1(
 		const x_aclspv_ctx* ae2f_restrict		h_ctx,
 		aclspv_wrd_t* ae2f_restrict const	rdwr_count_ret,
@@ -17,18 +33,7 @@ ACLSPV_ABI_IMPL aclspv_compile_t aclspv_dump_ctx_output1(
 	ae2f_ifezerr(rdwr_count_ret)	return ACLSPV_COMPILE_PRM_INVAL_NIL;
 	ae2f_ifnezerr(h_ctx->m_err)	return h_ctx->m_err;
 
-	NUM_RET	
-		= h_ctx->m_count.m_capability
-		+ h_ctx->m_count.m_ext
-		+ N_MEMMODEL
-		+ h_ctx->m_count.m_entp
-		+ h_ctx->m_count.m_execmode
-		+ h_ctx->m_count.m_name
-		+ h_ctx->m_count.m_decorate
-		+ h_ctx->m_count.m_types
-		+ h_ctx->m_count.m_vars
-		+ h_ctx->m_count.m_fndef
-		+ 5;
+	NUM_RET = s_dump_num_wrd(h_ctx);
 
 	if(*rdwr_count_ret < NUM_RET)	{ 
 		*rdwr_count_ret = NUM_RET;
@@ -36,12 +41,6 @@ ACLSPV_ABI_IMPL aclspv_compile_t aclspv_dump_ctx_output1(
 	}
 
 	ae2f_ifezerr(ret)		return ACLSPV_COMPILE_PRM_INVAL_NIL;
-
-	ret[0]	=	SpvMagicNumber;
-	ret[1]	=	h_ctx->m_usrcfg.m_ver_spv;
-	ret[2]	=	0;
-	ret[3]	=	NUM_RET;
-	ret[4]	=	0;
 
 #if	1
 #define copybinary(k_key, c_buf)	if(h_ctx->m_count.k_key)	\
@@ -87,6 +86,15 @@ ACLSPV_ABI_IMPL aclspv_compile_t aclspv_dump_ctx_output1(
 			+ h_ctx->m_count.m_execmode
 		  );
 
+	copybinary(m_name_symbol,	ret + 5 
+			+ h_ctx->m_count.m_capability 
+			+ h_ctx->m_count.m_ext
+			+ N_MEMMODEL
+			+ h_ctx->m_count.m_entp
+			+ h_ctx->m_count.m_execmode
+			+ h_ctx->m_count.m_name
+		  );
+
 	copybinary(m_decorate,		ret + 5 
 			+ h_ctx->m_count.m_capability 
 			+ h_ctx->m_count.m_ext
@@ -94,6 +102,7 @@ ACLSPV_ABI_IMPL aclspv_compile_t aclspv_dump_ctx_output1(
 			+ h_ctx->m_count.m_entp
 			+ h_ctx->m_count.m_execmode
 			+ h_ctx->m_count.m_name
+			+ h_ctx->m_count.m_name_symbol
 		  );
 
 	copybinary(m_types,		ret + 5 
@@ -103,6 +112,7 @@ ACLSPV_ABI_IMPL aclspv_compile_t aclspv_dump_ctx_output1(
 			+ h_ctx->m_count.m_entp
 			+ h_ctx->m_count.m_execmode
 			+ h_ctx->m_count.m_name
+			+ h_ctx->m_count.m_name_symbol
 			+ h_ctx->m_count.m_decorate
 		  );
 
@@ -113,6 +123,7 @@ ACLSPV_ABI_IMPL aclspv_compile_t aclspv_dump_ctx_output1(
 			+ h_ctx->m_count.m_entp
 			+ h_ctx->m_count.m_execmode
 			+ h_ctx->m_count.m_name
+			+ h_ctx->m_count.m_name_symbol
 			+ h_ctx->m_count.m_decorate
 			+ h_ctx->m_count.m_types
 		  );
@@ -124,10 +135,17 @@ ACLSPV_ABI_IMPL aclspv_compile_t aclspv_dump_ctx_output1(
 			+ h_ctx->m_count.m_entp
 			+ h_ctx->m_count.m_execmode
 			+ h_ctx->m_count.m_name
+			+ h_ctx->m_count.m_name_symbol
 			+ h_ctx->m_count.m_decorate
 			+ h_ctx->m_count.m_types
 			+ h_ctx->m_count.m_vars
 		  );
+
+	ret[0]	=	SpvMagicNumber;
+	ret[1]	=	h_ctx->m_usrcfg.m_ver_spv;
+	ret[2]	=	0;
+	ret[3]	=	NUM_RET;
+	ret[4]	=	0;
 
 #undef	copybinary
 
@@ -149,18 +167,7 @@ ACLSPV_ABI_IMPL aclspv_compile_t aclspv_dump_ctx_output(
 	ae2f_ifezerr(h_ctx)		return ACLSPV_COMPILE_PRM_INVAL_NIL;
 	ae2f_ifnezerr(h_ctx->m_err)	return h_ctx->m_err;
 
-	NUM_RET	
-		= h_ctx->m_count.m_capability
-		+ h_ctx->m_count.m_ext
-		+ N_MEMMODEL
-		+ h_ctx->m_count.m_entp
-		+ h_ctx->m_count.m_execmode
-		+ h_ctx->m_count.m_name
-		+ h_ctx->m_count.m_decorate
-		+ h_ctx->m_count.m_types
-		+ h_ctx->m_count.m_vars
-		+ h_ctx->m_count.m_fndef
-		+ 5;
+	NUM_RET = s_dump_num_wrd(h_ctx);
 
 	if(r_count)		*r_count = NUM_RET;
 	unless(ret)		return ACLSPV_COMPILE_OK;

@@ -15,7 +15,8 @@ ACLSPV_ABI_IMPL ae2f_ccpure ae2f_noexcept aclspv_bool_t aclspv_chck_extension_fr
 #define	BUF	aclutil_get_wrd_of_vec(&rd_ctx->m_section.m_ext)
 	aclspv_wrd_t		I	= 0;
 	const aclspv_wrd_t	C	= rd_ctx->m_count.m_ext;
-	const size_t		ELEN	= strlen(c_ext);
+	/** null terminator included, same as `aclspv_add_extension_from_ctx` */
+	const size_t		ELEN	= strlen(c_ext) + 1;
 	const aclspv_wrd_t	WELEN	= ae2f_bll_sel_bool1(aclspv_wrd_t
 			, (aclspv_wrd_t)(ELEN > (size_t)0xFFFFFFFF)
 			, 0 
@@ -23,28 +24,22 @@ ACLSPV_ABI_IMPL ae2f_ccpure ae2f_noexcept aclspv_bool_t aclspv_chck_extension_fr
 			);
 	const aclspv_wrd_t	WCEXT	= ((WELEN + 3) >> 2) + 1;
 
-	while(			I < C
-			&&	((BUF[I] >> 16) & 0xFFFF) < WCEXT
-			&&	ae2f_expected(I += ((BUF[I] >> 16) & 0xFFFF))
-	     ) {}
-
-	ae2f_ifezerr(I < C)		return 0;
 	ae2f_ifnezerr(rd_ctx->m_err)	return 0;
-	if(((BUF[I] >> 16) != WCEXT))	return 0;
 
-	{
-		const aclspv_wrd_t	MAGIC	= BUF[I];
+	while(I < C) {
 		const aclspv_wrd_t	SKIP	= (BUF[I] >> 16) & 0xffff;
-		aclspv_bool_t		R	= 0;
 
-		while(			I < C 
-				&&	BUF[I] == MAGIC
-				&&	(R = (aclspv_bool_t)!strcmp(c_ext, (const char* ae2f_restrict)&BUF[I + 1]))
-				&&	ae2f_expected(I += SKIP)
-		     ) {}
+		if(SKIP == WCEXT
+				&&	!strcmp(c_ext, (const char* ae2f_restrict)&BUF[I + 1]))
+			return 1;
 
-		return R;
+		if(SKIP > WCEXT)	break;
+		ae2f_ifezerr(SKIP)	break;
+
+		I += SKIP;
 	}
+
+	return 0;
 #undef	BUF
 
 	ae2f_unreachable();
@@ -72,30 +67,19 @@ ACLSPV_ABI_IMPL ae2f_ccpure ae2f_noexcept aclspv_bool_t aclspv_add_extension_fro
 	{
 #define	BUF	aclutil_get_wrd_of_vec(&h_ctx->m_section.m_ext)
 
-		while(			I < C
-				&&	((BUF[I] >> 16) & 0xFFFF) < WCEXT
-				&&	ae2f_expected(I += ((BUF[I] >> 16) & 0xFFFF))
-		     ) {}
-
-		ae2f_ifezerr(I < C)		goto LBL_NOT_FOUND;	/** end shit */
-		if(((BUF[I] >> 16) != WCEXT))	goto LBL_NOT_FOUND;
-
-		{
-			const aclspv_wrd_t	MAGIC	= BUF[I];
+		/** entries are kept sorted by word count (ascending). */
+		while(I < C) {
 			const aclspv_wrd_t	SKIP	= (BUF[I] >> 16) & 0xffff;
-			aclspv_bool_t		R	= 0;
 
-			while(			I < C 
-					&&	BUF[I] == MAGIC
-					&&	(R = (aclspv_bool_t)!strcmp(c_ext, (const char* ae2f_restrict)&BUF[I + 1]))
-					&&	ae2f_expected(I += SKIP)
-			     ) {}
+			if(SKIP == WCEXT
+					&&	!strcmp(c_ext, (const char* ae2f_restrict)&BUF[I + 1]))
+				return 1;
 
-			ae2f_cgoto2_strict(R, LBL_FOUND, LBL_NOT_FOUND);
-LBL_FOUND:
-			return 1;
+			if(SKIP > WCEXT)	break;
+			ae2f_ifezerr(SKIP)	break;
+
+			I += SKIP;
 		}
-		ae2f_unreachable();
 #undef	BUF
 	}
 
