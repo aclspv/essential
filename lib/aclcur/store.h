@@ -1,7 +1,9 @@
 #ifndef	aclcur_store_h
 #define aclcur_store_h
 
-#include <aclspv.h>
+#include <acldef.h>
+#include <aclcur/reg/id.h>
+#include <aclcur/lbl/id.h>
 #include "./flag0.h"
 
 enum ACLCUR_FLAG0_STORE_ {
@@ -17,10 +19,12 @@ typedef struct aclcur_store {
 	aclspv_id_t	m_reg;
 } aclcur_store_t;
 
+typedef aclcur_id_t aclcur_storeid_t;
+
 /** returns a store id of `c_reg` from `c_lbl` */
 ae2f_ccpure aclspv_id_t	aclcur_get_node_store(
-		aclspv_id_t c_reg,
-		aclspv_id_t c_lbl,
+		aclcur_regid_t c,
+		aclcur_lblid_t c_lbl,
 		h_aclspv_ctx_t h_ctx
 		);
 
@@ -30,9 +34,9 @@ ae2f_ccpure aclspv_id_t	aclcur_get_node_store(
  * 
  * phi is guaranteed
  * */
-aclspv_id_t	aclcur_store_reg(
-		aclspv_id_t c_reg,
-		aclspv_id_t c_val,
+aclcur_storeid_t aclcur_store_reg(
+		aclcur_regid_t c,
+		aclspv_vid_t c_val,
 		h_aclspv_ctx_t h_ctx
 		);
 
@@ -40,9 +44,9 @@ aclspv_id_t	aclcur_store_reg(
  * implicit store to memory
  * assumes no branching is happening
  * */
-aclspv_id_t	aclcur_store_reg_implicit(
-		aclspv_id_t c_reg,
-		aclspv_id_t c_val,
+aclcur_storeid_t aclcur_store_reg_implicit(
+		aclcur_regid_t c,
+		aclspv_vid_t c_val,
 		h_aclspv_ctx_t h_ctx
 		);
 
@@ -50,9 +54,9 @@ aclspv_id_t	aclcur_store_reg_implicit(
  * explicit store to memory
  * phi/store-to-memory is guaranteed.
  * */
-aclspv_id_t	aclcur_store_reg_explicit(
-		aclspv_id_t c_reg,
-		aclspv_id_t c_val,
+aclcur_storeid_t aclcur_store_reg_explicit(
+		aclcur_regid_t c,
+		aclspv_vid_t c_val,
 		h_aclspv_ctx_t h_ctx
 		);
 

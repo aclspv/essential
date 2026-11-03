@@ -17,9 +17,6 @@
 #include "./opX.h"
 #include "./emit.h"
 
-
-typedef aclspv_id_t aclcur_id_t;
-
 struct aclcur {
 	union {
 		aclcur_lbl_t	m_lbl;
@@ -52,7 +49,7 @@ struct aclcur {
 	 *
 	 * special: for 0th element(root label), this is a return type of the function.
 	 * */
-	aclspv_id_t	m_ty;
+	aclty_id_t	m_ty;
 
 	/** number of cursor referenced. */
 	aclspv_wrd_t	m_num_ref;
@@ -83,7 +80,7 @@ aclcur_id_t aclcur_cfg_node2(aclspv_id_reserved_t c_newid, h_aclspv_ctx_t h_ctx,
  *
  * see aclcur_cfg_node2
  * */
-static ae2f_inline_f aclspv_id_t aclcur_cfg_node(aclspv_id_t c, h_aclspv_ctx_t h_ctx) {
+static ae2f_inline_f aclcur_id_t aclcur_cfg_node(aclspv_id_reserved_t c, h_aclspv_ctx_t h_ctx) {
 	return aclcur_cfg_node2(c, h_ctx, 0);
 }
 

@@ -2,6 +2,7 @@
 #define _aclspv_src_lib_ctx_err_cc
 
 #include <aclspv.h>
+#include <assert.h>
 #include <ae2f/pat/macrofunc.h>
 
 #include <util/log.h>
@@ -18,6 +19,8 @@ ae2f_MAC() aclctx_err(
 	err_call(fprintf, (stderr, "err %u\n"
 				, ae2f_static_cast(unsigned, ((h)->m_err))
 			));
+
+	assert(0);
 }
 
 #endif

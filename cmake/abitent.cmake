@@ -7,7 +7,7 @@ function(aclspv_abitent prm_postfix)
 		${prm_postfix} OBJECT
 		inc aclspv
 		${PROJECT_SOURCE_DIR}/cfg/aclspv-${prm_postfix}.cmake.in
-		${src} ${inc} ${src2}
+		${src} ${inc} ${src2} ${head_gen}
 		)
 
 	target_compile_definitions(aclspv-${prm_postfix} PRIVATE ACLSPVLIB=1)

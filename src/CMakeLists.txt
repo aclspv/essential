@@ -9,7 +9,6 @@ ae2f_Macro_Lib_V2_REL(
 	inc/.aclspv ".h"
 	${PROJECT_SOURCE_DIR}/../cfg/aclspv-common-essential.cmake.in
 	inc ON
-	${head_gen}
 	)
 
 target_link_libraries(aclspv-common-essential

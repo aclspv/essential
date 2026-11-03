@@ -36,7 +36,7 @@ enum ACLEXPR_RET_ aclexpr_arithmetic_cast_non_literal(
 
 enum ACLEXPR_RET_ aclexpr_arithmetic_cast(
 		const aclspv_vid_t		c_old_id,
-		const aclspv_id_t		c_old_type,
+		const aclty_id_t		c_old_type,
 		const aclutil_ltrlmask_t	c_flag_literal,
 		const aclutil_literal		c_old_literal,
 

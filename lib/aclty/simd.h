@@ -35,7 +35,7 @@ static aclty_simd_t aclty_simd_elmtype_r(aclty_simd_t c, aclty_simd_t c_sub_opt,
 		c = c_new;
 	}
 
-	return c == c_sub_opt ? c_sub_opt : c_sub_opt ? 0 : c;
+	return c;
 }
 
 /** 

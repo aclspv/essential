@@ -1,9 +1,10 @@
 #ifndef	aclcur_lbl_h
 #define aclcur_lbl_h
 
-#include <aclspv.h>
+#include <aclcur.h>
 #include "./class.h"
 #include "./flag0.h"
+#include "./lbl/id.h"
 
 enum ACLCUR_FLAG0_LBL_ {
 	ACLCUR_FLAG0_LBL_ROOT	= ACLCUR_FLAG0_MAX,
@@ -19,26 +20,31 @@ typedef struct aclcur_lbl {
 	aclspv_wrd_t		m_nop;
 
 	/** root of it. */
-	aclspv_id_t		m_root;
+	aclcur_lblid_t		m_root;
 } aclcur_lbl_t;
 
 /** 
  * get current branch label.
  * has a possibility to fail.
  * */
-aclspv_id_t ae2f_ccpure aclcur_get_lbl_last(h_aclspv_ctx_t h_ctx);
+aclcur_lblid_t ae2f_ccpure aclcur_get_lbl_last(h_aclspv_ctx_t h_ctx);
 aclcur_t* ae2f_ccpure aclcur_get_lbl_last1(h_aclspv_ctx_t h_ctx);
 
 /** root is not bootstrapped by this. */
-aclspv_id_t aclcur_cfg_lbl(aclspv_id_t c, h_aclspv_ctx_t h_ctx);
+aclcur_lblid_t aclcur_cfg_lbl(aclcur_lblid_t c, h_aclspv_ctx_t h_ctx);
 
-/** mark a label as the loop header (the while-cond block).
+/** 
+ * returns 0 on failure
+ *
+ * mark a label as the loop header (the while-cond block).
  * only the header takes the marker: the back edge is not carved yet
  * when its loads resolve, so no graph shape reveals the loopness then.
  * everything else (the body, the store-side and phi-side decisions)
  * is derived from graph structure: the loop JC's continue target at
- * carve time, and emit-time cycle membership. */
-aclspv_id_t aclcur_cfg_lbl_loop(aclspv_id_t c_lbl, h_aclspv_ctx_t h_ctx);
+ * carve time, and emit-time cycle membership.
+ *
+ * */
+aclcur_lblid_t aclcur_cfg_lbl_loop(aclcur_lblid_t c, h_aclspv_ctx_t h_ctx);
 
 /** 
  * bootstrap the root label as the first node of the cursor buffer.

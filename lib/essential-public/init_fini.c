@@ -29,6 +29,7 @@ ACLSPV_ABI_IMPL void aclspv_fini_ctx(
 	aclmem_fini(&d_ctx->m_section.m_execmode);
 	aclmem_fini(&d_ctx->m_section.m_ext);
 	aclmem_fini(&d_ctx->m_section.m_name);
+	aclmem_fini(&d_ctx->m_section.m_name_symbol);
 	aclmem_fini(&d_ctx->m_section.m_types);
 	aclmem_fini(&d_ctx->m_section.m_vars);
 	aclmem_fini(&d_ctx->m_section.m_fnimpl);
@@ -140,6 +141,7 @@ ACLSPV_ABI_IMPL aclspv_compile_t aclspv_init_ctx(
 	aclmem_init(&i_ctx->m_section.m_types		, i_ctx);
 	aclmem_init(&i_ctx->m_section.m_decorate		, i_ctx);
 	aclmem_init(&i_ctx->m_section.m_name		, i_ctx);
+	aclmem_init(&i_ctx->m_section.m_name_symbol	, i_ctx);
 
 	aclmem_init(&i_ctx->m_tmp.m_v0			, i_ctx);
 	aclmem_init(&i_ctx->m_tmp.m_v1			, i_ctx);

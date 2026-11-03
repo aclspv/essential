@@ -81,7 +81,7 @@ ae2f_inline_f static aclexpr_visit_lbl_t aclexpr_visit_opn_initlist(
 		if(P && P->m_class == ACLTY_STRUCT
 				&& (P->m_field0 & ACLTY_STRUCT_FIELD0_UNION)
 				&& P->m_info.m_struct.m_num_mbr > N
-				&& P->m_info.m_struct.m_num_mbr <= ACLCUR_OPX_OPRND_CAP)
+				&& P->m_info.m_struct.m_num_mbr <= __ACLSPV_MAX_OPRND)
 			M = P->m_info.m_struct.m_num_mbr;
 	}
 

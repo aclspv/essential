@@ -587,4 +587,14 @@ ae2f_extern ACLSPV_ABI_DECL ae2f_noexcept aclspv_bool_t aclspv_add_extension_fro
 		const char* ae2f_restrict const		c_ext
 		);
 
+#include <ae2f/cc/arg_sarr.h>
+
+/** c should be len of `rd` EXCLUDING null terminator (\0) */
+ae2f_extern ACLSPV_ABI_DECL aclspv_id_t aclspv_cfg_symbol(
+		const char ae2fcc_arg_sarr_restrict(rd, aclspv_h),
+		aclspv_wrd_t c,
+		aclspv_id_t	c_new_opt,
+		h_aclspv_ctx_t h
+		);
+
 #endif

@@ -473,18 +473,27 @@ enum ACLEXPR_RET_ aclexpr_arithmetic_cast(
 	ae2fpat_assertassume(r_newid);
 	ae2fpat_assertassume(h_ctx);
 
+	dbg_puts("aclexpr_arithmetic_cast");
+
 	/** two are same */
 	if(c_old_type == c_new_type) {
 		const uint_fastenum_t	CND_LIT = c_flag_literal & ACLUTIL_LITERAL_LITERAL;
+
+		dbg_puts("twoaresame");
 		*r_newid = c_old_id;
 
 		if(r_new_literal_opt && CND_LIT)
 			*r_new_literal_opt = c_old_literal;
 
-		if (CND_LIT)
+		if (CND_LIT) {
+			dbg_puts("done");
 			return ACLEXPR_RET_SUCCESS_LITERAL;  /** prefer LITERAL so mask stays 0x3; prevents float literal arith from being forced to RT path after clear in carve2_arithmetic_do */
+		}
+
+			dbg_puts("done : nonlit");
 		return (c_flag_literal & ACLUTIL_LITERAL_CONSTANT) ? ACLEXPR_RET_SUCCESS_CONSTANT : ACLEXPR_RET_SUCCESS;
 	}
+
 
 	ae2f_ifezerr(c_old_type) {
 		_aclctx_err(h_ctx, ACLSPV_COMPILE_ARITHMETIC_CAST_TYPE_IS_UNDEFINED_OLD);

@@ -295,6 +295,12 @@ aclutil_entp_t aclemit_fndecl_entp_cfg(CXCursor h_parent, h_aclspv_ctx_t CTX) {
 			aclutil_get_wrd_of_vec(&CTX->m_section.m_entp)[POS]
 			, CTX->m_count.m_entp - POS - 1
 			);
+
+#if	1
+	ae2f_ifezerr(aclspv_cfg_symbol(NAME.data, (aclspv_wrd_t)strlen(NAME.data), THIS_ENTRY_POINT.m_id, CTX))
+		goto LBL_ABRT;
+#endif
+
 #endif
 
 	/** OpExecMode */

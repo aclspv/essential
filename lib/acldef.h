@@ -44,7 +44,9 @@ extern char ACLSPV_CHECK[sizeof(aclspv_opcode_t) >= 2 ? 1 : -1];
 typedef aclspv_wrd_t	aclspv_num_opprm_t;
 
 /** 
- * any value, which has data type
+ * any value, which has data type.
+ * it could be runtime & constant.
+ *
  * see aclty_id_t
  * */
 typedef aclspv_id_t	aclspv_vid_t;

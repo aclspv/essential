@@ -16,7 +16,7 @@ aclspv_id_t aclcur_cfg_opx(
 		aclspv_wrd_t	c_num,
 		h_aclspv_ctx_t	h_ctx
 		) {
-	h_aclcur_t p_os[ACLCUR_OPX_OPRND_CAP];
+	h_aclcur_t p_os[__ACLSPV_MAX_OPRND];
 	aclcur_t b;
 	aclspv_wrd_t i;
 
@@ -28,7 +28,7 @@ aclspv_id_t aclcur_cfg_opx(
 	}
 
 	/** opX holds at most ACLCUR_OPX_OPRND_CAP operands (fixed-size p_os array). */
-	if(c_num > ACLCUR_OPX_OPRND_CAP) {
+	if(c_num > __ACLSPV_MAX_OPRND) {
 #if	__ACLSPV_CHECK_EXTRA
 		err_puts("opX holds at most 256 operands.");
 #endif

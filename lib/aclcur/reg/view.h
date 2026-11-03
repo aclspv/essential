@@ -2,7 +2,13 @@
 #define aclcur_reg_view_h
 
 #include "../reg.h"
+#include <aclty.h>
 #include <ae2f/cc/profiles.h>
+
+/**
+ * ALIAS2 type
+ * */
+typedef aclcur_regid_t aclcur_regid_alias2_t;
 
 /**
  * address of an ALIAS2 view register: EMIT-TIME, APPENDING,
@@ -19,10 +25,10 @@
  * call is a second opcode, and re-using one id across a dominating
  * re-materialization would violate dominance.
  * */
-aclspv_id_t aclcur_regview_addr(aclspv_id_t c_reg, h_aclspv_ctx_t h_ctx);
+aclcur_regid_t aclcur_regview_addr(aclcur_regid_alias2_t c, h_aclspv_ctx_t h_ctx);
 
 /** byte size of an ALIAS2 view register's storage: the size of its own type. */
-aclconst_specsz aclcur_regview_size(aclspv_id_t c_reg, h_aclspv_ctx_t h_ctx);
+aclconst_specsz aclcur_regview_size(aclcur_regid_alias2_t c, h_aclspv_ctx_t h_ctx);
 
 /**
  * create an ALIAS2 typed view register of the storage owned by c_parent.
@@ -40,7 +46,7 @@ aclconst_specsz aclcur_regview_size(aclspv_id_t c_reg, h_aclspv_ctx_t h_ctx);
 aclspv_id_t aclcur_reg_view(
 		CXCursor		c_cur,
 		aclspv_id_t		c_parent,
-		aclspv_id_t		c_ty,
+		aclty_id_t		c_ty,
 		aclspv_id_t		c_idx,
 		aclspv_wrd_t		c_storage_class,
 		aclspv_wrd_t		c_step,

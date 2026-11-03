@@ -2,6 +2,7 @@
 #define ACLCUR_LBL_DFS_H
 
 #include "../class.h"
+#include "./id.h"
 
 enum ACLCUR_LBL_DFS_ {
 	ACLCUR_LBL_DFS_CONTINUE,
@@ -16,7 +17,7 @@ typedef enum ACLCUR_LBL_DFS_ aclcur_lbl_dfs_t(
 		);
 
 enum ACLCUR_LBL_DFS_ aclcur_lbl_dfs(
-		aclspv_id_t		c_lbl,
+		aclcur_lblid_t		c,
 		aclcur_lbl_dfs_t	fn,
 		void*			rdwr_client,
 		h_aclspv_ctx_t		h_ctx

@@ -5,5 +5,4 @@
 
 aclspv_compile_t EMIT_aclcur_ret(h_aclcur_t h, h_aclspv_ctx_t h_ctx);
 
-
 #endif

@@ -19,11 +19,14 @@ enum ACLCUR_FLAG0_ {
 	ACLCUR_FLAG0_MAX
 };
 
+#define aclcur_flag0_tent2(CAP, sml, ty, c_bitmax)	\
+	ae2f_inline_f ae2f_ccconst static ty sml(enum CAP c) { return ((ty)1u) << (ty)(c); }	\
+	typedef int sml##_check[ (CAP##MAX > (c_bitmax)) ? -1 : 1 ]
+
 #define	aclcur_flag0_tent(CAP, sml)	\
-	ae2f_inline_f ae2f_ccconst static aclspv_wrd_t sml	\
-	(enum CAP c) { return 1u << (aclspv_wrd_t)(c); }	\
-	typedef int sml##_check[CAP##MAX <= 32 ? 1 : -1]
+	aclcur_flag0_tent2(CAP, sml, aclspv_wrd_t, 32)
 
 aclcur_flag0_tent(ACLCUR_FLAG0_, aclcur_flag0);
+
 
 #endif

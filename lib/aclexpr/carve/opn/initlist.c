@@ -58,11 +58,11 @@ aclspv_bool_t aclexpr_carve_opn_initlist(
 	 * operands, but the scale's operand slots and extras share one
 	 * buffer (extras = buf + END + NUMOPRND), so anything appended past
 	 * the visited count would clobber extras[0]. keep pads here. */
-	aclspv_id_t		OP[ACLCUR_OPX_OPRND_CAP];
+	aclspv_id_t		OP[__ACLSPV_MAX_OPRND];
 	aclexpr_opbincfg_extra* ae2f_restrict XTRA = rdwr_lst_extra;
 
 	/** opX holds at most ACLCUR_OPX_OPRND_CAP operands; empty lists carry no value here. */
-	ae2f_ifnezerr_strict(N == 0 || N > ACLCUR_OPX_OPRND_CAP) {
+	ae2f_ifnezerr_strict(N == 0 || N > __ACLSPV_MAX_OPRND) {
 		err_puts("[carve::opn::initlist] element count out of range");
 		return ACLEXPR_CARVE_NO;
 	}
@@ -119,7 +119,7 @@ aclspv_bool_t aclexpr_carve_opn_initlist(
 				 * extras[0] survives untouched. */
 				if((P_TY->m_field0 & ACLTY_STRUCT_FIELD0_UNION)
 						&& N == 1 && EXPECTED > 1) {
-					ae2f_ifnezerr_strict(EXPECTED > ACLCUR_OPX_OPRND_CAP) {
+					ae2f_ifnezerr_strict(EXPECTED > __ACLSPV_MAX_OPRND) {
 						err_puts("[carve::opn::initlist] union member count too large");
 						return ACLEXPR_CARVE_NO;
 					}

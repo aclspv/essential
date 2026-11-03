@@ -1,18 +1,20 @@
 #ifndef	aclcur_op1_h
 #define aclcur_op1_h
 
-#include <aclspv.h>
+#include <aclcur.h>
+#include <aclctx/id.h>
+#include <aclty.h>
 
 typedef struct {
 	enum SpvOp_	m_op;
 	aclspv_id_t	m_o[3];
 } aclcur_op_t;
 
-aclspv_id_t aclcur_cfg_op1(
-		aclspv_id_t c_newid_opt,
+aclspv_vid_t aclcur_cfg_op1(
+		aclspv_id_reserved_t c_newid_opt,
 		enum SpvOp_ c_op,
-		aclspv_id_t c_ty,
-		aclspv_id_t c_o0,
+		aclty_id_t c_ty,
+		aclcur_vid_t c_o0,
 		h_aclspv_ctx_t	h_ctx
 		);
 
@@ -31,28 +33,42 @@ aclspv_id_t aclcur_cfg_op1(
  * OpAccessChain's shape, whose Base is a register id. @see aclcur_cfg_op1r
  * */
 aclspv_id_t aclcur_cfg_op1ri(
-		aclspv_id_t c_newid_opt,
+		aclspv_id_reserved_t c_newid_opt,
 		enum SpvOp_ c_op,
-		aclspv_id_t c_ty,
-		aclspv_id_t c_o0,
+		aclty_id_t c_ty,
+		aclspv_vid_t c_o0,
 		aclspv_wrd_t c_imm,
 		h_aclspv_ctx_t	h_ctx
 		);
 
+/**
+ * one-operand instruction whose operand is a RAW id, not a value node.
+ *
+ * the normal aclcur_cfg_op1 routes its operand through aclcur_get_load,
+ * which requires a node carrying ACLCUR_FLAG0_VALUE. that is right for an
+ * SSA operand, but an ADDRESS has no such node: a register's id is its
+ * storage address, and a register deliberately carries no VALUE flag.
+ * address-of (`&x`) and the view chain both land here — the address is
+ * emitted verbatim, exactly as a constant operand would be.
+ *
+ * the raw operand takes no reference: it is backed by no node.
+ *
+ * @see aclcur_cfg_op1, whose operand is validated and refcounted.
+ * */
 aclspv_id_t aclcur_cfg_op1r(
-		aclspv_id_t c_newid_opt,
+		aclspv_id_reserved_t c_newid_opt,
 		enum SpvOp_ c_op,
-		aclspv_id_t c_ty,
-		aclspv_id_t c_o0,
+		aclty_id_t c_ty,
+		aclspv_vid_t c_o0,
 		h_aclspv_ctx_t	h_ctx
 		);
 
 aclspv_id_t aclcur_cfg_op2(
 		aclspv_id_t c_newid_opt,
 		enum SpvOp_ c_op,
-		aclspv_id_t c_ty,
-		aclspv_id_t c_o0,
-		aclspv_id_t c_o1,
+		aclty_id_t c_ty,
+		aclcur_vid_t c_o0,
+		aclcur_vid_t c_o1,
 		h_aclspv_ctx_t	h_ctx
 		);
 
@@ -107,7 +123,7 @@ aclspv_id_t aclcur_cfg_op2i(
  *
  * @return the new node id, or 0 on failure.
  * */
-aclspv_id_t aclcur_cfg_st(
+aclcur_id_t aclcur_cfg_st(
 		enum SpvOp_	c_op,
 		aclspv_id_t	c_o0,
 		aclspv_id_t	c_o1,

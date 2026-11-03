@@ -24,12 +24,12 @@ boolx4 t0_band128_norm(const i32x4 A, const i32x4 B) {
 
     Z *= 15;
 
-    return A & B != Z;
+    return (A & B) != Z;
 }
 
 #endif
 
-#if	1
+#if	0
 
 __attribute__((annotate("aclspv_execmodel(0)")))
 void t0_band128(

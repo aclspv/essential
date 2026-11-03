@@ -2,10 +2,17 @@
 #define aclcur_reg_var_h
 
 #include "../reg.h"
+#include "./id.h"
 #include <ae2f/cc/profiles.h>
 
+/** variable storage id */
+typedef aclcur_id_t aclcur_varid_t;
+
+/** variable-like register id */
+typedef aclcur_regid_t aclcur_varregid_t;
+
 /** variable-kind register emission callbacks, see aclcur_regvar_in(). */
-aclspv_compile_t aclcur_regvar_emit_reg(aclspv_id_t c_reg, h_aclspv_ctx_t h_ctx);
+aclspv_compile_t aclcur_regvar_emit_reg(aclcur_regid_root_t c, h_aclspv_ctx_t h_ctx);
 aclspv_compile_t aclcur_regvar_emit_load(aclspv_id_t c_id, h_aclspv_ctx_t h_ctx);
 aclspv_compile_t aclcur_regvar_emit_store(aclspv_id_t c_id, h_aclspv_ctx_t h_ctx);
 

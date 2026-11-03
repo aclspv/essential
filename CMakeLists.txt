@@ -318,6 +318,8 @@ aclspv_predef_switch(aclspv-common-essential	INTERFACE "ACLSPV_OPACC_IDX_MAX" 64
 aclspv_predef_switch(aclspv-aclexpr	PRIVATE		"ACLSPV_MATH_NR" 0)	# not ready
 aclspv_predef_switch(aclspv-aclexpr	PRIVATE		"ACLSPV_MATH_NR_RSQRTF_MAGIC"	0x5f375a86)
 aclspv_predef_switch(aclspv-aclexpr	PRIVATE		"ACLSPV_MATH_NR_IT"		2)
+aclspv_predef_switch(aclspv-aclcur	PRIVATE		"ACLSPV_MAX_OPRND"		"0x100")
+aclspv_predef_switch(aclspv-aclexpr	PRIVATE		"ACLSPV_MAX_OPRND"		"${ACLSPV_MAX_OPRND}")
 
 message(STATUS ""
 	"[aclspv_essential]\n"

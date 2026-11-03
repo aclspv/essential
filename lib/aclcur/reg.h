@@ -2,6 +2,7 @@
 #define aclcur_reg_h
 
 #include "./flag0.h"
+#include "./reg/id.h"
 
 #include <aclconst/specsize.h>
 #include <util/literal.h>
@@ -362,7 +363,7 @@ typedef struct aclcur_reg {
  *
  * returns the new register id, or 0 on failure.
  * */
-aclspv_id_t aclcur_cfg_reg1(
+aclcur_regid_t aclcur_cfg_reg1(
 		aclspv_id_t		c_varid_opt,
 		CXCursor		c_cur,
 		aclspv_id_t		c_ty,
@@ -371,7 +372,7 @@ aclspv_id_t aclcur_cfg_reg1(
 		h_aclspv_ctx_t		h_ctx
 		);
 
-ae2f_inline_f static aclspv_id_t aclcur_cfg_reg(
+ae2f_inline_f static aclcur_regid_t aclcur_cfg_reg(
 		CXCursor		c_cur,
 		aclspv_id_t		c_ty,
 		aclspv_wrd_t		c_storage_class,
