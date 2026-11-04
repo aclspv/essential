@@ -22,8 +22,8 @@ ae2f_ccpure static enum ACLCUR_LBL_DFS_ s_reachable(
 }
 
 aclspv_bool_t aclcur_lbl_is_reachable(
-		aclspv_id_t c_root,
-		aclspv_id_t c_child,
+		aclcur_lblid_t c_root,
+		aclcur_lblid_t c_child,
 		h_aclspv_ctx_t h_ctx) {
 	s_reachable_t r;
 	r.m_tar_lbl	= c_child;
@@ -64,8 +64,8 @@ ae2f_ccpure static enum ACLCUR_LBL_DFS_ s_reachable_uc(
 }
 
 aclspv_bool_t aclcur_lbl_is_reachable_uc(
-		aclspv_id_t c_root,
-		aclspv_id_t c_child,
+		aclcur_lblid_t c_root,
+		aclcur_lblid_t c_child,
 		h_aclspv_ctx_t h_ctx) {
 	s_reachable_uc_t r;
 	r.m_tar_lbl	= c_child;
@@ -81,7 +81,7 @@ aclspv_bool_t aclcur_lbl_is_reachable_uc(
  * participates in a cycle (a loop block: header, body, or the continue
  * trampoline). */
 aclspv_bool_t aclcur_lbl_in_cycle(
-		aclspv_id_t c_lbl,
+		aclcur_lblid_t c_lbl,
 		h_aclspv_ctx_t h_ctx) {
 	h_aclcur_t p_lbl = aclcur_get_node(c_lbl, h_ctx);
 	h_aclcur_t p_tail;

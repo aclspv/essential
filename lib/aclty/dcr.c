@@ -3,7 +3,11 @@
 
 #include <ae2f/pat/dbg.h>
 
-ae2f_ccpure aclty_t* aclty_get_dcr(aclty_t* ae2f_restrict rd_dcr, aclspv_wrd_t c_decor, h_aclspv_ctx_t h_ctx) {
+ae2f_ccpure aclty_t* aclty_get_dcr(
+		aclty_t* ae2f_restrict rd_dcr,
+		aclspv_wrd_t c_decor,
+		h_aclspv_ctx_t h_ctx
+		) {
 	ae2fpat_assertassumeunless(rd_dcr) {
 		h_ctx->m_err = ACLSPV_COMPILE_CXTP_ZERO;
 		return 0;

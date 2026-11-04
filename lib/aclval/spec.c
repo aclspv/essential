@@ -17,7 +17,7 @@ aclspv_id_t	aclutil_mk_constant_spec_id(
 
 aclspv_id_t	aclutil_mk_constant_spec64_id(
 		const aclspv_wrd_t c_key, 
-		const u64_least c_val, h_aclspv_ctx_t h_ctx) {
+		const aclspv_wrd2_t c_val, h_aclspv_ctx_t h_ctx) {
 	return 
 		aclval_cfg_spec(
 				c_val

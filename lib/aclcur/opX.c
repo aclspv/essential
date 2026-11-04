@@ -9,10 +9,10 @@
 #include <aclutil/emitx.h>
 
 aclspv_id_t aclcur_cfg_opx(
-		aclspv_id_t	c_newid_opt,
+		aclspv_id_reserved_t	c_newid_opt,
 		enum SpvOp_	c_op,
-		aclspv_id_t	c_ty,
-		const aclspv_id_t	c_os[],
+		aclty_id_t	c_ty,
+		const aclspv_vid_t	c_os[],
 		aclspv_wrd_t	c_num,
 		h_aclspv_ctx_t	h_ctx
 		) {
@@ -159,4 +159,3 @@ aclspv_id_t aclcur_cfg_opx(
 
 	ae2f_unreachable();
 }
-

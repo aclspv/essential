@@ -74,11 +74,11 @@ ae2f_ccconst aclspv_bool_t aclty_is_sclr_signed(const aclty_sclr_t c) {
 	}
 }
 
-ae2f_ccconst aclspv_bool_t aclty_is_sclr_int(const aclty_default_t c_id_default) {
+ae2f_ccconst aclspv_bool_t aclty_is_sclr_int(const aclty_sclr_t c_id_default) {
 	return aclty_is_sclr_uint(c_id_default) || aclty_is_sclr_sint(c_id_default);
 }
 
-ae2f_ccconst aclspv_bool_t aclty_is_sclr_flt(const aclty_default_t c_id_default) {
+ae2f_ccconst aclspv_bool_t aclty_is_sclr_flt(const aclty_sclr_t c_id_default) {
 	switch(c_id_default) {
 		case ACLSPV_ID_F16:
 		case ACLSPV_ID_F32:
@@ -127,11 +127,11 @@ ae2f_ccconst aclspv_bool_t aclty_is_default(const aclty_default_t c_id_default) 
 }
 
 ae2f_ccconst aclspv_bool_t 
-aclty_is_sclr_num(const aclty_default_t c_id_default) {
+aclty_is_sclr_num(const aclty_sclr_t c_id_default) {
 	return aclty_is_sclr_int(c_id_default) || aclty_is_sclr_flt(c_id_default);
 }
 
-ae2f_ccconst aclty_default_t aclty_get_sclr_flt(unsigned bit_width) {
+ae2f_ccconst aclty_default_t aclty_get_sclr_flt(aclty_sclr_width_t bit_width) {
 	switch(bit_width) {
 		case 16:
 			return ACLSPV_ID_F16;
@@ -146,7 +146,7 @@ ae2f_ccconst aclty_default_t aclty_get_sclr_flt(unsigned bit_width) {
 	ae2f_unreachable();
 }
 
-ae2f_ccconst aclty_default_t aclty_get_sclr_sint(unsigned bit_width) {
+ae2f_ccconst aclty_default_t aclty_get_sclr_sint(aclty_sclr_width_t bit_width) {
 	switch(bit_width) {
 		case 8:
 			return ACLSPV_ID_I8;
@@ -163,7 +163,7 @@ ae2f_ccconst aclty_default_t aclty_get_sclr_sint(unsigned bit_width) {
 	ae2f_unreachable();
 }
 
-ae2f_ccconst aclty_default_t aclty_get_sclr_uint(unsigned bit_width) {
+ae2f_ccconst aclty_default_t aclty_get_sclr_uint(aclty_sclr_width_t bit_width) {
 	switch(bit_width) {
 		case 8:
 			return ACLSPV_ID_U8;
@@ -180,7 +180,7 @@ ae2f_ccconst aclty_default_t aclty_get_sclr_uint(unsigned bit_width) {
 	ae2f_unreachable();
 }
 
-ae2f_ccconst aclspv_uiter_t aclty_get_sclr_width(const aclty_default_t c_id_default) {
+ae2f_ccconst aclspv_uiter_t aclty_get_sclr_width(const aclty_sclr_width_t c_id_default) {
 	switch(c_id_default) {
 		case ACLSPV_ID_BOOL:
 			return 1;
@@ -405,7 +405,7 @@ aclspv_id_t aclty_mk_default(
 }
 
 
-ae2f_ccconst aclty_default_t aclty_cvt_sclr_width(const aclty_default_t c_id, const unsigned bitcount) {
+ae2f_ccconst aclty_default_t aclty_cvt_sclr_width(const aclty_sclr_t c_id, const aclty_sclr_width_t bitcount) {
 	if(aclty_is_sclr_uint(c_id))
 		return aclty_get_sclr_uint(bitcount);
 

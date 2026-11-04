@@ -13,8 +13,8 @@
 
 /** c_old_type and c_new_type's shape MUST BE SAME */
 static enum ACLEXPR_RET_ s_cast_bit(
-		const aclspv_id_t	c_old_id,
-		const aclspv_id_t	c_old_type,
+		const aclspv_vid_t	c_old_id,
+		const aclty_id_t	c_old_type,
 		ae2f_unused const aclutil_ltrlmask_t	c_flag_literal,
 		aclspv_id_t			ae2fcc_arg_sarr_restrict(r_newid, 1),
 		aclspv_id_t				c_new_type,
@@ -60,14 +60,14 @@ static enum ACLEXPR_RET_ s_cast_bit(
 }
 
 enum ACLEXPR_RET_ aclexpr_bit_cast(
-		const aclspv_id_t	c_old_id,
-		const aclspv_id_t	c_old_type,
+		const aclspv_vid_t	c_old_id,
+		const aclty_id_t	c_old_type,
 		const aclutil_ltrlmask_t	c_flag_literal,
-		const aclexpr_literal	c_old_literal,
+		const aclutil_literal	c_old_literal,
 
-		aclspv_id_t* ae2f_restrict	r_newid,
-		aclspv_id_t		c_new_type,
-		aclexpr_literal* ae2f_restrict r_new_literal_opt,
+		aclspv_vid_t* ae2f_restrict	r_newid,
+		aclty_id_t		c_new_type,
+		aclutil_literal* ae2f_restrict r_new_literal_opt,
 		const h_aclspv_ctx_t	h_ctx
 		)
 {

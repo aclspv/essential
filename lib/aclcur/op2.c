@@ -10,9 +10,9 @@
 aclspv_id_t aclcur_cfg_op2(
 		aclspv_id_t	c_newid_opt,
 		enum SpvOp_	c_op,
-		aclspv_id_t	c_ty,
-		aclspv_id_t	c_o0,
-		aclspv_id_t	c_o1,
+		aclty_id_t	c_ty,
+		aclcur_vid_t	c_o0,
+		aclcur_vid_t	c_o1,
 		h_aclspv_ctx_t	h_ctx
 		) {
 	aclcur_t b_o0, b_o1;

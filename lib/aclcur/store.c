@@ -4,7 +4,7 @@
 
 #include <util/log.h>
 
-aclspv_id_t	aclcur_store_reg(aclspv_id_t c_reg, aclspv_id_t c_val, h_aclspv_ctx_t h_ctx) {
+aclspv_id_t	aclcur_store_reg(aclcur_regid_t c_reg, aclspv_vid_t c_val, h_aclspv_ctx_t h_ctx) {
 	aclspv_id_t node;
 	aclspv_id_t c_ref;
 	aclcur_t b_val;
@@ -100,8 +100,8 @@ aclspv_id_t	aclcur_store_reg(aclspv_id_t c_reg, aclspv_id_t c_val, h_aclspv_ctx_
 }
 
 aclspv_id_t	aclcur_store_reg_implicit(
-		aclspv_id_t c_reg,
-		aclspv_id_t c_val,
+		aclcur_regid_t c_reg,
+		aclspv_vid_t c_val,
 		h_aclspv_ctx_t h_ctx
 		) {
 	h_aclcur_t p_reg;
@@ -145,8 +145,8 @@ aclspv_id_t	aclcur_store_reg_implicit(
 }
 
 aclspv_id_t	aclcur_store_reg_explicit(
-		aclspv_id_t c_reg,
-		aclspv_id_t c_val,
+		aclcur_regid_t c_reg,
+		aclspv_vid_t c_val,
 		h_aclspv_ctx_t h_ctx
 		) {
 	aclspv_id_t store = aclcur_store_reg(c_reg, c_val, h_ctx);
@@ -163,8 +163,8 @@ aclspv_id_t	aclcur_store_reg_explicit(
 }
 
 ae2f_ccpure aclspv_id_t	aclcur_get_node_store(
-		aclspv_id_t c_reg,
-		aclspv_id_t c_lbl,
+		aclcur_regid_t c_reg,
+		aclcur_lblid_t c_lbl,
 		h_aclspv_ctx_t h_ctx
 		) {
 	h_aclcur_t p_reg;

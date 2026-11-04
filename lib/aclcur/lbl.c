@@ -83,7 +83,7 @@ static aclspv_wrd_t s_fndjmp_count(
 	return c_num_ref;
 }
 
-aclspv_id_t aclcur_cfg_lbl(aclspv_id_t c, h_aclspv_ctx_t h_ctx) {
+aclspv_id_t aclcur_cfg_lbl(aclcur_lblid_t c, h_aclspv_ctx_t h_ctx) {
 	aclspv_id_t p_lbl		= aclcur_cfg_node(c, h_ctx);
 	h_aclcur_t p		= aclcur_get_node(p_lbl, h_ctx);
 	h_aclcur_t lbl_prv;
@@ -133,7 +133,7 @@ aclspv_id_t aclcur_cfg_lbl(aclspv_id_t c, h_aclspv_ctx_t h_ctx) {
  * everything else (the body, the store-side and phi-side decisions)
  * is derived from graph structure: the loop JC's continue target at
  * carve time, and emit-time cycle membership. */
-aclspv_id_t aclcur_cfg_lbl_loop(aclspv_id_t c_lbl, h_aclspv_ctx_t h_ctx) {
+aclspv_id_t aclcur_cfg_lbl_loop(aclcur_lblid_t c_lbl, h_aclspv_ctx_t h_ctx) {
 	h_aclcur_t p = aclcur_get_node(c_lbl, h_ctx);
 
 	ae2f_ifezerr(p)		return 0;

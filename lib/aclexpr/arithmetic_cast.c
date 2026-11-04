@@ -19,8 +19,8 @@
 
 /** c_old_type and c_new_type's shape MUST BE SAME */
 static enum ACLEXPR_RET_ s_cast_arithmetic(
-		const aclspv_id_t	c_old_id,
-		const aclspv_id_t	c_old_type,
+		const aclspv_vid_t	c_old_id,
+		const aclty_id_t	c_old_type,
 		const aclutil_ltrlmask_t	c_flag_literal,
 		aclspv_id_t			ae2fcc_arg_sarr_restrict(r_newid, 1),
 		aclspv_id_t				c_new_type,
@@ -259,11 +259,11 @@ static enum ACLEXPR_RET_ s_cast_arithmetic(
 }
 
 enum ACLEXPR_RET_ aclexpr_arithmetic_cast_non_literal(
-		const aclspv_id_t	c_old_id,
-		const aclspv_id_t	c_old_type,
+		const aclspv_vid_t	c_old_id,
+		const aclty_id_t	c_old_type,
 		const aclutil_ltrlmask_t	c_flag_literal,
-		aclspv_id_t* ae2f_restrict		r_newid,
-		aclspv_id_t				c_new_type,
+		aclspv_vid_t* ae2f_restrict		r_newid,
+		aclty_id_t				c_new_type,
 		const h_aclspv_ctx_t			h_ctx
 		) {
 	if(aclty_simd_chxg_sclr(
@@ -292,11 +292,11 @@ enum ACLEXPR_RET_ aclexpr_arithmetic_cast_non_literal(
 }
 
 enum ACLEXPR_RET_ aclexpr_arithmetic_cast_literal(
-		const aclspv_id_t	c_old_type,
-		const aclexpr_literal	c_old_literal,
-		aclspv_id_t* ae2f_restrict	r_newid,
-		aclspv_id_t			c_new_type,
-		aclexpr_literal* ae2f_restrict	wr_new_literal_opt,
+		const aclty_id_t	c_old_type,
+		const aclutil_literal	c_old_literal,
+		aclspv_vid_t* ae2f_restrict	r_newid,
+		aclty_id_t			c_new_type,
+		aclutil_literal* ae2f_restrict	wr_new_literal_opt,
 		const h_aclspv_ctx_t		h_ctx
 		) {
 	aclexpr_literal	RESULT = c_old_literal;
@@ -478,14 +478,14 @@ enum ACLEXPR_RET_ aclexpr_arithmetic_cast_literal(
 }
 
 enum ACLEXPR_RET_ aclexpr_arithmetic_cast(
-		const aclspv_id_t	c_old_id,
-		const aclspv_id_t	c_old_type,
+		const aclspv_vid_t	c_old_id,
+		const aclty_id_t	c_old_type,
 		const aclutil_ltrlmask_t	c_flag_literal,
-		const aclexpr_literal	c_old_literal,
+		const aclutil_literal	c_old_literal,
 
-		aclspv_id_t* ae2f_restrict	r_newid,
-		aclspv_id_t		c_new_type,
-		aclexpr_literal* ae2f_restrict r_new_literal_opt,
+		aclspv_vid_t* ae2f_restrict	r_newid,
+		aclty_id_t		c_new_type,
+		aclutil_literal* ae2f_restrict r_new_literal_opt,
 		const h_aclspv_ctx_t	h_ctx
 		)
 {

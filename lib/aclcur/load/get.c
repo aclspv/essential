@@ -4,7 +4,7 @@
 
 /** c_load might be somewhere in constant? */
 static ae2f_ccpure aclcur_t s_get_const(
-		aclspv_id_t c_load,
+		aclspv_vid_t c_load,
 		h_aclspv_ctx_t h_ctx)	
 {{
 	aclcur_t r = {0, };
@@ -66,7 +66,7 @@ V2T1:
  }}
 
 ae2f_ccpure aclcur_t aclcur_get_load(
-		aclspv_id_t c_load,
+		aclspv_vid_t c_load,
 		h_aclspv_ctx_t h_ctx) {
 	h_aclcur_t p_load = aclcur_get_node(c_load, h_ctx);
 

@@ -8,10 +8,10 @@
 #include <aclutil/emitx.h>
 
 aclspv_id_t aclcur_cfg_op1(
-		aclspv_id_t	c_newid_opt,
+		aclspv_id_reserved_t	c_newid_opt,
 		enum SpvOp_	c_op,
-		aclspv_id_t	c_ty,
-		aclspv_id_t	c_o0,
+		aclty_id_t	c_ty,
+		aclcur_vid_t	c_o0,
 		h_aclspv_ctx_t	h_ctx
 		) {
 	aclcur_t op0 = aclcur_get_load(c_o0, h_ctx);

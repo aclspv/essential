@@ -2,7 +2,7 @@
 #include "./common.h"
 
 aclspv_id_t	aclcur_cfg_jmp(
-		aclspv_id_t c_lbl,
+		aclcur_lblid_t c_lbl,
 		h_aclspv_ctx_t h_ctx
 		) {
 	aclspv_id_t	id_jmp = aclcur_cfg_node(0, h_ctx);
