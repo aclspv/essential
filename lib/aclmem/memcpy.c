@@ -299,7 +299,7 @@ void	aclmemcpy(void* ae2f_restrict wr, const void* ae2f_restrict rd, aclspv_wrd_
 #include <string.h>
 #include <aclmem.h>
 
-ae2f_inline_f void	aclmemcpy(void* ae2f_restrict wr, const void* ae2f_restrict rd, aclspv_wrd_t c) {
+void	aclmemcpy(void* ae2f_restrict wr, const void* ae2f_restrict rd, aclspv_wrd_t c) {
 	memcpy(wr, rd, c);
 }
 
