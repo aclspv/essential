@@ -186,8 +186,18 @@ static enum ACLEXPR_RET_ s_cast_arithmetic(
 					, (enum ACLSPV_ID_) aclty_get_simd_sclr(c_new_type, h_ctx)))
 			return ACLEXPR_RET_FAILURE;
 
-		ae2f_ifezerr(V1 = aclty_simd_broadcast(V1_CLS, c_new_type, ACLUTIL_LITERAL_CONSTANT, h_ctx))
-			return ACLEXPR_RET_FAILURE;
+		/**
+		 * when `c_new_type` is a scalar, `V1` is already shaped like the
+		 * result and `aclty_simd_broadcast` would fail explicitly (it rejects
+		 * scalar target types). `OpSelect` accepts a scalar bool condition
+		 * with scalar operands, so the broadcast is only needed for vectors.
+		 */
+		if(aclty_is_sclr(c_new_type)) {
+			V1 = V1_CLS;
+		} else {
+			ae2f_ifezerr(V1 = aclty_simd_broadcast(V1_CLS, c_new_type, ACLUTIL_LITERAL_CONSTANT, h_ctx))
+				return ACLEXPR_RET_FAILURE;
+		}
 
 		if(c_flag_literal & ACLUTIL_LITERAL_CONSTANT) {
 			aclspv_wrd_t buf[7];
@@ -504,7 +514,6 @@ enum ACLEXPR_RET_ aclexpr_arithmetic_cast(
 			dbg_puts("done : nonlit");
 		return (c_flag_literal & ACLUTIL_LITERAL_CONSTANT) ? ACLEXPR_RET_SUCCESS_CONSTANT : ACLEXPR_RET_SUCCESS;
 	}
-
 
 	ae2f_ifezerr(c_old_type) {
 		_aclctx_err(h_ctx, ACLSPV_COMPILE_ARITHMETIC_CAST_TYPE_IS_UNDEFINED_OLD);

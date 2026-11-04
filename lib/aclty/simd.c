@@ -89,7 +89,9 @@ aclspv_id_t aclty_simd_broadcast(aclspv_id_t c, aclty_id_t c_ty, aclspv_wrd_t c_
 	ae2f_ifezerr(c)		return 0;
 	ae2f_ifezerr(c_ty)	return 0;
 	ae2f_ifezerr(h)		return 0;
-	ae2f_ifnezerr_strict(c_ty == ACLSPV_ID_VOID) return 0;
+
+
+	if(aclty_is_sclr(c)) return c;
 
 	ae2fpat_assertassumeunless(c_ty >= (aclspv_id_t)ACLSPV_ID_END) {
 		/** should be a HARD ERROR */
