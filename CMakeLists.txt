@@ -181,13 +181,16 @@ ae2f_CoreLibTentConfigCustom(
 	${PROJECT_SOURCE_DIR}/cfg/aclspv-common.cmake.in
 	inc/aclspv.h
 	inc/aclspv.hh
-	${spirv_headers}
-	${clang_headers}
 	)
 
 target_include_directories(aclspv-common
-	INTERFACE ${spirv_inc}
-	INTERFACE ${clang_inc}
+	INTERFACE $<BUILD_INTERFACE:${spirv_inc}>
+	INTERFACE $<BUILD_INTERFACE:${clang_inc}>
+	INTERFACE $<INSTALL_INTERFACE:inc>
+	)
+
+install(DIRECTORY inc
+	DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
 	)
 
 add_subdirectory(src)
