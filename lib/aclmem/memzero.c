@@ -1,3 +1,5 @@
+#if	__ACLMEMZERO
+
 #include "./util.h"
 
 #include <ae2f/cc/profiles.h>
@@ -80,3 +82,13 @@ L64:		s_case_bulk(64, wr_end);
 #undef	s_case_byte
 #undef	s_case_bulk
 
+#else
+
+#include <aclmem.h>
+#include <string.h>
+
+void aclmemzero(void* ae2f_restrict wr, aclspv_wrd_t c) {
+	(void)memset(wr, 0, c);
+}
+
+#endif

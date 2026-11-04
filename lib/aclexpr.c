@@ -4,7 +4,6 @@
 #include <aclexpr/op.h>
 #include <aclcur/common.h>
 
-#include <ae2f/bll.h>
 #include <ae2f/pat/dbg.h>
 
 #include <util/scale.h>
@@ -143,9 +142,12 @@ enum ACLEXPR_RET_ aclexpr_eval_btcast(
 	(void)aclutil_visitfromroot(c_cur, aclexpr_visit, &DATA);
 	ae2f_ifnezerr(CTX->m_err) return ACLEXPR_RET_FAILURE;
 
-	unless(c_type_req)
-		return ae2f_bll_sel_bool1(uint_fastenum_t, DATA.m_literal_flag & 2, ACLEXPR_RET_SUCCESS_LITERAL, 0u)
-		| ae2f_bll_sel_bool1(uint_fastenum_t, DATA.m_literal_flag & 1, ACLEXPR_RET_SUCCESS_CONSTANT, ACLEXPR_RET_SUCCESS);
+	unless(c_type_req) {
+		return 
+			(DATA.m_literal_flag & ACLUTIL_LITERAL_LITERAL) ? ACLEXPR_RET_SUCCESS_LITERAL : 
+			(DATA.m_literal_flag & ACLUTIL_LITERAL_CONSTANT) ? ACLEXPR_RET_SUCCESS_CONSTANT :
+			ACLEXPR_RET_SUCCESS;
+	}
 
 	/** bitcast is not required when two types are exactly same */
 	return	aclexpr_bit_cast(
@@ -178,7 +180,7 @@ enum ACLEXPR_RET_ aclexpr_eval(
 	DATA.m_tyid_current	= 0;				/* type casted */
 	DATA.m_num_cmdcounter	= 1;				/* count for operand */
 
-	ae2f_expected_but_else(init_scale(&CTX->m_tmp.m_v1
+	ae2f_ifezerr(init_scale(&CTX->m_tmp.m_v1
 				, aclutil_count_to_sz(ACLEXPR_OPBINCFG_END) + sizeof(aclspv_wrd_t)
 				+ sizeof(aclexpr_opbincfg_extra)
 				))
@@ -217,9 +219,12 @@ enum ACLEXPR_RET_ aclexpr_eval(
 	(void)aclutil_visitfromroot(c_cur, aclexpr_visit, &DATA);
 	ae2f_ifnezerr(CTX->m_err) return ACLEXPR_RET_FAILURE;
 
-	unless(c_type_req)
-		return ae2f_bll_sel_bool1(uint_fastenum_t, DATA.m_literal_flag & 2, ACLEXPR_RET_SUCCESS_LITERAL, 0u)
-		| ae2f_bll_sel_bool1(uint_fastenum_t, DATA.m_literal_flag & 1, ACLEXPR_RET_SUCCESS_CONSTANT, ACLEXPR_RET_SUCCESS);
+	unless(c_type_req) {
+		return 
+			(DATA.m_literal_flag & ACLUTIL_LITERAL_LITERAL) ? ACLEXPR_RET_SUCCESS_LITERAL : 
+			(DATA.m_literal_flag & ACLUTIL_LITERAL_CONSTANT) ? ACLEXPR_RET_SUCCESS_CONSTANT :
+			ACLEXPR_RET_SUCCESS;
+	}
 
 	return	aclexpr_arithmetic_cast(
 			DATA.m_id_ret

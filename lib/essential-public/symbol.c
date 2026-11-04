@@ -41,7 +41,7 @@ aclspv_id_t aclspv_cfg_symbol(
 		/** word count mismatch */
 		if(opn != read_opn) { i += read_opn; continue; }
 		for(j = opn; j --> 0 && STRWRD(rd, j, c) != chunk[i + 2]; ) ae2fcc_pause();
-		if(j > opn) { puts("found"); return chunk[i + 1]; };
+		if(j > opn) { return chunk[i + 1]; };
 
 		i += read_opn;
 	}

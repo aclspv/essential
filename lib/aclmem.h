@@ -65,9 +65,6 @@ ae2f_ccconst ae2f_inline_f static aclspv_wrd_t aclmemremaddr(const void* c_p, ac
 void aclmem_init(x_aclspv_vec* ae2f_restrict fini, h_aclspv_ctx_t h_ctx);
 
 void aclmemcpy(void* ae2f_restrict wr, const void* ae2f_restrict rd, aclspv_wrd_t c);
-
-#include <ae2f/cc/profiles.h>
-
 void aclmemzero(void* ae2f_restrict wr, aclspv_wrd_t c);
 
 /** when zeroed, this is fine. */

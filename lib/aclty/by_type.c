@@ -3,7 +3,6 @@
 
 #include <util/log.h>
 
-#include <ae2f/bll.h>
 
 ae2f_ccconst aclspv_id_t aclty_mk_by_type(const CXType c_ty) {
 	switch((uint_leastenum_t)c_ty.kind) {

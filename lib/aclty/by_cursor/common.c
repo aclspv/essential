@@ -9,7 +9,6 @@
 #include <aclty.h>
 
 #include <util/log.h>
-#include <ae2f/bll.h>
 
 #if	1
 #include <aclattr/storage_class.h>
@@ -142,12 +141,7 @@ static aclspv_id_t s_helper2(
 				clang_visitChildren(TYPEDEF, s_attr_storage_class, &SCLASS);
 				clang_visitChildren(c_cursor, s_attr_storage_class, &SCLASS);
 
-				SCLASS = (enum SpvStorageClass_)ae2f_bll_sel_bool1(
-						uint_leastenum_t
-						, SCLASS == SpvStorageClassMax
-						, SpvStorageClassFunction	/* default fallback */
-						, (uint_least32_t) SCLASS
-						);
+				SCLASS = SCLASS == SpvStorageClassMax ? SpvStorageClassFunction : SCLASS;
 
 				return aclty_mk_ptr(ELMID, SCLASS, h_ctx);
 			}
@@ -202,11 +196,11 @@ static aclspv_id_t s_helper2(
 		case CXType_ConstantArray:	/** array */
 			{
 				const CXType ELM		= clang_getArrayElementType(TYPE);
-				const intmax_t _ELMCOUNT	= clang_getNumElements(TYPE);
-				const aclspv_wrd_t ELMCOUNT	= 
+				register const aclspv_swrd2_t _ELMCOUNT	= clang_getNumElements(TYPE);
+				register const aclspv_wrd_t ELMCOUNT	= 
 					ae2f_bll_sel_bool_naive1(
 							aclspv_wrd_t
-							, (umax)(_ELMCOUNT) & ~(umax)ACLSPV_MASK_WRD
+							, ((_ELMCOUNT)) >> 32
 							, 0 
 							,(aclspv_wrd_t)_ELMCOUNT
 							);
@@ -217,7 +211,7 @@ static aclspv_id_t s_helper2(
 				clang_visitChildren(TYPEDEF, s_attr_specid, &SPECID);
 				clang_visitChildren(c_cursor, s_attr_specid, &SPECID);
 
-				if(SPECID ^ 0xFFFFFFFF) {
+				if(SPECID != 0xFFFFFFFF) {
 					/** specid */
 					aclspv_id_t SPECID_WRD = aclutil_mk_constant_spec_id(
 							SPECID, ELMCOUNT, h_ctx);
@@ -225,7 +219,7 @@ static aclspv_id_t s_helper2(
 						SPECID_WRD = aclutil_mk_constant_spec64_id(
 								SPECID, ELMCOUNT, h_ctx);
 
-					ae2f_expected_but_else(SPECID_WRD) {
+					ae2f_ifezerr(SPECID_WRD) {
 						h_ctx->m_err = ACLSPV_COMPILE_CXTP_ZERO;
 						return 0; /** not found */
 					}
@@ -239,7 +233,7 @@ static aclspv_id_t s_helper2(
 				}
 
 				{
-					aclconst_specsz C;
+					register aclconst_specsz C;
 					C.m_id = 0;
 					C.m_lit.m_max = ELMCOUNT;
 					return aclty_mk_arr3(

@@ -213,10 +213,6 @@ ae2f_ccconst aclspv_uiter_t aclty_get_sclr_width(const aclty_default_t c_id_defa
 	ae2f_unreachable();
 }
 
-#include <ae2f/bll.h>
-
-
-
 aclspv_id_t aclty_mk_default(
 		const aclty_default_t	c_id_default,
 		h_aclspv_ctx_t	h_ctx

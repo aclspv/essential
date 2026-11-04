@@ -19,10 +19,11 @@ aclspv_id_t aclty_mk_by_cursor_dummy(
 	if(layout == ACLSPV_LAYOUT_MAX)
 		layout = ACLSPV_LAYOUT_STD430;	/** default */
 
+	/*** defualt layout is std430 */
 	switch(layout) {
 		default:
 		case ACLSPV_LAYOUT_MAX:
-			return 0;
+			ae2f_unreachable();
 
 		case ACLSPV_LAYOUT_STD430:
 			return aclty_mk_by_cursor_std430(c_cursor, c_type, h_ctx);

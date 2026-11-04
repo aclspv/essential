@@ -14,7 +14,6 @@
 
 #include <assert.h>
 
-#include <ae2f/bll.h>
 
 /** size_t for spir-v format */
 typedef	aclspv_wrdcount_t	aclspv_sz_t;
@@ -45,16 +44,12 @@ typedef	aclspv_wrdcount_t	aclspv_sz_t;
  * @brief	try emitting `c_wrd` on `h_vec`
  * @return	new c_wrdcount available. 0 when failed allocating.
  * */
-static ae2f_inline aclspv_sz_t aclutil_emit_wrd(
+static ae2f_inline_f aclspv_sz_t aclutil_emit_wrd(
 		x_aclspv_vec* ae2f_restrict const h_wrds, 
 		const aclspv_sz_t c_wrdcount, 
 		const aclspv_wrd_t c_wrd
 		)
 {
-	aclspv_wrd_t	DUMMY;
-	uptr		CND;
-
-
 	ae2f_ifnezerr_strict(s_aclmem_cgrow2(
 			h_wrds
 			, c_wrdcount + 1
@@ -65,21 +60,12 @@ static ae2f_inline aclspv_sz_t aclutil_emit_wrd(
 		return 0;
 	}
 
-	/** c_mask for `ae2f_bll_sel_ptr` must be all-ones/all-zeros, not 1/0. */
-	CND = ae2f_bll_from_bool1(uptr, ae2f_expected(h_wrds->m_p && (aclutil_sz_to_count(h_wrds->m_sz) <= UINT_MAX)));
+	ae2f_ifneznrm_strict(h_wrds->m_p && (aclutil_sz_to_count(h_wrds->m_sz) <= UINT_MAX)) {
+		aclutil_get_wrd_of_vec(h_wrds)[c_wrdcount] = c_wrd;
+		return c_wrdcount + 1;
+	}
 
-	*ae2f_bll_sel_ptr(
-			aclspv_wrd_t* ae2f_restrict
-			, CND
-			, &aclutil_get_wrd_of_vec(h_wrds)[c_wrdcount]
-			, &DUMMY) = c_wrd;
-
-	return ae2f_bll_sel(
-			aclspv_wrd_t
-			, (aclspv_sz_t)CND
-			, c_wrdcount + 1
-			, 0u
-			);
+	return 0u;
 }
 
 #define	aclspv_mk_noprnds(c_num_opprm)	\
@@ -117,19 +103,17 @@ ae2f_inline static aclspv_sz_t aclutil_emit_str(
 {
 	/** string len: null included. */
 	const size_t	len_		= strlen(rd_str) + 1;
-	const aclspv_sz_t	len		= (len_ > (size_t)0xFFFFFFFF) ? 0 : (aclspv_sz_t)len_;
+	const aclspv_sz_t	len		= ae2f_expected_strict(len_ > (size_t)0xFFFFFFFF) ? 0 : (aclspv_sz_t)len_;
 	const aclspv_sz_t	pad_wrds	= (len + 3) >> 2;
 
 	ae2f_expected_but_else(len)		return 0;
 
 	ae2f_ifnezerr_strict(s_aclmem_cgrow2(
-			h_wrds
-			, pad_wrds + c_wrdcount
-			, sizeof(aclspv_wrd_t)
-			, ACLSPV_COMPILE_ALLOC_FAILED_EMIT_WRD
-			)) return 0;
-
-	assert(aclutil_count_to_sz(pad_wrds + c_wrdcount) <= (aclspv_sz_t)h_wrds->m_sz);
+				h_wrds
+				, pad_wrds + c_wrdcount
+				, sizeof(aclspv_wrd_t)
+				, ACLSPV_COMPILE_ALLOC_FAILED_EMIT_WRD
+				)) return 0;
 
 	aclmemzero(&aclutil_get_wrd_of_vec(h_wrds)[c_wrdcount], aclutil_count_to_sz(pad_wrds));
 	aclmemcpy(&aclutil_get_wrd_of_vec(h_wrds)[c_wrdcount], rd_str, len);

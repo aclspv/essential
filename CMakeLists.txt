@@ -308,13 +308,15 @@ include(./cmake/predef.cmake)
 message(STATUS "[aclspv_essential_predef]")
 
 
-aclspv_predef_switch(aclspv-common		INTERFACE "ACLSPV_SHARED"		1)
+aclspv_predef_switch(aclspv-common		INTERFACE "ACLSPV_SHARED"		0)
 aclspv_predef_switch(aclspv-common-essential 	INTERFACE "ACLSPV_OpCapabilityKernel" "0")
 aclspv_predef_switch(aclspv-common-essential	INTERFACE "ACLSPV_OpCapabilityShader" "1")
-aclspv_predef_switch(aclspv-common-essential	INTERFACE "ACLSPV_CHECK_EXTRA" "1")
-aclspv_predef_switch(aclspv-common-essential	INTERFACE "ACLSPV_SYMBOL" "1")
+aclspv_predef_switch(aclspv-common-essential	INTERFACE "ACLSPV_CHECK_EXTRA" 1)
+aclspv_predef_switch(aclspv-common-essential	INTERFACE "ACLSPV_SYMBOL" 0)
 aclspv_predef_switch(aclspv-common-essential	INTERFACE "ACLSPV_ATOMIC_ID" 0)
 aclspv_predef_switch(aclspv-common-essential	INTERFACE "ACLSPV_OPACC_IDX_MAX" 64)
+aclspv_predef_switch(aclspv-aclmem	PUBLIC		"ACLMEMCPY" 0)
+aclspv_predef_switch(aclspv-aclmem	PUBLIC		"ACLMEMZERO" 0)
 aclspv_predef_switch(aclspv-aclexpr	PRIVATE		"ACLSPV_MATH_NR" 0)	# not ready
 aclspv_predef_switch(aclspv-aclexpr	PRIVATE		"ACLSPV_MATH_NR_RSQRTF_MAGIC"	0x5f375a86)
 aclspv_predef_switch(aclspv-aclexpr	PRIVATE		"ACLSPV_MATH_NR_IT"		2)

@@ -2,8 +2,6 @@
 #define aclattr_ifpart_h
 
 #include <aclspv.h>
-#include <ae2f/Keys.h>
-#include <ae2f/bll.h>
 
 struct s_attr_ifpart_t {
 	CXCursor		m_parts[3];

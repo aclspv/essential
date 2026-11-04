@@ -1,3 +1,5 @@
+#if	__ACLMEMCPY
+
 #include "./util.h"
 #include <.aclspv/mem/copy.h>
 
@@ -291,3 +293,14 @@ void	aclmemcpy(void* ae2f_restrict wr, const void* ae2f_restrict rd, aclspv_wrd_
 	s_mcp8(wr, rd, c);
 #endif
 }
+
+#else
+
+#include <string.h>
+#include <aclmem.h>
+
+ae2f_inline_f void	aclmemcpy(void* ae2f_restrict wr, const void* ae2f_restrict rd, aclspv_wrd_t c) {
+	memcpy(wr, rd, c);
+}
+
+#endif

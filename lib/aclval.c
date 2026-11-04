@@ -95,7 +95,7 @@ aclspv_id_t aclval_cfg_bool(
 		const aclspv_bool_t c_val,
 		h_aclspv_ctx_t h_ctx
 		) {
-	aclval_t* ae2f_restrict const C = aclval_cfg_node((u64_least)c_val, h_ctx);
+	aclval_t* ae2f_restrict const C = aclval_cfg_node(c_val, h_ctx);
 	ae2f_ifezerr(C) return 0;
 	if(C->m_const_val_bool) return C->m_const_val_bool;
 
@@ -110,7 +110,7 @@ aclspv_id_t aclval_cfg_bool(
 				, h_ctx->m_id
 				)) return 0;
 
-	return C->m_const_val_bool = h_ctx->m_id++;
+	return C->m_const_val_bool = aclctx_newid(h_ctx);
 }
 
 #include <aclval/nil.h>

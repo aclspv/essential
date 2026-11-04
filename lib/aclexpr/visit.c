@@ -147,11 +147,7 @@ enum CXChildVisitResult aclexpr_visit(
 		cgcsdef(OP_FAIL):
 		{
 			err_puts("[visit] OP_FAIL");
-			CTX->m_err = (aclspv_compile_t) ae2f_bll_sel_bool1(
-					uint_leastenum_t
-					, CTX->m_err
-					, (uint_leastenum_t) CTX-> m_err
-					, ACLSPV_COMPILE_UNHANDLED_VISIT);
+			_aclctx_err(CTX, ACLSPV_COMPILE_UNHANDLED_VISIT);
 			return CXChildVisit_Break;
 		}
 

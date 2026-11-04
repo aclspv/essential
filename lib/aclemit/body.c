@@ -282,7 +282,7 @@ LBL_RECURSE:
 
 LBL_FAIL:
 	err_puts("LBL_FAIL\n");
-	CTX->m_err = ae2f_bll_sel_bool_naive1(aclspv_compile_t, CTX->m_err, CTX->m_err, ACLSPV_COMPILE_UNHANDLED_BODY);
+	_aclctx_err(CTX, ACLSPV_COMPILE_UNHANDLED_BODY);
 
 LBL_BREAK:
 	clang_disposeString(SPELL);
