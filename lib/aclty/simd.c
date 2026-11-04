@@ -2,7 +2,7 @@
 #include <aclty.h>
 
 
-aclspv_id_t aclty_simd_elmtype(aclspv_id_t c, h_aclspv_ctx_t h_ctx) {
+aclspv_id_t aclty_simd_elmtype(aclty_simd_t c, h_aclspv_ctx_t h_ctx) {
 	unless(c) return 0;
 	ae2f_ifnezerr_strict(c == ACLSPV_ID_VOID) return 0;
 
@@ -38,7 +38,7 @@ aclspv_id_t aclty_simd_elmtype(aclspv_id_t c, h_aclspv_ctx_t h_ctx) {
 	}
 }
 
-aclspv_id_t aclty_simd_chxg_sclr(aclspv_id_t c, aclspv_id_t c_class, h_aclspv_ctx_t h) {
+aclspv_id_t aclty_simd_chxg_sclr(aclty_simd_t c, aclty_sclr_t c_class, h_aclspv_ctx_t h) {
 	ae2f_ifezerr(c)		return 0;
 	ae2f_ifezerr(c_class)	return 0;
 	ae2f_ifezerr(c_class)	return 0;
@@ -85,7 +85,7 @@ aclspv_id_t aclty_simd_chxg_sclr(aclspv_id_t c, aclspv_id_t c_class, h_aclspv_ct
 #include <aclctx/err.h>
 #include <ae2f/pat/dbg.h>
 
-aclspv_id_t aclty_simd_broadcast(aclspv_id_t c, aclty_id_t c_ty, aclspv_wrd_t c_literal_mask, h_aclspv_ctx_t h) {
+aclspv_id_t aclty_simd_broadcast(aclspv_id_t c, aclty_simd_t c_ty, aclspv_wrd_t c_literal_mask, h_aclspv_ctx_t h) {
 	ae2f_ifezerr(c)		return 0;
 	ae2f_ifezerr(c_ty)	return 0;
 	ae2f_ifezerr(h)		return 0;

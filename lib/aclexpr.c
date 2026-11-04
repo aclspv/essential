@@ -13,8 +13,8 @@
 #include <aclutil/emitx.h>
 
 enum ACLEXPR_RET_ aclspv_get_expr2(
-		aclspv_id_t* ae2f_restrict const	ret_id
-		, aclspv_id_t* ae2f_restrict const	r_type_opt
+		aclspv_vid_t* ae2f_restrict const	ret_id
+		, aclty_id_t* ae2f_restrict const	r_type_opt
 		, const CXCursor			c_cur
 		, aclutil_literal* ae2f_restrict		wr_literal_opt
 		, aclutil_fnctx* ae2f_restrict			h_fnctx
@@ -84,8 +84,8 @@ enum ACLEXPR_RET_ aclspv_get_expr2(
 }
 
 enum ACLEXPR_RET_ aclexpr_eval_btcast(
-		aclspv_id_t* ae2f_restrict const ret_id
-		, const aclspv_id_t c_type_req
+		aclspv_vid_t* ae2f_restrict const ret_id
+		, const aclty_id_t c_type_req
 		, const CXCursor c_cur
 		, aclutil_literal* ae2f_restrict	wr_literal_opt
 		, aclutil_fnctx* ae2f_restrict h_fnctx
@@ -162,8 +162,8 @@ enum ACLEXPR_RET_ aclexpr_eval_btcast(
 }
 
 enum ACLEXPR_RET_ aclexpr_eval(
-		aclspv_id_t* ae2f_restrict const ret_id
-		, const aclspv_id_t c_type_req
+		aclspv_vid_t* ae2f_restrict const ret_id
+		, const aclty_id_t c_type_req
 		, const CXCursor c_cur
 		, aclutil_literal* ae2f_restrict	wr_literal_opt
 		, aclutil_fnctx* ae2f_restrict h_fnctx

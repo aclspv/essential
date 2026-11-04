@@ -20,10 +20,10 @@
  * @see aclcur_cfg_op1, whose operand is validated and refcounted.
  * */
 aclspv_id_t aclcur_cfg_op1r(
-		aclspv_id_t	c_newid_opt,
+		aclspv_id_reserved_t	c_newid_opt,
 		enum SpvOp_	c_op,
-		aclspv_id_t	c_ty,
-		aclspv_id_t	c_o0,
+		aclty_id_t	c_ty,
+		aclspv_vid_t	c_o0,
 		h_aclspv_ctx_t	h_ctx
 		) {
 	{
@@ -77,10 +77,10 @@ aclspv_id_t aclcur_cfg_op1r(
  * not drop the instruction defining it.
  * */
 aclspv_id_t aclcur_cfg_op1ri(
-		aclspv_id_t	c_newid_opt,
+		aclspv_id_reserved_t	c_newid_opt,
 		enum SpvOp_	c_op,
-		aclspv_id_t	c_ty,
-		aclspv_id_t	c_o0,
+		aclty_id_t	c_ty,
+		aclspv_vid_t	c_o0,
 		aclspv_wrd_t	c_imm,
 		h_aclspv_ctx_t	h_ctx
 		) {

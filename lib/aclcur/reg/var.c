@@ -67,7 +67,7 @@ static aclspv_bool_t	s_reg_is_view_of(
 	return 0;
 }
 
-aclspv_compile_t	aclcur_regvar_emit_reg(aclspv_id_t c_reg, h_aclspv_ctx_t h_ctx) {
+aclspv_compile_t	aclcur_regvar_emit_reg(aclcur_regid_root_t c_reg, h_aclspv_ctx_t h_ctx) {
 	h_aclcur_t p;
 	aclspv_id_t ty;
 

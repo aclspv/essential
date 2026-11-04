@@ -205,7 +205,7 @@ static aclspv_bool_t s_ssa_lbl_live(
 }
 
 /** exported entry: a fresh visited set per query. */
-aclspv_bool_t aclcur_ssa_lbl_live(aclspv_id_t c_lbl, h_aclspv_ctx_t h_ctx) {
+aclspv_bool_t aclcur_ssa_lbl_live(aclcur_lblid_t c_lbl, h_aclspv_ctx_t h_ctx) {
 	aclspv_id_t vis[ACLCUR_SSA_MAX_PRED];
 
 	return s_ssa_lbl_live(c_lbl, h_ctx, vis, 0, 0);

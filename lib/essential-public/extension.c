@@ -46,7 +46,7 @@ ACLSPV_ABI_IMPL ae2f_ccpure ae2f_noexcept aclspv_bool_t aclspv_chck_extension_fr
 } ae2f_unreachable(); }
 
 ACLSPV_ABI_IMPL ae2f_ccpure ae2f_noexcept aclspv_bool_t aclspv_add_extension_from_ctx(
-		x_aclspv_ctx* const ae2f_restrict	h_ctx,
+		const h_aclspv_ctx_t ae2f_restrict	h_ctx,
 		const char* ae2f_restrict const		c_ext
 		) { 
 	aclspv_wrd_t		I	= 0;

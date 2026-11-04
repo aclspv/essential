@@ -156,7 +156,7 @@ ACLSPV_ABI_IMPL aclspv_compile_t aclspv_dump_ctx_output1(
 
 ACLSPV_ABI_IMPL aclspv_compile_t aclspv_dump_ctx_output(
 		const x_aclspv_ctx* ae2f_restrict		h_ctx,
-		aclspv_wrd_t* ae2f_restrict const			r_count,
+		aclspv_wrdcount_t* ae2f_restrict const			r_count,
 		aclspv_wrd_t* ae2f_restrict* ae2f_restrict const	ret
 		) {	
 	aclspv_wrd_t			NUM_RET;

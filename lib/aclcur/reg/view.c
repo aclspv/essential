@@ -35,7 +35,7 @@
  *
  * @return 0 on failure.
  * */
-aclspv_id_t	aclcur_regview_addr(aclspv_id_t c_reg, h_aclspv_ctx_t h_ctx) {
+aclspv_id_t	aclcur_regview_addr(aclcur_regid_alias2_t c_reg, h_aclspv_ctx_t h_ctx) {
 	aclspv_id_t idxs[ACLCUR_REGVIEW_CHAIN_MAX];
 	aclspv_id_t tys[ACLCUR_REGVIEW_CHAIN_MAX];
 	aclspv_wrd_t steps[ACLCUR_REGVIEW_CHAIN_MAX];
@@ -192,7 +192,7 @@ aclspv_id_t	aclcur_regview_addr(aclspv_id_t c_reg, h_aclspv_ctx_t h_ctx) {
 	return id_base;
 }
 
-aclconst_specsz	aclcur_regview_size(aclspv_id_t c_reg, h_aclspv_ctx_t h_ctx) {
+aclconst_specsz	aclcur_regview_size(aclcur_regid_alias2_t c_reg, h_aclspv_ctx_t h_ctx) {
 	ae2f_constexpr aclconst_specsz ZER = {0, };
 	h_aclcur_t p;
 
@@ -336,7 +336,7 @@ aclspv_compile_t	aclcur_regview_emit_store_explicit(aclspv_id_t c_id, h_aclspv_c
 aclspv_id_t aclcur_reg_view(
 		CXCursor		c_cur,
 		aclspv_id_t		c_parent,
-		aclspv_id_t		c_ty,
+		aclty_id_t		c_ty,
 		aclspv_id_t		c_idx,
 		aclspv_wrd_t		c_storage_class,
 		aclspv_wrd_t		c_step,

@@ -69,7 +69,7 @@ aclspv_id_t aclty_mk_arr3(
 aclspv_id_t aclty_mk_arr2(
 		const aclspv_id_t	c_type_elm,
 		const aclspv_id_t	c_num_arr,
-		const aclspv_wrd_t	c_decorate_stride,
+		const aclspv_wrdcount_t	c_decorate_stride,
 		const h_aclspv_ctx_t	h_ctx
 		) {
 	aclconst_specsz num_arr;

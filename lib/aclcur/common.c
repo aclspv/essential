@@ -5,7 +5,7 @@
 #include <aclctx/id.h>
 #include <aclmem.h>
 
-aclspv_id_t	aclcur_cfg_node2(aclspv_id_t c_newid, h_aclspv_ctx_t h_ctx, aclspv_bool_t c) {
+aclspv_id_t	aclcur_cfg_node2(aclspv_id_reserved_t c_newid, h_aclspv_ctx_t h_ctx, aclspv_bool_t c) {
 	aclspv_wrd_t i;
 
 	ae2f_ifezerr(h_ctx)
@@ -64,7 +64,7 @@ aclspv_id_t	aclcur_cfg_node2(aclspv_id_t c_newid, h_aclspv_ctx_t h_ctx, aclspv_b
 	ae2f_unreachable();
 }
 
-ae2f_ccpure aclcur_t*	aclcur_get_node(aclspv_id_t c, const x_aclspv_ctx* ae2f_restrict h_ctx) {
+ae2f_ccpure aclcur_t*	aclcur_get_node(aclcur_id_t c, const x_aclspv_ctx* ae2f_restrict h_ctx) {
 	aclspv_wrd_t i = h_ctx->m_num_cursor;
 
 	unless(c) return 0;
@@ -84,14 +84,14 @@ ae2f_ccpure aclcur_t*	aclcur_get_node(aclspv_id_t c, const x_aclspv_ctx* ae2f_re
 	return 0;
 }
 
-aclcur_t* aclcur_get_node_prv(aclspv_id_t c, const x_aclspv_ctx* ae2f_restrict h_ctx) {
+aclcur_t* aclcur_get_node_prv(aclcur_id_t c, const x_aclspv_ctx* ae2f_restrict h_ctx) {
 	const h_aclcur_t p = aclcur_get_node(c, h_ctx);
 	const aclspv_wrd_t pad = (aclspv_wrd_t)(p - s_get_buf(h_ctx));
 	const aclspv_wrd_t prvidx = ae2f_expected(p) ? pad - 1 - p->m_num_skip_prv : 0xFFFFFFFF;
 	return ae2f_expected_strict(prvidx < h_ctx->m_num_cursor) ? &s_get_buf(h_ctx)[prvidx] : 0;
 }
 
-aclcur_t* aclcur_get_node_nxt(aclspv_id_t c, const x_aclspv_ctx* ae2f_restrict h_ctx) {
+aclcur_t* aclcur_get_node_nxt(aclcur_id_t c, const x_aclspv_ctx* ae2f_restrict h_ctx) {
 	const h_aclcur_t p = aclcur_get_node(c, h_ctx);
 	const aclspv_wrd_t pad = (aclspv_wrd_t)(p - s_get_buf(h_ctx));
 	const aclspv_wrd_t nxtidx = ae2f_expected(p) ? pad + 1 + p->m_num_skip : 0xFFFFFFFF;
@@ -99,7 +99,7 @@ aclcur_t* aclcur_get_node_nxt(aclspv_id_t c, const x_aclspv_ctx* ae2f_restrict h
 }
 
 
-CXCursor aclcur_set_cxcursor(aclspv_id_t c, const CXCursor c_cur, h_aclspv_ctx_t h_ctx) {
+CXCursor aclcur_set_cxcursor(aclcur_id_t c, const CXCursor c_cur, h_aclspv_ctx_t h_ctx) {
 	aclcur_t* ae2f_restrict const p = aclcur_get_node(c, h_ctx);
 	ae2f_ifezerr(p) return clang_getNullCursor();
 
