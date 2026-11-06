@@ -17,21 +17,21 @@ enum ACLEXPR_RET_ aclspv_get_expr2(
 		, aclty_id_t* ae2f_restrict const	r_type_opt
 		, const CXCursor			c_cur
 		, aclutil_literal* ae2f_restrict		wr_literal_opt
-		, aclutil_fnctx* ae2f_restrict			h_fnctx
+		, h_aclspv_ctx_t				h_ctx
 		) {
 	aclspv_wrd_t* ae2f_restrict SCALE_BOOT;
 	struct aclexpr_visit_data	DATA;
-	const h_aclspv_ctx_t		CTX = h_fnctx->m_ctx;
+	const h_aclspv_ctx_t		CTX = h_ctx;
 
 	ae2f_ifezerr(CTX)	return ACLEXPR_RET_FAILURE;
 
 	DATA.m_ctx		= CTX;				/* context. must be pointer to context. */
-	DATA.m_fnctx		= h_fnctx;			/* context. must be pointer to context. */
 	DATA.m_exprcount	= 0;				/* stack count. must be 0. */
 	DATA.m_id_ret		= 0;				/* result value id */
 	DATA.m_literal_flag	= ACLUTIL_LITERAL_MASK_LITERAL;	/* see enum UTIL_LITERAL_MASK_ */
 	DATA.m_tyid_current	= 0;				/* type casted */
 	DATA.m_num_cmdcounter	= 1;				/* count for operand */
+	DATA.m_id_branch	= 0;				/* bool1 merge label */
 
 	ae2f_expected_but_else(CTX->m_tmp.m_v1.m_p)
 		return ACLEXPR_RET_FAILURE;
@@ -88,22 +88,22 @@ enum ACLEXPR_RET_ aclexpr_eval_btcast(
 		, const aclty_id_t c_type_req
 		, const CXCursor c_cur
 		, aclutil_literal* ae2f_restrict	wr_literal_opt
-		, aclutil_fnctx* ae2f_restrict h_fnctx
+		, h_aclspv_ctx_t h_ctx
 		) 
 {
 	aclspv_wrd_t* ae2f_restrict SCALE_BOOT;
 	struct aclexpr_visit_data	DATA;
-	const h_aclspv_ctx_t		CTX = h_fnctx->m_ctx;
+	const h_aclspv_ctx_t		CTX = h_ctx;
 
-	ae2f_ifezerr(h_fnctx)	return ACLEXPR_RET_FAILURE;
+	ae2f_ifezerr(h_ctx)	return ACLEXPR_RET_FAILURE;
 
-	DATA.m_ctx		= h_fnctx->m_ctx;		/* context. must be pointer to context. */
-	DATA.m_fnctx		= h_fnctx;			/* context. must be pointer to context. */
+	DATA.m_ctx		= h_ctx;			/* context. must be pointer to context. */
 	DATA.m_exprcount	= 0;				/* stack count. must be 0. */
 	DATA.m_id_ret		= 0;				/* result value id */
 	DATA.m_literal_flag	= ACLUTIL_LITERAL_MASK_LITERAL;	/* see enum UTIL_LITERAL_MASK_ */
 	DATA.m_tyid_current	= 0;				/* type casted */
 	DATA.m_num_cmdcounter	= 1;				/* count for operand */
+	DATA.m_id_branch	= 0;				/* bool1 merge label */
 
 	ae2f_expected_but_else(init_scale(&CTX->m_tmp.m_v1
 				, aclutil_count_to_sz(ACLEXPR_OPBINCFG_END) + sizeof(aclspv_wrd_t)
@@ -166,19 +166,19 @@ enum ACLEXPR_RET_ aclexpr_eval(
 		, const aclty_id_t c_type_req
 		, const CXCursor c_cur
 		, aclutil_literal* ae2f_restrict	wr_literal_opt
-		, aclutil_fnctx* ae2f_restrict h_fnctx
+		, h_aclspv_ctx_t h_ctx
 		) {
 	aclspv_wrd_t* ae2f_restrict SCALE_BOOT;
 	struct aclexpr_visit_data	DATA;
-	h_aclspv_ctx_t			CTX = h_fnctx->m_ctx;
+	h_aclspv_ctx_t			CTX = h_ctx;
 
 	DATA.m_ctx		= CTX;				/* context. must be pointer to context. */
-	DATA.m_fnctx		= h_fnctx;			/* context. must be pointer to context. */
 	DATA.m_exprcount	= 0;				/* stack count. must be 0. */
 	DATA.m_id_ret		= 0;				/* result value id */
 	DATA.m_literal_flag	= ACLUTIL_LITERAL_MASK_LITERAL;	/* see enum UTIL_LITERAL_MASK_ */
 	DATA.m_tyid_current	= 0;				/* type casted */
 	DATA.m_num_cmdcounter	= 1;				/* count for operand */
+	DATA.m_id_branch	= 0;				/* bool1 merge label */
 
 	ae2f_ifezerr(init_scale(&CTX->m_tmp.m_v1
 				, aclutil_count_to_sz(ACLEXPR_OPBINCFG_END) + sizeof(aclspv_wrd_t)

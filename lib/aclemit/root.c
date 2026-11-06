@@ -3,7 +3,6 @@
 #include "./fndecl/entp.h"
 
 #include <util/is_kernel.h>
-#include <util/fnctx.h>
 
 #include <aclspv.h>
 #include <aclcur/common.h>

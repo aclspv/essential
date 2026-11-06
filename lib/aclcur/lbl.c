@@ -47,6 +47,75 @@ struct aclcur* ae2f_ccpure aclcur_get_lbl_last1(h_aclspv_ctx_t h_ctx) {
 	return 0;
 }
 
+static h_aclcur_t s_get_root1(h_aclspv_ctx_t h_ctx) {
+	h_aclcur_t p = aclcur_get_node_idx(ACLCUR_IDX_ROOT, h_ctx);
+	return (p && p->m_class == ACLCUR_LBL) ? p : 0;
+}
+
+static const aclcur_t* s_get_root1_c(const x_aclspv_ctx* ae2f_restrict h_ctx) {
+	const aclcur_t* p = aclcur_get_node_idx(ACLCUR_IDX_ROOT, h_ctx);
+	return (p && p->m_class == ACLCUR_LBL) ? p : 0;
+}
+
+aclcur_idx_t ae2f_ccpure aclcur_get_idx_lbl_cur(const x_aclspv_ctx* ae2f_restrict h_ctx) {
+	const aclcur_t* p_root = s_get_root1_c(h_ctx);
+
+	return p_root ? p_root->m_d.m_lbl.m_idx_cur : ACLCUR_IDX_INVAL;
+}
+
+aclcur_t* ae2f_ccpure aclcur_get_lbl_cur1(h_aclspv_ctx_t h_ctx) {
+	return aclcur_get_node_idx(aclcur_get_idx_lbl_cur(h_ctx), h_ctx);
+}
+
+aclspv_id_t ae2f_ccpure aclcur_get_lbl_cur(h_aclspv_ctx_t h_ctx) {
+	h_aclcur_t p = aclcur_get_lbl_cur1(h_ctx);
+	return p ? p->m_id : 0;
+}
+
+/** the root label owns the open-label cursor. */
+static void s_set_idx_lbl_cur(aclcur_idx_t c_idx, h_aclspv_ctx_t h_ctx) {
+	h_aclcur_t p_root = s_get_root1(h_ctx);
+
+	if(p_root)
+		p_root->m_d.m_lbl.m_idx_cur = c_idx;
+}
+
+aclspv_bool_t ae2f_ccpure aclcur_get_fnret(const x_aclspv_ctx* ae2f_restrict h_ctx) {
+	const aclcur_t* p_root = s_get_root1_c(h_ctx);
+	return p_root ? p_root->m_d.m_lbl.m_fnret : 0;
+}
+
+void aclcur_set_fnret(aclspv_bool_t c_ret, h_aclspv_ctx_t h_ctx) {
+	h_aclcur_t p_root = s_get_root1(h_ctx);
+
+	if(p_root)
+		p_root->m_d.m_lbl.m_fnret = c_ret;
+}
+
+aclspv_id_t ae2f_ccpure aclcur_get_break_loop(const x_aclspv_ctx* ae2f_restrict h_ctx) {
+	const aclcur_t* p_root = s_get_root1_c(h_ctx);
+	return p_root ? p_root->m_d.m_lbl.m_break_loop : 0;
+}
+
+aclspv_id_t ae2f_ccpure aclcur_get_continue_loop(const x_aclspv_ctx* ae2f_restrict h_ctx) {
+	const aclcur_t* p_root = s_get_root1_c(h_ctx);
+	return p_root ? p_root->m_d.m_lbl.m_continue_loop : 0;
+}
+
+void aclcur_set_break_loop(aclspv_id_t c_lbl, h_aclspv_ctx_t h_ctx) {
+	h_aclcur_t p_root = s_get_root1(h_ctx);
+
+	if(p_root)
+		p_root->m_d.m_lbl.m_break_loop = c_lbl;
+}
+
+void aclcur_set_continue_loop(aclspv_id_t c_lbl, h_aclspv_ctx_t h_ctx) {
+	h_aclcur_t p_root = s_get_root1(h_ctx);
+
+	if(p_root)
+		p_root->m_d.m_lbl.m_continue_loop = c_lbl;
+}
+
 aclspv_id_t ae2f_ccpure aclcur_get_retty(const x_aclspv_ctx* ae2f_restrict h_ctx) {
 	const aclcur_t* p;
 
@@ -122,6 +191,10 @@ aclspv_id_t aclcur_cfg_lbl(aclcur_lblid_t c, h_aclspv_ctx_t h_ctx) {
 
 	--lbl_prv->m_d.m_lbl.m_nop;
 
+	/** this is now the open block: the cached label index is O(1) and
+	 * survives buffer realloc (it is an index, not a pointer). */
+	s_set_idx_lbl_cur((aclcur_idx_t)(p - s_get_buf(h_ctx)), h_ctx);
+
 	/** a new block starts here: nothing of the register value cache carries
 	 * over. a value tracked in a previous block must not be reused inside
 	 * this one (a load emitted in a block that does not dominate this one
@@ -191,6 +264,12 @@ aclspv_id_t aclcur_cfg_root(aclspv_id_t c_retty, h_aclspv_ctx_t h_ctx) {
 	p->m_lbl		= p->m_id;
 	p->m_ty			= c_retty;
 	p->m_num_ref		= 1;
+
+	/** the root is the first open block and the function-level state home. */
+	p->m_d.m_lbl.m_idx_cur		= ACLCUR_IDX_ROOT;
+	p->m_d.m_lbl.m_fnret		= 0;
+	p->m_d.m_lbl.m_break_loop	= 0;
+	p->m_d.m_lbl.m_continue_loop	= 0;
 
 	return p->m_id;
 }

@@ -7,7 +7,7 @@
  * */
 aclexpr_visit_lbl_t aclexpr_visit_op0_val(
 		const CXCursor			c_cur,
-		const aclutil_fnctx* ae2f_restrict	h_fnctx,
+		h_aclspv_ctx_t				h_ctx,
 		aclexpr_opbincfg_extra*		rdwr_extra,
 		aclspv_id_t* ae2f_restrict const	wr_newid,
 		const aclexpr_visit_lbl_t		c_lbl_success,
@@ -16,8 +16,7 @@ aclexpr_visit_lbl_t aclexpr_visit_op0_val(
 		) {
 	aclexpr_literal EVRES;
 	ae2fpat_assertassume(wr_newid);
-	ae2fpat_assertassume(h_fnctx);
-	ae2fpat_assertassume(h_fnctx->m_ctx);
+	ae2fpat_assertassume(h_ctx);
 	ae2fpat_assertassume(rdwr_extra);
 
 #define		wr_type_fetched			(&(rdwr_extra)->m_type_original)
@@ -66,7 +65,7 @@ aclexpr_visit_lbl_t aclexpr_visit_op0_val(
 
 						ae2f_ifezerr(aclty_mk_default(
 									*wr_type_fetched
-									, h_fnctx->m_ctx)) {
+									, h_ctx)) {
 							return c_lbl_fail;
 						}
 
@@ -75,7 +74,7 @@ aclexpr_visit_lbl_t aclexpr_visit_op0_val(
 								dbg_puts("I32");
 								ae2f_expected_but_else(*wr_newid = aclutil_mk_constant_val_id(
 											(aclspv_wrd_t)EVRES.m_u64
-											, h_fnctx->m_ctx
+											, h_ctx
 											))
 									return c_lbl_fail;
 
@@ -85,7 +84,7 @@ aclexpr_visit_lbl_t aclexpr_visit_op0_val(
 								dbg_puts("I64");
 								ae2f_expected_but_else(*wr_newid = aclutil_mk_constant_val64_id(
 											(aclspv_wrd_t)EVRES.m_u64
-											, h_fnctx->m_ctx
+											, h_ctx
 											))
 									return c_lbl_fail;
 
@@ -100,14 +99,14 @@ aclexpr_visit_lbl_t aclexpr_visit_op0_val(
 						dbg_puts(("Literal: double (float casted)"));
 						dbg_prefix(a);
 
-						if(aclspv_chck_capability_from_ctx(h_fnctx->m_ctx, SpvCapabilityFloat64)) {
+						if(aclspv_chck_capability_from_ctx(h_ctx, SpvCapabilityFloat64)) {
 							EVRES.m_dbl = clang_EvalResult_getAsDouble(EVAL);
 							*wr_type_fetched = ACLSPV_ID_F64;
 							dbg_call(fprintf, (stderr, "Literal fetched: %f\n", (float)EVRES.m_dbl));
 
 							ae2f_ifezerr(*wr_newid = aclval_cfg_f64(
 										EVRES.m_dbl
-										, h_fnctx->m_ctx
+										, h_ctx
 										))
 								return c_lbl_fail;
 						} else {
@@ -117,7 +116,7 @@ aclexpr_visit_lbl_t aclexpr_visit_op0_val(
 
 							ae2f_ifezerr(*wr_newid = aclval_cfg_f32(
 										EVRES.m_flt
-										, h_fnctx->m_ctx
+										, h_ctx
 										))
 								return c_lbl_fail;
 						}
@@ -143,13 +142,13 @@ aclexpr_visit_lbl_t aclexpr_visit_op0_val(
 				return c_lbl_success;
 			} else {
 				const CXCursor DECL = clang_getCursorReferenced(c_cur);
-				const aclspv_id_t REG = aclexpr_curreg_find(DECL, h_fnctx->m_ctx);
+				const aclspv_id_t REG = aclexpr_curreg_find(DECL, h_ctx);
 
 				ae2f_expected_but_else(REG)
 					return c_lbl_fail;
 
 				{
-					h_aclcur_t p_reg = aclcur_get_node(REG, h_fnctx->m_ctx);
+					h_aclcur_t p_reg = aclcur_get_node(REG, h_ctx);
 
 					ae2f_ifezerr(p_reg)	return c_lbl_fail;
 
@@ -163,11 +162,11 @@ aclexpr_visit_lbl_t aclexpr_visit_op0_val(
 				 * register's own stale label/loop state (phis, CHANGED)
 				 * must not force a runtime op. */
 				ae2f_ifezerr(*wr_newid = aclcur_load_reg(
-							REG, h_fnctx->m_ctx, rwr_literal))
+							REG, h_ctx, rwr_literal))
 					return c_lbl_fail;
 
 				{
-					const aclcur_t LB = aclcur_get_load(*wr_newid, h_fnctx->m_ctx);
+					const aclcur_t LB = aclcur_get_load(*wr_newid, h_ctx);
 
 					if((LB.m_val_mask & ACLUTIL_LITERAL_MASK_LITERAL)
 							== ACLUTIL_LITERAL_MASK_LITERAL) {

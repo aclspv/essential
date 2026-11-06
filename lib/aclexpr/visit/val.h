@@ -21,7 +21,7 @@
  * */
 aclexpr_visit_lbl_t aclexpr_visit_op0_val(
 		const CXCursor			c_cur,
-		const aclutil_fnctx* ae2f_restrict	h_fnctx,
+		h_aclspv_ctx_t				h_ctx,
 		aclexpr_opbincfg_extra*		rdwr_extra,
 		aclspv_id_t* ae2f_restrict const	wr_newid,
 		const aclexpr_visit_lbl_t		c_lbl_success,

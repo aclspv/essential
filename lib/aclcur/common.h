@@ -88,6 +88,26 @@ ae2f_ccpure aclcur_t*	aclcur_get_node(aclcur_id_t c, const x_aclspv_ctx* ae2f_re
 ae2f_ccpure aclcur_t* aclcur_get_node_prv(aclcur_id_t c, const x_aclspv_ctx* ae2f_restrict h_ctx);
 ae2f_ccpure aclcur_t* aclcur_get_node_nxt(aclcur_id_t c, const x_aclspv_ctx* ae2f_restrict h_ctx);
 
+/** O(1) node access through its cursor-buffer index.
+ * returns 0 when the index is out of range or ACLCUR_IDX_INVAL. */
+ae2f_ccpure aclcur_t* aclcur_get_node_idx(
+		aclcur_idx_t			c_idx,
+		const x_aclspv_ctx* ae2f_restrict h_ctx
+		);
+
+/** O(n) reverse lookup: index of the node carrying `c_id`.
+ * returns ACLCUR_IDX_INVAL when no node has it. */
+ae2f_ccpure aclcur_idx_t aclcur_idx_of(
+		aclcur_id_t			c_id,
+		const x_aclspv_ctx* ae2f_restrict h_ctx
+		);
+
+/** id of the node at `c_idx`, or 0 when the index is invalid. */
+ae2f_ccpure aclcur_id_t aclcur_id_of_idx(
+		aclcur_idx_t			c_idx,
+		const x_aclspv_ctx* ae2f_restrict h_ctx
+		);
+
 /** 
  * sets the c's cursor to c_cur.
  * when c_cur is null cursor it changes none of c.

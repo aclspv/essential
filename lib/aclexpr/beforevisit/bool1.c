@@ -142,7 +142,7 @@ aclspv_bool_t aclexpr_beforevisit2_bool1(
 		return 1;
 
 	LST_EXTRA[1].m_extra.m_bool1.m_parent	= LWBR[0];			/** branch-current */
-	rdwr_data->m_fnctx->m_branch		= LWBR[1];
+	rdwr_data->m_id_branch			= LWBR[1];
 
 	/** no sync-caching on vardecl is required since there's no other branch */
 	return 0;

@@ -21,6 +21,20 @@ typedef struct aclcur_lbl {
 
 	/** root of it. */
 	aclcur_lblid_t		m_root;
+
+	/** cursor-buffer index of the currently open label.
+	 * only the root label's value is authoritative; see
+	 * aclcur_get_idx_lbl_cur(). ACLCUR_IDX_INVAL when none. */
+	aclcur_idx_t		m_idx_cur;
+
+	/** function-level: the last traversed top-level path ended in a
+	 * return. only the root label's value is authoritative. */
+	aclspv_bool_t		m_fnret;
+
+	/** current lexical loop targets. only the root label's values are
+	 * authoritative; a while saves/sets/restores them around its body. */
+	aclspv_id_t		m_break_loop;
+	aclspv_id_t		m_continue_loop;
 } aclcur_lbl_t;
 
 /** 
@@ -29,6 +43,27 @@ typedef struct aclcur_lbl {
  * */
 aclcur_lblid_t ae2f_ccpure aclcur_get_lbl_last(h_aclspv_ctx_t h_ctx);
 aclcur_t* ae2f_ccpure aclcur_get_lbl_last1(h_aclspv_ctx_t h_ctx);
+
+/** cursor-buffer index of the currently open label (the one the next node
+ * belongs to). O(1): read from the root label. ACLCUR_IDX_INVAL before the
+ * root is bootstrapped. */
+aclcur_idx_t ae2f_ccpure aclcur_get_idx_lbl_cur(const x_aclspv_ctx* ae2f_restrict h_ctx);
+
+/** the currently open label, or 0 before the root is bootstrapped. */
+aclcur_t* ae2f_ccpure aclcur_get_lbl_cur1(h_aclspv_ctx_t h_ctx);
+
+/** id of the currently open label, or 0. */
+aclspv_id_t ae2f_ccpure aclcur_get_lbl_cur(h_aclspv_ctx_t h_ctx);
+
+/** function-level "last top-level path returned" bit. */
+aclspv_bool_t ae2f_ccpure aclcur_get_fnret(const x_aclspv_ctx* ae2f_restrict h_ctx);
+void aclcur_set_fnret(aclspv_bool_t c_ret, h_aclspv_ctx_t h_ctx);
+
+/** current lexical loop targets, 0 when not in a loop. */
+aclspv_id_t ae2f_ccpure aclcur_get_break_loop(const x_aclspv_ctx* ae2f_restrict h_ctx);
+aclspv_id_t ae2f_ccpure aclcur_get_continue_loop(const x_aclspv_ctx* ae2f_restrict h_ctx);
+void aclcur_set_break_loop(aclspv_id_t c_lbl, h_aclspv_ctx_t h_ctx);
+void aclcur_set_continue_loop(aclspv_id_t c_lbl, h_aclspv_ctx_t h_ctx);
 
 /** root is not bootstrapped by this. */
 aclcur_lblid_t aclcur_cfg_lbl(aclcur_lblid_t c, h_aclspv_ctx_t h_ctx);

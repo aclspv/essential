@@ -48,11 +48,11 @@ aclspv_bool_t aclexpr_carve2_bool1(
 			)) return ACLEXPR_CARVE_NO;
 
 	/** now we can branch shit */
-	ae2f_ifezerr(aclcur_cfg_jmp(rdwr_data->m_fnctx->m_branch, rdwr_data->m_ctx))
+	ae2f_ifezerr(aclcur_cfg_jmp(rdwr_data->m_id_branch, rdwr_data->m_ctx))
 		return ACLEXPR_CARVE_NO;
 
 	/** merge block. */
-	ae2f_ifezerr(aclcur_cfg_lbl(rdwr_data->m_fnctx->m_branch, rdwr_data->m_ctx))
+	ae2f_ifezerr(aclcur_cfg_lbl(rdwr_data->m_id_branch, rdwr_data->m_ctx))
 		return ACLEXPR_CARVE_NO;
 
 	ae2f_ifezerr(*rdwr_prv_idval = aclcur_load_reg(

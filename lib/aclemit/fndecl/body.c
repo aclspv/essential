@@ -1,7 +1,5 @@
 #include "./body.h"
 #include <aclutil/emitx.h>
-#include <util/fnctx.h>
-#include <.aclspv/util/fnctx.h>
 #include <aclemit/body.h>
 #include <aclemit/root.h>
 #include <aclattr/main.h>
@@ -10,30 +8,12 @@
 
 enum CXChildVisitResult	aclemit_fndecl_bodycfg(
 		CXCursor h_cur,
-		const aclutil_fnctx* ae2f_restrict rd_fnctx,
-		h_aclspv_ctx_t			h_ctx
+		h_aclspv_ctx_t	h_ctx
 		) {
-	aclutil_fnctx	fnctx = *rd_fnctx;
-	fnctx.m_break_loop	= 0;
-	fnctx.m_var_stage	= 1;
-	fnctx.m_ctx		= h_ctx;
-
 	h_ctx->m_count.m_fnimpl = 0;
-	{
-		/** the root label is bootstrapped by aclemit_root; at this point
-		 * it is the current (and only) label, so m_branch can take it. */
-		h_aclcur_t	p_root = aclcur_get_lbl_last1(h_ctx);
-
-		ae2f_ifezerr(p_root) {
-			h_ctx->m_err = ACLSPV_COMPILE_ALLOC_FAILED;
-			return CXChildVisit_Break;
-		}
-
-		fnctx.m_branch = p_root->m_id;
-	}
 
 	h_ctx->m_work_nxt = aclemit_entp_body;
-	fnctx.m_ctx->m_work_data = &fnctx;
+	h_ctx->m_work_data = h_ctx;
 
 	clang_visitChildren(
 			h_cur
@@ -72,7 +52,7 @@ enum CXChildVisitResult	aclemit_fndecl_bodycfg(
 		h_ctx->m_count.m_fndef += h_ctx->m_count.m_fnimpl;
 	}
 
-	unless(fnctx.m_state0 & ACLUTIL_FNCTX_STATE0_FNRET) {
+	unless(aclcur_get_fnret(h_ctx)) {
 		ae2f_ifezerr(h_ctx->m_count.m_fndef = emit_opcode(
 					&h_ctx->m_section.m_fndef
 					, h_ctx->m_count.m_fndef
@@ -95,7 +75,7 @@ enum CXChildVisitResult	aclemit_fndecl_bodycfg(
 
 	h_ctx->m_num_cursor = 0;
 
-	fnctx.m_ctx->m_work_data	= fnctx.m_ctx;
-	fnctx.m_ctx->m_work_nxt		= aclemit_root;
+	h_ctx->m_work_data	= h_ctx;
+	h_ctx->m_work_nxt	= aclemit_root;
 	return CXChildVisit_Continue;
 }

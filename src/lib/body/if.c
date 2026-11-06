@@ -9,7 +9,6 @@
 
 #include <aclemit/body.h>
 #include <aclutil/emitx.h>
-#include <util/fnctx.h>
 #include <util/visitfromroot.h>
 
 #include <ae2f/pat/dbg.h>
@@ -18,7 +17,7 @@
 #include <.aclspv/util/mkname.h>
 
 /** @brief it produces error on ctx. */
-ae2f_MAC((L, )) aclemit_body_if(CXCursor h_cur, aclutil_fnctx * ae2f_restrict h_fnctx) {
+ae2f_MAC((L, )) aclemit_body_if(CXCursor h_cur, h_aclspv_ctx_t h_ctx) {
 
 	struct s_attr_ifpart_t	L$$IFPART;
 	aclspv_wrd_t		L$$IDVAL = 0,
@@ -27,14 +26,18 @@ ae2f_MAC((L, )) aclemit_body_if(CXCursor h_cur, aclutil_fnctx * ae2f_restrict h_
 
 	aclutil_literal		L$$LTLR;
 
-	ae2fpat_assertassume(h_fnctx);
-	ae2fpat_assertassume(h_fnctx->m_ctx);
+	/** fnret merged across the branches: parent | true | false. */
+	aclspv_bool_t		L$$FNRET_PAR = 0,
+				L$$FNRET_TRUE = 0,
+				L$$FNRET_FALSE = 0;
+
+	ae2fpat_assertassume(h_ctx);
 
 	L$$IFPART.m_n				= 0;
 	L$$IFPART.m_n_dummy			= 0;
-	L$$IFPART.m_b_true				= (h_fnctx->m_ctx)->m_id++;
-	L$$IFPART.m_b_false = L$$IFPART.m_b_default	= (h_fnctx->m_ctx)->m_id++;
-	L$$IFPART.m_ctx				= (h_fnctx->m_ctx);
+	L$$IFPART.m_b_true				= h_ctx->m_id++;
+	L$$IFPART.m_b_false = L$$IFPART.m_b_default	= h_ctx->m_id++;
+	L$$IFPART.m_ctx				= h_ctx;
 
 	clang_visitChildren(h_cur, s_attr_ifpart, &L$$IFPART);
 
@@ -55,7 +58,7 @@ ae2f_MAC((L, )) aclemit_body_if(CXCursor h_cur, aclutil_fnctx * ae2f_restrict h_
 				, ACLSPV_ID_BOOL
 				, L$$IFPART.m_parts[0]
 				, &L$$LTLR
-				, (h_fnctx)))
+				, h_ctx))
 	{
 		case ACLEXPR_RET_NOT_THE_CASE:
 		case ACLEXPR_RET_FAILURE:
@@ -70,39 +73,39 @@ ae2f_MAC((L, )) aclemit_body_if(CXCursor h_cur, aclutil_fnctx * ae2f_restrict h_
 				const enum CXChildVisitResult L$$RET = aclemit_entp_body(
 						L$$IFPART.m_parts[1]
 						, L$$IFPART.m_parts[1]
-						, h_fnctx
+						, h_ctx
 						);
 
-				ae2f_unexpected_but_if((h_fnctx->m_ctx)->m_err)
+				ae2f_unexpected_but_if(h_ctx->m_err)
 					goto L$$LBL_END;
 
 				if(L$$RET == CXChildVisit_Recurse) clang_visitChildren(
 						L$$IFPART.m_parts[1]
 						, aclemit_entp_body
-						, h_fnctx
-						); ae2f_unexpected_but_if((h_fnctx->m_ctx)->m_err) goto L$$LBL_END;
+						, h_ctx
+						); ae2f_unexpected_but_if(h_ctx->m_err) goto L$$LBL_END;
 			} else unless((L$$IFPART.m_n ^ 3) & 3) {
 				const enum CXChildVisitResult L$$RET = aclemit_entp_body(
 						L$$IFPART.m_parts[2]
 						, L$$IFPART.m_parts[2]
-						, h_fnctx
+						, h_ctx
 						);
 
-				ae2f_unexpected_but_if((h_fnctx->m_ctx)->m_err)
+				ae2f_unexpected_but_if(h_ctx->m_err)
 					goto L$$LBL_END;
 
 				if(L$$RET == CXChildVisit_Recurse) clang_visitChildren(
 						L$$IFPART.m_parts[2]
 						, aclemit_entp_body
-						, h_fnctx
-						); ae2f_unexpected_but_if((h_fnctx->m_ctx)->m_err) goto L$$LBL_END;
+						, h_ctx
+						); ae2f_unexpected_but_if(h_ctx->m_err) goto L$$LBL_END;
 			}
 
 			goto L$$LBL_END;
 	}
 
 	ae2f_expected_but_else(L$$IDVAL) {
-		(h_fnctx->m_ctx)->m_err = ACLSPV_COMPILE_IF_COND_INVAL;
+		h_ctx->m_err = ACLSPV_COMPILE_IF_COND_INVAL;
 		goto L$$LBL_END;
 	}
 
@@ -121,92 +124,84 @@ ae2f_MAC((L, )) aclemit_body_if(CXCursor h_cur, aclutil_fnctx * ae2f_restrict h_
 				, L$$IFPART.m_b_default
 				, (aclspv_id_t)0
 				, L$$IFCTL	/** attribute */
-				, (h_fnctx)->m_ctx
+				, h_ctx
 				)) goto L$$LBL_END;
 
 	{
-		aclutil_fnctx		L$$FNCTX_NEW = *h_fnctx;
-		L$$FNCTX_NEW.m_state0 = 0;
-		++L$$FNCTX_NEW.m_var_stage;
+		L$$FNRET_PAR = aclcur_get_fnret(h_ctx);
+		L$$FNRET_TRUE = L$$FNRET_FALSE = 0;
+		aclcur_set_fnret(0, h_ctx);
 
-		ae2f_expected_but_else(aclcur_cfg_lbl(L$$IFPART.m_b_true, (h_fnctx)->m_ctx))
+		ae2f_expected_but_else(aclcur_cfg_lbl(L$$IFPART.m_b_true, h_ctx))
 			goto L$$LBL_END;
-
-		L$$FNCTX_NEW.m_branch		= L$$IFPART.m_b_true;
 
 		aclutil_visitfromroot(L$$IFPART.m_parts[1]
 				, aclemit_entp_body
-				, &L$$FNCTX_NEW
+				, h_ctx
 				);
 
-		ae2f_unexpected_but_if(((h_fnctx)->m_ctx)->m_err) goto L$$LBL_END;
+		ae2f_unexpected_but_if(h_ctx->m_err) goto L$$LBL_END;
 
-		(h_fnctx)->m_state0		|= L$$FNCTX_NEW.m_state0;
+		L$$FNRET_TRUE = aclcur_get_fnret(h_ctx);
 
-		unless(L$$FNCTX_NEW.m_state0 & ACLUTIL_FNCTX_STATE0_FNRET) {
-			ae2f_expected_but_else(aclcur_cfg_jmp(L$$IFPART.m_b_default, (h_fnctx)->m_ctx))
+		unless(L$$FNRET_TRUE) {
+			ae2f_expected_but_else(aclcur_cfg_jmp(L$$IFPART.m_b_default, h_ctx))
 				goto L$$LBL_END;
-
-			(h_fnctx)->m_branch = L$$IFPART.m_b_default;
 		}
 
 		aclutil_mkname_dbg_fn(
 				L$$IFPART.m_b_true
 				, "if"
-				, (h_fnctx)->m_ctx
-				, &(h_fnctx)->m_ctx->m_tmp.m_v0
+				, h_ctx
+				, &h_ctx->m_tmp.m_v0
 				);
 
-		ae2f_ifnezerr(h_fnctx->m_ctx->m_err) {
+		ae2f_ifnezerr(h_ctx->m_err) {
 			goto L$$LBL_END;
 		}
 	}
 
 	unless((L$$IFPART.m_n ^ 3) & 3) {
-		aclutil_fnctx		L$$FNCTX_NEW = *h_fnctx;
-		L$$FNCTX_NEW.m_state0 = 0;
+		aclcur_set_fnret(0, h_ctx);
 
-		ae2f_expected_but_else(aclcur_cfg_lbl(L$$IFPART.m_b_false, (h_fnctx)->m_ctx))
+		ae2f_expected_but_else(aclcur_cfg_lbl(L$$IFPART.m_b_false, h_ctx))
 			goto L$$LBL_END;
-
-		L$$FNCTX_NEW.m_branch		= L$$IFPART.m_b_false;
-		++L$$FNCTX_NEW.m_var_stage;
 
 		aclutil_visitfromroot(
 				L$$IFPART.m_parts[2]
 				, aclemit_entp_body
-				, &L$$FNCTX_NEW
+				, h_ctx
 				);
 
-		ae2f_ifnezerr(((h_fnctx)->m_ctx)->m_err)
+		ae2f_ifnezerr(h_ctx->m_err)
 			goto L$$LBL_END;
 
-		h_fnctx->m_state0		|= L$$FNCTX_NEW.m_state0;
+		L$$FNRET_FALSE = aclcur_get_fnret(h_ctx);
 
-		unless(L$$FNCTX_NEW.m_state0 & ACLUTIL_FNCTX_STATE0_FNRET) {
-			ae2f_expected_but_else(aclcur_cfg_jmp(L$$IFPART.m_b_default, (h_fnctx)->m_ctx))
+		unless(L$$FNRET_FALSE) {
+			ae2f_expected_but_else(aclcur_cfg_jmp(L$$IFPART.m_b_default, h_ctx))
 				goto L$$LBL_END;
 		}
 
 		aclutil_mkname_dbg_fn(
 				L$$IFPART.m_b_false
 				, "else"
-				, (h_fnctx)->m_ctx
-				, &(h_fnctx)->m_ctx->m_tmp.m_v0
+				, h_ctx
+				, &h_ctx->m_tmp.m_v0
 				);
 	}
+
+	aclcur_set_fnret(L$$FNRET_PAR | L$$FNRET_TRUE | L$$FNRET_FALSE, h_ctx);
 
 	aclutil_mkname_dbg_fn(
 			L$$IFPART.m_b_default
 			, "endif"
-			, (h_fnctx)->m_ctx
-			, &(h_fnctx)->m_ctx->m_tmp.m_v0
+			, h_ctx
+			, &h_ctx->m_tmp.m_v0
 			);
 
-	ae2f_expected_but_else(aclcur_cfg_lbl(L$$IFPART.m_b_default, (h_fnctx)->m_ctx))
+	ae2f_expected_but_else(aclcur_cfg_lbl(L$$IFPART.m_b_default, h_ctx))
 		goto L$$LBL_END;
-
-	(h_fnctx)->m_branch = L$$IFPART.m_b_default;
 
 	L$$LBL_END: (void)0;
 } 

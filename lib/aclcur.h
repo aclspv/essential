@@ -7,6 +7,18 @@
 typedef aclspv_id_t	aclcur_id_t;
 
 /** 
+ * physical index from the root to represent address locally on aclcur.
+ * invalid value is u32 with all bit sets 1. see ACLCUR_IDX_INVAL
+ * */
+typedef aclspv_wrd_t		aclcur_idx_t;
+
+/** invalid value of aclcur_idx_t */
+#define	ACLCUR_IDX_INVAL	0xFFFFFFFF
+
+/** root label value */
+#define ACLCUR_IDX_ROOT		0
+
+/** 
  * runtime value
  * has attribute of aclspv_vid_t also
  * */

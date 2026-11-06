@@ -3,6 +3,6 @@
 
 #include <aclspv.h>
 
-enum CXChildVisitResult aclemit_entp_body(CXCursor h_cur, CXCursor h_parent, CXClientData h_fnctx);
+enum CXChildVisitResult aclemit_entp_body(CXCursor h_cur, CXCursor h_parent, CXClientData h_ctx);
 
 #endif

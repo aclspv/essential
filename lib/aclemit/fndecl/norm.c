@@ -1,6 +1,5 @@
 #include "./norm.h"
 
-#include <util/fnctx.h>
 #include <util/fn.h>
 #include <aclty.h>
 
@@ -50,8 +49,7 @@ OUT:
 		[ctx->m_fnlist.m_num_fn++] = fn;
 
 	{
-		aclutil_fnctx	fnctx = {0, };
-		return aclemit_fndecl_bodycfg(h_cur, &fnctx, h_ctx);
+		return aclemit_fndecl_bodycfg(h_cur, h_ctx);
 	}
 
 }

@@ -38,8 +38,7 @@ static aclspv_id_t s_body_lbl_find(CXCursor c_cur, h_aclspv_ctx_t h_ctx) {
 }
 
 enum CXChildVisitResult aclemit_entp_body(CXCursor h_cur, ae2f_unused CXCursor h_parent, CXClientData rdwr_data) {
-#define	FNCTX		((aclutil_fnctx* ae2f_restrict) rdwr_data)
-#define	CTX		FNCTX->m_ctx
+#define	CTX		((h_aclspv_ctx_t) rdwr_data)
 #define	jmpfail(c_why)		{ _aclctx_err(CTX, (c_why)); goto LBL_BREAK; }
 #define	jmpfail_msg(rd_why)	{ err_puts(rd_why); goto LBL_FAIL; }
 #define	ctxcheck(h)	ae2f_ifnezerr(h->m_err) { err_puts("ctx check failed.\n"); goto LBL_FAIL; }
@@ -48,6 +47,9 @@ enum CXChildVisitResult aclemit_entp_body(CXCursor h_cur, ae2f_unused CXCursor h
 	const CXString KINDSPELL	= clang_getCursorKindSpelling(KIND);
 	const CXString SPELL		= clang_getCursorSpelling(h_cur);
 
+	/** the block opened by this statement, when it needs its own. */
+	aclspv_id_t BRANCH		= 0;
+
 	ae2f_expected_but_else(KIND)
 		jmpfail(ACLSPV_COMPILE_MET_INVAL_BODY_NOKIND);
 
@@ -55,21 +57,20 @@ enum CXChildVisitResult aclemit_entp_body(CXCursor h_cur, ae2f_unused CXCursor h
 		goto LBL_BREAK;
 	}
 
-	FNCTX->m_state0 |= (uint_leastenum_t)(KIND != CXCursor_LabelStmt && KIND != CXCursor_ReturnStmt) << (uint_leastenum_t)(ACLUTIL_FNCTX_STATEPAD0_LBL_DO_SOMETHING);
-	FNCTX->m_state0 &= ~((uint_leastenum_t)(KIND != CXCursor_ReturnStmt) << (uint_leastenum_t)(ACLUTIL_FNCTX_STATEPAD0_FNRET));
+	unless(KIND == CXCursor_ReturnStmt)
+		aclcur_set_fnret(0, CTX);
 
 	switch((uintmax_t)KIND) {
 		case CXCursor_VarDecl:
 			_aclemit_body_vardecl(
 					VDCL
 					, h_cur
-					, FNCTX
+					, CTX
 					);
 			ctxcheck(CTX) else goto LBL_DONE;
 
 		case CXCursor_ReturnStmt:
-			FNCTX->m_state0 |= ACLUTIL_FNCTX_STATE0_FNRET;
-			FNCTX->m_state0 &= ~(uint_leastenum_t)(ACLUTIL_FNCTX_STATE0_LBL_DO_SOMETHING);
+			aclcur_set_fnret(1, CTX);
 
 			if(aclcur_get_retty(CTX) != ACLSPV_ID_VOID) {
 				aclspv_id_t	RETVAL;
@@ -89,7 +90,7 @@ enum CXChildVisitResult aclemit_entp_body(CXCursor h_cur, ae2f_unused CXCursor h
 							, aclcur_get_retty(CTX)
 							, CURSORCHILD
 							, 0
-							, FNCTX)) {
+							, CTX)) {
 					case ACLEXPR_RET_NOT_THE_CASE:
 					case ACLEXPR_RET_FAILURE:
 					default:
@@ -109,7 +110,7 @@ enum CXChildVisitResult aclemit_entp_body(CXCursor h_cur, ae2f_unused CXCursor h
 				jmpfail_msg("aclcur_cfg_ret\n");
 			}
 
-			ae2f_ifezerr_strict(aclcur_cfg_lbl(FNCTX->m_branch = CTX->m_id++, CTX)) {
+			ae2f_ifezerr_strict(aclcur_cfg_lbl(CTX->m_id++, CTX)) {
 				jmpfail(ACLSPV_COMPILE_UNHANDLED_BODY_LBL);
 			}
 			goto LBL_DONE;
@@ -125,8 +126,6 @@ enum CXChildVisitResult aclemit_entp_body(CXCursor h_cur, ae2f_unused CXCursor h
 					jmpfail_msg("aclcur_cfg_jmp\n");
 				ae2f_ifezerr_strict(aclcur_cfg_lbl(LBL_ID, CTX))
 					jmpfail_msg("aclcur_cfg_lbl\n");
-
-				FNCTX->m_branch = LBL_ID;
 
 				ae2f_ifnezerr(clang_Cursor_isNull(aclcur_set_cxcursor(LBL_ID, h_cur, CTX)))
 					jmpfail_msg("cursor was null (h_cur)\n");
@@ -174,12 +173,11 @@ enum CXChildVisitResult aclemit_entp_body(CXCursor h_cur, ae2f_unused CXCursor h
 				}
 
 				/** just for branch */
-				ae2f_expected_but_else(aclcur_cfg_lbl(FNCTX->m_branch = CTX->m_id++, CTX))
+				BRANCH = CTX->m_id++;
+				ae2f_expected_but_else(aclcur_cfg_lbl(BRANCH, CTX))
 					jmpfail_msg("aclcur_cfg_lbl\n");
-				ae2f_ifnezerr(clang_Cursor_isNull(aclcur_set_cxcursor(FNCTX->m_branch, h_cur, CTX)))
+				ae2f_ifnezerr(clang_Cursor_isNull(aclcur_set_cxcursor(BRANCH, h_cur, CTX)))
 					jmpfail_msg("cxcursor\n");
-
-				FNCTX->m_state0 &= ~(uint_leastenum_t)(ACLUTIL_FNCTX_STATE0_LBL_DO_SOMETHING);
 			}
 			goto LBL_DONE;
 
@@ -208,7 +206,7 @@ enum CXChildVisitResult aclemit_entp_body(CXCursor h_cur, ae2f_unused CXCursor h
 							, 0
 							, h_cur
 							, 0
-							, FNCTX))
+							, CTX))
 					jmpfail_msg("aclexpr_eval\n");
 			}
 
@@ -216,44 +214,44 @@ enum CXChildVisitResult aclemit_entp_body(CXCursor h_cur, ae2f_unused CXCursor h
 			ctxcheck(CTX) else goto LBL_DONE;
 #endif
 		case CXCursor_IfStmt: 
-			_aclemit_body_if(IF, h_cur, FNCTX);
+			_aclemit_body_if(IF, h_cur, CTX);
 			ctxcheck(CTX) else goto LBL_DONE;
 
 		case CXCursor_WhileStmt:
-			_aclemit_body_while(WHILE, h_cur, FNCTX);
+			_aclemit_body_while(WHILE, h_cur, CTX);
 			ctxcheck(CTX) else goto LBL_DONE;
 
 		case CXCursor_BreakStmt:
-			ae2f_ifezerr(FNCTX->m_break_loop) {
+			ae2f_ifezerr(aclcur_get_break_loop(CTX)) {
 				jmpfail(ACLSPV_COMPILE_MET_INVAL_BRK);
 			}
 
-			ae2f_expected_but_else(aclcur_cfg_jmp(FNCTX->m_break_loop, CTX))
+			ae2f_expected_but_else(aclcur_cfg_jmp(aclcur_get_break_loop(CTX), CTX))
 				jmpfail_msg("aclcur_cfg_jmp\n");
 
 			/** just for branch */
-			ae2f_expected_but_else(aclcur_cfg_lbl(FNCTX->m_branch = CTX->m_id++, CTX))
+			BRANCH = CTX->m_id++;
+			ae2f_expected_but_else(aclcur_cfg_lbl(BRANCH, CTX))
 				jmpfail_msg("aclcur_cfg_lbl\n");
-			ae2f_ifnezerr(clang_Cursor_isNull(aclcur_set_cxcursor(FNCTX->m_branch, h_cur, CTX)))
+			ae2f_ifnezerr(clang_Cursor_isNull(aclcur_set_cxcursor(BRANCH, h_cur, CTX)))
 				jmpfail_msg("aclcur_set_cxcursor\n");
 
-			FNCTX->m_state0 &= ~(uint_leastenum_t)(ACLUTIL_FNCTX_STATE0_LBL_DO_SOMETHING);
 			ctxcheck(CTX) else goto LBL_DONE;
 
 		case CXCursor_ContinueStmt:
-			ae2f_ifezerr(FNCTX->m_continue_loop)
+			ae2f_ifezerr(aclcur_get_continue_loop(CTX))
 				jmpfail(ACLSPV_COMPILE_MET_INVAL_CONTINUE);
 
-			ae2f_ifezerr(aclcur_cfg_jmp(FNCTX->m_continue_loop, CTX))
+			ae2f_ifezerr(aclcur_cfg_jmp(aclcur_get_continue_loop(CTX), CTX))
 				jmpfail_msg("aclcur_cfg_jmp\n");
 
 			/** just for branch */
-			ae2f_ifezerr(aclcur_cfg_lbl(FNCTX->m_branch = CTX->m_id++, CTX))
+			BRANCH = CTX->m_id++;
+			ae2f_ifezerr(aclcur_cfg_lbl(BRANCH, CTX))
 				jmpfail_msg("aclcur_cfg_lbl\n");
-			ae2f_ifnezerr(clang_Cursor_isNull(aclcur_set_cxcursor(FNCTX->m_branch, h_cur, CTX)))
+			ae2f_ifnezerr(clang_Cursor_isNull(aclcur_set_cxcursor(BRANCH, h_cur, CTX)))
 				jmpfail_msg("aclcur_set_cxcursor\n");
 
-			FNCTX->m_state0 &= ~(uint_leastenum_t)(ACLUTIL_FNCTX_STATE0_LBL_DO_SOMETHING);
 			ctxcheck(CTX) else goto LBL_DONE;
 
 		case CXCursor_DoStmt:

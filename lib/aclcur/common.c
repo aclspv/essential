@@ -48,8 +48,13 @@ aclspv_id_t	aclcur_cfg_node2(aclspv_id_reserved_t c_newid, h_aclspv_ctx_t h_ctx,
 	}
 
 	{
-		h_aclcur_t p_lbl_cur	= aclcur_get_lbl_last1(h_ctx);
+		/** the cached open-label index is O(1); fall back to the graph walk
+		 * only when it is not available (e.g. before the root exists). */
+		h_aclcur_t p_lbl_cur	= aclcur_get_lbl_cur1(h_ctx);
 		h_aclcur_t p = &s_get_buf(h_ctx)[h_ctx->m_num_cursor - 1];
+
+		unless(p_lbl_cur)
+			p_lbl_cur = aclcur_get_lbl_last1(h_ctx);
 
 		ae2f_ifezerr(p_lbl_cur) return 0;
 
@@ -96,6 +101,42 @@ aclcur_t* aclcur_get_node_nxt(aclcur_id_t c, const x_aclspv_ctx* ae2f_restrict h
 	const aclspv_wrd_t pad = (aclspv_wrd_t)(p - s_get_buf(h_ctx));
 	const aclspv_wrd_t nxtidx = ae2f_expected(p) ? pad + 1 + p->m_num_skip : 0xFFFFFFFF;
 	return ae2f_expected_strict(nxtidx < h_ctx->m_num_cursor) ? &s_get_buf(h_ctx)[nxtidx] : 0;
+}
+
+ae2f_ccpure aclcur_t* aclcur_get_node_idx(
+		aclcur_idx_t			c_idx,
+		const x_aclspv_ctx* ae2f_restrict h_ctx
+		) {
+	ae2f_ifezerr(h_ctx)				return 0;
+	ae2f_ifnezerr_strict(c_idx == ACLCUR_IDX_INVAL)	return 0;
+	ae2f_ifnezerr_strict(c_idx >= h_ctx->m_num_cursor)	return 0;
+
+	return &s_get_buf(h_ctx)[c_idx];
+}
+
+ae2f_ccpure aclcur_idx_t aclcur_idx_of(
+		aclcur_id_t			c_id,
+		const x_aclspv_ctx* ae2f_restrict h_ctx
+		) {
+	aclspv_wrd_t i;
+
+	ae2f_ifezerr(c_id)	return ACLCUR_IDX_INVAL;
+	ae2f_ifezerr(h_ctx)	return ACLCUR_IDX_INVAL;
+
+	for(i = 0; i < h_ctx->m_num_cursor; ++i) {
+		if(s_get_buf_c(h_ctx)[i].m_id == c_id)
+			return (aclcur_idx_t)i;
+	}
+
+	return ACLCUR_IDX_INVAL;
+}
+
+ae2f_ccpure aclcur_id_t aclcur_id_of_idx(
+		aclcur_idx_t			c_idx,
+		const x_aclspv_ctx* ae2f_restrict h_ctx
+		) {
+	const aclcur_t* p = aclcur_get_node_idx(c_idx, h_ctx);
+	return p ? p->m_id : 0;
 }
 
 

@@ -1,7 +1,6 @@
 #ifndef	aclemit_body_vardecl_c
 #define aclemit_body_vardecl_c
 
-#include <util/fnctx.h>
 #include <util/log.h>
 
 #include <aclattr/specid.h>
@@ -59,8 +58,8 @@ static enum CXChildVisitResult	s_vardecl_init_detect(CXCursor h_cur, CXCursor h_
 
 
 /** @brief it produces error on ctx. */
-ae2f_MAC((L, )) aclemit_body_vardecl(CXCursor h_cur, aclutil_fnctx* ae2f_restrict h_fnctx) { ae2fpat_assertassume(h_fnctx); {
-	h_aclspv_ctx_t	L$$CTX = h_fnctx->m_ctx;
+ae2f_MAC((L, )) aclemit_body_vardecl(CXCursor h_cur, h_aclspv_ctx_t h_ctx) { ae2fpat_assertassume(h_ctx); {
+	h_aclspv_ctx_t	L$$CTX = h_ctx;
 	aclutil_literal	L$$LITERAL;
 	aclspv_id_t		L$$TYPEID = 0;
 	aclspv_id_t		L$$TYPE_PTR = 0;
@@ -177,7 +176,7 @@ ae2f_MAC((L, )) aclemit_body_vardecl(CXCursor h_cur, aclutil_fnctx* ae2f_restric
 			else {
 				CXCursor	L$$VAR_INIT = clang_Cursor_getVarDeclInitializer(h_cur);
 				ae2f_ifnezerr(clang_Cursor_isNull(L$$VAR_INIT)) {
-					(h_fnctx)->m_ctx->m_err = ACLSPV_COMPILE_UNHANDLED_BODY_VARDECL;
+					h_ctx->m_err = ACLSPV_COMPILE_UNHANDLED_BODY_VARDECL;
 					goto L$$LBL_END;
 				}
 				else {
@@ -194,7 +193,7 @@ ae2f_MAC((L, )) aclemit_body_vardecl(CXCursor h_cur, aclutil_fnctx* ae2f_restric
 								, L$$TYPEID
 								, L$$VAR_INIT
 								, &L$$LITERAL
-								, h_fnctx)) {
+								, h_ctx)) {
 						L$$CTX->m_err = ACLSPV_COMPILE_MET_INVAL_BODY_VARDECL_GET_EXPR;
 						goto L$$LBL_END;
 					}
@@ -249,7 +248,7 @@ ae2f_MAC((L, )) aclemit_body_vardecl(CXCursor h_cur, aclutil_fnctx* ae2f_restric
 						, L$$TYPEID
 						, L$$VAR_INIT
 						, &L$$LITERAL
-						, h_fnctx))
+						, h_ctx))
 			{
 				case ACLEXPR_RET_NOT_THE_CASE:
 					L$$CTX->m_err = ACLSPV_COMPILE_NOIMPL;
