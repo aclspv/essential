@@ -46,6 +46,15 @@ aclcur_lblid_t aclcur_cfg_lbl(aclcur_lblid_t c, h_aclspv_ctx_t h_ctx);
  * */
 aclcur_lblid_t aclcur_cfg_lbl_loop(aclcur_lblid_t c, h_aclspv_ctx_t h_ctx);
 
+/**
+ * return type of the current function: the root label's `m_ty`.
+ *
+ * the root label is node 0 of the cursor buffer (see aclcur_cfg_root);
+ * this is the single source of truth for the return type. returns
+ * ACLSPV_ID_VOID when the buffer has no root yet.
+ * */
+aclspv_id_t ae2f_ccpure aclcur_get_retty(const x_aclspv_ctx* ae2f_restrict h_ctx);
+
 /** 
  * bootstrap the root label as the first node of the cursor buffer.
  *

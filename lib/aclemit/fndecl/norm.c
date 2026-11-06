@@ -50,8 +50,7 @@ OUT:
 		[ctx->m_fnlist.m_num_fn++] = fn;
 
 	{
-		aclutil_fnctx	fnctx;
-		fnctx.m_retid = ACLSPV_ID_VOID;
+		aclutil_fnctx	fnctx = {0, };
 		return aclemit_fndecl_bodycfg(h_cur, &fnctx, h_ctx);
 	}
 

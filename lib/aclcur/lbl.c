@@ -47,6 +47,19 @@ struct aclcur* ae2f_ccpure aclcur_get_lbl_last1(h_aclspv_ctx_t h_ctx) {
 	return 0;
 }
 
+aclspv_id_t ae2f_ccpure aclcur_get_retty(const x_aclspv_ctx* ae2f_restrict h_ctx) {
+	const aclcur_t* p;
+
+	ae2f_ifezerr(h_ctx)			return ACLSPV_ID_VOID;
+	ae2f_ifezerr(h_ctx->m_num_cursor)	return ACLSPV_ID_VOID;
+
+	/** the root label is node 0: see aclcur_cfg_root. */
+	p = s_get_buf_c(h_ctx);
+	ae2f_ifnezerr_strict(p->m_class != ACLCUR_LBL)	return ACLSPV_ID_VOID;
+
+	return p->m_ty ? p->m_ty : ACLSPV_ID_VOID;
+}
+
 /** count every J / JC edge targeting the new label across the whole
  * buffer, including edges from blocks that are dead themselves: the
  * power-off sweep (lbl/emit.c) decrements the target of every edge it

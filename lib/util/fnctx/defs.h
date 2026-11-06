@@ -41,8 +41,6 @@ typedef struct {
 	/** @brief see `enum ACLSPV_FNCTX_STATEPAD0_` */
 	uint_leastenum_t	m_state0;
 
-	aclspv_id_t		m_retid;		/** return type id */
-
 	struct {
 		aclspv_wrdcount_t	m_idx_fnimpl;
 		aclspv_wrdcount_t	m_idx_fndef;
