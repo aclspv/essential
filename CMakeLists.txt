@@ -293,6 +293,50 @@ target_include_directories(aclspv-essential-test
 ae2f_CoreTestTentVerbose(aclspv-essential-test ./test/compile)
 ae2f_CoreTestTentVerbose(aclspv-essential-test ./test/util)
 
+# ae2f_CoreTestTentVerbose globs only *.c when ae2f_CXX is off. the C++
+# shader variants (SPIR-V 1.3 / 1.4, GLSL450) are independent of that
+# flag, so register them explicitly.
+if(ae2f_TEST AND CMAKE_CXX_COMPILER)
+	file(GLOB aclspv-cxx-tests "${CMAKE_CURRENT_SOURCE_DIR}/test/compile/*.cc")
+	foreach(item ${aclspv-cxx-tests})
+		get_filename_component(__NAME ${item} NAME_WLE)
+		add_executable("Test-cc-aclspv-essential-${__NAME}" ${item})
+		target_link_libraries("Test-cc-aclspv-essential-${__NAME}"
+			PRIVATE aclspv-essential-test)
+		add_test(NAME "Test-cc-aclspv-essential-${__NAME}"
+			COMMAND "Test-cc-aclspv-essential-${__NAME}")
+	endforeach()
+endif()
+
+# real SPIR-V validation for every module the compile tests emit. optional:
+# the tests simply do not exist when spirv-val is not installed.
+if(ae2f_TEST)
+	find_program(ACLSPV_SPIRV_VAL NAMES spirv-val)
+	if(ACLSPV_SPIRV_VAL)
+		set(aclspv-spv-outputs
+			"Test-1.0.c-aclspv-essential-test-gl-simple.1.0|result-c-gl-simple-1.0.spv"
+			"Test-1.0.c-aclspv-essential-test-while.1.0|result-c-while-1.0.spv"
+			"Test-cc-aclspv-essential-gl-logic.1.0|result-cc-gl-logical-1.0.spv"
+			"Test-cc-aclspv-essential-gl-logic.1.3|result-cc-gl-logical-1.3.spv"
+			"Test-cc-aclspv-essential-gl-logic.1.4|result-cc-gl-logical-1.4.spv"
+			"Test-cc-aclspv-essential-vk-phy32.1.5|result-cc-vk-phy32-1.5.spv"
+			"Test-cc-aclspv-essential-vk-phy64.1.5|result-cc-vk-phy64-1.5.spv"
+			)
+		foreach(item ${aclspv-spv-outputs})
+			string(REPLACE "|" ";" pair "${item}")
+			list(GET pair 0 tname)
+			list(GET pair 1 fname)
+			set_tests_properties("${tname}"
+				PROPERTIES FIXTURES_SETUP "spv_${fname}")
+			add_test(NAME "Test-spirv-val-${fname}"
+				COMMAND "${ACLSPV_SPIRV_VAL}"
+					"${CMAKE_CURRENT_BINARY_DIR}/${fname}")
+			set_tests_properties("Test-spirv-val-${fname}"
+				PROPERTIES FIXTURES_REQUIRED "spv_${fname}")
+		endforeach()
+	endif()
+endif()
+
 if(ae2f_TEST)
 	target_link_libraries(Test-c-aclspv-essential-test-scale 
 		PRIVATE	$<BUILD_INTERFACE:aclspv::aclconst>

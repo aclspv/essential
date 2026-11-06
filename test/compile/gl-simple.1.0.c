@@ -1,10 +1,10 @@
 #include <aclspv.h>
-#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
+
 #include <acltest/onefile.h>
 #include <acltest/compile.h>
+#include <acltest/spirv.h>
 
 #if 1
 int main(void);
@@ -15,6 +15,7 @@ int main(void) {
 
 	aclspv_wrd_t *spirv0;
 	aclspv_wrdcount_t spirv_count;
+	acltest_spirv_stats stats;
 
 	acltestcfg();
 
@@ -48,7 +49,42 @@ int main(void) {
 	printf("aclspv_compile: %d\n", (int) RET);
 	printf("output spirv: %p, %u\n", (void *)spirv0, spirv_count);
 
-	assert(spirv0);
+	/** the test targets are compiled with -DNDEBUG: make every check a
+	 * real failure, not an assert that the preprocessor erases. */
+	if(RET != ACLSPV_COMPILE_OK) {
+		fprintf(stderr, "[gl-simple.1.0] compile failed: %d\n", (int)RET);
+		return EXIT_FAILURE;
+	}
+
+	if(!spirv0) {
+		fputs("[gl-simple.1.0] compile produced no spir-v\n", stderr);
+		return EXIT_FAILURE;
+	}
+
+	/** the shared source has if/else entry points; a successful compile is
+	 * not enough, the emitted CFG must carry selections and every merge /
+	 * branch target must name a defined label. */
+	if(acltest_spirv_scan(spirv0, spirv_count, &stats) != 0) {
+		fputs("[gl-simple.1.0] malformed spir-v instruction stream\n", stderr);
+		free(spirv0);
+		return EXIT_FAILURE;
+	}
+
+	printf("inst=%u lbl=%u br=%u brc=%u selmerge=%u loopmerge=%u targets_ok=%d\n"
+			, stats.m_num_inst
+			, stats.m_num_lbl
+			, stats.m_num_br
+			, stats.m_num_brc
+			, stats.m_num_selmerge
+			, stats.m_num_loopmerge
+			, stats.m_targets_ok
+			);
+
+	if(stats.m_num_selmerge < 1 || !stats.m_targets_ok) {
+		fputs("[gl-simple.1.0] selection control flow missing or targets invalid\n", stderr);
+		free(spirv0);
+		return EXIT_FAILURE;
+	}
 
 	if (spirv0) {
 		FILE *const fp = fopen("result-c-gl-simple-1.0.spv", "wb");
@@ -63,7 +99,7 @@ int main(void) {
 	puts("freeing spirv");
 	free(spirv0);
 
-	return 0;
+	return EXIT_SUCCESS;
 }
 #else
 

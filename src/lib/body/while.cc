@@ -153,7 +153,10 @@ ae2f_MAC((L, )) aclemit_body_while(CXCursor h_cur, h_aclspv_ctx_t h_ctx) { do {
 
 			aclcur_set_fnret(0, h_ctx);
 			aclcur_set_break_loop(L$$LOOPEND, h_ctx);
-			aclcur_set_continue_loop(L$$LOOPCHECK, h_ctx);
+			/** continue must reach the loop's continue block, not the
+			 * header: a direct header jump adds a second back edge and
+			 * violates structured control flow (one back edge per loop). */
+			aclcur_set_continue_loop(L$$LOOPCONTINUE, h_ctx);
 
 			aclutil_visitfromroot(
 					L$$CUR[1]

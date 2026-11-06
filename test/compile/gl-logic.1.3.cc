@@ -55,12 +55,15 @@ int main(void) {
 	}
 
 	RET = CTX.dump_output(spirv_count, spirv0);
-	ae2f_ifnezerr(RET) printf("[err] dump_output:	%d\n", static_cast<int>(RET));
+	ae2f_ifnezerr(RET) {
+		printf("[err] dump_output:	%d\n", static_cast<int>(RET));
+		return static_cast<int>(RET);
+	}
 
 	printf("output spirv: %p, %u\n", reinterpret_cast<void *>(spirv0),
 			spirv_count);
 
-	assert(spirv0);
+	if(!spirv0) return EXIT_FAILURE;
 	if (spirv0) {
 		std::ofstream ofs("result-cc-gl-logical-1.3.spv", std::ios::binary);
 		unless(ofs.is_open()) goto FPOPEN_FAILED;

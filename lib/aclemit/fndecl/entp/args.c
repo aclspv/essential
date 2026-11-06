@@ -13,6 +13,7 @@
 #include <aclmem.h>
 
 #include <aclutil/extension.h>
+#include <aclutil/capability.h>
 
 #include <aclctx/err.h>
 #include <aclctx/id.h>
@@ -919,6 +920,25 @@ enum CXChildVisitResult aclemit_fndecl_entp_arg(
 			break;
 		case SpvStorageClassWorkgroup:
 			{
+				/** SPIR-V 1.4+ forbids Block on a Workgroup variable unless
+				 * the explicit-layout capability is declared. the frontend
+				 * wraps T[] / T* in a Block struct, so declare it here. */
+				if(CTX->m_usrcfg.m_ver_spv >= aclspv_ver_spv(1, 4)) {
+					ae2f_ifezerr(aclutil_add_capability_by_flag(
+								CTX
+								, SpvCapabilityWorkgroupMemoryExplicitLayoutKHR)) {
+						_aclctx_err(DAT->m_ctx, ACLSPV_COMPILE_UNHANDLED_ARGS);
+						return CXChildVisit_Break;
+					}
+
+					ae2f_ifezerr(aclutil_add_extension_by_flag(
+								CTX
+								, "SPV_KHR_workgroup_memory_explicit_layout")) {
+						_aclctx_err(DAT->m_ctx, ACLSPV_COMPILE_UNHANDLED_ARGS);
+						return CXChildVisit_Break;
+					}
+				}
+
 				ae2f_ifezerr(var_native_type_id = aclty_mk_ptr(
 							var_elm_type_id
 							, SpvStorageClassWorkgroup
@@ -936,6 +956,20 @@ enum CXChildVisitResult aclemit_fndecl_entp_arg(
 							)) {
 					_aclctx_err(DAT->m_ctx, ACLSPV_COMPILE_UNHANDLED_ARGS);
 					return CXChildVisit_Break;
+				}
+
+				/** with explicit layout, every Block Workgroup variable in
+				 * the entry point must be Aliased. */
+				if(CTX->m_usrcfg.m_ver_spv >= aclspv_ver_spv(1, 4)) {
+					ae2f_ifezerr(CTX->m_count.m_decorate = aclutil_emitx_3(
+								&CTX->m_section.m_decorate
+								, CTX->m_count.m_decorate
+								, SpvOpDecorate
+								, var_id
+								, SpvDecorationAliased)) {
+						_aclctx_err(DAT->m_ctx, ACLSPV_COMPILE_UNHANDLED_ARGS);
+						return CXChildVisit_Break;
+					}
 				}
 			}
 

@@ -1,12 +1,14 @@
 #include "../../lib/util/scale.h"
 
-#include <assert.h>
+#include <stdio.h>
 #include <string.h>
 
-typedef struct {
-	char* m_name;
-	char* m_brief;
-} evknd;
+#define	CHECK(c)	do { \
+	if(!(c)) { \
+		fprintf(stderr, "check failed: %s:%d\n", __FILE__, __LINE__); \
+		return 1; \
+	} \
+} while(0)
 
 int main(void) {
 	x_aclspv_ctx	ctx;
@@ -15,23 +17,25 @@ int main(void) {
 	aclspv_usrcfg_t	usrcfg;
 	memset(&usrcfg, 0, sizeof(usrcfg));
 
-	aclspv_init_ctx(&ctx, &usrcfg);
+	/** the test targets are built with -DNDEBUG, so assert() is erased.
+	 * every check is an explicit branch. */
+	CHECK(!aclspv_init_ctx(&ctx, &usrcfg));
 	aclmem_init(&alloc, &ctx);
-	assert(init_scale(&alloc, 0));
+	CHECK(init_scale(&alloc, 0));
 
-	assert(mk_scale_from_vec(&alloc, 0));
+	CHECK(mk_scale_from_vec(&alloc, 0));
 
 #if	1
-	assert(mk_scale_from_vec(&alloc, 0));
-	assert(mk_scale_from_vec(&alloc, 0));
-	assert(mk_scale_from_vec(&alloc, 0));
-	assert(mk_scale_from_vec(&alloc, 0));
+	CHECK(mk_scale_from_vec(&alloc, 0));
+	CHECK(mk_scale_from_vec(&alloc, 0));
+	CHECK(mk_scale_from_vec(&alloc, 0));
+	CHECK(mk_scale_from_vec(&alloc, 0));
 #endif
 
-	assert(get_scale_from_vec(&alloc, 0));
-	assert(get_scale_from_vec(&alloc, 1));
-	assert(get_scale_from_vec(&alloc, 2));
-	assert(get_scale_from_vec(&alloc, 3));
+	CHECK(get_scale_from_vec(&alloc, 0));
+	CHECK(get_scale_from_vec(&alloc, 1));
+	CHECK(get_scale_from_vec(&alloc, 2));
+	CHECK(get_scale_from_vec(&alloc, 3));
 
 	aclmem_fini(&alloc);
 	aclspv_fini_ctx(&ctx);
