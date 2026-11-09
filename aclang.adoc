@@ -1,0 +1,687 @@
+= aclang
+:lang: ko
+:idprefix:
+:idseparator: -
+:note-caption: 노트
+:tip-caption: 힌트
+:important-caption: 중요
+:caution-caption: 주의
+:warning-caption: 경고
+:toc-title: 차례
+:table-caption: 표
+:figure-caption: 그림
+:example-caption: 예시
+:appendix-caption: 부록
+:version-label: 버전
+:untitled-label: 익명
+:last-update-label: 마지막 업데이트
+
+// Asciidoctor ships Korean labels as data/locale/attributes-ko.adoc; the
+// IANA subtag is `ko`. There is no `ko-KR` locale file. The labels above are
+// inlined from that file so this document renders Korean without the extra
+// `include::locale/attributes.adoc[]`.
+
+[quote]
+____
+`aclang`, annotated C-family language parses subset of clang ast. +
+This page describes the pure specification of `aclang`, without preprocessing sugar. +
+listed patterns can be emitted as spir-v which validates.
+____
+
+== size of integer
+
+[cols="1,1,1,1,1",options="header"]
+|===
+| | char | short | int | long
+| bytes | 1 | 2 | 4 | 8
+|===
+
+with unsigned is also possible.
+
+== Attributes
+
+[quote]
+`__attribute__((ext_vector_type(a)))`
+
+[quote]
+____
+make a vector type. +
+a vector type is a simd type, where many operations maps to simd.
+____
+
+[source,c]
+----
+typedef int i32;
+typedef i32 __attribute__((ext_vector_type(4))) v4i32;
+typedef _Bool __attribute__((ext_vector_type(4))) boolx4;
+
+boolx4 band128(const v4i32 A, const v4i32 B) {
+    v4i32 Z;
+    Z[0] = 0; Z[1] = 0;
+    Z[2] = 0; Z[3] = 0;
+
+    return A & B != Z;  
+}
+----
+
+=== AnnotationAttributes
+
+[quote]
+____
+Some compiler attributes are available for vulkan-specific behaviours. +
+Many will be annotation attribute so seem as `__attribute__((annotate("<here>")))` +
+arguments should be literal. it is not done by travelling ast.
+____
+
+==== aclspv_specid
+
+[quote]
+`aclspv_specid(specid : u32)`
+
+[quote]
+____
+Make constant value modifiable on vulkan pipeline. +
+See link:https://docs.vulkan.org/refpages/latest/refpages/source/VkPipelineShaderStageCreateInfo.html[shader stage create info]
+____
+
+* if `specid` is `0xFFFFFFFF`, it will be seen undefined.
+* Maps to `OpSpecConstant` with id of `specid`
+* Result type must be scalar Integer or Floating point type.
+* Follows the first specified value & data type.
+* Default value must be specified on first use.
+* Ignores the initialising value when specid is found.
+* Must be specified on use. E.g:
+** Setting a size of an constant array
+** Initialising a non-constant variable
+* Specifying on following condition will be ignored
+** Enumerators
+** `__constant` variable
+** Constant literals
+
+[source,c]
+----
+
+typedef int i32;
+
+/** 
+ * r's size will be determined by spec constant with id 0.
+ * without constant specified in certain type, spec constant will be defined with a default of 3.
+ * */
+i32 sum(const i32 rd[3] __attribute__((annotate("aclspv_specid(0)")))) {
+
+    /** since specid is specified upon, no specifying default value is required. */
+    i32 c __attribute__((annotate("aclspv_specid(0)")));
+    i32 ret = 0;
+    
+    for(i32 i = 0; i < c; ++i)
+        ret += rd[i];
+
+    return ret;
+}
+
+----
+
+==== aclspv_execmode
+
+[quote]
+____
+`aclspv_execmode0(mode : u32)` +
+`aclspv_execmode1(mode : u32, o0 : u32 | id)` +
+`aclspv_execmode2(mode : u32, o0 : u32 | id, o1 : u32 | id)` +
+`aclspv_execmode3(mode : u32, o0 : u32 | id, o1 : u32 | id, o2 : u32 | id)`
+____
+
+[WARNING]
+====
+using spec constant id on execution mode requires spir-v >= 1.2. +
+these do not resolve capabilities and extensions automatically.
+====
+
+[NOTE]
+====
+for local size might be resolved specifically. see below:
+
+* <<aclspv_wrkgroup_size,aclspv_wrkgroup_size>>
+* <<aclspv_wrkgroup_size_id,aclspv_wrkgroup_size_id>>
+====
+
+* attach an execution mode on an entry point function with arguments.
+* `mode` represents link:https://registry.khronos.org/SPIR-V/specs/unified1/SPIRV.html#Execution_Mode[execution mode number].
+* execution mode may have extra operands. since i've seen max to three, `aclspv_execmode3` should be working fine for most of things.
+
+[source,c]
+----
+/**
+ * & means it is spec constant id (id).
+ * # means it is literal (u32).
+ * 
+ * therefore following line means it size should be
+ * o0: specified constant in id 1
+ * o1: 3
+ * o2: specified constant in id 2
+ */
+__attribute__((annotate("aclspv_execmode3(17, &1, #3, &2)")))
+__attribute__((annotate("aclspv_execmodel(5)")))            /** GLCompute */
+void entry_point_glcompute(void) {
+    return;
+}
+
+----
+
+==== aclspv_execmodel
+
+[quote]
+`aclspv_execmodel(model : u32)`
+
+* make a function entry point
+* only attach this on a function which returns void. others should be ignored.
+* possible inputs are defined as enum `SpvExecutionModel_` on spirv-header.
+
+[source,c]
+----
+
+/** this is a normal function */
+void normal_function(void) {
+    return;
+}
+
+/**
+ * this is an entry point of vertex. (0 is a number for vertex execution model)
+ */
+__attribute__((annotate("aclspv_execmodel(0)")))
+void entry_point_vertex(void) {
+    return;
+}
+
+----
+
+entry point
+
+[quote]
+____
+is a void (void); with interface attached. +
+you can have multiple entry points in a shader. (you can have vertex & frag shader at one go!) +
+in aclang the entry point is very flexible since execution mode & objects are represented as attributes & arguments.
+____
+
+arguments
+
+[quote]
+____
+unlike normal function, arguments of entry point have different meaning. +
+for pointers with <<aclspv_storage_class,storage class>> will be a variable declared globally binded. +
+for non-pointers will be an element appended on one push constant block. +
+without `storage class` specified on pointer parameter, compiler should emit an error.
+____
+
+bindables
+
+[quote]
+____
+every entry points have its own reserved <<aclspv_set,descriptor set>>, incremented from 0. +
+from left to right, bindable arguments have its reserved <<aclspv_bind_idx,binding index>> from 0, incremented on every bindable obejcts.
+____
+
+[source,c]
+----
+
+__attribute__((annotate("aclspv_execmodel(0)")))
+void entry_point_vertex(
+    int pc_int /** becomes a push constant's element. follows std430 memory layout. */,
+
+    /*** 3: output */
+    __attribute__((annotate("aclspv_storage_class(3)")))
+    int* out_int,
+
+    /*** 
+     * 12: storage buffer
+     * bindable, which should follow std430 memory layout.
+     * */
+
+    /** bind number 0 **/
+    __attribute__((annotate("aclspv_storage_class(12)"))) int* sbo_int_struct /** struct { int a; } */,
+    /** bind number 1 **/
+    __attribute__((annotate("aclspv_storage_class(12)"))) struct {int c; }* sbo_struct /** struct { int c; }  } */,
+
+    /***
+     * 2: uniform buffer
+     * bindable, which should follow std140 memory layout.
+     */
+
+    /** bind number 2 **/
+    __attribute__((annotate("aclspv_storage_class(2)"))) int* ubo_int,
+    
+    /** bind number 3 **/
+    __attribute__((annotate("aclspv_layout(1)")))
+    __attribute__((annotate("aclspv_storage_class(2)")))
+    struct { int c; }* ubo_struct,
+
+    /*** 4: workgroup */ 
+    __attribute__((annotate("aclspv_storage_class(4)"))) int* work_int,
+    __attribute__((annotate("aclspv_storage_class(4)"))) int work_i32_15[15],
+    __attribute__((annotate("aclspv_storage_class(4)"))) int work_int_arr_spec[] __attribute__((annotate("aclspv_specid(1)")))
+) {
+    return;
+}
+
+----
+
+==== aclspv_storage_class
+
+[quote]
+`aclspv_storage_class(class : u32)`
+
+[quote]
+____
+Specifies the storage class for the target pointer type. +
+Possible inputs are defined as enum `SpvStorageClass_` on spirv-header. +
+pointer type with same element type and different storage class is considered different pointer type.
+____
+
+[source,c]
+----
+__attribute__((annotate("aclspv_execmodel(0)")))
+void entry_point_vertex(
+    /*** 
+     * 12: storage buffer
+     * */
+    __attribute__((annotate("aclspv_storage_class(12)"))) int sbo_int_rtarray[] /** struct { runtimearray<int> a; } */
+) {
+    /** legal, has same storage class. */
+    __attribute__((annotate("aclspv_storage_class(12)"))) int* p0 = &sbo_int_rtarray[3];
+
+    /** illegal, has different storage class. */
+    __attribute__((annotate("aclspv_storage_class(5)"))) int* p1 = &sbo_int_rtarray[3];
+}
+----
+
+you can typedef it.
+
+[source,c]
+----
+typedef unsigned int u32;
+typedef u32* __attribute__((annotate("aclspv_storage_class(12)"))) p_u32_sbo_t;
+typedef struct { u32 m_lsb; u32 m_hsb; } u32x2;
+typedef u32x2* __attribute__((annotate("aclspv_storage_class(12)"))) p_u32x2_sbo_t;
+----
+
+==== aclspv_set
+
+[quote]
+`aclspv_set(set : u32)`
+
+* specifies the descriptor sets of bindable object.
+* could be used on bindable objects.
+* when specified, specifing <<aclspv_bind_idx,binding index>> is required.
+
+[source,c]
+----
+__attribute__((annotate("aclspv_execmodel(5)")))
+void entry_point_compute(
+    /*** 
+     * descriptor set 2, binding 0
+     * */
+    __attribute__((annotate("aclspv_storage_class(12)")))
+    __attribute__((annotate("aclspv_set(2)")))
+    __attribute__((annotate("aclspv_bind_idx(0)")))
+    struct { int data; }* sbo_data,
+
+    /*** 
+     * descriptor set 2, binding 1 (auto-incremented from 0 since bind_idx not specified)
+     * */
+    __attribute__((annotate("aclspv_storage_class(12)")))
+    __attribute__((annotate("aclspv_set(2)")))
+    struct { float value; }* sbo_value
+) { return; }
+----
+
+==== aclspv_bind_idx
+
+[quote]
+`aclspv_bind_idx(idx : u32)`
+
+* specifies the binding index of bindable object.
+* could be used on bindable objects.
+* when specified, auto binding index resolver will not increment the index for next.
+
+[source,c]
+----
+__attribute__((annotate("aclspv_execmodel(5)")))
+void entry_point_compute(
+    /*** 
+     * explicit binding 5 — next bindable in same set starts at 6
+     * */
+    __attribute__((annotate("aclspv_storage_class(12)")))
+    __attribute__((annotate("aclspv_set(0)")))
+    __attribute__((annotate("aclspv_bind_idx(5)")))
+    struct { double x; }* sbo_explicit,
+
+    /*** 
+     * binding 6 (auto-incremented from 5 since bind_idx was specified above)
+     * */
+    __attribute__((annotate("aclspv_storage_class(12)")))
+    __attribute__((annotate("aclspv_set(0)")))
+    struct { double y; }* sbo_auto
+) { return; }
+----
+
+==== aclspv_wrkgroup_size
+
+[quote]
+____
+`aclspv_wrkgroup_size(x: u32, y: u32, z: u32)` +
+`reqd_work_group_size(x: u32, y: u32, z: u32)`
+____
+
+* specifies the entry point's workgroup size.
+* `x`, `y`, `z` must be a 32-bit integer as decimal literal.
+* this attribute is ignored when its execution model is not either `Kernel(6)` or `GLCompute(5)`.
+* this attribute adds execution mode on an given entry point. to attach others, see <<aclspv_execmode,execution mode>>
+
+[source,c]
+----
+__attribute__((annotate("aclspv_wrkgroup_size(1, 1, 1)")))  /** with workgroup size (1, 1, 1) */
+__attribute__((annotate("aclspv_execmodel(5)")))            /** GLCompute */
+void entry_point_glcompute(void) {
+    return;
+}
+----
+
+==== aclspv_wrkgroup_size_id
+
+[NOTE]
+====
+this attribute is available from spir-v version 1.2.
+====
+
+[quote]
+`aclspv_wrkgroup_size_id(x : u32 | id, y: u32 | id, z: u32 | id)`
+
+* specifies the entry point's workgroup size, with not only literal, but an spec constant id.
+* to specify which is literal or specid, prefix is used.
+* this attribute adds execution mode on an given entry point. to attach others, see <<aclspv_execmode,execution mode>>
+
+[source,c]
+----
+/**
+ * & means it is spec constant id.
+ * # means it is literal.
+ * 
+ * therefore following line means it size should be
+ * x: specified constant in id 1
+ * y: 3
+ * z: specified constant in id 2
+ */
+__attribute__((annotate("aclspv_wrkgroup_size_id(&1, #3, &2)")))
+__attribute__((annotate("aclspv_execmodel(5)")))            /** GLCompute */
+void entry_point_glcompute(void) {
+    return;
+}
+----
+
+==== aclspv_location
+
+[quote]
+`aclspv_location(location : u32)`
+
+[WARNING]
+====
+you cannot specify this with <<aclspv_bltin,aclspv_bltin>>
+====
+
+* used on declaring arguments in entry point.
+* specifies the location of `input(1)` or `output(3)`
+* when this and <<aclspv_bltin,aclspv_bltin>> is not specified, every input our output's location will be 0.
+* when <<aclspv_bltin,aclspv_bltin>> is specified, location will not be specified.
+
+[source,c]
+----
+__attribute__((annotate("aclspv_execmodel(0)")))
+void entry_point_vertex(
+    /*** 
+     * omitted.
+     * location: 0
+     * */
+    __attribute__((annotate("aclspv_storage_class(1)"))) int* in_int,
+
+    /** 
+     * location: 1
+     **/
+    __attribute__((annotate("aclspv_location(1)")))
+    __attribute__((annotate("aclspv_storage_class(3)"))) int* out_int
+) { *out_int = *in_int; }
+----
+
+==== aclspv_btcast
+
+[quote]
+`aclspv_btcast`
+
+* tells that the final casting of variable would be bit-casting when it is arithmetic casting.
+
+[source,c]
+----
+void foo(void) {
+    /** 3.20000005 */
+    __attribute__((annotate("aclspv_btcast"))) float bar = 1078774989;
+}
+----
+
+==== aclspv_bratio
+
+[quote]
+`aclspv_bratio(weight_true_branch : u32, weight_false_branch : u32)`
+
+* declare a branch ratio of possibility that whether branch would be true or not.
+* this attribute is a performance hint which affects the logic-based control statement has two cases
+* while
+* if
+
+[source,c]
+----
+typedef int i32;
+struct foo { i32 m; };
+
+i32 foo_read_32(struct foo* h_whatever) {
+    if(h_whatever) {    /** weighted as 7 */
+        __attribute__(("aclspv_bratio(7, 1)")) typedef int dummy_t;
+        return h_whatever->m;
+    } else {            /** weighted as 1 */
+        return 0;
+    }
+}
+----
+
+==== aclspv_layout
+
+[quote]
+`aclspv_layout(layout_number: u32)`
+
+* specify a variable | type be follows a certain memory layout
+* see `./lib/aclty/layout.h` to get the layouts
+* without this attribute specified, layout will be default. (see ACLSPV_LAYOUT_)
+
+[source,c]
+----
+__attribute__((annotate("aclspv_layout(1)")))
+typedef struct { unsigned m_uint; } std140_uint_t;
+----
+
+==== aclspv_bltin
+
+[quote]
+`aclspv_bltin(bltin_number: u32)`
+
+[WARNING]
+====
+this attribute will not resolve or check for execution model | capabilities. +
+use standard macro to resolve or you should be aware of your choice.
+====
+
+[WARNING]
+====
+you cannot specify this with <<aclspv_location,aclspv_location>>
+====
+
+* specify an interface variable (input | output) is builtin variable.
+* see https://registry.khronos.org/SPIR-V/specs/unified1/SPIRV.html#BuiltIn
+
+[source,c]
+----
+typedef float f32;
+typedef f32 __attribute__((ext_vector_type(4))) f32x4;
+
+__attribute__((annotate("aclspv_execmodel(0)")))
+void t12_entry_point_vertex(
+    /***
+     * vertex shader builtin: position output
+     * SPIR-V BuiltIn: Position (0)
+     * */
+    __attribute__((annotate("aclspv_storage_class(3)")))
+    __attribute__((annotate("aclspv_bltin(0)")))
+    f32x4* gl_Position,
+
+    /***
+     * vertex shader builtin: vertex index input
+     * SPIR-V BuiltIn: VertexIndex (42)
+     * */
+    __attribute__((annotate("aclspv_storage_class(1)")))
+    __attribute__((annotate("aclspv_bltin(42)")))
+    int* gl_VertexIndex
+) { return; }
+----
+
+== Builtin
+
+[quote]
+____
+Builtin expressions recognised while carving. +
+Unlike <<attributes,Attributes>>, they are not annotations: they use ordinary call syntax (or a vector expression) and are emitted as SPIR-V instructions.
+____
+
+=== __builtin_sinf / __builtin_cosf / __builtin_tanf
+
+[quote]
+____
+`__builtin_sinf(x)` +
+`__builtin_cosf(x)` +
+`__builtin_tanf(x)`
+____
+
+* emit `GLSL.std.450` `Sin` (instruction 13), `Cos` (14), and `Tan` (15).
+* scalar only: operand and result are 32-bit floating point (`f32`).
+* the operand is cast to the result type before the call is emitted.
+* passing a vector is a clang type error, so these spellings never yield a vector.
+* a scalar literal operand is folded on the host into an `OpConstant` instead of `OpExtInst`, because an extension instruction cannot appear in `OpSpecConstantOp`.
+* `f64` (`__builtin_sin`) is not supported for now.
+* the bare `sinf` / `cosf` / `tanf` names are not recognised; only the `__builtin_` spellings are.
+* the `GLSL.std.450` import is emitted on first use.
+
+[source,c]
+----
+typedef float f32;
+
+void f32_math(f32* in, f32* out) {
+    *out = __builtin_sinf(*in);
+    *out = __builtin_cosf(*in);
+    *out = __builtin_tanf(*in);
+
+    /** folded: no OpExtInst is emitted */
+    *out = __builtin_sinf(0.5f);
+}
+----
+
+=== __builtin_sinf16 / __builtin_cosf16 / __builtin_tanf16
+
+[quote]
+____
+`__builtin_sinf16(x)` +
+`__builtin_cosf16(x)` +
+`__builtin_tanf16(x)`
+____
+
+* emit `GLSL.std.450` `Sin` (instruction 13), `Cos` (14), and `Tan` (15).
+* scalar only: operand and result are 16-bit floating point (`_Float16`).
+* the operand is cast to the result type before the call is emitted.
+* the `Float16` capability is added by the type layer.
+* literal folding is not available for `f16` yet: a literal operand still goes through `OpExtInst`.
+* the `GLSL.std.450` import is emitted on first use.
+
+[source,c]
+----
+typedef _Float16 f16;
+
+void f16_math(f16* in, f16* out) {
+    *out = __builtin_sinf16(*in);
+    *out = __builtin_cosf16(*in);
+    *out = __builtin_tanf16(*in);
+}
+----
+
+=== __builtin_elementwise_sin / __builtin_elementwise_cos / __builtin_elementwise_tan
+
+[quote]
+____
+`__builtin_elementwise_sin(x)` +
+`__builtin_elementwise_cos(x)` +
+`__builtin_elementwise_tan(x)`
+____
+
+* emit `GLSL.std.450` `Sin` (instruction 13), `Cos` (14), and `Tan` (15), elementwise.
+* accept a scalar or a vector; the result has the same shape with 32-bit floating point (`f32`) components.
+* the operand is cast to the result type before the call is emitted.
+* a scalar `f32` literal folds exactly like the f32 family above.
+* the `GLSL.std.450` import is emitted on first use.
+
+[source,c]
+----
+typedef float f32;
+typedef f32 __attribute__((ext_vector_type(4))) f32x4;
+
+void elementwise_math(f32x4* in, f32x4* out) {
+    *out = __builtin_elementwise_sin(*in);
+    *out = __builtin_elementwise_cos(*in);
+    *out = __builtin_elementwise_tan(*in);
+}
+----
+
+=== shufflevector
+
+[quote]
+`__builtin_shufflevector(v1, v2, i0, i1, ...)`
+
+* emits `OpVectorShuffle`.
+* `v1` and `v2` must be vectors of the same component type.
+* the mask indexes the concatenation `v1 ++ v2`, so every `iN` must be a literal integer in `[0, 2 * |v1|)`.
+* the result length is the number of mask components; it may differ from the input length.
+* only `v1` and `v2` are evaluated: the mask is not part of the expression operand stream.
+* the result component count must equal the mask count, as `spirv-val` requires.
+
+[source,c]
+----
+typedef float f32;
+typedef f32 __attribute__((ext_vector_type(4))) f32x4;
+typedef f32 __attribute__((ext_vector_type(2))) f32x2;
+
+void gather(f32x4* a, f32x4* b, f32x4* out4, f32x2* out2) {
+    /** [a.x, b.y, a.z, b.w] */
+    *out4 = __builtin_shufflevector(*a, *b, 0, 5, 2, 7);
+
+    /** [a.y, b.z] */
+    *out2 = __builtin_shufflevector(*a, *b, 1, 6);
+}
+----
+
+== Restriction
+
+[quote]
+Some statements / extensions may not be planned to be supported for now.
+
+* `VK_KHR_relaxed_block_layout` behaviour (free alignment)
+* Non plain-old-data types
+* `OpenCL` memory model
+* `function-scoped variable` shadowing function parameter
+* designated initializer list
+* pointer arithmetic on non-physical addressing model
+* global variables
+* pointer to struct on input | output buffer
