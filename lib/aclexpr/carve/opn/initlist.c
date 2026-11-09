@@ -52,7 +52,7 @@ aclspv_bool_t aclexpr_carve_opn_initlist(
 	const aclty_t* ae2f_restrict P_TY;
 	aclspv_id_t		TY_ELM	= 0;
 	aclspv_wrd_t		EXPECTED = 0;
-	aclspv_wrd_t		MASK = ACLUTIL_LITERAL_MASK_LITERAL;
+	aclspv_wrd_t		MASK = ACLUTIL_LTRL_MASK_LTRL;
 	aclspv_wrd_t		i;
 	/** local operand list: union pads append ids past the visited
 	 * operands, but the scale's operand slots and extras share one
@@ -138,7 +138,7 @@ aclspv_bool_t aclexpr_carve_opn_initlist(
 
 						aclmemzero(&XTRA[i], sizeof(XTRA[i]));
 						XTRA[i].m_type_original = TY_I;
-						XTRA[i].m_mask_literal = ACLUTIL_LITERAL_MASK_CONSTANT;
+						XTRA[i].m_mask_literal = ACLUTIL_LTRL_MASK_CONST;
 					}
 
 					N = EXPECTED;
@@ -166,8 +166,8 @@ aclspv_bool_t aclexpr_carve_opn_initlist(
 				/** the array length must be a plain literal (not a
 				 * spec-constant) to size the list. */
 				ae2f_ifnezerr_strict(
-						(LB.m_val_mask & ACLUTIL_LITERAL_MASK_LITERAL)
-						!= ACLUTIL_LITERAL_MASK_LITERAL) {
+						(LB.m_val_mask & ACLUTIL_LTRL_MASK_LTRL)
+						!= ACLUTIL_LTRL_MASK_LTRL) {
 					err_puts("[carve::opn::initlist] array length is not a literal");
 					return ACLEXPR_CARVE_NO;
 				}
@@ -263,7 +263,7 @@ aclspv_bool_t aclexpr_carve_opn_initlist(
 
 	rdwr_prv_extra->m_type_original = TY_RES;
 
-	if(MASK & ACLUTIL_LITERAL_CONSTANT) {
+	if(MASK & ACLUTIL_LTRL_CONST) {
 		/** all elements foldable: emit OpConstantComposite straight into
 		 * the types section. a composite is never a scalar literal, so
 		 * the mask is CONSTANT only (0x1). */
@@ -289,7 +289,7 @@ aclspv_bool_t aclexpr_carve_opn_initlist(
 				= OP[i];
 		}
 
-		rdwr_prv_extra->m_mask_literal = ACLUTIL_LITERAL_MASK_CONSTANT;
+		rdwr_prv_extra->m_mask_literal = ACLUTIL_LTRL_MASK_CONST;
 		*r_ltrl = rdwr_prv_extra->m_literal;
 		return ACLEXPR_CARVE_OK;
 	}
@@ -308,6 +308,6 @@ aclspv_bool_t aclexpr_carve_opn_initlist(
 		return ACLEXPR_CARVE_NO;
 	}
 
-	rdwr_prv_extra->m_mask_literal = ACLUTIL_LITERAL_MASK_RT;
+	rdwr_prv_extra->m_mask_literal = ACLUTIL_LTRL_MASK_RT;
 	return ACLEXPR_CARVE_OK;
 }

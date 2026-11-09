@@ -8,16 +8,22 @@
 
 #include <aclutil/emitx.h>
 
-aclspv_id_t aclcur_cfg_opx(
+/** create an opx node from operand words that are already resolved.
+ *
+ * `c_num_val` leading operands are value ids and carry a reference; the
+ * remaining words are raw operands (e.g. OpVectorShuffle components) that
+ * are emitted verbatim and referenced by nothing. */
+static aclspv_id_t s_cfg_opx_build(
 		aclspv_id_reserved_t	c_newid_opt,
 		enum SpvOp_	c_op,
 		aclty_id_t	c_ty,
+		aclspv_id_t	c_set,
+		aclspv_wrd_t	c_inst,
 		const aclspv_vid_t	c_os[],
 		aclspv_wrd_t	c_num,
+		aclspv_wrd_t	c_num_val,
 		h_aclspv_ctx_t	h_ctx
 		) {
-	h_aclcur_t p_os[__ACLSPV_MAX_OPRND];
-	aclcur_t b;
 	aclspv_wrd_t i;
 
 	unless(c_num) {
@@ -35,28 +41,6 @@ aclspv_id_t aclcur_cfg_opx(
 		return 0;
 	}
 
-	/** every operand must resolve to a value. */
-	for(i = 0; i < c_num; ++i) {
-		b = aclcur_get_load(c_os[i], h_ctx);
-		ae2f_ifezerr(b.m_val) return 0;
-
-		/** constant operands are permitted: their ids are emitted as raw operands. */
-		p_os[i] = b.m_id ? aclcur_get_node(b.m_id, h_ctx) : 0;
-
-#if	__ACLSPV_CHECK_EXTRA
-		ae2f_ifnezerr(b.m_id && !p_os[i]) {
-			err_puts(
-					"operand node missing on aclcur opx.\n"
-					"it should be handled on aclemit.\n"
-					);
-			h_ctx->m_err = ACLSPV_COMPILE_UNHANDLED;
-			return 0;
-		}
-#else
-		ae2f_assume_strict(!b.m_id || p_os[i]);
-#endif
-	}
-
 	/** all operands are order-sensitive: no swap here. */
 	{
 		const aclcur_t* ae2f_restrict buf = s_get_buf_c(h_ctx);
@@ -68,6 +52,8 @@ aclspv_id_t aclcur_cfg_opx(
 					&& buf[k].m_d.m_opx.m_op	== c_op
 					&& buf[k].m_ty			== c_ty
 					&& buf[k].m_d.m_opx.m_num	== c_num
+					&& buf[k].m_d.m_opx.m_set	== c_set
+					&& buf[k].m_d.m_opx.m_inst	== c_inst
 			  ) {
 				/** compare the operand chain in order. */
 				aclspv_wrd_t idx = buf[k].m_d.m_opx.m_o_head;
@@ -105,6 +91,8 @@ aclspv_id_t aclcur_cfg_opx(
 		p_opx->m_d.m_opx.m_op = c_op;
 		p_opx->m_d.m_opx.m_num = c_num;
 		p_opx->m_d.m_opx.m_o_head = 0;
+		p_opx->m_d.m_opx.m_set = c_set;
+		p_opx->m_d.m_opx.m_inst = c_inst;
 
 		/** operand links: chained via cursor-buffer index, skipped in the instruction stream. */
 		for(i = 0; i < c_num; ++i) {
@@ -148,8 +136,9 @@ aclspv_id_t aclcur_cfg_opx(
 			mbr_prv = mbr;
 		}
 
-		/** member links may have regrown (realloc'd) the buffer: re-resolve. */
-		for(i = 0; i < c_num; ++i) {
+		/** member links may have regrown (realloc'd) the buffer: re-resolve.
+		 * only the value operands carry a reference. */
+		for(i = 0; i < c_num_val; ++i) {
 			h_aclcur_t p_os_i = aclcur_get_node(c_os[i], h_ctx);
 			if(p_os_i)	(void)++p_os_i->m_num_ref;
 		}
@@ -158,4 +147,107 @@ aclspv_id_t aclcur_cfg_opx(
 	}
 
 	ae2f_unreachable();
+}
+
+static aclspv_id_t s_cfg_opx(
+		aclspv_id_reserved_t	c_newid_opt,
+		enum SpvOp_	c_op,
+		aclty_id_t	c_ty,
+		aclspv_id_t	c_set,
+		aclspv_wrd_t	c_inst,
+		const aclspv_vid_t	c_os[],
+		aclspv_wrd_t	c_num,
+		h_aclspv_ctx_t	h_ctx
+		) {
+	aclcur_t b;
+	aclspv_wrd_t i;
+
+	/** every operand must resolve to a value. */
+	for(i = 0; i < c_num; ++i) {
+		b = aclcur_get_load(c_os[i], h_ctx);
+		ae2f_ifezerr(b.m_val) return 0;
+
+		/** constant operands are permitted: their ids are emitted as raw operands. */
+#if	__ACLSPV_CHECK_EXTRA
+		ae2f_ifnezerr(b.m_id && !aclcur_get_node(b.m_id, h_ctx)) {
+			err_puts(
+					"operand node missing on aclcur opx.\n"
+					"it should be handled on aclemit.\n"
+					);
+			h_ctx->m_err = ACLSPV_COMPILE_UNHANDLED;
+			return 0;
+		}
+#else
+		ae2f_assume_strict(!b.m_id || aclcur_get_node(b.m_id, h_ctx));
+#endif
+	}
+
+	return s_cfg_opx_build(
+			c_newid_opt, c_op, c_ty, c_set, c_inst
+			, c_os, c_num, c_num, h_ctx);
+}
+
+aclspv_id_t aclcur_cfg_opx(
+		aclspv_id_reserved_t	c_newid_opt,
+		enum SpvOp_	c_op,
+		aclty_id_t	c_ty,
+		const aclspv_vid_t	c_os[],
+		aclspv_wrd_t	c_num,
+		h_aclspv_ctx_t	h_ctx
+		) {
+	return s_cfg_opx(c_newid_opt, c_op, c_ty, 0, 0, c_os, c_num, h_ctx);
+}
+
+aclspv_id_t aclcur_cfg_extinst(
+		aclspv_id_reserved_t	c_newid_opt,
+		aclty_id_t		c_ty,
+		aclspv_id_t		c_set,
+		aclspv_wrd_t		c_inst,
+		const aclspv_vid_t	c_os[],
+		aclspv_wrd_t		c_num,
+		h_aclspv_ctx_t		h_ctx
+		) {
+	return s_cfg_opx(c_newid_opt, SpvOpExtInst, c_ty, c_set, c_inst, c_os, c_num, h_ctx);
+}
+
+aclspv_id_t aclcur_cfg_shuffle(
+		aclspv_id_reserved_t	c_newid_opt,
+		aclty_id_t		c_ty,
+		aclspv_id_t		c_v1,
+		aclspv_id_t		c_v2,
+		const aclspv_wrd_t*	c_comps,
+		aclspv_wrd_t		c_num,
+		h_aclspv_ctx_t		h_ctx
+		) {
+	aclspv_wrd_t		os[__ACLSPV_MAX_OPRND];
+	aclcur_t		b;
+	aclspv_wrd_t		i;
+
+	ae2f_ifezerr(c_num) return 0;
+
+	if((aclspv_wrd_t)2 + c_num > __ACLSPV_MAX_OPRND)
+		return 0;
+
+	/** the two vectors are ordinary value operands. */
+	b = aclcur_get_load(c_v1, h_ctx);
+	ae2f_ifezerr(b.m_val) return 0;
+	os[0] = c_v1;
+
+	b = aclcur_get_load(c_v2, h_ctx);
+	ae2f_ifezerr(b.m_val) return 0;
+	os[1] = c_v2;
+
+	/** components are literal indices into v1 ++ v2, emitted verbatim. */
+	for(i = 0; i < c_num; ++i)
+		os[2 + i] = c_comps[i];
+
+	return s_cfg_opx_build(
+			c_newid_opt
+			, SpvOpVectorShuffle
+			, c_ty
+			, 0, 0
+			, os
+			, (aclspv_wrd_t)2 + c_num
+			, 2
+			, h_ctx);
 }

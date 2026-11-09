@@ -47,7 +47,7 @@ struct aclcur* ae2f_ccpure aclcur_get_lbl_last1(h_aclspv_ctx_t h_ctx) {
 	return 0;
 }
 
-static h_aclcur_t s_get_root1(h_aclspv_ctx_t h_ctx) {
+static aclcur_t* s_get_root1(h_aclspv_ctx_t h_ctx) {
 	h_aclcur_t p = aclcur_get_node_idx(ACLCUR_IDX_ROOT, h_ctx);
 	return (p && p->m_class == ACLCUR_LBL) ? p : 0;
 }

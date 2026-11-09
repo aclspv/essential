@@ -142,7 +142,7 @@ ae2f_MAC((L, )) aclemit_body_vardecl(CXCursor h_cur, h_aclspv_ctx_t h_ctx) { ae2
 				switch(aclexpr_arithmetic_cast_non_literal(
 							L$$NODE.m_val
 							, L$$NODE.m_ty
-							, ACLUTIL_LITERAL_CONSTANT
+							, ACLUTIL_LTRL_CONST
 							, &L$$INIT
 							, L$$TYPEID
 							, L$$CTX

@@ -298,18 +298,18 @@ static aclspv_bool_t s_negate(
 
 	switch(r_extra->m_mask_literal) {
 		default:
-		case ACLUTIL_LITERAL_MASK_LITERAL:
-		case ACLUTIL_LITERAL_LITERAL:
+		case ACLUTIL_LTRL_MASK_LTRL:
+		case ACLUTIL_LTRL_LTRL:
 			*r_id = 0;
 			rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_OPCODE] = opcode_old;
 
 			return 0;
 
-		case ACLUTIL_LITERAL_CONSTANT:
+		case ACLUTIL_LTRL_CONST:
 			rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_END] = rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_END + 1];
 			return !(*r_id = aclconst_specop(rdwr_lst_scale_buf, 5, h_ctx));
 
-		case ACLUTIL_LITERAL_RT:
+		case ACLUTIL_LTRL_RT:
 			return !(*r_id = aclcur_cfg_op1(0
 						, (enum SpvOp_)rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_OPCODE]
 						, rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_RESTYID]
@@ -332,6 +332,9 @@ aclspv_bool_t aclexpr_carve2_arithmetic_do(
 		) {
 	const aclspv_bool_t IS_ASSIGN = s_is_assign(rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_OPCODE]);
 
+	if(IS_ASSIGN)
+		r_extra->m_state0 |= (aclspv_wrd_t)ACLEXPR_OPCFGX_STATE0_NOPURE;
+
 	if(
 			aclty_is_sclr_flt(aclty_get_simd_sclr(rd_extra[0].m_type_original, h_ctx))
 			|| aclty_is_sclr_flt(aclty_get_simd_sclr(rd_extra[1].m_type_original, h_ctx))
@@ -345,10 +348,10 @@ aclspv_bool_t aclexpr_carve2_arithmetic_do(
 			 * so that OpConstant is emitted in dominating section instead of
 			 * OpFSub inside one if-arm only. Fixes dominance error in
 			 * chained if-else (t16_vs_main / gl-simple test). */
-			if ((r_extra->m_mask_literal & ACLUTIL_LITERAL_LITERAL) == 0)
-				r_extra->m_mask_literal = ACLUTIL_LITERAL_MASK_RT;
+			if ((r_extra->m_mask_literal & ACLUTIL_LTRL_LTRL) == 0)
+				r_extra->m_mask_literal = ACLUTIL_LTRL_MASK_RT;
 			else
-				r_extra->m_mask_literal &= ~(aclspv_wrd_t)(ACLUTIL_LITERAL_CONSTANT);
+				r_extra->m_mask_literal &= ~(aclspv_wrd_t)(ACLUTIL_LTRL_CONST);
 		}
 	}
 
@@ -376,8 +379,8 @@ aclspv_bool_t aclexpr_carve2_arithmetic_do(
 #endif
 
 	unless(*r_id) switch(r_extra->m_mask_literal) {
-		case ACLUTIL_LITERAL_MASK_LITERAL:
-		case ACLUTIL_LITERAL_LITERAL:
+		case ACLUTIL_LTRL_MASK_LTRL:
+		case ACLUTIL_LTRL_LTRL:
 			{
 				struct aclutil_ltrl_eval_t EVAL_LIT
 					= s_eval2_ltrl(
@@ -410,14 +413,14 @@ aclspv_bool_t aclexpr_carve2_arithmetic_do(
 			break;
 
 
-		case ACLUTIL_LITERAL_MASK_CONSTANT:
+		case ACLUTIL_LTRL_MASK_CONST:
 			ae2f_ifezerr(*r_id = aclconst_specop(
 						rdwr_lst_scale_buf
 						, 6
 						, h_ctx)) return 1;
 			break;
 
-		case ACLUTIL_LITERAL_MASK_RT:
+		case ACLUTIL_LTRL_MASK_RT:
 
 			/** runtime: the operation is a graph node, flushed by aclcur_emit(). */
 			{

@@ -59,7 +59,7 @@ int main(void) {
 
 	if(!spirv0) return EXIT_FAILURE;
 	if (spirv0) {
-		std::ofstream ofs("result-cc-vk-phy32-1.5.spv", std::ios::binary);
+		std::ofstream ofs(ACLTEST_OUT, std::ios::binary);
 		unless(ofs.is_open()) goto FPOPEN_FAILED;
 		ofs.write(reinterpret_cast<char *>(spirv0),
 			  static_cast<std::streamsize>(

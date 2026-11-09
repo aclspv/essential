@@ -87,7 +87,7 @@ aclspv_id_t	aclcur_store_reg(aclcur_regid_t c_reg, aclspv_vid_t c_val, h_aclspv_
 		p_reg->m_flag0 &= (aclspv_wrd_t)~(aclcur_flag0_reg(ACLCUR_FLAG0_REG_TRACKED)
 					| aclcur_flag0_reg(ACLCUR_FLAG0_REG_CHANGED));
 		p_reg->m_val	= 0;
-		p_reg->m_val_mask = ACLUTIL_LITERAL_RT;
+		p_reg->m_val_mask = ACLUTIL_LTRL_RT;
 	} else {
 		p_reg->m_flag0 |= aclcur_flag0_reg(ACLCUR_FLAG0_REG_TRACKED)
 		                | aclcur_flag0_reg(ACLCUR_FLAG0_REG_CHANGED);
@@ -157,7 +157,7 @@ aclspv_id_t	aclcur_store_reg_explicit(
 	p->m_flag0 |= aclcur_flag0_store(ACLCUR_FLAG0_STORE_EXPLICIT);
 	p_reg->m_flag0 &= ~aclcur_flag0_reg(ACLCUR_FLAG0_REG_TRACKED);
 	p_reg->m_val = 0;
-	p_reg->m_val_mask = ACLUTIL_LITERAL_RT;
+	p_reg->m_val_mask = ACLUTIL_LTRL_RT;
 
 	return store;
 }

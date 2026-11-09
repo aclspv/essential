@@ -46,6 +46,8 @@ static enum CXChildVisitResult s_memberwrite_cnt(
 			aclexpr_opbincfg_extra		ae2fcc_arg_sarr_restrict(rdwr_lst_extra, 2),
 			aclutil_literal			ae2fcc_arg_sarr_restrict(r_ltrl, 1)
 			) {
+		rdwr_prv_extra->m_state0 |= (aclspv_wrd_t)ACLEXPR_OPCFGX_STATE0_NOPURE;
+
 		{
 			const CXCursor MREF = rdwr_lst_extra[0].m_cursor;
 			const CXCursor FD = clang_getCursorReferenced(MREF);
@@ -100,7 +102,7 @@ static enum CXChildVisitResult s_memberwrite_cnt(
 							, (aclspv_id_t)CNT.m_idx
 							, rdwr_data->m_ctx);
 
-					const aclspv_id_t X = rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_END + 1];
+					aclspv_id_t X = rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_END + 1];
 
 					ae2f_ifezerr(VIEW) {
 						err_puts("[carve2::memberwrite] the member view could not be built\n");
@@ -109,6 +111,15 @@ static enum CXChildVisitResult s_memberwrite_cnt(
 
 					ae2f_ifnezerr_strict(!X) {
 						err_puts("[carve2::memberwrite] rhs missing\n");
+						return ACLEXPR_CARVE_NO;
+					}
+
+					ae2f_ifnezerr_strict(aclexpr_carve_cast_to_reg(
+								VIEW
+								, &X
+								, &rdwr_lst_extra[1]
+								, rdwr_data->m_ctx)) {
+						err_puts("[carve2::memberwrite] rhs cast failed\n");
 						return ACLEXPR_CARVE_NO;
 					}
 
@@ -141,10 +152,19 @@ static enum CXChildVisitResult s_memberwrite_cnt(
 							, rdwr_data->m_ctx);
 
 					if(VIEW) {
-						const aclspv_id_t X = rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_END + 1];
+						aclspv_id_t X = rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_END + 1];
 
 						ae2f_ifnezerr_strict(!X) {
 							err_puts("[carve2::memberwrite] rhs missing\n");
+							return ACLEXPR_CARVE_NO;
+						}
+
+						ae2f_ifnezerr_strict(aclexpr_carve_cast_to_reg(
+									VIEW
+									, &X
+									, &rdwr_lst_extra[1]
+									, rdwr_data->m_ctx)) {
+							err_puts("[carve2::memberwrite] rhs cast failed\n");
 							return ACLEXPR_CARVE_NO;
 						}
 
@@ -196,7 +216,7 @@ static enum CXChildVisitResult s_memberwrite_cnt(
 							, rdwr_data->m_ctx
 							);
 					h_aclcur_t p_reg = aclcur_get_node(REG, rdwr_data->m_ctx);
-					const aclspv_id_t X = rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_END + 1];
+					aclspv_id_t X = rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_END + 1];
 					const aclspv_id_t S_VAL = aclcur_load_reg(REG, rdwr_data->m_ctx, 0);
 
 					unless(REG) {
@@ -215,18 +235,46 @@ static enum CXChildVisitResult s_memberwrite_cnt(
 					}
 
 					{
+						const aclspv_id_t TY_BASE = p_reg->m_ty;
 						const aclty_t* const ae2f_restrict P_TY
-							= aclty_find(p_reg->m_ty, rdwr_data->m_ctx);
+							= aclty_find(TY_BASE, rdwr_data->m_ctx);
+						aclspv_wrd_t NUM_MBR;
 
 						unless(P_TY && P_TY->m_class == ACLTY_STRUCT) {
 							err_puts("[carve2::memberwrite] base register is not a composite value\n");
 							return ACLEXPR_CARVE_NO;
 						}
 
+						NUM_MBR = P_TY->m_info.m_struct.m_num_mbr;
+
 						/** member ordinal: already computed above (CNT). */
-						unless(CNT.m_found && CNT.m_idx < P_TY->m_info.m_struct.m_num_mbr) {
+						unless(CNT.m_found && CNT.m_idx < NUM_MBR) {
 							err_puts("[carve2::memberwrite] member index out of the base composite\n");
 							return ACLEXPR_CARVE_NO;
+						}
+
+						/** the inserted object must already have the member
+						 * type; P_TY/TY_BASE are captured before the cast
+						 * because it can allocate and move the arena. */
+						{
+							const aclspv_id_t TY_M_VAL = aclty_mk_by_cursor_dummy(
+									FD
+									, clang_getCursorType(FD)
+									, rdwr_data->m_ctx);
+
+							ae2f_ifezerr(TY_M_VAL) {
+								err_puts("[carve2::memberwrite] failed to make the member type\n");
+								return ACLEXPR_CARVE_NO;
+							}
+
+							ae2f_ifnezerr_strict(aclexpr_carve_cast_to_ty(
+										TY_M_VAL
+										, &X
+										, &rdwr_lst_extra[1]
+										, rdwr_data->m_ctx)) {
+								err_puts("[carve2::memberwrite] rhs cast failed\n");
+								return ACLEXPR_CARVE_NO;
+							}
 						}
 
 						/** OpCompositeInsert: [op|6, ty(struct), id, obj(comp),
@@ -236,7 +284,7 @@ static enum CXChildVisitResult s_memberwrite_cnt(
 							const aclspv_id_t NEW = aclcur_cfg_op2i(
 									0
 									, SpvOpCompositeInsert
-									, p_reg->m_ty
+									, TY_BASE
 									, X
 									, S_VAL
 									, CNT.m_idx

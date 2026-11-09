@@ -2,12 +2,17 @@
 #include "./fndecl/norm.h"
 #include "./fndecl/entp.h"
 
-#include <util/is_kernel.h>
-
 #include <aclspv.h>
 #include <aclcur/common.h>
 
 #include <ae2f/pat/dbg.h>
+#include <aclattr/execmodel.h>
+
+ae2f_inline_f static aclspv_wrd_t s_is_kernel(const CXCursor h_fndecl) {
+	enum SpvExecutionModel_ MODEL = SpvExecutionModelMax;
+	clang_visitChildren(h_fndecl, s_attr_execmodel, &MODEL);
+	return (aclspv_wrd_t)(MODEL ^ SpvExecutionModelMax);
+}
 
 ae2f_extern enum CXChildVisitResult aclemit_root(
 		CXCursor h_cur, CXCursor h_parent, CXClientData h_ctx
@@ -30,7 +35,7 @@ ae2f_extern enum CXChildVisitResult aclemit_root(
 	}
 
 	return (CTX->m_work_nxt
-			= s_aclutil_is_kernel(h_parent)
+			= s_is_kernel(h_parent)
 			? aclemit_fndecl_entp
 			: aclemit_fndecl_norm
 	       )(h_cur, h_parent, CTX->m_work_data);

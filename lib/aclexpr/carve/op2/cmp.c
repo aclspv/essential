@@ -209,7 +209,7 @@ aclspv_bool_t aclexpr_carve2_cmp(
 	 * OpSpecConstantOp) cannot carry a bool result type cleanly, so a
 	 * comparison is ALWAYS a runtime graph node — regardless of the
 	 * operands being literal/constant foldable. */
-	rdwr_prv_extra->m_mask_literal = ACLUTIL_LITERAL_MASK_RT;
+	rdwr_prv_extra->m_mask_literal = ACLUTIL_LTRL_MASK_RT;
 
 	ae2f_ifezerr(rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_OPCODE] = s_cmp_to_spv(
 				ACLEXPR_OPBINCFG_RESTYID[rdwr_lst_scale_buf]

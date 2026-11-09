@@ -76,7 +76,7 @@ enum ACLEXPR_RET_ aclexpr_bit_cast(
 
 	/** two are same */
 	if(c_old_type == c_new_type) {
-		const uint_fastenum_t	CND_LIT = c_flag_literal & ACLUTIL_LITERAL_LITERAL;
+		const uint_fastenum_t	CND_LIT = c_flag_literal & ACLUTIL_LTRL_LTRL;
 		*r_newid = c_old_id;
 
 		if(r_new_literal_opt)
@@ -84,7 +84,7 @@ enum ACLEXPR_RET_ aclexpr_bit_cast(
 
 		if (CND_LIT)
 			return ACLEXPR_RET_SUCCESS_LITERAL;
-		return (c_flag_literal & ACLUTIL_LITERAL_CONSTANT) ? ACLEXPR_RET_SUCCESS_CONSTANT : ACLEXPR_RET_SUCCESS;
+		return (c_flag_literal & ACLUTIL_LTRL_CONST) ? ACLEXPR_RET_SUCCESS_CONSTANT : ACLEXPR_RET_SUCCESS;
 	}
 
 	ae2f_ifezerr(c_old_type) {
@@ -121,7 +121,7 @@ enum ACLEXPR_RET_ aclexpr_bit_cast(
 	unless(aclty_is_sclr(c_old_type) && aclty_is_sclr(c_new_type))
 		return s_cast_bit(c_old_id, c_old_type, c_flag_literal, r_newid, c_new_type, h_ctx);
 
-	if(c_flag_literal & ACLUTIL_LITERAL_LITERAL) {
+	if(c_flag_literal & ACLUTIL_LTRL_LTRL) {
 		dbg_puts("literal\n");
 		*r_new_literal_opt = c_old_literal;
 		return ae2f_expected(*r_newid = aclval_cfg_by_enum(c_old_literal.m_u64, h_ctx, (enum ACLSPV_ID_)c_new_type))

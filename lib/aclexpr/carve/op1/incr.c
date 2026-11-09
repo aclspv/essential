@@ -29,6 +29,8 @@
 
 		aclspv_wrd_t	O = rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_OPCODE];
 
+		rdwr_prv_extra->m_state0 |= (aclspv_wrd_t)ACLEXPR_OPCFGX_STATE0_NOPURE;
+
 		ae2f_ifnezerr_strict(!REG) {
 			err_puts("[carve1::incr] no register for the lvalue.");
 			return ACLEXPR_CARVE_NO;
@@ -51,7 +53,7 @@
 			return ACLEXPR_CARVE_NO;
 		}
 
-		if(rdwr_lst_extra->m_mask_literal & (aclspv_wrd_t)ACLUTIL_LITERAL_LITERAL) {
+		if(rdwr_lst_extra->m_mask_literal & (aclspv_wrd_t)ACLUTIL_LTRL_LTRL) {
 			switch(O) {
 				case ACLEXPR_OP1_PREDEC:
 					r_ltrl->m_api_uintmax = LTRL.m_api_uintmax - 1;
@@ -125,7 +127,7 @@
 					return ACLEXPR_CARVE_NO;
 
 				case ACLEXPR_RET_SUCCESS:
-					rdwr_prv_extra->m_mask_literal &= ACLUTIL_LITERAL_RT;
+					rdwr_prv_extra->m_mask_literal &= ACLUTIL_LTRL_RT;
 					ae2f_ifezerr(VP = aclcur_cfg_op2(
 								VP, (enum SpvOp_)RO
 								, rdwr_lst_extra->m_type_original
@@ -145,7 +147,7 @@
 						B[4] = V;
 						B[5] = ONE_CASTED;
 
-						rdwr_prv_extra->m_mask_literal &= ACLUTIL_LITERAL_CONSTANT;
+						rdwr_prv_extra->m_mask_literal &= ACLUTIL_LTRL_CONST;
 
 						ae2f_ifezerr(aclconst_specop(
 									B

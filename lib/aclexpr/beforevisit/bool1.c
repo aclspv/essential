@@ -11,8 +11,10 @@
 #include <ae2f/pat/dbg.h>
 
 #include <util/scale.h>
+#include <aclexpr/sideeffect.h>
 
 aclspv_bool_t aclexpr_beforevisit2_bool1(
+		CXCursor					c_cur,
 		struct aclexpr_visit_data* const ae2f_restrict	rdwr_data,
 		aclspv_wrd_t					c_opidx
 		) {
@@ -37,6 +39,16 @@ aclspv_bool_t aclexpr_beforevisit2_bool1(
 	dbg_call(fprintf, (stderr, "opidx: %u\n", (unsigned)c_opidx));
 
 	unless(c_opidx)		return 0;
+
+	/** short-circuiting only guards the RIGHT operand; the left is always
+	 * evaluated. so the flatten is valid exactly when the right side has
+	 * no observable side effect. the right is only a cursor here (it has
+	 * not been evaluated yet), so it needs the static check.
+	 *
+	 * no extra flag: the evaluated RHS carries NOPURE iff it has a side
+	 * effect, and the carver keys on that bit. clear == flatten. */
+	if(!s_cursor_impure(c_cur))
+		return 0;
 
 	V = aclty_get_veccfg(
 			LST_EXTRA[0].m_type_original

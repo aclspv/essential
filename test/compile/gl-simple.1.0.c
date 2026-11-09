@@ -87,7 +87,7 @@ int main(void) {
 	}
 
 	if (spirv0) {
-		FILE *const fp = fopen("result-c-gl-simple-1.0.spv", "wb");
+		FILE *const fp = fopen(ACLTEST_OUT, "wb");
 		unless(fp) goto FPOPEN_FAILED;
 
 		fwrite(spirv0, sizeof(aclspv_wrd_t), (size_t)spirv_count, fp);

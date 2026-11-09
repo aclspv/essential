@@ -107,10 +107,10 @@ int main(void) {
 	}
 
 	{
-		FILE* const fp = fopen("result-c-while-1.0.spv", "wb");
+		FILE* const fp = fopen(ACLTEST_OUT, "wb");
 
 		if(!fp) {
-			fputs("[while.1.0] cannot write result-c-while-1.0.spv\n", stderr);
+			fprintf(stderr, "[while.1.0] cannot write %s\n", ACLTEST_OUT);
 			free(spirv);
 			return EXIT_FAILURE;
 		}

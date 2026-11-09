@@ -4,8 +4,10 @@
 #include "./beforevisit.h"
 #include "./beforevisit/util.h"
 #include "./beforevisit/bool1.h"
+#include "./beforevisit/cond.h"
 
 aclspv_bool_t aclexpr_beforevisit(
+		CXCursor					c_cur,
 		struct aclexpr_visit_data* const ae2f_restrict	rdwr_data,
 		aclspv_wrd_t					c_opidx
 		) {
@@ -20,7 +22,15 @@ aclspv_bool_t aclexpr_beforevisit(
 		case ACLEXPR_OP2_AND_L:
 		case ACLEXPR_OP2_OR_L:
 			return aclexpr_beforevisit2_bool1(
-					rdwr_data
+					c_cur
+					, rdwr_data
+					, c_opidx
+					);
+
+		case ACLEXPR_OP3_COND:
+			return aclexpr_beforevisit3_cond(
+					c_cur
+					, rdwr_data
 					, c_opidx
 					);
 

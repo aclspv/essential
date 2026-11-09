@@ -32,11 +32,13 @@ aclspv_bool_t aclexpr_carve2_derefwrite(
 		aclutil_literal			ae2fcc_arg_sarr_restrict(r_ltrl, 1)
 		) {
 	const CXCursor DREF = aclexpr_expr_unwrap(rdwr_lst_extra[0].m_cursor);
-	const aclspv_id_t X = rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_END + 1];
+	aclspv_id_t X = rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_END + 1];
 	aclexpr_opnd_t OPND;
 	aclspv_id_t REG;
 	aclspv_id_t PTR;
 	aclspv_id_t GHOST;
+
+	rdwr_prv_extra->m_state0 |= (aclspv_wrd_t)ACLEXPR_OPCFGX_STATE0_NOPURE;
 
 	unless(clang_getCursorKind(DREF) == CXCursor_UnaryOperator) {
 		err_puts("[carve2::derefwrite] lvalue is not a dereference\n");
@@ -81,6 +83,11 @@ aclspv_bool_t aclexpr_carve2_derefwrite(
 	 * before the instructions this store's operands come from. */
 	ae2f_ifezerr(GHOST = aclcur_reg_ghost(PTR, CTX(rdwr_data))) {
 		err_puts("[carve2::derefwrite] no ghost for the deref operand\n");
+		return ACLEXPR_CARVE_NO;
+	}
+
+	ae2f_ifnezerr_strict(aclexpr_carve_cast_to_reg(GHOST, &X, &rdwr_lst_extra[1], CTX(rdwr_data))) {
+		err_puts("[carve2::derefwrite] RHS cast failed\n");
 		return ACLEXPR_CARVE_NO;
 	}
 

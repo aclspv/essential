@@ -28,7 +28,7 @@ enum ACLEXPR_RET_ aclspv_get_expr2(
 	DATA.m_ctx		= CTX;				/* context. must be pointer to context. */
 	DATA.m_exprcount	= 0;				/* stack count. must be 0. */
 	DATA.m_id_ret		= 0;				/* result value id */
-	DATA.m_literal_flag	= ACLUTIL_LITERAL_MASK_LITERAL;	/* see enum UTIL_LITERAL_MASK_ */
+	DATA.m_literal_flag	= ACLUTIL_LTRL_MASK_LTRL;	/* see enum UTIL_LITERAL_MASK_ */
 	DATA.m_tyid_current	= 0;				/* type casted */
 	DATA.m_num_cmdcounter	= 1;				/* count for operand */
 	DATA.m_id_branch	= 0;				/* bool1 merge label */
@@ -76,8 +76,8 @@ enum ACLEXPR_RET_ aclspv_get_expr2(
 	ae2fpat_assertassume_strict(ret_id);
 	*ret_id = DATA.m_id_ret;
 
-	return		DATA.m_literal_flag & ACLUTIL_LITERAL_LITERAL ? ACLEXPR_RET_SUCCESS_LITERAL
-		: 	DATA.m_literal_flag & ACLUTIL_LITERAL_CONSTANT ? ACLEXPR_RET_SUCCESS_CONSTANT
+	return		DATA.m_literal_flag & ACLUTIL_LTRL_LTRL ? ACLEXPR_RET_SUCCESS_LITERAL
+		: 	DATA.m_literal_flag & ACLUTIL_LTRL_CONST ? ACLEXPR_RET_SUCCESS_CONSTANT
 		: 	ACLEXPR_RET_SUCCESS;
 
 #undef	INIT_EXTRA
@@ -100,7 +100,7 @@ enum ACLEXPR_RET_ aclexpr_eval_btcast(
 	DATA.m_ctx		= h_ctx;			/* context. must be pointer to context. */
 	DATA.m_exprcount	= 0;				/* stack count. must be 0. */
 	DATA.m_id_ret		= 0;				/* result value id */
-	DATA.m_literal_flag	= ACLUTIL_LITERAL_MASK_LITERAL;	/* see enum UTIL_LITERAL_MASK_ */
+	DATA.m_literal_flag	= ACLUTIL_LTRL_MASK_LTRL;	/* see enum UTIL_LITERAL_MASK_ */
 	DATA.m_tyid_current	= 0;				/* type casted */
 	DATA.m_num_cmdcounter	= 1;				/* count for operand */
 	DATA.m_id_branch	= 0;				/* bool1 merge label */
@@ -144,8 +144,8 @@ enum ACLEXPR_RET_ aclexpr_eval_btcast(
 
 	unless(c_type_req) {
 		return 
-			(DATA.m_literal_flag & ACLUTIL_LITERAL_LITERAL) ? ACLEXPR_RET_SUCCESS_LITERAL : 
-			(DATA.m_literal_flag & ACLUTIL_LITERAL_CONSTANT) ? ACLEXPR_RET_SUCCESS_CONSTANT :
+			(DATA.m_literal_flag & ACLUTIL_LTRL_LTRL) ? ACLEXPR_RET_SUCCESS_LITERAL : 
+			(DATA.m_literal_flag & ACLUTIL_LTRL_CONST) ? ACLEXPR_RET_SUCCESS_CONSTANT :
 			ACLEXPR_RET_SUCCESS;
 	}
 
@@ -175,7 +175,7 @@ enum ACLEXPR_RET_ aclexpr_eval(
 	DATA.m_ctx		= CTX;				/* context. must be pointer to context. */
 	DATA.m_exprcount	= 0;				/* stack count. must be 0. */
 	DATA.m_id_ret		= 0;				/* result value id */
-	DATA.m_literal_flag	= ACLUTIL_LITERAL_MASK_LITERAL;	/* see enum UTIL_LITERAL_MASK_ */
+	DATA.m_literal_flag	= ACLUTIL_LTRL_MASK_LTRL;	/* see enum UTIL_LITERAL_MASK_ */
 	DATA.m_tyid_current	= 0;				/* type casted */
 	DATA.m_num_cmdcounter	= 1;				/* count for operand */
 	DATA.m_id_branch	= 0;				/* bool1 merge label */
@@ -221,8 +221,8 @@ enum ACLEXPR_RET_ aclexpr_eval(
 
 	unless(c_type_req) {
 		return 
-			(DATA.m_literal_flag & ACLUTIL_LITERAL_LITERAL) ? ACLEXPR_RET_SUCCESS_LITERAL : 
-			(DATA.m_literal_flag & ACLUTIL_LITERAL_CONSTANT) ? ACLEXPR_RET_SUCCESS_CONSTANT :
+			(DATA.m_literal_flag & ACLUTIL_LTRL_LTRL) ? ACLEXPR_RET_SUCCESS_LITERAL : 
+			(DATA.m_literal_flag & ACLUTIL_LTRL_CONST) ? ACLEXPR_RET_SUCCESS_CONSTANT :
 			ACLEXPR_RET_SUCCESS;
 	}
 

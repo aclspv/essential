@@ -31,25 +31,25 @@ V2T1:
 		case SpvOpConstant:
 			/** constant being double words */
 			if(((*op >> 16) - 3) < 3) {
-				r.m_val_mask		= ACLUTIL_LITERAL_MASK_LITERAL;
+				r.m_val_mask		= ACLUTIL_LTRL_MASK_LTRL;
 				r.m_val_lit.m_u64	= op[3];
 				if(((*op >> 16) - 3) == 2) {
 					r.m_val_lit.m_u64	|= ((aclspv_wrd2_t)op[4] << 32);
 				}
 			} else {
-				r.m_val_mask = ACLUTIL_LITERAL_CONSTANT;
+				r.m_val_mask = ACLUTIL_LTRL_CONST;
 			}
 			goto V2T1;
 
 		case SpvOpConstantTrue:
 			r.m_val_lit.m_api_uintmax = 1;
-			r.m_val_mask = ACLUTIL_LITERAL_MASK_LITERAL;
+			r.m_val_mask = ACLUTIL_LTRL_MASK_LTRL;
 			goto V2T1;
 
 		case SpvOpConstantFalse:
 		case SpvOpConstantNull:
 			r.m_val_lit.m_api_uintmax = 0;
-			r.m_val_mask = ACLUTIL_LITERAL_MASK_LITERAL;
+			r.m_val_mask = ACLUTIL_LTRL_MASK_LTRL;
 			goto V2T1;
 
 		case SpvOpConstantComposite:
@@ -58,7 +58,7 @@ V2T1:
 		case SpvOpSpecConstantFalse:
 		case SpvOpSpecConstantComposite:
 		case SpvOpSpecConstantOp:
-			r.m_val_mask = ACLUTIL_LITERAL_CONSTANT;
+			r.m_val_mask = ACLUTIL_LTRL_CONST;
 			goto V2T1;
 	}
 

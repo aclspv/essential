@@ -670,7 +670,7 @@ static aclspv_id_t	s_load_without_phi(
 
 	if((p->m_flag0 & aclcur_flag0_reg(ACLCUR_FLAG0_REG_TRACKED))
 			&& !c_explicit) {
-		if(r_lit_opt && p->m_val_mask & ACLUTIL_LITERAL_MASK_LITERAL)
+		if(r_lit_opt && p->m_val_mask & ACLUTIL_LTRL_MASK_LTRL)
 			*r_lit_opt = p->m_val_lit;
 
 		return p->m_val;
@@ -716,7 +716,7 @@ static aclspv_id_t	s_load_without_phi(
 			p->m_val_mask	= 0;
 
 			if(r_lit_opt && p_b
-					&& (p_b->m_val_mask & ACLUTIL_LITERAL_MASK_LITERAL))
+					&& (p_b->m_val_mask & ACLUTIL_LTRL_MASK_LTRL))
 				*r_lit_opt = p_b->m_val_lit;
 
 			return id_ssa;

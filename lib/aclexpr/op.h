@@ -35,6 +35,16 @@ enum ACLEXPR_OP_ {
 	ACLEXPR_OP1_ADDRESS,
 	/** dereference read (`*p`): OpLoad from the operand's pointer value. */
 	ACLEXPR_OP1_DEREF,
+	/** logical not (`!x`): cast the operand to bool, then OpLogicalNot.
+	 * like comparisons, the result is bool; the C int result comes from the
+	 * implicit cast at the use site. */
+	ACLEXPR_OP1_NOT,
+	/** bitwise not (`~x`): OpNot on the promoted integer type. */
+	ACLEXPR_OP1_BITNOT,
+
+	/** `__builtin_sinf` / `sinf` / `__builtin_elementwise_sin`:
+	 * GLSL.std.450 Sin (f32 scalar/vector). */
+	ACLEXPR_OP1_SIN,
 
 #if	__ACLSPV_MATH_NR
 	ACLEXPR_OP1_RSQRTF_NR,
@@ -57,6 +67,9 @@ enum ACLEXPR_OP_ {
 	ACLEXPR_OP2_SHRASS,
 
 	ACLEXPR_OP2_ASSIGN,
+	/** comma (`a, b`): both sides are evaluated; the value is the right
+	 * operand. emits no instruction of its own. */
+	ACLEXPR_OP2_COMMA,
 	/** composite member write (`s.b = x`): OpCompositeInsert into the base
 	 * register, then store. the RHS id rides in operand slot 1; the base
 	 * register and the member index are re-derived from the MemberRefExpr
@@ -93,6 +106,13 @@ enum ACLEXPR_OP_ {
 	ACLEXPR_OP2_XOR,
 	ACLEXPR_OP2_XOR_A,
 
+	/** `c ? t : f` — OpSelect(condition, true, false). */
+	ACLEXPR_OP3_COND,
+
+	/** `__builtin_shufflevector(v1, v2, ...)` — OpVectorShuffle. the mask
+	 * components are literal words, not value operands. */
+	ACLEXPR_OPN_SHUFFLE,
+
 	/** N-ary: variable operand count (see OPN_ stages) */
 	ACLEXPR_OPN_INITLIST
 };
@@ -118,6 +138,15 @@ typedef struct {
 		struct {
 			aclspv_id_t	m_reg;
 		} m_view;
+
+		/** branch-mode `c ? t : f`: the result temp register and the three
+		 * labels, valid under ACLEXPR_OPCFGX_STATE0_COND_BRANCH. */
+		struct {
+			aclspv_id_t	m_reg;
+			aclspv_id_t	m_id_true;
+			aclspv_id_t	m_id_false;
+			aclspv_id_t	m_id_merge;
+		} m_cond;
 
 		/** the vector element a vector-subscript l-value read named
 		 * (`v[i]`), valid under
@@ -156,7 +185,20 @@ enum ACLEXPR_OPCFGX_STATE0_ {
 	 * no address, so m_extra.m_vecelm is valid, and a compound assignment
 	 * through this l-value is a read-modify-write of the whole vector
 	 * (OpVectorInsertDynamic + store) rather than a store through a view. */
-	ACLEXPR_OPCFGX_STATE0_LVALUE_VEC_ELM	= 0x8
+	ACLEXPR_OPCFGX_STATE0_LVALUE_VEC_ELM	= 0x8,
+
+	/** this expression has an observable side effect.
+	 *
+	 * purity is the DEFAULT: the bit is clear when the expression has no
+	 * side effect, and is set only by stores, compound assignments,
+	 * increments/decrements, and calls. propagation is therefore OR, not
+	 * AND: any impure operand makes the result impure. */
+	ACLEXPR_OPCFGX_STATE0_NOPURE		= 0x10,
+
+	/** this ternary was lowered to the branch/phi lane because at least
+	 * one arm has a side effect. the condition extra's m_extra.m_cond
+	 * holds the temp register and labels. */
+	ACLEXPR_OPCFGX_STATE0_COND_BRANCH	= 0x20
 };
 
 /**

@@ -3,6 +3,7 @@
 #include <aclcur/common.h>
 #include <aclexpr/curreg.h>
 #include <aclcur/load.h>
+#include <aclexpr/carve/util.h>
 
 aclspv_bool_t aclexpr_carve2_assign(
 		struct aclexpr_visit_data	ae2fcc_arg_sarr_restrict(rdwr_data, 1),
@@ -19,6 +20,8 @@ aclspv_bool_t aclexpr_carve2_assign(
 
 	h_aclcur_t p_reg = aclcur_get_node(REG, rdwr_data->m_ctx);
 
+	rdwr_prv_extra->m_state0 |= (aclspv_wrd_t)ACLEXPR_OPCFGX_STATE0_NOPURE;
+
 	ae2f_ifnezerr_strict(!REG) {
 		err_puts("[carve2::assign] no register for the lvalue.\n");
 		return ACLEXPR_CARVE_NO;
@@ -26,6 +29,16 @@ aclspv_bool_t aclexpr_carve2_assign(
 
 	ae2f_ifezerr(p_reg) {
 		err_puts("register not found as node\n");
+		return ACLEXPR_CARVE_NO;
+	}
+
+	ae2f_ifnezerr_strict(aclexpr_carve_cast_to_reg(
+			REG
+			, &rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_END + 1]
+			, &rdwr_lst_extra[1]
+			, rdwr_data->m_ctx
+			)) {
+		err_puts("[carve2::assign] RHS cast failed\n");
 		return ACLEXPR_CARVE_NO;
 	}
 

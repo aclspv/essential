@@ -151,7 +151,7 @@ aclspv_bool_t aclexpr_carve2_shift(
 	 * via the DeclRefExpr / served-value work, so the structure supports it
 	 * later) — no fold, no SpecConstantOp, no s_eval2_ltrl copy here.
 	 * */
-	rdwr_prv_extra->m_mask_literal = ACLUTIL_LITERAL_MASK_RT;
+	rdwr_prv_extra->m_mask_literal = ACLUTIL_LTRL_MASK_RT;
 
 	ae2f_ifezerr(rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_OPCODE] = s_shift_to_spv(
 				ACLEXPR_OPBINCFG_RESTYID[rdwr_lst_scale_buf]

@@ -168,6 +168,9 @@ aclspv_bool_t aclexpr_carve2_subscript(
 	h_aclcur_t P_REG;
 	aclspv_wrd_t STORAGE;
 
+	if(rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_OPCODE] == ACLEXPR_OP2_SUBSCRIPTWRITE)
+		rdwr_prv_extra->m_state0 |= (aclspv_wrd_t)ACLEXPR_OPCFGX_STATE0_NOPURE;
+
 	/** the index came from the cascade: slot 1 holds its value id. the
 	 * ARRAY however must be reached as a register, not as a value —
 	 * aclcur_reg_alias2 links the view to a register node, and slot 0
@@ -490,7 +493,7 @@ aclspv_bool_t aclexpr_carve2_subscriptwrite(
 	aclspv_id_t VIEW;
 	aclspv_wrd_t STORAGE;
 	h_aclcur_t P_REG;
-	const aclspv_id_t X = rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_END + 1];
+	aclspv_id_t X = rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_END + 1];
 
 	ae2f_ifnezerr_strict(!s_subscript_resolve(
 				SUB
@@ -551,6 +554,16 @@ aclspv_bool_t aclexpr_carve2_subscriptwrite(
 		/** resolve the vector register to its value. */
 		ae2f_ifezerr(VEC_VAL = aclexpr_ptrval(REG, CTX(rdwr_data)))
 			return ACLEXPR_CARVE_NO;
+
+		/** the component must already have the element type. */
+		ae2f_ifnezerr_strict(aclexpr_carve_cast_to_ty(
+					TY_ELM
+					, &X
+					, &rdwr_lst_extra[1]
+					, CTX(rdwr_data))) {
+			err_puts("[carve1::subscriptwrite] the component cast failed");
+			return ACLEXPR_CARVE_NO;
+		}
 
 		/** OpVectorInsertDynamic: result type = the vector type,
 		 * operands = (vector, component value, index) — all three are
@@ -637,6 +650,16 @@ aclspv_bool_t aclexpr_carve2_subscriptwrite(
 			err_puts("[carve1::subscriptwrite] the view could not be built");
 			return ACLEXPR_CARVE_NO;
 		}
+	}
+
+	/** the stored object must already have the element type. */
+	ae2f_ifnezerr_strict(aclexpr_carve_cast_to_reg(
+				VIEW
+				, &X
+				, &rdwr_lst_extra[1]
+				, CTX(rdwr_data))) {
+		err_puts("[carve1::subscriptwrite] the value cast failed");
+		return ACLEXPR_CARVE_NO;
 	}
 
 	/** store through the view: aclcur_store_reg validates the SSA-scope

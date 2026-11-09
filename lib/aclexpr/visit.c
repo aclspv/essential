@@ -19,12 +19,17 @@
 #include "./visit/op1/subscript.h"
 #include "./visit/op1/neg.h"
 #include "./visit/op1/plus.h"
+#include "./visit/op1/not.h"
 #include "./visit/opn/initlist.h"
 #include "./visit/op2/arithmetic.h"
 #include "./visit/op2/assign.h"
 #include "./visit/op2/bool0.h"
 #include "./visit/op2/cmp.h"
 #include "./visit/op2/shift.h"
+#include "./visit/op2/comma.h"
+#include "./visit/op3/cond.h"
+#include "./visit/opn/sin.h"
+#include "./visit/opn/shuffle.h"
 
 #include "./beforevisit.h"
 
@@ -35,6 +40,7 @@ enum {
 	OP2_CMP,
 	OP2_SHIFT,
 	OP2_BOOL0,
+	OP2_COMMA,
 	OP2_ASSIGN,
 	OP1_ARITHMETIC_CAST,
 	OP1_INCR,
@@ -43,9 +49,15 @@ enum {
 	OP1_DEREF,
 	OP1_NEG,
 	OP1_PLUS,
+	OP1_NOT,
+	OP1_BITNOT,
+	OP3_COND,
+	OPN_SIN,
+	OPN_SHUFFLE,
 	OPN_INITLIST,
 	OP0_,
 	OP0_VAL,
+	OP_DONE,
 	OP_FAIL,
 	OP_FALL,
 	OP_RECURSE,
@@ -112,18 +124,20 @@ enum CXChildVisitResult aclexpr_visit(
 	}
 
 	LST_EXTRA = (void* ae2f_restrict)(&LST_SCALE_BUF[(ACLEXPR_OPBINCFG_END + LST_SCALE_BUF[0])]);
-
-#if	0
-	ID_REQ = CTX->m_id++;
-#endif
-	LST_EXTRA[GETLASTEL_CMDCOUNTERSTCK(a).m_count_oprnd].m_mask_literal = ACLUTIL_LITERAL_MASK_LITERAL;
+	LST_EXTRA[GETLASTEL_CMDCOUNTERSTCK(a).m_count_oprnd].m_mask_literal = ACLUTIL_LTRL_MASK_LTRL;
 
 	/** Recurse filter */
 	switch((uintmax_t)h_cur.kind) {
 		default:
 			break;
 		case CXCursor_UnexposedExpr:
-			return CXChildVisit_Recurse;
+			/** libclang surfaces `__builtin_shufflevector` as an
+			 * UnexposedExpr, but it is a real operator and must reach the
+			 * dispatch chain. every other UnexposedExpr is a transparent
+			 * wrapper. */
+			unless(aclexpr_shuffle_detect(h_cur))
+				return CXChildVisit_Recurse;
+			break;
 	}
 
 	LST_EXTRA[GETLASTEL_CMDCOUNTERSTCK(a).m_count_oprnd].m_cursor = h_cur;
@@ -174,7 +188,7 @@ enum CXChildVisitResult aclexpr_visit(
 		{
 			dbg_puts("[visit] OP0_");
 
-			if(LST_EXTRA[GETLASTEL_CMDCOUNTERSTCK(a).m_count_oprnd].m_mask_literal & (aclspv_wrd_t)ACLUTIL_LITERAL_LITERAL) {
+			if(LST_EXTRA[GETLASTEL_CMDCOUNTERSTCK(a).m_count_oprnd].m_mask_literal & (aclspv_wrd_t)ACLUTIL_LTRL_LTRL) {
 				*RET_LITERAL = LST_EXTRA[GETLASTEL_CMDCOUNTERSTCK(i).m_count_oprnd].m_literal; 
 			}
 
@@ -238,8 +252,23 @@ enum CXChildVisitResult aclexpr_visit(
 							, (unsigned)GETLASTEL_CMDCOUNTERSTCK(a).m_count_oprnd));
 
 				LST_SCALE		= get_last_scale_from_vec(&CMDSTCK_SCALE);
+				ae2f_expected_but_else(LST_SCALE) return CXChildVisit_Break;
 				LST_SCALE_BUF		= get_buf_from_scale2(aclspv_wrd_t, &CMDSTCK_SCALE, *LST_SCALE);
+				ae2f_expected_but_else(LST_SCALE_BUF) return CXChildVisit_Break;
 				LST_EXTRA		= (void* ae2f_restrict)(&LST_SCALE_BUF[(ACLEXPR_OPBINCFG_END + LST_SCALE_BUF[0])]);
+
+				/** NOPURE is OR-propagated: any impure operand makes the
+				 * result impure. pure is the default clear state. */
+				{
+					aclspv_wrd_t NOPURE = PRV_EXTRA.m_state0 & (aclspv_wrd_t)ACLEXPR_OPCFGX_STATE0_NOPURE;
+					aclspv_wrd_t i;
+
+					for(i = 0; i < LST_SCALE_BUF[ACLEXPR_OPBINCFG_NUMOPRND]; ++i)
+						NOPURE |= LST_EXTRA[i].m_state0 & (aclspv_wrd_t)ACLEXPR_OPCFGX_STATE0_NOPURE;
+
+					PRV_EXTRA.m_state0 = (PRV_EXTRA.m_state0 & ~(aclspv_wrd_t)ACLEXPR_OPCFGX_STATE0_NOPURE) | NOPURE;
+				}
+
 				LST_EXTRA[GETLASTEL_CMDCOUNTERSTCK(a).m_count_oprnd] = PRV_EXTRA;
 
 				ID_REQ = LST_SCALE_BUF[GETLASTEL_CMDCOUNTERSTCK(a).m_count_oprnd + ACLEXPR_OPBINCFG_END] = IDVAL_PRV;
@@ -256,10 +285,46 @@ enum CXChildVisitResult aclexpr_visit(
 		cgcsdef(OP_ENTRY_POINT):
 		{
 			cgjmp(
-					aclexpr_beforevisit(rdwr_data, GETLASTEL_CMDCOUNTERSTCK(a).m_count_oprnd)
+					aclexpr_beforevisit(h_cur, rdwr_data, GETLASTEL_CMDCOUNTERSTCK(a).m_count_oprnd)
 					? cgcase(OP_FAIL)
-					: cgcase(OPN_INITLIST)
+					: cgcase(OPN_SIN)
 			     );
+		}
+
+		cgcsdef(OPN_SIN):
+		{
+			cgjmp(aclexpr_visit_op1_sin(
+						h_cur, rdwr_data
+						, cgcase(OP_DONE)
+						, cgcase(OP_FAIL)
+						, cgcase(OPN_SHUFFLE)
+						));
+		}
+
+		cgcsdef(OPN_SHUFFLE):
+		{
+			cgjmp(aclexpr_visit_opn_shuffle(
+						h_cur, rdwr_data
+						, cgcase(OP_DONE)
+						, cgcase(OP_FAIL)
+						, cgcase(OP3_COND)
+						));
+		}
+
+		cgcsdef(OP3_COND):
+		{
+			cgjmp(aclexpr_visit_op3_cond(
+						h_cur, CTX
+						, &CMDSTCK_SCALE
+						, cgcase(OP_RECURSE)
+						, cgcase(OP_FAIL)
+						, cgcase(OPN_INITLIST)
+						));
+		}
+
+		cgcsdef(OP_DONE):
+		{
+			return CXChildVisit_Continue;
 		}
 
 		cgcsdef(OPN_INITLIST):
@@ -309,6 +374,17 @@ enum CXChildVisitResult aclexpr_visit(
 		cgcsdef(OP2_BOOL0):
 		{
 			cgjmp(aclexpr_visit_op2_bool0(
+						h_cur, CTX
+						, &CMDSTCK_SCALE
+						, cgcase(OP_RECURSE)
+						, cgcase(OP_FAIL)
+						, cgcase(OP2_COMMA)
+						));
+		}
+
+		cgcsdef(OP2_COMMA):
+		{
+			cgjmp(aclexpr_visit_op2_comma(
 						h_cur, CTX
 						, &CMDSTCK_SCALE
 						, cgcase(OP_RECURSE)
@@ -368,7 +444,29 @@ enum CXChildVisitResult aclexpr_visit(
 		{
 			cgjmp(aclexpr_visit_op1_plus(h_cur
 						, cgcase(OP_RECURSE_NOTHIN)
-						, cgcase(OP1_INCR)))
+						, cgcase(OP1_NOT)))
+		}
+
+		cgcsdef(OP1_NOT):
+		{
+			cgjmp(aclexpr_visit_op1_not(
+						h_cur, CTX
+						, &CMDSTCK_SCALE
+						, cgcase(OP_RECURSE)
+						, cgcase(OP_FAIL)
+						, cgcase(OP1_BITNOT)
+						));
+		}
+
+		cgcsdef(OP1_BITNOT):
+		{
+			cgjmp(aclexpr_visit_op1_bitnot(
+						h_cur, CTX
+						, &CMDSTCK_SCALE
+						, cgcase(OP_RECURSE)
+						, cgcase(OP_FAIL)
+						, cgcase(OP1_INCR)
+						));
 		}
 
 		cgcsdef(OP1_INCR):
@@ -437,8 +535,53 @@ enum CXChildVisitResult aclexpr_visit(
 		{
 			CXString SPELL = clang_getCursorSpelling(h_cur);
 			CXString KINDSPELL = clang_getCursorKindSpelling(h_cur.kind);
+			aclspv_bool_t IS_OPERATOR = 0;
 
 			dbg_puts("[visit] OP_FALL");
+
+			switch((uintmax_t)h_cur.kind) {
+				default:
+					break;
+
+				/** operator-shaped expressions are claimed by a lane
+				 * above. reaching here means this compiler has no lane
+				 * for it: recursing would silently drop the operator
+				 * (`!x` compiled as `x`), so reject it instead. */
+				case CXCursor_UnaryOperator:
+				case CXCursor_UnaryExpr:
+				case CXCursor_BinaryOperator:
+				case CXCursor_CompoundAssignOperator:
+				case CXCursor_ConditionalOperator:
+				case CXCursor_ArraySubscriptExpr:
+				case CXCursor_MemberRefExpr:
+				case CXCursor_CallExpr:
+				case CXCursor_CStyleCastExpr:
+				case CXCursor_CXXStaticCastExpr:
+				case CXCursor_CXXDynamicCastExpr:
+				case CXCursor_CXXReinterpretCastExpr:
+				case CXCursor_CXXConstCastExpr:
+				case CXCursor_CXXFunctionalCastExpr:
+					IS_OPERATOR = 1;
+					break;
+			}
+
+			if(IS_OPERATOR) {
+				err_prefix(i);
+				err_call(fprintf, (stderr
+							, "[visit] unhandled operator spell(%s) kind(%s)\n"
+							, (const char*)SPELL.data
+							, (const char*)KINDSPELL.data));
+
+				clang_disposeString(SPELL);
+				clang_disposeString(KINDSPELL);
+
+				/** a user-facing reject, not an internal invariant:
+				 * _aclctx_err() asserts, so set the error directly. */
+				unless(CTX->m_err)
+					CTX->m_err = ACLSPV_COMPILE_UNHANDLED_VISIT;
+
+				return CXChildVisit_Break;
+			}
 
 			warn_prefix(i);
 			warn_call(fprintf, (stderr, "[visit] OP_FALL::spell(%s)::kind(%s)\n"

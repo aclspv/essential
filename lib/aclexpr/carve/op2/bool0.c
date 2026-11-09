@@ -224,6 +224,19 @@ ae2f_inline_f static ae2f_ccconst struct aclutil_ltrl_eval_t	s_eval2_ltrl(
 				return RET;
 			}
 
+		case ACLSPV_ID_BOOL:
+			switch((uintmax_t)c_opcode) {
+				EXPR_TWO(&&, m_api_uintmax, SpvOpLogicalAnd); return RET;
+				EXPR_TWO(||, m_api_uintmax, SpvOpLogicalOr); return RET;
+				EXPR_TWO(&, m_api_uintmax, SpvOpBitwiseAnd); return RET;
+				EXPR_TWO(|, m_api_uintmax, SpvOpBitwiseOr); return RET;
+				EXPR_TWO(^, m_api_uintmax, SpvOpBitwiseXor); return RET;
+				default:
+				RET.m_ret.m_u64 = 0;
+				RET.m_found = 0;
+				return RET;
+			}
+
 		default:
 			RET.m_ret.m_u64 = 0;
 			RET.m_found = 0;
@@ -252,6 +265,9 @@ aclspv_bool_t aclexpr_carve2_bool0(
 				, (rdwr_data)->m_ctx
 				)
 			, rdwr_data->m_ctx);
+
+	if(ISASS)
+		rdwr_prv_extra->m_state0 |= (aclspv_wrd_t)ACLEXPR_OPCFGX_STATE0_NOPURE;
 
 	rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_RESID] = *rdwr_prv_idval = (rdwr_data)->m_ctx->m_id++;
 
@@ -309,8 +325,8 @@ aclspv_bool_t aclexpr_carve2_bool0(
 	rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_OPCODE] = OPNATIVE;
 
 	switch(rdwr_prv_extra->m_mask_literal) {
-		case ACLUTIL_LITERAL_MASK_LITERAL: 
-		case ACLUTIL_LITERAL_LITERAL:
+		case ACLUTIL_LTRL_MASK_LTRL: 
+		case ACLUTIL_LTRL_LTRL:
 			{
 				struct aclutil_ltrl_eval_t EVAL_LIT 
 					= s_eval2_ltrl(
@@ -343,7 +359,7 @@ aclspv_bool_t aclexpr_carve2_bool0(
 				break;
 			}
 
-		case ACLUTIL_LITERAL_MASK_RT:
+		case ACLUTIL_LTRL_MASK_RT:
 			/** runtime: the operation is a graph node, flushed by aclcur_emit(). */
 			ae2f_ifezerr(*rdwr_prv_idval = aclcur_cfg_op2(
 						rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_RESID]
@@ -355,7 +371,7 @@ aclspv_bool_t aclexpr_carve2_bool0(
 				return ACLEXPR_CARVE_NO;
 			break;
 
-		case ACLUTIL_LITERAL_MASK_CONSTANT:
+		case ACLUTIL_LTRL_MASK_CONST:
 			ae2f_ifezerr(*rdwr_prv_idval = aclconst_specop(
 						rdwr_lst_scale_buf
 						, 6

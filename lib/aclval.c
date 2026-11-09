@@ -99,16 +99,23 @@ aclspv_id_t aclval_cfg_bool(
 	ae2f_ifezerr(C) return 0;
 	if(C->m_const_val_bool) return C->m_const_val_bool;
 
-	ae2f_ifnezerr(aclty_mk_default(ACLSPV_ID_BOOL, h_ctx))
-		return 0;
+	{
+		const aclspv_id_t T = aclty_mk_default(ACLSPV_ID_BOOL, h_ctx);
 
-	ae2f_expected_but_else(h_ctx->m_count.m_types = aclutil_emitx_3(
+		ae2f_ifezerr(T) return 0;
+	}
+
+	{
+		const aclspv_wrdcount_t N = aclutil_emitx_3(
 				&h_ctx->m_section.m_types
 				, h_ctx->m_count.m_types
 				, ae2f_bll_sel_bool1(aclspv_wrd_t, c_val, SpvOpConstantTrue, SpvOpConstantFalse)
 				, ACLSPV_ID_BOOL
-				, h_ctx->m_id
-				)) return 0;
+				, h_ctx->m_id);
+
+		ae2f_ifezerr(N) return 0;
+		h_ctx->m_count.m_types = N;
+	}
 
 	return C->m_const_val_bool = aclctx_newid(h_ctx);
 }

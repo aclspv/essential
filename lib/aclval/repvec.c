@@ -29,7 +29,7 @@ struct aclutil_mk_constant_repvec_t	aclval_cfg_vec_broadcast(
 
 	const aclspv_wrd_t	OPCODE_PURE = ae2f_bll_sel_bool_naive1(
 			aclspv_wrd_t
-			, c_literal & (ACLUTIL_LITERAL_CONSTANT | ACLUTIL_LITERAL_LITERAL)
+			, c_literal & (ACLUTIL_LTRL_CONST | ACLUTIL_LTRL_LTRL)
 			, SpvOpSpecConstantComposite
 			, SpvOpCompositeConstruct);
 
@@ -37,12 +37,12 @@ struct aclutil_mk_constant_repvec_t	aclval_cfg_vec_broadcast(
 
 
 	x_aclspv_vec* ae2f_restrict const P_VEC =
-			c_literal & (ACLUTIL_LITERAL_CONSTANT | ACLUTIL_LITERAL_LITERAL)
+			c_literal & (ACLUTIL_LTRL_CONST | ACLUTIL_LTRL_LTRL)
 			? &h_ctx->m_section.m_types
 			: &h_ctx->m_section.m_fnimpl;
 
 	aclspv_wrd_t* ae2f_restrict const P_VWRD =
-			c_literal & (ACLUTIL_LITERAL_CONSTANT | ACLUTIL_LITERAL_LITERAL)
+			c_literal & (ACLUTIL_LTRL_CONST | ACLUTIL_LTRL_LTRL)
 			? &h_ctx->m_count.m_types
 			: &h_ctx->m_count.m_fnimpl;
 
@@ -79,7 +79,7 @@ struct aclutil_mk_constant_repvec_t	aclval_cfg_vec_broadcast(
 		for(i = 0; i < VEC_COUNT; ++i)
 			os[i] = c_val;
 
-		if(c_literal & (ACLUTIL_LITERAL_CONSTANT | ACLUTIL_LITERAL_LITERAL)) {
+		if(c_literal & (ACLUTIL_LTRL_CONST | ACLUTIL_LTRL_LTRL)) {
 			/** all-constant path: emit directly into m_types. */
 			ae2f_ifezerr(*P_VWRD = aclutil_emit_wrd(P_VEC, *P_VWRD + 2 + VEC_COUNT, 0)) {
 				h_ctx->m_err = ACLSPV_COMPILE_ALLOC_FAILED_VEC;
@@ -96,10 +96,10 @@ struct aclutil_mk_constant_repvec_t	aclval_cfg_vec_broadcast(
 				aclutil_get_wrd_of_vec(P_VEC)[ANCHOUR + 3 + VEC_COUNT] = c_val;
 			}
 
-			C->m_repvec_literal_mask = c_literal & ~(aclspv_wrd_t)ACLUTIL_LITERAL_LITERAL;
+			C->m_repvec_literal_mask = c_literal & ~(aclspv_wrd_t)ACLUTIL_LTRL_LTRL;
 
-			if(c_literal & ACLUTIL_LITERAL_LITERAL) {
-				C->m_repvec_literal_mask |= ACLUTIL_LITERAL_CONSTANT;
+			if(c_literal & ACLUTIL_LTRL_LTRL) {
+				C->m_repvec_literal_mask |= ACLUTIL_LTRL_CONST;
 			}
 
 			return s_mkret(
@@ -124,7 +124,7 @@ struct aclutil_mk_constant_repvec_t	aclval_cfg_vec_broadcast(
 				return s_mkret(0, 0);
 			}
 			C->m_repvec = OPC;
-			C->m_repvec_literal_mask = c_literal & ~(aclspv_wrd_t)(ACLUTIL_LITERAL_CONSTANT | ACLUTIL_LITERAL_LITERAL);
+			C->m_repvec_literal_mask = c_literal & ~(aclspv_wrd_t)(ACLUTIL_LTRL_CONST | ACLUTIL_LTRL_LTRL);
 			return s_mkret(OPC, C->m_repvec_literal_mask);
 		}
 	}

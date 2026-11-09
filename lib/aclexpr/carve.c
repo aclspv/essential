@@ -5,10 +5,14 @@
 #include "./carve/op1/incr.h"
 #include "./carve/op1/memberread.h"
 #include "./carve/op1/subscript.h"
+#include "./carve/op1/sin.h"
+#include "./carve/op1/not.h"
+#include "./carve/op3/cond.h"
 #if	__ACLSPV_MATH_NR
 #include "./carve/op1/rsqrtf_nr.h"
 #endif
 #include "./carve/opn/initlist.h"
+#include "./carve/opn/shuffle.h"
 #include "./carve/op2/arithmetic.h"
 #include "./carve/op2/cmp.h"
 #include "./carve/op2/shift.h"
@@ -17,6 +21,7 @@
 #include "./carve/op2/memberwrite.h"
 #include "./carve/op2/bool0.h"
 #include "./carve/op2/bool1.h"
+#include "./carve/op2/comma.h"
 
 #include <aclexpr.h>
 
@@ -69,6 +74,17 @@ aclspv_bool_t aclexpr_carve(
 						, RET_LITERAL
 						));
 
+		case ACLEXPR_OPN_SHUFFLE:
+			return (aclspv_bool_t)ae2f_expected_not_strict(aclexpr_carve_opn_shuffle(
+						rdwr_data
+						, rdwr_prv_idval
+						, rdwr_prv_extra
+						, LST_SCALE
+						, LST_SCALE_BUF
+						, LST_EXTRA
+						, RET_LITERAL
+						));
+
 		case ACLEXPR_OP2_ADD:
 		case ACLEXPR_OP2_ADDASS:
 		case ACLEXPR_OP2_SUB:
@@ -105,6 +121,22 @@ aclspv_bool_t aclexpr_carve(
 
 		case ACLEXPR_OP2_AND_L:
 		case ACLEXPR_OP2_OR_L:
+			/** the before-visitor skipped the branch exactly when the RHS
+			 * had no side effect. the evaluated RHS carries NOPURE iff it
+			 * did, so: clear == flattened, set == branch/phi was created.
+			 * the left operand is always evaluated and is irrelevant. */
+			if(!(LST_EXTRA[1].m_state0 & ACLEXPR_OPCFGX_STATE0_NOPURE)) {
+				return (aclspv_bool_t)ae2f_expected_not_strict(aclexpr_carve2_bool0(
+							rdwr_data
+							, rdwr_prv_idval
+							, rdwr_prv_extra
+							, LST_SCALE
+							, LST_SCALE_BUF
+							, LST_EXTRA
+							, RET_LITERAL
+							));
+			}
+
 			return (aclspv_bool_t)ae2f_expected_not_strict(aclexpr_carve2_bool1(
 						rdwr_data
 						, rdwr_prv_idval
@@ -151,6 +183,16 @@ aclspv_bool_t aclexpr_carve(
 						, RET_LITERAL
 						));
 
+		case ACLEXPR_OP2_COMMA:
+			return (aclspv_bool_t)ae2f_expected_not_strict(aclexpr_carve2_comma(
+						rdwr_data
+						, rdwr_prv_idval
+						, rdwr_prv_extra
+						, LST_SCALE_BUF
+						, LST_EXTRA
+						, RET_LITERAL
+						));
+
 		case ACLEXPR_OP1_ADDRESS:
 			return (aclspv_bool_t)ae2f_expected_not_strict(aclexpr_carve1_address(
 						rdwr_data
@@ -166,6 +208,26 @@ aclspv_bool_t aclexpr_carve(
 						, rdwr_prv_idval
 						, rdwr_prv_extra
 						, LST_EXTRA
+						));
+
+		case ACLEXPR_OP1_NOT:
+			return (aclspv_bool_t)ae2f_expected_not_strict(aclexpr_carve1_not(
+						rdwr_data
+						, rdwr_prv_idval
+						, rdwr_prv_extra
+						, LST_SCALE_BUF
+						, LST_EXTRA
+						, RET_LITERAL
+						));
+
+		case ACLEXPR_OP1_BITNOT:
+			return (aclspv_bool_t)ae2f_expected_not_strict(aclexpr_carve1_bitnot(
+						rdwr_data
+						, rdwr_prv_idval
+						, rdwr_prv_extra
+						, LST_SCALE_BUF
+						, LST_EXTRA
+						, RET_LITERAL
 						));
 
 		case ACLEXPR_OP2_DEREFWRITE:
@@ -232,6 +294,26 @@ aclspv_bool_t aclexpr_carve(
 
 		case ACLEXPR_OP2_MEMBERWRITE:
 			return (aclspv_bool_t)ae2f_expected_not_strict(aclexpr_carve2_memberwrite(
+						rdwr_data
+						, rdwr_prv_idval
+						, rdwr_prv_extra
+						, LST_SCALE_BUF
+						, LST_EXTRA
+						, RET_LITERAL
+						));
+
+		case ACLEXPR_OP1_SIN:
+			return (aclspv_bool_t)ae2f_expected_not_strict(aclexpr_carve1_sin(
+						rdwr_data
+						, rdwr_prv_idval
+						, rdwr_prv_extra
+						, LST_SCALE_BUF
+						, LST_EXTRA
+						, RET_LITERAL
+						));
+
+		case ACLEXPR_OP3_COND:
+			return (aclspv_bool_t)ae2f_expected_not_strict(aclexpr_carve3_cond(
 						rdwr_data
 						, rdwr_prv_idval
 						, rdwr_prv_extra

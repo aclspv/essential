@@ -1,6 +1,16 @@
 #ifndef	acltest_onefile_h
 #define acltest_onefile_h
 
+/** path the test writes its SPIR-V module to.
+ *
+ * the build passes -DACLTEST_OUT="<path>" per test target (see
+ * cmake/test.cmake); the fallback keeps a standalone invocation writing
+ * into its working directory.
+ * */
+#ifndef ACLTEST_OUT
+#define ACLTEST_OUT "result.spv"
+#endif
+
 #include <.acltest/ocl.h>
 #include <.acltest/source.h>
 

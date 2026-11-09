@@ -23,7 +23,7 @@ aclexpr_visit_lbl_t aclexpr_visit_op0_val(
 #define		rwr_literal			(&(rdwr_extra)->m_literal)
 #define		r_literal_mask			(&(rdwr_extra)->m_mask_literal)
 
-	rdwr_extra->m_mask_literal = ACLUTIL_LITERAL_MASK_LITERAL;
+	rdwr_extra->m_mask_literal = ACLUTIL_LTRL_MASK_LTRL;
 
 	switch((uint_leastenum_t)c_cur.kind) {
 		/** unknown */
@@ -168,13 +168,13 @@ aclexpr_visit_lbl_t aclexpr_visit_op0_val(
 				{
 					const aclcur_t LB = aclcur_get_load(*wr_newid, h_ctx);
 
-					if((LB.m_val_mask & ACLUTIL_LITERAL_MASK_LITERAL)
-							== ACLUTIL_LITERAL_MASK_LITERAL) {
-						rdwr_extra->m_mask_literal = ACLUTIL_LITERAL_MASK_LITERAL;
+					if((LB.m_val_mask & ACLUTIL_LTRL_MASK_LTRL)
+							== ACLUTIL_LTRL_MASK_LTRL) {
+						rdwr_extra->m_mask_literal = ACLUTIL_LTRL_MASK_LTRL;
 						if(rwr_literal)
 							*rwr_literal = LB.m_val_lit;
-					} else if(LB.m_val_mask & ACLUTIL_LITERAL_CONSTANT) {
-						rdwr_extra->m_mask_literal = ACLUTIL_LITERAL_MASK_CONSTANT;
+					} else if(LB.m_val_mask & ACLUTIL_LTRL_CONST) {
+						rdwr_extra->m_mask_literal = ACLUTIL_LTRL_MASK_CONST;
 					} else {
 						rdwr_extra->m_mask_literal = 0;
 					}

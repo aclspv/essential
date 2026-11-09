@@ -5,6 +5,15 @@
 
 /** opcodes this checker understands. */
 enum ACLTEST_SPV_OP_ {
+	ACLTEST_SPV_OP_EXT_INST			= 12,
+	ACLTEST_SPV_OP_VECTOR_SHUFFLE		= 79,
+	ACLTEST_SPV_OP_LOGICAL_NOT		= 168,
+	ACLTEST_SPV_OP_SELECT			= 169,
+	ACLTEST_SPV_OP_I_EQUAL			= 170,
+	ACLTEST_SPV_OP_F_ORD_EQUAL		= 180,
+	ACLTEST_SPV_OP_NOT			= 200,
+	ACLTEST_SPV_OP_LOGICAL_OR		= 166,
+	ACLTEST_SPV_OP_LOGICAL_AND		= 167,
 	ACLTEST_SPV_OP_PHI			= 245,
 	ACLTEST_SPV_OP_LOOP_MERGE		= 246,
 	ACLTEST_SPV_OP_SELECTION_MERGE		= 247,
@@ -21,6 +30,16 @@ typedef struct {
 	unsigned	m_num_selmerge;
 	unsigned	m_num_loopmerge;
 	unsigned	m_num_phi;
+	unsigned	m_num_land;
+	unsigned	m_num_lor;
+	unsigned	m_num_extinst;
+	unsigned	m_num_sin;
+	unsigned	m_num_select;
+	unsigned	m_num_shuffle;
+	unsigned	m_num_lnot;
+	unsigned	m_num_bnot;
+	unsigned	m_num_ieq;
+	unsigned	m_num_feq;
 
 	/** every merge / branch target names a defined OpLabel. */
 	int		m_targets_ok;
@@ -79,6 +98,16 @@ static int acltest_spirv_scan(
 	r->m_num_selmerge	= 0;
 	r->m_num_loopmerge	= 0;
 	r->m_num_phi		= 0;
+	r->m_num_land		= 0;
+	r->m_num_lor		= 0;
+	r->m_num_extinst	= 0;
+	r->m_num_sin		= 0;
+	r->m_num_select		= 0;
+	r->m_num_shuffle	= 0;
+	r->m_num_lnot		= 0;
+	r->m_num_bnot		= 0;
+	r->m_num_ieq		= 0;
+	r->m_num_feq		= 0;
 	r->m_targets_ok		= 1;
 
 	for(i = 5; i < c; ) {
@@ -97,6 +126,46 @@ static int acltest_spirv_scan(
 
 			case ACLTEST_SPV_OP_PHI:
 				++r->m_num_phi;
+				break;
+
+			case ACLTEST_SPV_OP_LOGICAL_AND:
+				++r->m_num_land;
+				break;
+
+			case ACLTEST_SPV_OP_LOGICAL_OR:
+				++r->m_num_lor;
+				break;
+
+			case ACLTEST_SPV_OP_SELECT:
+				++r->m_num_select;
+				break;
+
+			case ACLTEST_SPV_OP_VECTOR_SHUFFLE:
+				++r->m_num_shuffle;
+				break;
+
+			case ACLTEST_SPV_OP_LOGICAL_NOT:
+				++r->m_num_lnot;
+				break;
+
+			case ACLTEST_SPV_OP_I_EQUAL:
+				++r->m_num_ieq;
+				break;
+
+			case ACLTEST_SPV_OP_F_ORD_EQUAL:
+				++r->m_num_feq;
+				break;
+
+			case ACLTEST_SPV_OP_NOT:
+				++r->m_num_bnot;
+				break;
+
+			case ACLTEST_SPV_OP_EXT_INST:
+				++r->m_num_extinst;
+				/** [op][type][result][set][instruction][operand...]
+				 * 13 = GLSL.std.450 Sin */
+				if(wc >= 6 && rd[i + 4] == (aclspv_wrd_t)13)
+					++r->m_num_sin;
 				break;
 
 			case ACLTEST_SPV_OP_BRANCH:
