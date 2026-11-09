@@ -49,20 +49,21 @@ make a vector type. +
 a vector type is a simd type, where many operations maps to simd.
 ____
 
-[source,c]
-----
-typedef int i32;
-typedef i32 __attribute__((ext_vector_type(4))) v4i32;
-typedef _Bool __attribute__((ext_vector_type(4))) boolx4;
+++++
+<div class="listingblock" style="background-color:#1c171b;color:#d8ccd3;padding:0.8em 1em;overflow-x:auto;border-radius:4px">
+<pre style="font-family:'Source Code Pro','DejaVu Sans Mono','Courier New',monospace;font-size:14px;line-height:1.3;margin:0;background:transparent;color:inherit"><span style="color:#d0aa68;font-weight:bold">typedef</span> <span style="color:#d0aa68;font-weight:bold">int</span> i32;
+<span style="color:#d0aa68;font-weight:bold">typedef</span> i32 __attribute__((ext_vector_type(<span style="color:#d99462">4</span>))) v4i32;
+<span style="color:#d0aa68;font-weight:bold">typedef</span> <span style="color:#d0aa68;font-weight:bold">_Bool</span> __attribute__((ext_vector_type(<span style="color:#d99462">4</span>))) boolx4;
 
-boolx4 band128(const v4i32 A, const v4i32 B) {
+boolx4 band128(<span style="color:#d0aa68">const</span> v4i32 A, <span style="color:#d0aa68">const</span> v4i32 B) {
     v4i32 Z;
-    Z[0] = 0; Z[1] = 0;
-    Z[2] = 0; Z[3] = 0;
+    Z[<span style="color:#d99462">0</span>] = <span style="color:#d99462">0</span>; Z[<span style="color:#d99462">1</span>] = <span style="color:#d99462">0</span>;
+    Z[<span style="color:#d99462">2</span>] = <span style="color:#d99462">0</span>; Z[<span style="color:#d99462">3</span>] = <span style="color:#d99462">0</span>;
 
-    return A & B != Z;  
-}
-----
+    <span style="color:#c47791;font-weight:bold">return</span> A &amp; B != Z;  
+}</pre>
+</div>
+++++
 
 === AnnotationAttributes
 
@@ -98,28 +99,29 @@ ____
 ** `__constant` variable
 ** Constant literals
 
-[source,c]
-----
+++++
+<div class="listingblock" style="background-color:#1c171b;color:#d8ccd3;padding:0.8em 1em;overflow-x:auto;border-radius:4px">
+<pre style="font-family:'Source Code Pro','DejaVu Sans Mono','Courier New',monospace;font-size:14px;line-height:1.3;margin:0;background:transparent;color:inherit">
+<span style="color:#d0aa68;font-weight:bold">typedef</span> <span style="color:#d0aa68;font-weight:bold">int</span> i32;
 
-typedef int i32;
+<span style="color:#a99ba3;font-style:italic">/** </span>
+<span style="color:#a99ba3;font-style:italic"> * r's size will be determined by spec constant with id 0.</span>
+<span style="color:#a99ba3;font-style:italic"> * without constant specified in certain type, spec constant will be defined with a default of 3.</span>
+<span style="color:#a99ba3;font-style:italic"> * */</span>
+i32 sum(<span style="color:#d0aa68">const</span> i32 rd[<span style="color:#d99462">3</span>] __attribute__((annotate(<span style="color:#8fbf91">"aclspv_specid(0)"</span>)))) {
 
-/** 
- * r's size will be determined by spec constant with id 0.
- * without constant specified in certain type, spec constant will be defined with a default of 3.
- * */
-i32 sum(const i32 rd[3] __attribute__((annotate("aclspv_specid(0)")))) {
-
-    /** since specid is specified upon, no specifying default value is required. */
-    i32 c __attribute__((annotate("aclspv_specid(0)")));
-    i32 ret = 0;
+    <span style="color:#a99ba3;font-style:italic">/** since specid is specified upon, no specifying default value is required. */</span>
+    i32 c __attribute__((annotate(<span style="color:#8fbf91">"aclspv_specid(0)"</span>)));
+    i32 ret = <span style="color:#d99462">0</span>;
     
-    for(i32 i = 0; i < c; ++i)
+    <span style="color:#c47791;font-weight:bold">for</span>(i32 i = <span style="color:#d99462">0</span>; i &lt; c; ++i)
         ret += rd[i];
 
-    return ret;
+    <span style="color:#c47791;font-weight:bold">return</span> ret;
 }
-
-----
+</pre>
+</div>
+++++
 
 ==== aclspv_execmode
 
@@ -149,24 +151,25 @@ for local size might be resolved specifically. see below:
 * `mode` represents link:https://registry.khronos.org/SPIR-V/specs/unified1/SPIRV.html#Execution_Mode[execution mode number].
 * execution mode may have extra operands. since i've seen max to three, `aclspv_execmode3` should be working fine for most of things.
 
-[source,c]
-----
-/**
- * & means it is spec constant id (id).
- * # means it is literal (u32).
- * 
- * therefore following line means it size should be
- * o0: specified constant in id 1
- * o1: 3
- * o2: specified constant in id 2
- */
-__attribute__((annotate("aclspv_execmode3(17, &1, #3, &2)")))
-__attribute__((annotate("aclspv_execmodel(5)")))            /** GLCompute */
-void entry_point_glcompute(void) {
-    return;
+++++
+<div class="listingblock" style="background-color:#1c171b;color:#d8ccd3;padding:0.8em 1em;overflow-x:auto;border-radius:4px">
+<pre style="font-family:'Source Code Pro','DejaVu Sans Mono','Courier New',monospace;font-size:14px;line-height:1.3;margin:0;background:transparent;color:inherit"><span style="color:#a99ba3;font-style:italic">/**</span>
+<span style="color:#a99ba3;font-style:italic"> * &amp; means it is spec constant id (id).</span>
+<span style="color:#a99ba3;font-style:italic"> * # means it is literal (u32).</span>
+<span style="color:#a99ba3;font-style:italic"> * </span>
+<span style="color:#a99ba3;font-style:italic"> * therefore following line means it size should be</span>
+<span style="color:#a99ba3;font-style:italic"> * o0: specified constant in id 1</span>
+<span style="color:#a99ba3;font-style:italic"> * o1: 3</span>
+<span style="color:#a99ba3;font-style:italic"> * o2: specified constant in id 2</span>
+<span style="color:#a99ba3;font-style:italic"> */</span>
+__attribute__((annotate(<span style="color:#8fbf91">"aclspv_execmode3(17, &amp;1, #3, &amp;2)"</span>)))
+__attribute__((annotate(<span style="color:#8fbf91">"aclspv_execmodel(5)"</span>)))            <span style="color:#a99ba3;font-style:italic">/** GLCompute */</span>
+<span style="color:#d0aa68;font-weight:bold">void</span> entry_point_glcompute(<span style="color:#d0aa68;font-weight:bold">void</span>) {
+    <span style="color:#c47791;font-weight:bold">return</span>;
 }
-
-----
+</pre>
+</div>
+++++
 
 ==== aclspv_execmodel
 
@@ -177,23 +180,24 @@ void entry_point_glcompute(void) {
 * only attach this on a function which returns void. others should be ignored.
 * possible inputs are defined as enum `SpvExecutionModel_` on spirv-header.
 
-[source,c]
-----
-
-/** this is a normal function */
-void normal_function(void) {
-    return;
+++++
+<div class="listingblock" style="background-color:#1c171b;color:#d8ccd3;padding:0.8em 1em;overflow-x:auto;border-radius:4px">
+<pre style="font-family:'Source Code Pro','DejaVu Sans Mono','Courier New',monospace;font-size:14px;line-height:1.3;margin:0;background:transparent;color:inherit">
+<span style="color:#a99ba3;font-style:italic">/** this is a normal function */</span>
+<span style="color:#d0aa68;font-weight:bold">void</span> normal_function(<span style="color:#d0aa68;font-weight:bold">void</span>) {
+    <span style="color:#c47791;font-weight:bold">return</span>;
 }
 
-/**
- * this is an entry point of vertex. (0 is a number for vertex execution model)
- */
-__attribute__((annotate("aclspv_execmodel(0)")))
-void entry_point_vertex(void) {
-    return;
+<span style="color:#a99ba3;font-style:italic">/**</span>
+<span style="color:#a99ba3;font-style:italic"> * this is an entry point of vertex. (0 is a number for vertex execution model)</span>
+<span style="color:#a99ba3;font-style:italic"> */</span>
+__attribute__((annotate(<span style="color:#8fbf91">"aclspv_execmodel(0)"</span>)))
+<span style="color:#d0aa68;font-weight:bold">void</span> entry_point_vertex(<span style="color:#d0aa68;font-weight:bold">void</span>) {
+    <span style="color:#c47791;font-weight:bold">return</span>;
 }
-
-----
+</pre>
+</div>
+++++
 
 entry point
 
@@ -222,49 +226,50 @@ every entry points have its own reserved <<aclspv_set,descriptor set>>, incremen
 from left to right, bindable arguments have its reserved <<aclspv_bind_idx,binding index>> from 0, incremented on every bindable obejcts.
 ____
 
-[source,c]
-----
+++++
+<div class="listingblock" style="background-color:#1c171b;color:#d8ccd3;padding:0.8em 1em;overflow-x:auto;border-radius:4px">
+<pre style="font-family:'Source Code Pro','DejaVu Sans Mono','Courier New',monospace;font-size:14px;line-height:1.3;margin:0;background:transparent;color:inherit">
+__attribute__((annotate(<span style="color:#8fbf91">"aclspv_execmodel(0)"</span>)))
+<span style="color:#d0aa68;font-weight:bold">void</span> entry_point_vertex(
+    <span style="color:#d0aa68;font-weight:bold">int</span> pc_int <span style="color:#a99ba3;font-style:italic">/** becomes a push constant's element. follows std430 memory layout. */</span>,
 
-__attribute__((annotate("aclspv_execmodel(0)")))
-void entry_point_vertex(
-    int pc_int /** becomes a push constant's element. follows std430 memory layout. */,
+    <span style="color:#a99ba3;font-style:italic">/*** 3: output */</span>
+    __attribute__((annotate(<span style="color:#8fbf91">"aclspv_storage_class(3)"</span>)))
+    <span style="color:#d0aa68;font-weight:bold">int</span>* out_int,
 
-    /*** 3: output */
-    __attribute__((annotate("aclspv_storage_class(3)")))
-    int* out_int,
+    <span style="color:#a99ba3;font-style:italic">/*** </span>
+<span style="color:#a99ba3;font-style:italic">     * 12: storage buffer</span>
+<span style="color:#a99ba3;font-style:italic">     * bindable, which should follow std430 memory layout.</span>
+<span style="color:#a99ba3;font-style:italic">     * */</span>
 
-    /*** 
-     * 12: storage buffer
-     * bindable, which should follow std430 memory layout.
-     * */
+    <span style="color:#a99ba3;font-style:italic">/** bind number 0 **/</span>
+    __attribute__((annotate(<span style="color:#8fbf91">"aclspv_storage_class(12)"</span>))) <span style="color:#d0aa68;font-weight:bold">int</span>* sbo_int_struct <span style="color:#a99ba3;font-style:italic">/** struct { int a; } */</span>,
+    <span style="color:#a99ba3;font-style:italic">/** bind number 1 **/</span>
+    __attribute__((annotate(<span style="color:#8fbf91">"aclspv_storage_class(12)"</span>))) <span style="color:#d0aa68;font-weight:bold">struct</span> <span style="color:#eef1f8;background-color:#590008">{</span><span style="color:#d0aa68;font-weight:bold">int</span> c; <span style="color:#eef1f8;background-color:#590008">}</span>* sbo_struct <span style="color:#a99ba3;font-style:italic">/** struct { int c; }  } */</span>,
 
-    /** bind number 0 **/
-    __attribute__((annotate("aclspv_storage_class(12)"))) int* sbo_int_struct /** struct { int a; } */,
-    /** bind number 1 **/
-    __attribute__((annotate("aclspv_storage_class(12)"))) struct {int c; }* sbo_struct /** struct { int c; }  } */,
+    <span style="color:#a99ba3;font-style:italic">/***</span>
+<span style="color:#a99ba3;font-style:italic">     * 2: uniform buffer</span>
+<span style="color:#a99ba3;font-style:italic">     * bindable, which should follow std140 memory layout.</span>
+<span style="color:#a99ba3;font-style:italic">     */</span>
 
-    /***
-     * 2: uniform buffer
-     * bindable, which should follow std140 memory layout.
-     */
-
-    /** bind number 2 **/
-    __attribute__((annotate("aclspv_storage_class(2)"))) int* ubo_int,
+    <span style="color:#a99ba3;font-style:italic">/** bind number 2 **/</span>
+    __attribute__((annotate(<span style="color:#8fbf91">"aclspv_storage_class(2)"</span>))) <span style="color:#d0aa68;font-weight:bold">int</span>* ubo_int,
     
-    /** bind number 3 **/
-    __attribute__((annotate("aclspv_layout(1)")))
-    __attribute__((annotate("aclspv_storage_class(2)")))
-    struct { int c; }* ubo_struct,
+    <span style="color:#a99ba3;font-style:italic">/** bind number 3 **/</span>
+    __attribute__((annotate(<span style="color:#8fbf91">"aclspv_layout(1)"</span>)))
+    __attribute__((annotate(<span style="color:#8fbf91">"aclspv_storage_class(2)"</span>)))
+    <span style="color:#d0aa68;font-weight:bold">struct</span> <span style="color:#eef1f8;background-color:#590008">{</span> <span style="color:#d0aa68;font-weight:bold">int</span> c; <span style="color:#eef1f8;background-color:#590008">}</span>* ubo_struct,
 
-    /*** 4: workgroup */ 
-    __attribute__((annotate("aclspv_storage_class(4)"))) int* work_int,
-    __attribute__((annotate("aclspv_storage_class(4)"))) int work_i32_15[15],
-    __attribute__((annotate("aclspv_storage_class(4)"))) int work_int_arr_spec[] __attribute__((annotate("aclspv_specid(1)")))
+    <span style="color:#a99ba3;font-style:italic">/*** 4: workgroup */</span> 
+    __attribute__((annotate(<span style="color:#8fbf91">"aclspv_storage_class(4)"</span>))) <span style="color:#d0aa68;font-weight:bold">int</span>* work_int,
+    __attribute__((annotate(<span style="color:#8fbf91">"aclspv_storage_class(4)"</span>))) <span style="color:#d0aa68;font-weight:bold">int</span> work_i32_15[<span style="color:#d99462">15</span>],
+    __attribute__((annotate(<span style="color:#8fbf91">"aclspv_storage_class(4)"</span>))) <span style="color:#d0aa68;font-weight:bold">int</span> work_int_arr_spec[] __attribute__((annotate(<span style="color:#8fbf91">"aclspv_specid(1)"</span>)))
 ) {
-    return;
+    <span style="color:#c47791;font-weight:bold">return</span>;
 }
-
-----
+</pre>
+</div>
+++++
 
 ==== aclspv_storage_class
 
@@ -278,32 +283,34 @@ Possible inputs are defined as enum `SpvStorageClass_` on spirv-header. +
 pointer type with same element type and different storage class is considered different pointer type.
 ____
 
-[source,c]
-----
-__attribute__((annotate("aclspv_execmodel(0)")))
-void entry_point_vertex(
-    /*** 
-     * 12: storage buffer
-     * */
-    __attribute__((annotate("aclspv_storage_class(12)"))) int sbo_int_rtarray[] /** struct { runtimearray<int> a; } */
+++++
+<div class="listingblock" style="background-color:#1c171b;color:#d8ccd3;padding:0.8em 1em;overflow-x:auto;border-radius:4px">
+<pre style="font-family:'Source Code Pro','DejaVu Sans Mono','Courier New',monospace;font-size:14px;line-height:1.3;margin:0;background:transparent;color:inherit">__attribute__((annotate(<span style="color:#8fbf91">"aclspv_execmodel(0)"</span>)))
+<span style="color:#d0aa68;font-weight:bold">void</span> entry_point_vertex(
+    <span style="color:#a99ba3;font-style:italic">/*** </span>
+<span style="color:#a99ba3;font-style:italic">     * 12: storage buffer</span>
+<span style="color:#a99ba3;font-style:italic">     * */</span>
+    __attribute__((annotate(<span style="color:#8fbf91">"aclspv_storage_class(12)"</span>))) <span style="color:#d0aa68;font-weight:bold">int</span> sbo_int_rtarray[] <span style="color:#a99ba3;font-style:italic">/** struct { runtimearray&lt;int&gt; a; } */</span>
 ) {
-    /** legal, has same storage class. */
-    __attribute__((annotate("aclspv_storage_class(12)"))) int* p0 = &sbo_int_rtarray[3];
+    <span style="color:#a99ba3;font-style:italic">/** legal, has same storage class. */</span>
+    __attribute__((annotate(<span style="color:#8fbf91">"aclspv_storage_class(12)"</span>))) <span style="color:#d0aa68;font-weight:bold">int</span>* p0 = &amp;sbo_int_rtarray[<span style="color:#d99462">3</span>];
 
-    /** illegal, has different storage class. */
-    __attribute__((annotate("aclspv_storage_class(5)"))) int* p1 = &sbo_int_rtarray[3];
-}
-----
+    <span style="color:#a99ba3;font-style:italic">/** illegal, has different storage class. */</span>
+    __attribute__((annotate(<span style="color:#8fbf91">"aclspv_storage_class(5)"</span>))) <span style="color:#d0aa68;font-weight:bold">int</span>* p1 = &amp;sbo_int_rtarray[<span style="color:#d99462">3</span>];
+}</pre>
+</div>
+++++
 
 you can typedef it.
 
-[source,c]
-----
-typedef unsigned int u32;
-typedef u32* __attribute__((annotate("aclspv_storage_class(12)"))) p_u32_sbo_t;
-typedef struct { u32 m_lsb; u32 m_hsb; } u32x2;
-typedef u32x2* __attribute__((annotate("aclspv_storage_class(12)"))) p_u32x2_sbo_t;
-----
+++++
+<div class="listingblock" style="background-color:#1c171b;color:#d8ccd3;padding:0.8em 1em;overflow-x:auto;border-radius:4px">
+<pre style="font-family:'Source Code Pro','DejaVu Sans Mono','Courier New',monospace;font-size:14px;line-height:1.3;margin:0;background:transparent;color:inherit"><span style="color:#d0aa68;font-weight:bold">typedef</span> <span style="color:#d0aa68;font-weight:bold">unsigned</span> <span style="color:#d0aa68;font-weight:bold">int</span> u32;
+<span style="color:#d0aa68;font-weight:bold">typedef</span> u32* __attribute__((annotate(<span style="color:#8fbf91">"aclspv_storage_class(12)"</span>))) p_u32_sbo_t;
+<span style="color:#d0aa68;font-weight:bold">typedef</span> <span style="color:#d0aa68;font-weight:bold">struct</span> { u32 m_lsb; u32 m_hsb; } u32x2;
+<span style="color:#d0aa68;font-weight:bold">typedef</span> u32x2* __attribute__((annotate(<span style="color:#8fbf91">"aclspv_storage_class(12)"</span>))) p_u32x2_sbo_t;</pre>
+</div>
+++++
 
 ==== aclspv_set
 
@@ -314,26 +321,27 @@ typedef u32x2* __attribute__((annotate("aclspv_storage_class(12)"))) p_u32x2_sbo
 * could be used on bindable objects.
 * when specified, specifing <<aclspv_bind_idx,binding index>> is required.
 
-[source,c]
-----
-__attribute__((annotate("aclspv_execmodel(5)")))
-void entry_point_compute(
-    /*** 
-     * descriptor set 2, binding 0
-     * */
-    __attribute__((annotate("aclspv_storage_class(12)")))
-    __attribute__((annotate("aclspv_set(2)")))
-    __attribute__((annotate("aclspv_bind_idx(0)")))
-    struct { int data; }* sbo_data,
+++++
+<div class="listingblock" style="background-color:#1c171b;color:#d8ccd3;padding:0.8em 1em;overflow-x:auto;border-radius:4px">
+<pre style="font-family:'Source Code Pro','DejaVu Sans Mono','Courier New',monospace;font-size:14px;line-height:1.3;margin:0;background:transparent;color:inherit">__attribute__((annotate(<span style="color:#8fbf91">"aclspv_execmodel(5)"</span>)))
+<span style="color:#d0aa68;font-weight:bold">void</span> entry_point_compute(
+    <span style="color:#a99ba3;font-style:italic">/*** </span>
+<span style="color:#a99ba3;font-style:italic">     * descriptor set 2, binding 0</span>
+<span style="color:#a99ba3;font-style:italic">     * */</span>
+    __attribute__((annotate(<span style="color:#8fbf91">"aclspv_storage_class(12)"</span>)))
+    __attribute__((annotate(<span style="color:#8fbf91">"aclspv_set(2)"</span>)))
+    __attribute__((annotate(<span style="color:#8fbf91">"aclspv_bind_idx(0)"</span>)))
+    <span style="color:#d0aa68;font-weight:bold">struct</span> <span style="color:#eef1f8;background-color:#590008">{</span> <span style="color:#d0aa68;font-weight:bold">int</span> data; <span style="color:#eef1f8;background-color:#590008">}</span>* sbo_data,
 
-    /*** 
-     * descriptor set 2, binding 1 (auto-incremented from 0 since bind_idx not specified)
-     * */
-    __attribute__((annotate("aclspv_storage_class(12)")))
-    __attribute__((annotate("aclspv_set(2)")))
-    struct { float value; }* sbo_value
-) { return; }
-----
+    <span style="color:#a99ba3;font-style:italic">/*** </span>
+<span style="color:#a99ba3;font-style:italic">     * descriptor set 2, binding 1 (auto-incremented from 0 since bind_idx not specified)</span>
+<span style="color:#a99ba3;font-style:italic">     * */</span>
+    __attribute__((annotate(<span style="color:#8fbf91">"aclspv_storage_class(12)"</span>)))
+    __attribute__((annotate(<span style="color:#8fbf91">"aclspv_set(2)"</span>)))
+    <span style="color:#d0aa68;font-weight:bold">struct</span> <span style="color:#eef1f8;background-color:#590008">{</span> <span style="color:#d0aa68;font-weight:bold">float</span> value; <span style="color:#eef1f8;background-color:#590008">}</span>* sbo_value
+) { <span style="color:#c47791;font-weight:bold">return</span>; }</pre>
+</div>
+++++
 
 ==== aclspv_bind_idx
 
@@ -344,26 +352,27 @@ void entry_point_compute(
 * could be used on bindable objects.
 * when specified, auto binding index resolver will not increment the index for next.
 
-[source,c]
-----
-__attribute__((annotate("aclspv_execmodel(5)")))
-void entry_point_compute(
-    /*** 
-     * explicit binding 5 — next bindable in same set starts at 6
-     * */
-    __attribute__((annotate("aclspv_storage_class(12)")))
-    __attribute__((annotate("aclspv_set(0)")))
-    __attribute__((annotate("aclspv_bind_idx(5)")))
-    struct { double x; }* sbo_explicit,
+++++
+<div class="listingblock" style="background-color:#1c171b;color:#d8ccd3;padding:0.8em 1em;overflow-x:auto;border-radius:4px">
+<pre style="font-family:'Source Code Pro','DejaVu Sans Mono','Courier New',monospace;font-size:14px;line-height:1.3;margin:0;background:transparent;color:inherit">__attribute__((annotate(<span style="color:#8fbf91">"aclspv_execmodel(5)"</span>)))
+<span style="color:#d0aa68;font-weight:bold">void</span> entry_point_compute(
+    <span style="color:#a99ba3;font-style:italic">/*** </span>
+<span style="color:#a99ba3;font-style:italic">     * explicit binding 5 — next bindable in same set starts at 6</span>
+<span style="color:#a99ba3;font-style:italic">     * */</span>
+    __attribute__((annotate(<span style="color:#8fbf91">"aclspv_storage_class(12)"</span>)))
+    __attribute__((annotate(<span style="color:#8fbf91">"aclspv_set(0)"</span>)))
+    __attribute__((annotate(<span style="color:#8fbf91">"aclspv_bind_idx(5)"</span>)))
+    <span style="color:#d0aa68;font-weight:bold">struct</span> <span style="color:#eef1f8;background-color:#590008">{</span> <span style="color:#d0aa68;font-weight:bold">double</span> x; <span style="color:#eef1f8;background-color:#590008">}</span>* sbo_explicit,
 
-    /*** 
-     * binding 6 (auto-incremented from 5 since bind_idx was specified above)
-     * */
-    __attribute__((annotate("aclspv_storage_class(12)")))
-    __attribute__((annotate("aclspv_set(0)")))
-    struct { double y; }* sbo_auto
-) { return; }
-----
+    <span style="color:#a99ba3;font-style:italic">/*** </span>
+<span style="color:#a99ba3;font-style:italic">     * binding 6 (auto-incremented from 5 since bind_idx was specified above)</span>
+<span style="color:#a99ba3;font-style:italic">     * */</span>
+    __attribute__((annotate(<span style="color:#8fbf91">"aclspv_storage_class(12)"</span>)))
+    __attribute__((annotate(<span style="color:#8fbf91">"aclspv_set(0)"</span>)))
+    <span style="color:#d0aa68;font-weight:bold">struct</span> <span style="color:#eef1f8;background-color:#590008">{</span> <span style="color:#d0aa68;font-weight:bold">double</span> y; <span style="color:#eef1f8;background-color:#590008">}</span>* sbo_auto
+) { <span style="color:#c47791;font-weight:bold">return</span>; }</pre>
+</div>
+++++
 
 ==== aclspv_wrkgroup_size
 
@@ -378,14 +387,15 @@ ____
 * this attribute is ignored when its execution model is not either `Kernel(6)` or `GLCompute(5)`.
 * this attribute adds execution mode on an given entry point. to attach others, see <<aclspv_execmode,execution mode>>
 
-[source,c]
-----
-__attribute__((annotate("aclspv_wrkgroup_size(1, 1, 1)")))  /** with workgroup size (1, 1, 1) */
-__attribute__((annotate("aclspv_execmodel(5)")))            /** GLCompute */
-void entry_point_glcompute(void) {
-    return;
-}
-----
+++++
+<div class="listingblock" style="background-color:#1c171b;color:#d8ccd3;padding:0.8em 1em;overflow-x:auto;border-radius:4px">
+<pre style="font-family:'Source Code Pro','DejaVu Sans Mono','Courier New',monospace;font-size:14px;line-height:1.3;margin:0;background:transparent;color:inherit">__attribute__((annotate(<span style="color:#8fbf91">"aclspv_wrkgroup_size(1, 1, 1)"</span>)))  <span style="color:#a99ba3;font-style:italic">/** with workgroup size (1, 1, 1) */</span>
+__attribute__((annotate(<span style="color:#8fbf91">"aclspv_execmodel(5)"</span>)))            <span style="color:#a99ba3;font-style:italic">/** GLCompute */</span>
+<span style="color:#d0aa68;font-weight:bold">void</span> entry_point_glcompute(<span style="color:#d0aa68;font-weight:bold">void</span>) {
+    <span style="color:#c47791;font-weight:bold">return</span>;
+}</pre>
+</div>
+++++
 
 ==== aclspv_wrkgroup_size_id
 
@@ -401,23 +411,24 @@ this attribute is available from spir-v version 1.2.
 * to specify which is literal or specid, prefix is used.
 * this attribute adds execution mode on an given entry point. to attach others, see <<aclspv_execmode,execution mode>>
 
-[source,c]
-----
-/**
- * & means it is spec constant id.
- * # means it is literal.
- * 
- * therefore following line means it size should be
- * x: specified constant in id 1
- * y: 3
- * z: specified constant in id 2
- */
-__attribute__((annotate("aclspv_wrkgroup_size_id(&1, #3, &2)")))
-__attribute__((annotate("aclspv_execmodel(5)")))            /** GLCompute */
-void entry_point_glcompute(void) {
-    return;
-}
-----
+++++
+<div class="listingblock" style="background-color:#1c171b;color:#d8ccd3;padding:0.8em 1em;overflow-x:auto;border-radius:4px">
+<pre style="font-family:'Source Code Pro','DejaVu Sans Mono','Courier New',monospace;font-size:14px;line-height:1.3;margin:0;background:transparent;color:inherit"><span style="color:#a99ba3;font-style:italic">/**</span>
+<span style="color:#a99ba3;font-style:italic"> * &amp; means it is spec constant id.</span>
+<span style="color:#a99ba3;font-style:italic"> * # means it is literal.</span>
+<span style="color:#a99ba3;font-style:italic"> * </span>
+<span style="color:#a99ba3;font-style:italic"> * therefore following line means it size should be</span>
+<span style="color:#a99ba3;font-style:italic"> * x: specified constant in id 1</span>
+<span style="color:#a99ba3;font-style:italic"> * y: 3</span>
+<span style="color:#a99ba3;font-style:italic"> * z: specified constant in id 2</span>
+<span style="color:#a99ba3;font-style:italic"> */</span>
+__attribute__((annotate(<span style="color:#8fbf91">"aclspv_wrkgroup_size_id(&amp;1, #3, &amp;2)"</span>)))
+__attribute__((annotate(<span style="color:#8fbf91">"aclspv_execmodel(5)"</span>)))            <span style="color:#a99ba3;font-style:italic">/** GLCompute */</span>
+<span style="color:#d0aa68;font-weight:bold">void</span> entry_point_glcompute(<span style="color:#d0aa68;font-weight:bold">void</span>) {
+    <span style="color:#c47791;font-weight:bold">return</span>;
+}</pre>
+</div>
+++++
 
 ==== aclspv_location
 
@@ -434,23 +445,24 @@ you cannot specify this with <<aclspv_bltin,aclspv_bltin>>
 * when this and <<aclspv_bltin,aclspv_bltin>> is not specified, every input our output's location will be 0.
 * when <<aclspv_bltin,aclspv_bltin>> is specified, location will not be specified.
 
-[source,c]
-----
-__attribute__((annotate("aclspv_execmodel(0)")))
-void entry_point_vertex(
-    /*** 
-     * omitted.
-     * location: 0
-     * */
-    __attribute__((annotate("aclspv_storage_class(1)"))) int* in_int,
+++++
+<div class="listingblock" style="background-color:#1c171b;color:#d8ccd3;padding:0.8em 1em;overflow-x:auto;border-radius:4px">
+<pre style="font-family:'Source Code Pro','DejaVu Sans Mono','Courier New',monospace;font-size:14px;line-height:1.3;margin:0;background:transparent;color:inherit">__attribute__((annotate(<span style="color:#8fbf91">"aclspv_execmodel(0)"</span>)))
+<span style="color:#d0aa68;font-weight:bold">void</span> entry_point_vertex(
+    <span style="color:#a99ba3;font-style:italic">/*** </span>
+<span style="color:#a99ba3;font-style:italic">     * omitted.</span>
+<span style="color:#a99ba3;font-style:italic">     * location: 0</span>
+<span style="color:#a99ba3;font-style:italic">     * */</span>
+    __attribute__((annotate(<span style="color:#8fbf91">"aclspv_storage_class(1)"</span>))) <span style="color:#d0aa68;font-weight:bold">int</span>* in_int,
 
-    /** 
-     * location: 1
-     **/
-    __attribute__((annotate("aclspv_location(1)")))
-    __attribute__((annotate("aclspv_storage_class(3)"))) int* out_int
-) { *out_int = *in_int; }
-----
+    <span style="color:#a99ba3;font-style:italic">/** </span>
+<span style="color:#a99ba3;font-style:italic">     * location: 1</span>
+<span style="color:#a99ba3;font-style:italic">     **/</span>
+    __attribute__((annotate(<span style="color:#8fbf91">"aclspv_location(1)"</span>)))
+    __attribute__((annotate(<span style="color:#8fbf91">"aclspv_storage_class(3)"</span>))) <span style="color:#d0aa68;font-weight:bold">int</span>* out_int
+) { *out_int = *in_int; }</pre>
+</div>
+++++
 
 ==== aclspv_btcast
 
@@ -459,13 +471,14 @@ void entry_point_vertex(
 
 * tells that the final casting of variable would be bit-casting when it is arithmetic casting.
 
-[source,c]
-----
-void foo(void) {
-    /** 3.20000005 */
-    __attribute__((annotate("aclspv_btcast"))) float bar = 1078774989;
-}
-----
+++++
+<div class="listingblock" style="background-color:#1c171b;color:#d8ccd3;padding:0.8em 1em;overflow-x:auto;border-radius:4px">
+<pre style="font-family:'Source Code Pro','DejaVu Sans Mono','Courier New',monospace;font-size:14px;line-height:1.3;margin:0;background:transparent;color:inherit"><span style="color:#d0aa68;font-weight:bold">void</span> foo(<span style="color:#d0aa68;font-weight:bold">void</span>) {
+    <span style="color:#a99ba3;font-style:italic">/** 3.20000005 */</span>
+    __attribute__((annotate(<span style="color:#8fbf91">"aclspv_btcast"</span>))) <span style="color:#d0aa68;font-weight:bold">float</span> bar = <span style="color:#d99462">1078774989</span>;
+}</pre>
+</div>
+++++
 
 ==== aclspv_bratio
 
@@ -477,20 +490,21 @@ void foo(void) {
 * while
 * if
 
-[source,c]
-----
-typedef int i32;
-struct foo { i32 m; };
+++++
+<div class="listingblock" style="background-color:#1c171b;color:#d8ccd3;padding:0.8em 1em;overflow-x:auto;border-radius:4px">
+<pre style="font-family:'Source Code Pro','DejaVu Sans Mono','Courier New',monospace;font-size:14px;line-height:1.3;margin:0;background:transparent;color:inherit"><span style="color:#d0aa68;font-weight:bold">typedef</span> <span style="color:#d0aa68;font-weight:bold">int</span> i32;
+<span style="color:#d0aa68;font-weight:bold">struct</span> foo { i32 m; };
 
-i32 foo_read_32(struct foo* h_whatever) {
-    if(h_whatever) {    /** weighted as 7 */
-        __attribute__(("aclspv_bratio(7, 1)")) typedef int dummy_t;
-        return h_whatever->m;
-    } else {            /** weighted as 1 */
-        return 0;
+i32 foo_read_32(<span style="color:#d0aa68;font-weight:bold">struct</span> foo* h_whatever) {
+    <span style="color:#c47791;font-weight:bold">if</span>(h_whatever) {    <span style="color:#a99ba3;font-style:italic">/** weighted as 7 */</span>
+        __attribute__((<span style="color:#8fbf91">"aclspv_bratio(7, 1)"</span>)) <span style="color:#d0aa68;font-weight:bold">typedef</span> <span style="color:#d0aa68;font-weight:bold">int</span> dummy_t;
+        <span style="color:#c47791;font-weight:bold">return</span> h_whatever-&gt;m;
+    } <span style="color:#c47791;font-weight:bold">else</span> {            <span style="color:#a99ba3;font-style:italic">/** weighted as 1 */</span>
+        <span style="color:#c47791;font-weight:bold">return</span> <span style="color:#d99462">0</span>;
     }
-}
-----
+}</pre>
+</div>
+++++
 
 ==== aclspv_layout
 
@@ -501,11 +515,12 @@ i32 foo_read_32(struct foo* h_whatever) {
 * see `./lib/aclty/layout.h` to get the layouts
 * without this attribute specified, layout will be default. (see ACLSPV_LAYOUT_)
 
-[source,c]
-----
-__attribute__((annotate("aclspv_layout(1)")))
-typedef struct { unsigned m_uint; } std140_uint_t;
-----
+++++
+<div class="listingblock" style="background-color:#1c171b;color:#d8ccd3;padding:0.8em 1em;overflow-x:auto;border-radius:4px">
+<pre style="font-family:'Source Code Pro','DejaVu Sans Mono','Courier New',monospace;font-size:14px;line-height:1.3;margin:0;background:transparent;color:inherit">__attribute__((annotate(<span style="color:#8fbf91">"aclspv_layout(1)"</span>)))
+<span style="color:#d0aa68;font-weight:bold">typedef</span> <span style="color:#d0aa68;font-weight:bold">struct</span> { <span style="color:#d0aa68;font-weight:bold">unsigned</span> m_uint; } std140_uint_t;</pre>
+</div>
+++++
 
 ==== aclspv_bltin
 
@@ -526,30 +541,31 @@ you cannot specify this with <<aclspv_location,aclspv_location>>
 * specify an interface variable (input | output) is builtin variable.
 * see https://registry.khronos.org/SPIR-V/specs/unified1/SPIRV.html#BuiltIn
 
-[source,c]
-----
-typedef float f32;
-typedef f32 __attribute__((ext_vector_type(4))) f32x4;
+++++
+<div class="listingblock" style="background-color:#1c171b;color:#d8ccd3;padding:0.8em 1em;overflow-x:auto;border-radius:4px">
+<pre style="font-family:'Source Code Pro','DejaVu Sans Mono','Courier New',monospace;font-size:14px;line-height:1.3;margin:0;background:transparent;color:inherit"><span style="color:#d0aa68;font-weight:bold">typedef</span> <span style="color:#d0aa68;font-weight:bold">float</span> f32;
+<span style="color:#d0aa68;font-weight:bold">typedef</span> f32 __attribute__((ext_vector_type(<span style="color:#d99462">4</span>))) f32x4;
 
-__attribute__((annotate("aclspv_execmodel(0)")))
-void t12_entry_point_vertex(
-    /***
-     * vertex shader builtin: position output
-     * SPIR-V BuiltIn: Position (0)
-     * */
-    __attribute__((annotate("aclspv_storage_class(3)")))
-    __attribute__((annotate("aclspv_bltin(0)")))
+__attribute__((annotate(<span style="color:#8fbf91">"aclspv_execmodel(0)"</span>)))
+<span style="color:#d0aa68;font-weight:bold">void</span> t12_entry_point_vertex(
+    <span style="color:#a99ba3;font-style:italic">/***</span>
+<span style="color:#a99ba3;font-style:italic">     * vertex shader builtin: position output</span>
+<span style="color:#a99ba3;font-style:italic">     * SPIR-V BuiltIn: Position (0)</span>
+<span style="color:#a99ba3;font-style:italic">     * */</span>
+    __attribute__((annotate(<span style="color:#8fbf91">"aclspv_storage_class(3)"</span>)))
+    __attribute__((annotate(<span style="color:#8fbf91">"aclspv_bltin(0)"</span>)))
     f32x4* gl_Position,
 
-    /***
-     * vertex shader builtin: vertex index input
-     * SPIR-V BuiltIn: VertexIndex (42)
-     * */
-    __attribute__((annotate("aclspv_storage_class(1)")))
-    __attribute__((annotate("aclspv_bltin(42)")))
-    int* gl_VertexIndex
-) { return; }
-----
+    <span style="color:#a99ba3;font-style:italic">/***</span>
+<span style="color:#a99ba3;font-style:italic">     * vertex shader builtin: vertex index input</span>
+<span style="color:#a99ba3;font-style:italic">     * SPIR-V BuiltIn: VertexIndex (42)</span>
+<span style="color:#a99ba3;font-style:italic">     * */</span>
+    __attribute__((annotate(<span style="color:#8fbf91">"aclspv_storage_class(1)"</span>)))
+    __attribute__((annotate(<span style="color:#8fbf91">"aclspv_bltin(42)"</span>)))
+    <span style="color:#d0aa68;font-weight:bold">int</span>* gl_VertexIndex
+) { <span style="color:#c47791;font-weight:bold">return</span>; }</pre>
+</div>
+++++
 
 == Builtin
 
@@ -577,19 +593,20 @@ ____
 * the bare `sinf` / `cosf` / `tanf` names are not recognised; only the `__builtin_` spellings are.
 * the `GLSL.std.450` import is emitted on first use.
 
-[source,c]
-----
-typedef float f32;
+++++
+<div class="listingblock" style="background-color:#1c171b;color:#d8ccd3;padding:0.8em 1em;overflow-x:auto;border-radius:4px">
+<pre style="font-family:'Source Code Pro','DejaVu Sans Mono','Courier New',monospace;font-size:14px;line-height:1.3;margin:0;background:transparent;color:inherit"><span style="color:#d0aa68;font-weight:bold">typedef</span> <span style="color:#d0aa68;font-weight:bold">float</span> f32;
 
-void f32_math(f32* in, f32* out) {
+<span style="color:#d0aa68;font-weight:bold">void</span> f32_math(f32* in, f32* out) {
     *out = __builtin_sinf(*in);
     *out = __builtin_cosf(*in);
     *out = __builtin_tanf(*in);
 
-    /** folded: no OpExtInst is emitted */
-    *out = __builtin_sinf(0.5f);
-}
-----
+    <span style="color:#a99ba3;font-style:italic">/** folded: no OpExtInst is emitted */</span>
+    *out = __builtin_sinf(<span style="color:#d99462">0.5f</span>);
+}</pre>
+</div>
+++++
 
 === __builtin_sinf16 / __builtin_cosf16 / __builtin_tanf16
 
@@ -607,16 +624,17 @@ ____
 * literal folding is not available for `f16` yet: a literal operand still goes through `OpExtInst`.
 * the `GLSL.std.450` import is emitted on first use.
 
-[source,c]
-----
-typedef _Float16 f16;
+++++
+<div class="listingblock" style="background-color:#1c171b;color:#d8ccd3;padding:0.8em 1em;overflow-x:auto;border-radius:4px">
+<pre style="font-family:'Source Code Pro','DejaVu Sans Mono','Courier New',monospace;font-size:14px;line-height:1.3;margin:0;background:transparent;color:inherit"><span style="color:#d0aa68;font-weight:bold">typedef</span> _Float16 f16;
 
-void f16_math(f16* in, f16* out) {
+<span style="color:#d0aa68;font-weight:bold">void</span> f16_math(f16* in, f16* out) {
     *out = __builtin_sinf16(*in);
     *out = __builtin_cosf16(*in);
     *out = __builtin_tanf16(*in);
-}
-----
+}</pre>
+</div>
+++++
 
 === __builtin_elementwise_sin / __builtin_elementwise_cos / __builtin_elementwise_tan
 
@@ -633,17 +651,18 @@ ____
 * a scalar `f32` literal folds exactly like the f32 family above.
 * the `GLSL.std.450` import is emitted on first use.
 
-[source,c]
-----
-typedef float f32;
-typedef f32 __attribute__((ext_vector_type(4))) f32x4;
+++++
+<div class="listingblock" style="background-color:#1c171b;color:#d8ccd3;padding:0.8em 1em;overflow-x:auto;border-radius:4px">
+<pre style="font-family:'Source Code Pro','DejaVu Sans Mono','Courier New',monospace;font-size:14px;line-height:1.3;margin:0;background:transparent;color:inherit"><span style="color:#d0aa68;font-weight:bold">typedef</span> <span style="color:#d0aa68;font-weight:bold">float</span> f32;
+<span style="color:#d0aa68;font-weight:bold">typedef</span> f32 __attribute__((ext_vector_type(<span style="color:#d99462">4</span>))) f32x4;
 
-void elementwise_math(f32x4* in, f32x4* out) {
+<span style="color:#d0aa68;font-weight:bold">void</span> elementwise_math(f32x4* in, f32x4* out) {
     *out = __builtin_elementwise_sin(*in);
     *out = __builtin_elementwise_cos(*in);
     *out = __builtin_elementwise_tan(*in);
-}
-----
+}</pre>
+</div>
+++++
 
 === shufflevector
 
@@ -657,20 +676,21 @@ void elementwise_math(f32x4* in, f32x4* out) {
 * only `v1` and `v2` are evaluated: the mask is not part of the expression operand stream.
 * the result component count must equal the mask count, as `spirv-val` requires.
 
-[source,c]
-----
-typedef float f32;
-typedef f32 __attribute__((ext_vector_type(4))) f32x4;
-typedef f32 __attribute__((ext_vector_type(2))) f32x2;
+++++
+<div class="listingblock" style="background-color:#1c171b;color:#d8ccd3;padding:0.8em 1em;overflow-x:auto;border-radius:4px">
+<pre style="font-family:'Source Code Pro','DejaVu Sans Mono','Courier New',monospace;font-size:14px;line-height:1.3;margin:0;background:transparent;color:inherit"><span style="color:#d0aa68;font-weight:bold">typedef</span> <span style="color:#d0aa68;font-weight:bold">float</span> f32;
+<span style="color:#d0aa68;font-weight:bold">typedef</span> f32 __attribute__((ext_vector_type(<span style="color:#d99462">4</span>))) f32x4;
+<span style="color:#d0aa68;font-weight:bold">typedef</span> f32 __attribute__((ext_vector_type(<span style="color:#d99462">2</span>))) f32x2;
 
-void gather(f32x4* a, f32x4* b, f32x4* out4, f32x2* out2) {
-    /** [a.x, b.y, a.z, b.w] */
-    *out4 = __builtin_shufflevector(*a, *b, 0, 5, 2, 7);
+<span style="color:#d0aa68;font-weight:bold">void</span> gather(f32x4* a, f32x4* b, f32x4* out4, f32x2* out2) {
+    <span style="color:#a99ba3;font-style:italic">/** [a.x, b.y, a.z, b.w] */</span>
+    *out4 = __builtin_shufflevector(*a, *b, <span style="color:#d99462">0</span>, <span style="color:#d99462">5</span>, <span style="color:#d99462">2</span>, <span style="color:#d99462">7</span>);
 
-    /** [a.y, b.z] */
-    *out2 = __builtin_shufflevector(*a, *b, 1, 6);
-}
-----
+    <span style="color:#a99ba3;font-style:italic">/** [a.y, b.z] */</span>
+    *out2 = __builtin_shufflevector(*a, *b, <span style="color:#d99462">1</span>, <span style="color:#d99462">6</span>);
+}</pre>
+</div>
+++++
 
 == Restriction
 
