@@ -9,6 +9,7 @@ enum { N_MEMMODEL = 3 };
 /** total word count of the binary. single source of truth for allocator and dumper. */
 static aclspv_wrd_t s_dump_num_wrd(const x_aclspv_ctx* ae2f_restrict h_ctx) {
 	return	 h_ctx->m_count.m_capability
+		+ h_ctx->m_count.m_extinst
 		+ h_ctx->m_count.m_ext
 		+ N_MEMMODEL
 		+ h_ctx->m_count.m_entp
@@ -52,13 +53,21 @@ ACLSPV_ABI_IMPL aclspv_compile_t aclspv_dump_ctx_output1(
 
 	copybinary(m_capability,	ret + 5);
 
+	/** SPIR-V layout: capability, extension, ext-inst import, memory
+	 * model. extensions must precede imports. */
 	copybinary(m_ext,		ret + 5 
 			+ h_ctx->m_count.m_capability
+		  );
+
+	copybinary(m_extinst,		ret + 5 
+			+ h_ctx->m_count.m_capability
+			+ h_ctx->m_count.m_ext
 		  );
 
 	{
 		aclspv_wrd_t* ae2f_restrict ptmp = ret + 5
 			+ h_ctx->m_count.m_capability 
+			+ h_ctx->m_count.m_extinst
 			+ h_ctx->m_count.m_ext;
 		ptmp[0] = aclspv_opcode_to_wrd(SpvOpMemoryModel, 2);
 		ptmp[1] = h_ctx->m_usrcfg.m_mdl_addr;
@@ -67,12 +76,14 @@ ACLSPV_ABI_IMPL aclspv_compile_t aclspv_dump_ctx_output1(
 
 	copybinary(m_entp,		ret + 5 
 			+ h_ctx->m_count.m_capability 
+			+ h_ctx->m_count.m_extinst
 			+ h_ctx->m_count.m_ext
 			+ N_MEMMODEL
 		  );
 
 	copybinary(m_execmode,		ret + 5 
 			+ h_ctx->m_count.m_capability 
+			+ h_ctx->m_count.m_extinst
 			+ h_ctx->m_count.m_ext
 			+ N_MEMMODEL
 			+ h_ctx->m_count.m_entp
@@ -80,6 +91,7 @@ ACLSPV_ABI_IMPL aclspv_compile_t aclspv_dump_ctx_output1(
 
 	copybinary(m_name,		ret + 5 
 			+ h_ctx->m_count.m_capability 
+			+ h_ctx->m_count.m_extinst
 			+ h_ctx->m_count.m_ext
 			+ N_MEMMODEL
 			+ h_ctx->m_count.m_entp
@@ -88,6 +100,7 @@ ACLSPV_ABI_IMPL aclspv_compile_t aclspv_dump_ctx_output1(
 
 	copybinary(m_name_symbol,	ret + 5 
 			+ h_ctx->m_count.m_capability 
+			+ h_ctx->m_count.m_extinst
 			+ h_ctx->m_count.m_ext
 			+ N_MEMMODEL
 			+ h_ctx->m_count.m_entp
@@ -97,6 +110,7 @@ ACLSPV_ABI_IMPL aclspv_compile_t aclspv_dump_ctx_output1(
 
 	copybinary(m_decorate,		ret + 5 
 			+ h_ctx->m_count.m_capability 
+			+ h_ctx->m_count.m_extinst
 			+ h_ctx->m_count.m_ext
 			+ N_MEMMODEL
 			+ h_ctx->m_count.m_entp
@@ -107,6 +121,7 @@ ACLSPV_ABI_IMPL aclspv_compile_t aclspv_dump_ctx_output1(
 
 	copybinary(m_types,		ret + 5 
 			+ h_ctx->m_count.m_capability 
+			+ h_ctx->m_count.m_extinst
 			+ h_ctx->m_count.m_ext
 			+ N_MEMMODEL
 			+ h_ctx->m_count.m_entp
@@ -118,6 +133,7 @@ ACLSPV_ABI_IMPL aclspv_compile_t aclspv_dump_ctx_output1(
 
 	copybinary(m_vars,		ret + 5 
 			+ h_ctx->m_count.m_capability 
+			+ h_ctx->m_count.m_extinst
 			+ h_ctx->m_count.m_ext
 			+ N_MEMMODEL
 			+ h_ctx->m_count.m_entp
@@ -130,6 +146,7 @@ ACLSPV_ABI_IMPL aclspv_compile_t aclspv_dump_ctx_output1(
 
 	copybinary(m_fndef,		ret + 5 
 			+ h_ctx->m_count.m_capability 
+			+ h_ctx->m_count.m_extinst
 			+ h_ctx->m_count.m_ext
 			+ N_MEMMODEL
 			+ h_ctx->m_count.m_entp

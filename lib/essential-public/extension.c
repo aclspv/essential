@@ -8,15 +8,15 @@
 #include <util/log.h>
 
 ACLSPV_ABI_IMPL ae2f_ccpure ae2f_noexcept aclspv_bool_t aclspv_chck_extension_from_ctx(
-		const x_aclspv_ctx* const ae2f_restrict	rd_ctx,
-		const char* ae2f_restrict const		c_ext
-		) { ae2f_ifezerr_strict(rd_ctx && rd_ctx->m_section.m_ext.m_p && c_ext) return 0; {
+		const x_aclspv_ctx* const ae2f_restrict	h_ctx,
+		const char* ae2f_restrict const		rd
+		) { ae2f_ifezerr_strict(h_ctx && h_ctx->m_section.m_ext.m_p && rd) return 0; {
 	
-#define	BUF	aclutil_get_wrd_of_vec(&rd_ctx->m_section.m_ext)
+#define	BUF	aclutil_get_wrd_of_vec(&h_ctx->m_section.m_ext)
 	aclspv_wrd_t		I	= 0;
-	const aclspv_wrd_t	C	= rd_ctx->m_count.m_ext;
+	const aclspv_wrd_t	C	= h_ctx->m_count.m_ext;
 	/** null terminator included, same as `aclspv_add_extension_from_ctx` */
-	const size_t		ELEN	= strlen(c_ext) + 1;
+	const size_t		ELEN	= strlen(rd) + 1;
 	const aclspv_wrd_t	WELEN	= ae2f_bll_sel_bool1(aclspv_wrd_t
 			, (aclspv_wrd_t)(ELEN > (size_t)0xFFFFFFFF)
 			, 0 
@@ -24,13 +24,13 @@ ACLSPV_ABI_IMPL ae2f_ccpure ae2f_noexcept aclspv_bool_t aclspv_chck_extension_fr
 			);
 	const aclspv_wrd_t	WCEXT	= ((WELEN + 3) >> 2) + 1;
 
-	ae2f_ifnezerr(rd_ctx->m_err)	return 0;
+	ae2f_ifnezerr(h_ctx->m_err)	return 0;
 
 	while(I < C) {
 		const aclspv_wrd_t	SKIP	= (BUF[I] >> 16) & 0xffff;
 
 		if(SKIP == WCEXT
-				&&	!strcmp(c_ext, (const char* ae2f_restrict)&BUF[I + 1]))
+				&&	!strcmp(rd, (const char* ae2f_restrict)&BUF[I + 1]))
 			return 1;
 
 		if(SKIP > WCEXT)	break;
@@ -41,17 +41,15 @@ ACLSPV_ABI_IMPL ae2f_ccpure ae2f_noexcept aclspv_bool_t aclspv_chck_extension_fr
 
 	return 0;
 #undef	BUF
-
-	ae2f_unreachable();
-} ae2f_unreachable(); }
+}}
 
 ACLSPV_ABI_IMPL ae2f_ccpure ae2f_noexcept aclspv_bool_t aclspv_add_extension_from_ctx(
 		const h_aclspv_ctx_t ae2f_restrict	h_ctx,
-		const char* ae2f_restrict const		c_ext
+		const char* ae2f_restrict const		rd
 		) { 
 	aclspv_wrd_t		I	= 0;
 	const aclspv_wrd_t	C	= h_ctx ? h_ctx->m_count.m_ext : 0;
-	const size_t		ELEN	= c_ext ? 1 + strlen(c_ext) : 0;
+	const size_t		ELEN	= rd ? 1 + strlen(rd) : 0;
 	const aclspv_wrd_t	WELEN	= ae2f_bll_sel_bool1(
 			aclspv_wrd_t
 			, (aclspv_wrd_t)(ELEN > (size_t)0xFFFFFFFF)
@@ -60,7 +58,7 @@ ACLSPV_ABI_IMPL ae2f_ccpure ae2f_noexcept aclspv_bool_t aclspv_add_extension_fro
 			);
 	const aclspv_wrd_t	WCEXT	= ((WELEN + 3) >> 2) + 1;
 
-	ae2f_ifezerr_strict(h_ctx && c_ext) return 0;
+	ae2f_ifezerr_strict(h_ctx && rd) return 0;
 	ae2f_ifnezerr(h_ctx->m_err)		return 0;
 	unless(h_ctx->m_section.m_ext.m_p) goto LBL_NOT_FOUND;
 
@@ -72,7 +70,7 @@ ACLSPV_ABI_IMPL ae2f_ccpure ae2f_noexcept aclspv_bool_t aclspv_add_extension_fro
 			const aclspv_wrd_t	SKIP	= (BUF[I] >> 16) & 0xffff;
 
 			if(SKIP == WCEXT
-					&&	!strcmp(c_ext, (const char* ae2f_restrict)&BUF[I + 1]))
+					&&	!strcmp(rd, (const char* ae2f_restrict)&BUF[I + 1]))
 				return 1;
 
 			if(SKIP > WCEXT)	break;
@@ -84,7 +82,7 @@ ACLSPV_ABI_IMPL ae2f_ccpure ae2f_noexcept aclspv_bool_t aclspv_add_extension_fro
 	}
 
 LBL_NOT_FOUND:
-	dbg_puts(c_ext);
+	dbg_puts(rd);
 	dbg_puts("extension::edge");
 	unless(I < C) {
 		ae2f_ifezerr(h_ctx->m_count.m_ext = aclutil_emit_wrd(
@@ -97,13 +95,13 @@ LBL_NOT_FOUND:
 		ae2f_ifezerr(h_ctx->m_count.m_ext = aclutil_emit_str(
 					&h_ctx->m_section.m_ext
 					, h_ctx->m_count.m_ext
-					, c_ext)) {
+					, rd)) {
 			return 0;
 		}
 		return 1;
 	}
 
-	dbg_puts(c_ext);
+	dbg_puts(rd);
 	dbg_puts("extension::mid");
 
 	ae2f_ifezerr(h_ctx->m_count.m_ext = aclutil_emit_wrd(
@@ -119,7 +117,7 @@ LBL_NOT_FOUND:
 			, C - I);
 
 	aclutil_get_wrd_of_vec(&h_ctx->m_section.m_ext)[I] = SpvOpExtension | (WCEXT << 16);
-	strcpy((char* ae2f_restrict)&aclutil_get_wrd_of_vec(&h_ctx->m_section.m_ext)[I + 1], c_ext);
+	strcpy((char* ae2f_restrict)&aclutil_get_wrd_of_vec(&h_ctx->m_section.m_ext)[I + 1], rd);
 
 	return 1;
 }

@@ -222,7 +222,10 @@ enum ACLSPV_COMPILE_ {
 	ACLSPV_COMPILE_NOT_A_POINTER,
 
 	/** see ACLSPV_CTX_FLAG0_ERROR_UNASSIGNED_VAL_USED */
-	ACLSPV_COMPILE_UNASSIGNED_VALUE
+	ACLSPV_COMPILE_UNASSIGNED_VALUE,
+
+	/** see ACLSPV_CTX_FLAG0_EXPLICIT_EXTINST_IMPORT */
+	ACLSPV_COMPILE_NOIMPL_EXTINST
 };
 
 /** 
@@ -251,6 +254,7 @@ typedef struct {
 	__X(KILL_ON_DIAGNOSTICS),	\
 	__X(EXPLICIT_CAPABILITY),	\
 	__X(EXPLICIT_EXTENSION),	\
+	__X(EXPLICIT_EXTINST_IMPORT),	\
 	__X(ERROR_UNASSIGNED_VAL_USED)
 
 #define	__X(A)	ACLSPV_CTX_FLAGPAD0_##A
@@ -420,6 +424,7 @@ typedef struct a_aclspv_ctx {
 	struct {
 		aclspv_wrdcount_t
 			m_capability,
+			m_extinst,
 			m_ext,
 			m_entp,
 			m_execmode,
@@ -463,6 +468,7 @@ typedef struct a_aclspv_ctx {
 	struct {
 		x_aclspv_vec
 			m_capability,
+			m_extinst,
 			m_ext,
 			m_entp,
 			m_execmode,
@@ -595,6 +601,27 @@ ae2f_extern ACLSPV_ABI_DECL aclspv_id_t aclspv_cfg_symbol(
 		aclspv_wrd_t c,
 		aclspv_id_t	c_new_opt,
 		h_aclspv_ctx_t h
+		);
+
+/** extended instruction */
+typedef aclspv_id_t aclspv_extinst_t;
+
+/** 
+ * check an extension instruction import
+ * 0 on none has found.
+ * */
+ae2f_extern ACLSPV_ABI_DECL ae2f_ccpure ae2f_noexcept aclspv_extinst_t aclspv_chck_extinst(
+		const char* ae2f_restrict rd,
+		h_aclspv_ctx_t h_ctx
+		);
+
+/**
+ * import new instruction
+ * 0 on failure
+ * */
+ae2f_extern ACLSPV_ABI_DECL ae2f_noexcept aclspv_extinst_t aclspv_add_extinst_from_ctx(
+		const h_aclspv_ctx_t ae2f_restrict	h_ctx,
+		const char* ae2f_restrict const		rd
 		);
 
 #endif
