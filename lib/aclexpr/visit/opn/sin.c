@@ -38,7 +38,6 @@ aclexpr_visit_lbl_t aclexpr_visit_op1_sin(
 
 	SPL = clang_getCursorSpelling(c_cur);
 	IS_SIN = !strcmp(SPL.data, "__builtin_sinf")
-		|| !strcmp(SPL.data, "sinf")
 		|| !strcmp(SPL.data, "__builtin_elementwise_sin");
 	clang_disposeString(SPL);
 

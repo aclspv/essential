@@ -5,9 +5,8 @@
 #include <aclexpr/visit/api.h>
 #include <aclspv.h>
 
-/** handles `__builtin_sinf` / `sinf` (scalar) and
- * `__builtin_elementwise_sin` (scalar or vector) as a one-operand Sin
- * expression.
+/** handles `__builtin_sinf` (scalar) and `__builtin_elementwise_sin`
+ * (scalar or vector) as a one-operand Sin expression.
  * */
 aclexpr_visit_lbl_t aclexpr_visit_op1_sin(
 		CXCursor				c_cur,

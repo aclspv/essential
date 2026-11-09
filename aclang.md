@@ -31,7 +31,7 @@ boolx4 band128(const v4i32 A, const v4i32 B) {
 }
 ```
 
-# AnnotationAttributes
+## AnnotationAttributes
 > Some compiler attributes are available for vulkan-specific behaviours.  
 > Many will be annotation attribute so seem as `__attribute__((annotate("<here>")))`  
 > arguments should be literal. it is not done by travelling ast.
@@ -442,6 +442,73 @@ void t12_entry_point_vertex(
     __attribute__((annotate("aclspv_bltin(42)")))
     int* gl_VertexIndex
 ) { return; }
+```
+
+# Builtin
+> Builtin expressions recognised while carving.  
+> Unlike [Attributes](#attributes), they are not annotations: they use ordinary call syntax (or a vector expression) and are emitted as SPIR-V instructions.
+
+## __builtin_sinf
+
+> `__builtin_sinf(x)`
+
+- emits `GLSL.std.450` `Sin` (instruction 13).
+- scalar only: operand and result are 32-bit floating point (`f32`).
+- the operand is cast to the result type before the call is emitted.
+- passing a vector is a clang type error, so this spelling never yields a vector.
+- `f64` (`__builtin_sin`) is not supported for now: the carve rejects every width other than 32-bit.
+- the `GLSL.std.450` import is emitted on first use.
+
+```c
+typedef float f32;
+
+void sin_scalar(f32* in, f32* out) {
+    *out = __builtin_sinf(*in);
+}
+```
+
+## __builtin_elementwise_sin
+
+> `__builtin_elementwise_sin(x)`
+
+- emits `GLSL.std.450` `Sin` (instruction 13), elementwise.
+- accepts a scalar or a vector; the result has the same shape with 32-bit floating point (`f32`) components.
+- the operand is cast to the result type before the call is emitted.
+- a component width other than 32-bit is rejected for now.
+- the `GLSL.std.450` import is emitted on first use.
+
+```c
+typedef float f32;
+typedef f32 __attribute__((ext_vector_type(4))) f32x4;
+
+void sin_vector(f32x4* in, f32x4* out) {
+    *out = __builtin_elementwise_sin(*in);
+}
+```
+
+## shufflevector
+
+> `__builtin_shufflevector(v1, v2, i0, i1, ...)`
+
+- emits `OpVectorShuffle`.
+- `v1` and `v2` must be vectors of the same component type.
+- the mask indexes the concatenation `v1 ++ v2`, so every `iN` must be a literal integer in `[0, 2 * |v1|)`.
+- the result length is the number of mask components; it may differ from the input length.
+- only `v1` and `v2` are evaluated: the mask is not part of the expression operand stream.
+- the result component count must equal the mask count, as `spirv-val` requires.
+
+```c
+typedef float f32;
+typedef f32 __attribute__((ext_vector_type(4))) f32x4;
+typedef f32 __attribute__((ext_vector_type(2))) f32x2;
+
+void gather(f32x4* a, f32x4* b, f32x4* out4, f32x2* out2) {
+    /** [a.x, b.y, a.z, b.w] */
+    *out4 = __builtin_shufflevector(*a, *b, 0, 5, 2, 7);
+
+    /** [a.y, b.z] */
+    *out2 = __builtin_shufflevector(*a, *b, 1, 6);
+}
 ```
 
 # Restriction
