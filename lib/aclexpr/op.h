@@ -42,9 +42,12 @@ enum ACLEXPR_OP_ {
 	/** bitwise not (`~x`): OpNot on the promoted integer type. */
 	ACLEXPR_OP1_BITNOT,
 
-	/** `__builtin_sinf` / `__builtin_elementwise_sin`:
-	 * GLSL.std.450 Sin (f32 scalar/vector). */
+	/** GLSL.std.450 unary float math:
+	 * `__builtin_{sin,cos,tan}f` (f32), `__builtin_{sin,cos,tan}f16`
+	 * (f16), and `__builtin_elementwise_sin` (f32 scalar/vector). */
 	ACLEXPR_OP1_SIN,
+	ACLEXPR_OP1_COS,
+	ACLEXPR_OP1_TAN,
 
 #if	__ACLSPV_MATH_NR
 	ACLEXPR_OP1_RSQRTF_NR,

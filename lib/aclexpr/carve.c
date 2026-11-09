@@ -5,7 +5,7 @@
 #include "./carve/op1/incr.h"
 #include "./carve/op1/memberread.h"
 #include "./carve/op1/subscript.h"
-#include "./carve/op1/sin.h"
+#include "./carve/op1/glslmath.h"
 #include "./carve/op1/not.h"
 #include "./carve/op3/cond.h"
 #if	__ACLSPV_MATH_NR
@@ -304,6 +304,26 @@ aclspv_bool_t aclexpr_carve(
 
 		case ACLEXPR_OP1_SIN:
 			return (aclspv_bool_t)ae2f_expected_not_strict(aclexpr_carve1_sin(
+						rdwr_data
+						, rdwr_prv_idval
+						, rdwr_prv_extra
+						, LST_SCALE_BUF
+						, LST_EXTRA
+						, RET_LITERAL
+						));
+
+		case ACLEXPR_OP1_COS:
+			return (aclspv_bool_t)ae2f_expected_not_strict(aclexpr_carve1_cos(
+						rdwr_data
+						, rdwr_prv_idval
+						, rdwr_prv_extra
+						, LST_SCALE_BUF
+						, LST_EXTRA
+						, RET_LITERAL
+						));
+
+		case ACLEXPR_OP1_TAN:
+			return (aclspv_bool_t)ae2f_expected_not_strict(aclexpr_carve1_tan(
 						rdwr_data
 						, rdwr_prv_idval
 						, rdwr_prv_extra

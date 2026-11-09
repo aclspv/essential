@@ -34,6 +34,8 @@ typedef struct {
 	unsigned	m_num_lor;
 	unsigned	m_num_extinst;
 	unsigned	m_num_sin;
+	unsigned	m_num_cos;
+	unsigned	m_num_tan;
 	unsigned	m_num_select;
 	unsigned	m_num_shuffle;
 	unsigned	m_num_lnot;
@@ -102,6 +104,8 @@ static int acltest_spirv_scan(
 	r->m_num_lor		= 0;
 	r->m_num_extinst	= 0;
 	r->m_num_sin		= 0;
+	r->m_num_cos		= 0;
+	r->m_num_tan		= 0;
 	r->m_num_select		= 0;
 	r->m_num_shuffle	= 0;
 	r->m_num_lnot		= 0;
@@ -163,9 +167,15 @@ static int acltest_spirv_scan(
 			case ACLTEST_SPV_OP_EXT_INST:
 				++r->m_num_extinst;
 				/** [op][type][result][set][instruction][operand...]
-				 * 13 = GLSL.std.450 Sin */
-				if(wc >= 6 && rd[i + 4] == (aclspv_wrd_t)13)
-					++r->m_num_sin;
+				 * 13 = Sin, 14 = Cos, 15 = Tan */
+				if(wc >= 6) {
+					switch(rd[i + 4]) {
+						case 13: ++r->m_num_sin; break;
+						case 14: ++r->m_num_cos; break;
+						case 15: ++r->m_num_tan; break;
+						default: break;
+					}
+				}
 				break;
 
 			case ACLTEST_SPV_OP_BRANCH:

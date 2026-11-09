@@ -28,7 +28,7 @@
 #include "./visit/op2/shift.h"
 #include "./visit/op2/comma.h"
 #include "./visit/op3/cond.h"
-#include "./visit/opn/sin.h"
+#include "./visit/op1/glslmath.h"
 #include "./visit/opn/shuffle.h"
 
 #include "./beforevisit.h"
@@ -52,7 +52,7 @@ enum {
 	OP1_NOT,
 	OP1_BITNOT,
 	OP3_COND,
-	OPN_SIN,
+	OP1_GLSL_MATH,
 	OPN_SHUFFLE,
 	OPN_INITLIST,
 	OP0_,
@@ -287,13 +287,13 @@ enum CXChildVisitResult aclexpr_visit(
 			cgjmp(
 					aclexpr_beforevisit(h_cur, rdwr_data, GETLASTEL_CMDCOUNTERSTCK(a).m_count_oprnd)
 					? cgcase(OP_FAIL)
-					: cgcase(OPN_SIN)
+					: cgcase(OP1_GLSL_MATH)
 			     );
 		}
 
-		cgcsdef(OPN_SIN):
+		cgcsdef(OP1_GLSL_MATH):
 		{
-			cgjmp(aclexpr_visit_op1_sin(
+			cgjmp(aclexpr_visit_op1_glsl_math(
 						h_cur, rdwr_data
 						, cgcase(OP_DONE)
 						, cgcase(OP_FAIL)

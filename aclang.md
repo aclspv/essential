@@ -448,41 +448,77 @@ void t12_entry_point_vertex(
 > Builtin expressions recognised while carving.  
 > Unlike [Attributes](#attributes), they are not annotations: they use ordinary call syntax (or a vector expression) and are emitted as SPIR-V instructions.
 
-## __builtin_sinf
+## __builtin_sinf / __builtin_cosf / __builtin_tanf
 
-> `__builtin_sinf(x)`
+> `__builtin_sinf(x)`  
+> `__builtin_cosf(x)`  
+> `__builtin_tanf(x)`
 
-- emits `GLSL.std.450` `Sin` (instruction 13).
+- emit `GLSL.std.450` `Sin` (instruction 13), `Cos` (14), and `Tan` (15).
 - scalar only: operand and result are 32-bit floating point (`f32`).
 - the operand is cast to the result type before the call is emitted.
-- passing a vector is a clang type error, so this spelling never yields a vector.
-- `f64` (`__builtin_sin`) is not supported for now: the carve rejects every width other than 32-bit.
+- passing a vector is a clang type error, so these spellings never yield a vector.
+- a scalar literal operand is folded on the host into an `OpConstant` instead of `OpExtInst`, because an extension instruction cannot appear in `OpSpecConstantOp`.
+- `f64` (`__builtin_sin`) is not supported for now.
+- the bare `sinf` / `cosf` / `tanf` names are not recognised; only the `__builtin_` spellings are.
 - the `GLSL.std.450` import is emitted on first use.
 
 ```c
 typedef float f32;
 
-void sin_scalar(f32* in, f32* out) {
+void f32_math(f32* in, f32* out) {
     *out = __builtin_sinf(*in);
+    *out = __builtin_cosf(*in);
+    *out = __builtin_tanf(*in);
+
+    /** folded: no OpExtInst is emitted */
+    *out = __builtin_sinf(0.5f);
 }
 ```
 
-## __builtin_elementwise_sin
+## __builtin_sinf16 / __builtin_cosf16 / __builtin_tanf16
 
-> `__builtin_elementwise_sin(x)`
+> `__builtin_sinf16(x)`  
+> `__builtin_cosf16(x)`  
+> `__builtin_tanf16(x)`
 
-- emits `GLSL.std.450` `Sin` (instruction 13), elementwise.
-- accepts a scalar or a vector; the result has the same shape with 32-bit floating point (`f32`) components.
+- emit `GLSL.std.450` `Sin` (instruction 13), `Cos` (14), and `Tan` (15).
+- scalar only: operand and result are 16-bit floating point (`_Float16`).
 - the operand is cast to the result type before the call is emitted.
-- a component width other than 32-bit is rejected for now.
+- the `Float16` capability is added by the type layer.
+- literal folding is not available for `f16` yet: a literal operand still goes through `OpExtInst`.
+- the `GLSL.std.450` import is emitted on first use.
+
+```c
+typedef _Float16 f16;
+
+void f16_math(f16* in, f16* out) {
+    *out = __builtin_sinf16(*in);
+    *out = __builtin_cosf16(*in);
+    *out = __builtin_tanf16(*in);
+}
+```
+
+## __builtin_elementwise_sin / __builtin_elementwise_cos / __builtin_elementwise_tan
+
+> `__builtin_elementwise_sin(x)`  
+> `__builtin_elementwise_cos(x)`  
+> `__builtin_elementwise_tan(x)`
+
+- emit `GLSL.std.450` `Sin` (instruction 13), `Cos` (14), and `Tan` (15), elementwise.
+- accept a scalar or a vector; the result has the same shape with 32-bit floating point (`f32`) components.
+- the operand is cast to the result type before the call is emitted.
+- a scalar `f32` literal folds exactly like the f32 family above.
 - the `GLSL.std.450` import is emitted on first use.
 
 ```c
 typedef float f32;
 typedef f32 __attribute__((ext_vector_type(4))) f32x4;
 
-void sin_vector(f32x4* in, f32x4* out) {
+void elementwise_math(f32x4* in, f32x4* out) {
     *out = __builtin_elementwise_sin(*in);
+    *out = __builtin_elementwise_cos(*in);
+    *out = __builtin_elementwise_tan(*in);
 }
 ```
 

@@ -329,6 +329,7 @@ aclspv_predef_switch(aclspv-common-essential	INTERFACE "ACLSPV_OPACC_IDX_MAX" 64
 aclspv_predef_switch(aclspv-aclmem	PUBLIC		"ACLMEMCPY" 0)
 aclspv_predef_switch(aclspv-aclmem	PUBLIC		"ACLMEMZERO" 0)
 aclspv_predef_switch(aclspv-aclexpr	PRIVATE		"ACLSPV_MATH_LITERAL"	1)
+aclspv_predef_switch(aclspv-aclexpr	PRIVATE		"ACLSPV_MATH_DEFUALT"	"ACLSPV_ID_F32")
 aclspv_predef_switch(aclspv-aclexpr	PRIVATE		"ACLSPV_MATH_NR" 0)	# not ready
 aclspv_predef_switch(aclspv-aclexpr	PRIVATE		"ACLSPV_MATH_NR_RSQRTF_MAGIC"	0x5f375a86)
 aclspv_predef_switch(aclspv-aclexpr	PRIVATE		"ACLSPV_MATH_NR_IT"		2)
