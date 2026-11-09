@@ -328,6 +328,7 @@ aclspv_predef_switch(aclspv-common-essential	INTERFACE "ACLSPV_ATOMIC_ID" 0)
 aclspv_predef_switch(aclspv-common-essential	INTERFACE "ACLSPV_OPACC_IDX_MAX" 64)
 aclspv_predef_switch(aclspv-aclmem	PUBLIC		"ACLMEMCPY" 0)
 aclspv_predef_switch(aclspv-aclmem	PUBLIC		"ACLMEMZERO" 0)
+aclspv_predef_switch(aclspv-aclexpr	PRIVATE		"ACLSPV_MATH_LITERAL"	1)
 aclspv_predef_switch(aclspv-aclexpr	PRIVATE		"ACLSPV_MATH_NR" 0)	# not ready
 aclspv_predef_switch(aclspv-aclexpr	PRIVATE		"ACLSPV_MATH_NR_RSQRTF_MAGIC"	0x5f375a86)
 aclspv_predef_switch(aclspv-aclexpr	PRIVATE		"ACLSPV_MATH_NR_IT"		2)
@@ -341,6 +342,13 @@ message(STATUS ""
 	"\taclspv_example: ${aclspv_example}\n"
 	"\taclspv_example_vk: ${aclspv_example_vk}"
 	)
+
+if(${ACLSPV_MATH_LITERAL})
+	find_library(MATH_LIBRARY m)
+	if(MATH_LIBRARY)
+		target_link_libraries(aclspv-aclexpr PRIVATE ${MATH_LIBRARY})
+	endif()
+endif()
 
 if(${aclspv_example})
 	add_subdirectory(./example/)
