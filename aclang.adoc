@@ -1,26 +1,3 @@
-= aclang
-:lang: ko
-:idprefix:
-:idseparator: -
-:note-caption: 노트
-:tip-caption: 힌트
-:important-caption: 중요
-:caution-caption: 주의
-:warning-caption: 경고
-:toc-title: 차례
-:table-caption: 표
-:figure-caption: 그림
-:example-caption: 예시
-:appendix-caption: 부록
-:version-label: 버전
-:untitled-label: 익명
-:last-update-label: 마지막 업데이트
-
-// Asciidoctor ships Korean labels as data/locale/attributes-ko.adoc; the
-// IANA subtag is `ko`. There is no `ko-KR` locale file. The labels above are
-// inlined from that file so this document renders Korean without the extra
-// `include::locale/attributes.adoc[]`.
-
 [quote]
 ____
 `aclang`, annotated C-family language parses subset of clang ast. +
