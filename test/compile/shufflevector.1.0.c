@@ -13,23 +13,25 @@
  * the mask length, not the operands), a nested shuffle as an operand, and a
  * shuffle feeding a vector arithmetic op.
  * */
-static const char s_src_shufflevector[] =
-"typedef float f32;\n"
-"typedef f32 __attribute__((ext_vector_type(4))) f32x4;\n"
-"typedef f32 __attribute__((ext_vector_type(2))) f32x2;\n"
-"__attribute__((annotate(\"aclspv_execmodel(5)\")))\n"
-"__attribute__((annotate(\"aclspv_wrkgroup_size(1,1,1)\")))\n"
-"void t(\n"
-"    __attribute__((annotate(\"aclspv_storage_class(1)\"))) f32x4* a,\n"
-"    __attribute__((annotate(\"aclspv_storage_class(1)\"))) f32x4* b,\n"
-"    __attribute__((annotate(\"aclspv_storage_class(3)\"))) f32x4* out4,\n"
-"    __attribute__((annotate(\"aclspv_storage_class(3)\"))) f32x2* out2\n"
-") {\n"
-"    *out4 = __builtin_shufflevector(*a, *b, 0, 5, 2, 7);\n"
-"    *out4 = __builtin_shufflevector(__builtin_shufflevector(*a, *b, 0, 5, 2, 7), *a, 1, 6, 2, 0);\n"
-"    *out4 = __builtin_shufflevector(*a, *b, 0, 5, 2, 7) + *a;\n"
-"    *out2 = __builtin_shufflevector(*a, *b, 1, 6);\n"
-"}\n";
+static const char* const s_src_shufflevector_lines[] = {
+"typedef float f32;\n",
+"typedef f32 __attribute__((ext_vector_type(4))) f32x4;\n",
+"typedef f32 __attribute__((ext_vector_type(2))) f32x2;\n",
+"__attribute__((annotate(\"aclspv_execmodel(5)\")))\n",
+"__attribute__((annotate(\"aclspv_wrkgroup_size(1,1,1)\")))\n",
+"void t(\n",
+"    __attribute__((annotate(\"aclspv_storage_class(1)\"))) f32x4* a,\n",
+"    __attribute__((annotate(\"aclspv_storage_class(1)\"))) f32x4* b,\n",
+"    __attribute__((annotate(\"aclspv_storage_class(3)\"))) f32x4* out4,\n",
+"    __attribute__((annotate(\"aclspv_storage_class(3)\"))) f32x2* out2\n",
+") {\n",
+"    *out4 = __builtin_shufflevector(*a, *b, 0, 5, 2, 7);\n",
+"    *out4 = __builtin_shufflevector(__builtin_shufflevector(*a, *b, 0, 5, 2, 7), *a, 1, 6, 2, 0);\n",
+"    *out4 = __builtin_shufflevector(*a, *b, 0, 5, 2, 7) + *a;\n",
+"    *out2 = __builtin_shufflevector(*a, *b, 1, 6);\n",
+"}\n",
+};
+static char s_src_shufflevector[4096];
 
 int main(void);
 
@@ -42,10 +44,12 @@ int main(void) {
 	acltest_spirv_stats	stats;
 
 	acltestcfg();
+	acltest_concat(s_src_shufflevector, s_src_shufflevector_lines,
+			(unsigned)(sizeof(s_src_shufflevector_lines) / sizeof(s_src_shufflevector_lines[0])));
 
 	files[0].Contents	= s_src_shufflevector;
 	files[0].Filename	= "main.c";
-	files[0].Length		= sizeof(s_src_shufflevector) - 1;
+	files[0].Length		= (unsigned long)strlen(s_src_shufflevector);
 
 	files[1].Contents	= s_oclbase;
 	files[1].Filename	= "opencl-c-base.h";

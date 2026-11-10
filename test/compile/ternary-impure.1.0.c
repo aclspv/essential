@@ -14,21 +14,23 @@
  * wrapper cursor re-enters at the same operand index), a pure literal arm
  * against an impure one, and a nested ternary in the true arm.
  * */
-static const char s_src_ternary_impure[] =
-"typedef int i32;\n"
-"__attribute__((annotate(\"aclspv_execmodel(5)\")))\n"
-"__attribute__((annotate(\"aclspv_wrkgroup_size(1,1,1)\")))\n"
-"void t(\n"
-"    __attribute__((annotate(\"aclspv_storage_class(1)\"))) i32* in,\n"
-"    __attribute__((annotate(\"aclspv_storage_class(3)\"))) i32* x,\n"
-"    __attribute__((annotate(\"aclspv_storage_class(3)\"))) i32* y,\n"
-"    __attribute__((annotate(\"aclspv_storage_class(3)\"))) i32* z,\n"
-"    __attribute__((annotate(\"aclspv_storage_class(3)\"))) i32* out\n"
-") {\n"
-"    *out = *in ? ((*x = 1)) : ((*y = 2));\n"
-"    *out = *in ? 3 : (*y = 2);\n"
-"    *out = *in ? (*in ? (*x = 1) : (*y = 2)) : (*z = 3);\n"
-"}\n";
+static const char* const s_src_ternary_impure_lines[] = {
+"typedef int i32;\n",
+"__attribute__((annotate(\"aclspv_execmodel(5)\")))\n",
+"__attribute__((annotate(\"aclspv_wrkgroup_size(1,1,1)\")))\n",
+"void t(\n",
+"    __attribute__((annotate(\"aclspv_storage_class(1)\"))) i32* in,\n",
+"    __attribute__((annotate(\"aclspv_storage_class(3)\"))) i32* x,\n",
+"    __attribute__((annotate(\"aclspv_storage_class(3)\"))) i32* y,\n",
+"    __attribute__((annotate(\"aclspv_storage_class(3)\"))) i32* z,\n",
+"    __attribute__((annotate(\"aclspv_storage_class(3)\"))) i32* out\n",
+") {\n",
+"    *out = *in ? ((*x = 1)) : ((*y = 2));\n",
+"    *out = *in ? 3 : (*y = 2);\n",
+"    *out = *in ? (*in ? (*x = 1) : (*y = 2)) : (*z = 3);\n",
+"}\n",
+};
+static char s_src_ternary_impure[4096];
 
 int main(void);
 
@@ -41,10 +43,12 @@ int main(void) {
 	acltest_spirv_stats	stats;
 
 	acltestcfg();
+	acltest_concat(s_src_ternary_impure, s_src_ternary_impure_lines,
+			(unsigned)(sizeof(s_src_ternary_impure_lines) / sizeof(s_src_ternary_impure_lines[0])));
 
 	files[0].Contents	= s_src_ternary_impure;
 	files[0].Filename	= "main.c";
-	files[0].Length		= sizeof(s_src_ternary_impure) - 1;
+	files[0].Length		= (unsigned long)strlen(s_src_ternary_impure);
 
 	files[1].Contents	= s_oclbase;
 	files[1].Filename	= "opencl-c-base.h";

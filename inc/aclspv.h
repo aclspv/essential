@@ -620,7 +620,7 @@ ae2f_extern ACLSPV_ABI_DECL ae2f_ccpure ae2f_noexcept aclspv_extinst_t aclspv_ch
  * 0 on failure
  * */
 ae2f_extern ACLSPV_ABI_DECL ae2f_noexcept aclspv_extinst_t aclspv_add_extinst_from_ctx(
-		const h_aclspv_ctx_t ae2f_restrict	h_ctx,
+		const h_aclspv_ctx_t h_ctx,
 		const char* ae2f_restrict const		rd
 		);
 

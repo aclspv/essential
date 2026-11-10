@@ -52,6 +52,23 @@ static char s_oclbase[
 
 #include <string.h>
 
+/** concatenate short literals into `rd_dst`.
+ *
+ * strict C90 only guarantees 509 characters per string literal, so shader
+ * sources longer than that are assembled from an array of shorter lines at
+ * runtime instead of one oversized literal.
+ * */
+ae2f_inline_f static void acltest_concat(
+		char* ae2f_restrict	rd_dst,
+		const char* const*	rd_lines,
+		unsigned		c_num
+		) {
+	unsigned i;
+	rd_dst[0] = '\0';
+	for(i = 0; i < c_num; ++i)
+		strcat(rd_dst, rd_lines[i]);
+}
+
 static void acltestcfg(void) {
 	strcpy(s_src0, SRC0_0);
 	strcat(s_src0, SRC0_1);

@@ -44,7 +44,7 @@ ACLSPV_ABI_IMPL ae2f_ccpure ae2f_noexcept aclspv_bool_t aclspv_chck_extension_fr
 }}
 
 ACLSPV_ABI_IMPL ae2f_ccpure ae2f_noexcept aclspv_bool_t aclspv_add_extension_from_ctx(
-		const h_aclspv_ctx_t ae2f_restrict	h_ctx,
+		const h_aclspv_ctx_t	h_ctx,
 		const char* ae2f_restrict const		rd
 		) { 
 	aclspv_wrd_t		I	= 0;

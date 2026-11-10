@@ -13,23 +13,25 @@
  *           for float4 it is int4 as well (Clang's ext_vector rule).
  *   (a,b)-> comma: vector-typed result is the right operand.
  * */
-static const char s_src_vector_unary[] =
-"typedef int i4 __attribute__((ext_vector_type(4)));\n"
-"typedef float f4 __attribute__((ext_vector_type(4)));\n"
-"__attribute__((annotate(\"aclspv_execmodel(5)\")))\n"
-"__attribute__((annotate(\"aclspv_wrkgroup_size(1,1,1)\")))\n"
-"void t(\n"
-"    __attribute__((annotate(\"aclspv_storage_class(1)\"))) i4* in,\n"
-"    __attribute__((annotate(\"aclspv_storage_class(1)\"))) i4* b,\n"
-"    __attribute__((annotate(\"aclspv_storage_class(1)\"))) f4* fin,\n"
-"    __attribute__((annotate(\"aclspv_storage_class(3)\"))) i4* out,\n"
-"    __attribute__((annotate(\"aclspv_storage_class(3)\"))) i4* fneg\n"
-") {\n"
-"    *out = ~*in;\n"
-"    *out = !*in;\n"
-"    *fneg = !*fin;\n"
-"    *out = (*in, *b);\n"
-"}\n";
+static const char* const s_src_vector_unary_lines[] = {
+"typedef int i4 __attribute__((ext_vector_type(4)));\n",
+"typedef float f4 __attribute__((ext_vector_type(4)));\n",
+"__attribute__((annotate(\"aclspv_execmodel(5)\")))\n",
+"__attribute__((annotate(\"aclspv_wrkgroup_size(1,1,1)\")))\n",
+"void t(\n",
+"    __attribute__((annotate(\"aclspv_storage_class(1)\"))) i4* in,\n",
+"    __attribute__((annotate(\"aclspv_storage_class(1)\"))) i4* b,\n",
+"    __attribute__((annotate(\"aclspv_storage_class(1)\"))) f4* fin,\n",
+"    __attribute__((annotate(\"aclspv_storage_class(3)\"))) i4* out,\n",
+"    __attribute__((annotate(\"aclspv_storage_class(3)\"))) i4* fneg\n",
+") {\n",
+"    *out = ~*in;\n",
+"    *out = !*in;\n",
+"    *fneg = !*fin;\n",
+"    *out = (*in, *b);\n",
+"}\n",
+};
+static char s_src_vector_unary[4096];
 
 int main(void);
 
@@ -42,10 +44,12 @@ int main(void) {
 	acltest_spirv_stats	stats;
 
 	acltestcfg();
+	acltest_concat(s_src_vector_unary, s_src_vector_unary_lines,
+			(unsigned)(sizeof(s_src_vector_unary_lines) / sizeof(s_src_vector_unary_lines[0])));
 
 	files[0].Contents	= s_src_vector_unary;
 	files[0].Filename	= "main.c";
-	files[0].Length		= sizeof(s_src_vector_unary) - 1;
+	files[0].Length		= (unsigned long)strlen(s_src_vector_unary);
 
 	files[1].Contents	= s_oclbase;
 	files[1].Filename	= "opencl-c-base.h";
