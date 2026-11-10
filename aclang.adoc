@@ -51,17 +51,17 @@ ____
 
 ++++
 <div class="listingblock" style="background-color:#1c171b;color:#d8ccd3;padding:0.8em 1em;overflow-x:auto;border-radius:4px">
-<pre style="font-family:'Source Code Pro','DejaVu Sans Mono','Courier New',monospace;font-size:14px;line-height:1.3;margin:0;background:transparent;color:inherit"><span style="color:#d0aa68;font-weight:bold">typedef</span> <span style="color:#d0aa68;font-weight:bold">int</span> i32;
-<span style="color:#d0aa68;font-weight:bold">typedef</span> i32 __attribute__((ext_vector_type(<span style="color:#d99462">4</span>))) v4i32;
-<span style="color:#d0aa68;font-weight:bold">typedef</span> <span style="color:#d0aa68;font-weight:bold">_Bool</span> __attribute__((ext_vector_type(<span style="color:#d99462">4</span>))) boolx4;
+<pre style="font-family:'Source Code Pro','DejaVu Sans Mono','Courier New',monospace;font-size:14px;line-height:1.3;margin:0;background:transparent;color:inherit"><span style="color:#c47791;font-weight:bold">typedef</span> <span style="color:#d0aa68">int</span> <span style="color:#d0aa68;font-weight:bold">i32</span><span style="color:#857780">;</span>
+<span style="color:#c47791;font-weight:bold">typedef</span> <span style="color:#d0aa68;font-weight:bold">i32</span> <span style="color:#d0aa68;font-weight:bold">__attribute__</span><span style="color:#857780">((</span><span style="color:#d8ccd3">ext_vector_type</span><span style="color:#857780">(</span><span style="color:#d99462">4</span><span style="color:#857780">)))</span> <span style="color:#d8ccd3">v4i32</span><span style="color:#857780">;</span>
+<span style="color:#c47791;font-weight:bold">typedef</span> <span style="color:#d0aa68;font-weight:bold">_Bool</span> <span style="color:#d0aa68;font-weight:bold">__attribute__</span><span style="color:#857780">((</span><span style="color:#d8ccd3">ext_vector_type</span><span style="color:#857780">(</span><span style="color:#d99462">4</span><span style="color:#857780">)))</span> <span style="color:#d8ccd3">boolx4</span><span style="color:#857780">;</span>
 
-boolx4 band128(<span style="color:#d0aa68">const</span> v4i32 A, <span style="color:#d0aa68">const</span> v4i32 B) {
-    v4i32 Z;
-    Z[<span style="color:#d99462">0</span>] = <span style="color:#d99462">0</span>; Z[<span style="color:#d99462">1</span>] = <span style="color:#d99462">0</span>;
-    Z[<span style="color:#d99462">2</span>] = <span style="color:#d99462">0</span>; Z[<span style="color:#d99462">3</span>] = <span style="color:#d99462">0</span>;
+<span style="color:#d0aa68;font-weight:bold">boolx4</span> <span style="color:#7ba9c4;font-weight:bold">band128</span><span style="color:#857780">(</span><span style="color:#c47791;font-weight:bold">const</span> <span style="color:#d0aa68;font-weight:bold">v4i32</span> <span style="color:#a99ba3;font-style:italic">A</span><span style="color:#857780">,</span> <span style="color:#c47791;font-weight:bold">const</span> <span style="color:#d0aa68;font-weight:bold">v4i32</span> <span style="color:#a99ba3;font-style:italic">B</span><span style="color:#857780">)</span> <span style="color:#857780">{</span>
+    <span style="color:#d0aa68;font-weight:bold">v4i32</span> <span style="color:#d8ccd3">Z</span><span style="color:#857780">;</span>
+    <span style="color:#d8ccd3">Z</span><span style="color:#857780">[</span><span style="color:#d99462">0</span><span style="color:#857780">]</span> <span style="color:#6fa6a8">=</span> <span style="color:#d99462">0</span><span style="color:#857780">;</span> <span style="color:#d8ccd3">Z</span><span style="color:#857780">[</span><span style="color:#d99462">1</span><span style="color:#857780">]</span> <span style="color:#6fa6a8">=</span> <span style="color:#d99462">0</span><span style="color:#857780">;</span>
+    <span style="color:#d8ccd3">Z</span><span style="color:#857780">[</span><span style="color:#d99462">2</span><span style="color:#857780">]</span> <span style="color:#6fa6a8">=</span> <span style="color:#d99462">0</span><span style="color:#857780">;</span> <span style="color:#d8ccd3">Z</span><span style="color:#857780">[</span><span style="color:#d99462">3</span><span style="color:#857780">]</span> <span style="color:#6fa6a8">=</span> <span style="color:#d99462">0</span><span style="color:#857780">;</span>
 
-    <span style="color:#c47791;font-weight:bold">return</span> A &amp; B != Z;  
-}</pre>
+    <span style="color:#c47791;font-weight:bold">return</span> <span style="color:#d8ccd3">A</span> <span style="color:#6fa6a8">&amp;</span> <span style="color:#d8ccd3">B</span> <span style="color:#6fa6a8">!=</span> <span style="color:#d8ccd3">Z</span><span style="color:#857780">;</span>  
+<span style="color:#857780">}</span></pre>
 </div>
 ++++
 
@@ -102,23 +102,23 @@ ____
 ++++
 <div class="listingblock" style="background-color:#1c171b;color:#d8ccd3;padding:0.8em 1em;overflow-x:auto;border-radius:4px">
 <pre style="font-family:'Source Code Pro','DejaVu Sans Mono','Courier New',monospace;font-size:14px;line-height:1.3;margin:0;background:transparent;color:inherit">
-<span style="color:#d0aa68;font-weight:bold">typedef</span> <span style="color:#d0aa68;font-weight:bold">int</span> i32;
+<span style="color:#c47791;font-weight:bold">typedef</span> <span style="color:#d0aa68">int</span> <span style="color:#d0aa68;font-weight:bold">i32</span><span style="color:#857780">;</span>
 
 <span style="color:#a99ba3;font-style:italic">/** </span>
 <span style="color:#a99ba3;font-style:italic"> * r's size will be determined by spec constant with id 0.</span>
 <span style="color:#a99ba3;font-style:italic"> * without constant specified in certain type, spec constant will be defined with a default of 3.</span>
 <span style="color:#a99ba3;font-style:italic"> * */</span>
-i32 sum(<span style="color:#d0aa68">const</span> i32 rd[<span style="color:#d99462">3</span>] __attribute__((annotate(<span style="color:#8fbf91">"aclspv_specid(0)"</span>)))) {
+<span style="color:#d0aa68;font-weight:bold">i32</span> <span style="color:#7ba9c4;font-weight:bold">sum</span><span style="color:#857780">(</span><span style="color:#c47791;font-weight:bold">const</span> <span style="color:#d0aa68;font-weight:bold">i32</span> <span style="color:#d8ccd3;font-style:italic">rd</span><span style="color:#857780;font-style:italic">[</span><span style="color:#d99462;font-style:italic">3</span><span style="color:#857780;font-style:italic">]</span> <span style="color:#c58ba4">__attribute__</span><span style="color:#857780">((</span><span style="color:#7ba9c4">annotate</span><span style="color:#857780">(</span><span style="color:#8fbf91">"aclspv_specid(0)"</span><span style="color:#857780">))))</span> <span style="color:#857780">{</span>
 
     <span style="color:#a99ba3;font-style:italic">/** since specid is specified upon, no specifying default value is required. */</span>
-    i32 c __attribute__((annotate(<span style="color:#8fbf91">"aclspv_specid(0)"</span>)));
-    i32 ret = <span style="color:#d99462">0</span>;
+    <span style="color:#d0aa68;font-weight:bold">i32</span> <span style="color:#d8ccd3">c</span> <span style="color:#c58ba4">__attribute__</span><span style="color:#857780">((</span><span style="color:#7ba9c4">annotate</span><span style="color:#857780">(</span><span style="color:#8fbf91">"aclspv_specid(0)"</span><span style="color:#857780">)));</span>
+    <span style="color:#d0aa68;font-weight:bold">i32</span> <span style="color:#d8ccd3">ret</span> <span style="color:#6fa6a8">=</span> <span style="color:#d99462">0</span><span style="color:#857780">;</span>
     
-    <span style="color:#c47791;font-weight:bold">for</span>(i32 i = <span style="color:#d99462">0</span>; i &lt; c; ++i)
-        ret += rd[i];
+    <span style="color:#c47791;font-weight:bold">for</span><span style="color:#857780">(</span><span style="color:#d0aa68;font-weight:bold">i32</span> <span style="color:#d8ccd3">i</span> <span style="color:#6fa6a8">=</span> <span style="color:#d99462">0</span><span style="color:#857780">;</span> <span style="color:#d8ccd3">i</span> <span style="color:#6fa6a8">&lt;</span> <span style="color:#d8ccd3">c</span><span style="color:#857780">;</span> <span style="color:#6fa6a8">++</span><span style="color:#d8ccd3">i</span><span style="color:#857780">)</span>
+        <span style="color:#d8ccd3">ret</span> <span style="color:#6fa6a8">+=</span> <span style="color:#d8ccd3">rd</span><span style="color:#857780">[</span><span style="color:#d8ccd3">i</span><span style="color:#857780">];</span>
 
-    <span style="color:#c47791;font-weight:bold">return</span> ret;
-}
+    <span style="color:#c47791;font-weight:bold">return</span> <span style="color:#d8ccd3">ret</span><span style="color:#857780">;</span>
+<span style="color:#857780">}</span>
 </pre>
 </div>
 ++++
@@ -162,11 +162,11 @@ for local size might be resolved specifically. see below:
 <span style="color:#a99ba3;font-style:italic"> * o1: 3</span>
 <span style="color:#a99ba3;font-style:italic"> * o2: specified constant in id 2</span>
 <span style="color:#a99ba3;font-style:italic"> */</span>
-__attribute__((annotate(<span style="color:#8fbf91">"aclspv_execmode3(17, &amp;1, #3, &amp;2)"</span>)))
-__attribute__((annotate(<span style="color:#8fbf91">"aclspv_execmodel(5)"</span>)))            <span style="color:#a99ba3;font-style:italic">/** GLCompute */</span>
-<span style="color:#d0aa68;font-weight:bold">void</span> entry_point_glcompute(<span style="color:#d0aa68;font-weight:bold">void</span>) {
-    <span style="color:#c47791;font-weight:bold">return</span>;
-}
+<span style="color:#c58ba4">__attribute__</span><span style="color:#857780">((</span><span style="color:#7ba9c4">annotate</span><span style="color:#857780">(</span><span style="color:#8fbf91">"aclspv_execmode3(17, &amp;1, #3, &amp;2)"</span><span style="color:#857780">)))</span>
+<span style="color:#c58ba4">__attribute__</span><span style="color:#857780">((</span><span style="color:#7ba9c4">annotate</span><span style="color:#857780">(</span><span style="color:#8fbf91">"aclspv_execmodel(5)"</span><span style="color:#857780">)))</span>            <span style="color:#a99ba3;font-style:italic">/** GLCompute */</span>
+<span style="color:#d0aa68">void</span> <span style="color:#7ba9c4;font-weight:bold">entry_point_glcompute</span><span style="color:#857780">(</span><span style="color:#d0aa68">void</span><span style="color:#857780">)</span> <span style="color:#857780">{</span>
+    <span style="color:#c47791;font-weight:bold">return</span><span style="color:#857780">;</span>
+<span style="color:#857780">}</span>
 </pre>
 </div>
 ++++
@@ -184,17 +184,17 @@ __attribute__((annotate(<span style="color:#8fbf91">"aclspv_execmodel(5)"</span>
 <div class="listingblock" style="background-color:#1c171b;color:#d8ccd3;padding:0.8em 1em;overflow-x:auto;border-radius:4px">
 <pre style="font-family:'Source Code Pro','DejaVu Sans Mono','Courier New',monospace;font-size:14px;line-height:1.3;margin:0;background:transparent;color:inherit">
 <span style="color:#a99ba3;font-style:italic">/** this is a normal function */</span>
-<span style="color:#d0aa68;font-weight:bold">void</span> normal_function(<span style="color:#d0aa68;font-weight:bold">void</span>) {
-    <span style="color:#c47791;font-weight:bold">return</span>;
-}
+<span style="color:#d0aa68">void</span> <span style="color:#7ba9c4;font-weight:bold">normal_function</span><span style="color:#857780">(</span><span style="color:#d0aa68">void</span><span style="color:#857780">)</span> <span style="color:#857780">{</span>
+    <span style="color:#c47791;font-weight:bold">return</span><span style="color:#857780">;</span>
+<span style="color:#857780">}</span>
 
 <span style="color:#a99ba3;font-style:italic">/**</span>
 <span style="color:#a99ba3;font-style:italic"> * this is an entry point of vertex. (0 is a number for vertex execution model)</span>
 <span style="color:#a99ba3;font-style:italic"> */</span>
-__attribute__((annotate(<span style="color:#8fbf91">"aclspv_execmodel(0)"</span>)))
-<span style="color:#d0aa68;font-weight:bold">void</span> entry_point_vertex(<span style="color:#d0aa68;font-weight:bold">void</span>) {
-    <span style="color:#c47791;font-weight:bold">return</span>;
-}
+<span style="color:#c58ba4">__attribute__</span><span style="color:#857780">((</span><span style="color:#7ba9c4">annotate</span><span style="color:#857780">(</span><span style="color:#8fbf91">"aclspv_execmodel(0)"</span><span style="color:#857780">)))</span>
+<span style="color:#d0aa68">void</span> <span style="color:#7ba9c4;font-weight:bold">entry_point_vertex</span><span style="color:#857780">(</span><span style="color:#d0aa68">void</span><span style="color:#857780">)</span> <span style="color:#857780">{</span>
+    <span style="color:#c47791;font-weight:bold">return</span><span style="color:#857780">;</span>
+<span style="color:#857780">}</span>
 </pre>
 </div>
 ++++
@@ -229,13 +229,13 @@ ____
 ++++
 <div class="listingblock" style="background-color:#1c171b;color:#d8ccd3;padding:0.8em 1em;overflow-x:auto;border-radius:4px">
 <pre style="font-family:'Source Code Pro','DejaVu Sans Mono','Courier New',monospace;font-size:14px;line-height:1.3;margin:0;background:transparent;color:inherit">
-__attribute__((annotate(<span style="color:#8fbf91">"aclspv_execmodel(0)"</span>)))
-<span style="color:#d0aa68;font-weight:bold">void</span> entry_point_vertex(
-    <span style="color:#d0aa68;font-weight:bold">int</span> pc_int <span style="color:#a99ba3;font-style:italic">/** becomes a push constant's element. follows std430 memory layout. */</span>,
+<span style="color:#c58ba4">__attribute__</span><span style="color:#857780">((</span><span style="color:#7ba9c4">annotate</span><span style="color:#857780">(</span><span style="color:#8fbf91">"aclspv_execmodel(0)"</span><span style="color:#857780">)))</span>
+<span style="color:#d0aa68">void</span> <span style="color:#7ba9c4;font-weight:bold">entry_point_vertex</span><span style="color:#857780">(</span>
+    <span style="color:#d0aa68">int</span> <span style="color:#a99ba3;font-style:italic">pc_int</span> <span style="color:#a99ba3;font-style:italic">/** becomes a push constant's element. follows std430 memory layout. */</span><span style="color:#857780">,</span>
 
     <span style="color:#a99ba3;font-style:italic">/*** 3: output */</span>
-    __attribute__((annotate(<span style="color:#8fbf91">"aclspv_storage_class(3)"</span>)))
-    <span style="color:#d0aa68;font-weight:bold">int</span>* out_int,
+    <span style="color:#c58ba4">__attribute__</span><span style="color:#857780">((</span><span style="color:#7ba9c4">annotate</span><span style="color:#857780">(</span><span style="color:#8fbf91">"aclspv_storage_class(3)"</span><span style="color:#857780">)))</span>
+    <span style="color:#d0aa68">int</span><span style="color:#6fa6a8;font-style:italic">*</span><span style="color:#a99ba3;font-style:italic"> </span><span style="color:#d8ccd3;font-style:italic">out_int</span><span style="color:#857780">,</span>
 
     <span style="color:#a99ba3;font-style:italic">/*** </span>
 <span style="color:#a99ba3;font-style:italic">     * 12: storage buffer</span>
@@ -243,9 +243,9 @@ __attribute__((annotate(<span style="color:#8fbf91">"aclspv_execmodel(0)"</span>
 <span style="color:#a99ba3;font-style:italic">     * */</span>
 
     <span style="color:#a99ba3;font-style:italic">/** bind number 0 **/</span>
-    __attribute__((annotate(<span style="color:#8fbf91">"aclspv_storage_class(12)"</span>))) <span style="color:#d0aa68;font-weight:bold">int</span>* sbo_int_struct <span style="color:#a99ba3;font-style:italic">/** struct { int a; } */</span>,
+    <span style="color:#c58ba4">__attribute__</span><span style="color:#857780">((</span><span style="color:#7ba9c4">annotate</span><span style="color:#857780">(</span><span style="color:#8fbf91">"aclspv_storage_class(12)"</span><span style="color:#857780">)))</span> <span style="color:#d0aa68">int</span><span style="color:#6fa6a8;font-style:italic">*</span><span style="color:#a99ba3;font-style:italic"> </span><span style="color:#d8ccd3;font-style:italic">sbo_int_struct</span> <span style="color:#a99ba3;font-style:italic">/** struct { int a; } */</span><span style="color:#857780">,</span>
     <span style="color:#a99ba3;font-style:italic">/** bind number 1 **/</span>
-    __attribute__((annotate(<span style="color:#8fbf91">"aclspv_storage_class(12)"</span>))) <span style="color:#d0aa68;font-weight:bold">struct</span> <span style="color:#eef1f8;background-color:#590008">{</span><span style="color:#d0aa68;font-weight:bold">int</span> c; <span style="color:#eef1f8;background-color:#590008">}</span>* sbo_struct <span style="color:#a99ba3;font-style:italic">/** struct { int c; }  } */</span>,
+    <span style="color:#c58ba4">__attribute__</span><span style="color:#857780">((</span><span style="color:#7ba9c4">annotate</span><span style="color:#857780">(</span><span style="color:#8fbf91">"aclspv_storage_class(12)"</span><span style="color:#857780">)))</span> <span style="color:#c47791;font-weight:bold">struct</span> <span style="color:#857780">{</span><span style="color:#d0aa68">int</span> c<span style="color:#857780">;</span> <span style="color:#857780">}</span><span style="color:#6fa6a8;font-style:italic">*</span><span style="color:#a99ba3;font-style:italic"> </span><span style="color:#d8ccd3;font-style:italic">sbo_struct</span> <span style="color:#a99ba3;font-style:italic">/** struct { int c; }  } */</span><span style="color:#857780">,</span>
 
     <span style="color:#a99ba3;font-style:italic">/***</span>
 <span style="color:#a99ba3;font-style:italic">     * 2: uniform buffer</span>
@@ -253,20 +253,20 @@ __attribute__((annotate(<span style="color:#8fbf91">"aclspv_execmodel(0)"</span>
 <span style="color:#a99ba3;font-style:italic">     */</span>
 
     <span style="color:#a99ba3;font-style:italic">/** bind number 2 **/</span>
-    __attribute__((annotate(<span style="color:#8fbf91">"aclspv_storage_class(2)"</span>))) <span style="color:#d0aa68;font-weight:bold">int</span>* ubo_int,
+    <span style="color:#c58ba4">__attribute__</span><span style="color:#857780">((</span><span style="color:#7ba9c4">annotate</span><span style="color:#857780">(</span><span style="color:#8fbf91">"aclspv_storage_class(2)"</span><span style="color:#857780">)))</span> <span style="color:#d0aa68">int</span><span style="color:#6fa6a8;font-style:italic">*</span><span style="color:#a99ba3;font-style:italic"> </span><span style="color:#d8ccd3;font-style:italic">ubo_int</span><span style="color:#857780">,</span>
     
     <span style="color:#a99ba3;font-style:italic">/** bind number 3 **/</span>
-    __attribute__((annotate(<span style="color:#8fbf91">"aclspv_layout(1)"</span>)))
-    __attribute__((annotate(<span style="color:#8fbf91">"aclspv_storage_class(2)"</span>)))
-    <span style="color:#d0aa68;font-weight:bold">struct</span> <span style="color:#eef1f8;background-color:#590008">{</span> <span style="color:#d0aa68;font-weight:bold">int</span> c; <span style="color:#eef1f8;background-color:#590008">}</span>* ubo_struct,
+    <span style="color:#c58ba4">__attribute__</span><span style="color:#857780">((</span><span style="color:#7ba9c4">annotate</span><span style="color:#857780">(</span><span style="color:#8fbf91">"aclspv_layout(1)"</span><span style="color:#857780">)))</span>
+    <span style="color:#c58ba4">__attribute__</span><span style="color:#857780">((</span><span style="color:#7ba9c4">annotate</span><span style="color:#857780">(</span><span style="color:#8fbf91">"aclspv_storage_class(2)"</span><span style="color:#857780">)))</span>
+    <span style="color:#c47791;font-weight:bold">struct</span> <span style="color:#857780">{</span> <span style="color:#d0aa68">int</span> c<span style="color:#857780">;</span> <span style="color:#857780">}</span><span style="color:#6fa6a8;font-style:italic">*</span><span style="color:#a99ba3;font-style:italic"> </span><span style="color:#d8ccd3;font-style:italic">ubo_struct</span><span style="color:#857780">,</span>
 
     <span style="color:#a99ba3;font-style:italic">/*** 4: workgroup */</span> 
-    __attribute__((annotate(<span style="color:#8fbf91">"aclspv_storage_class(4)"</span>))) <span style="color:#d0aa68;font-weight:bold">int</span>* work_int,
-    __attribute__((annotate(<span style="color:#8fbf91">"aclspv_storage_class(4)"</span>))) <span style="color:#d0aa68;font-weight:bold">int</span> work_i32_15[<span style="color:#d99462">15</span>],
-    __attribute__((annotate(<span style="color:#8fbf91">"aclspv_storage_class(4)"</span>))) <span style="color:#d0aa68;font-weight:bold">int</span> work_int_arr_spec[] __attribute__((annotate(<span style="color:#8fbf91">"aclspv_specid(1)"</span>)))
-) {
-    <span style="color:#c47791;font-weight:bold">return</span>;
-}
+    <span style="color:#c58ba4">__attribute__</span><span style="color:#857780">((</span><span style="color:#7ba9c4">annotate</span><span style="color:#857780">(</span><span style="color:#8fbf91">"aclspv_storage_class(4)"</span><span style="color:#857780">)))</span> <span style="color:#d0aa68">int</span><span style="color:#6fa6a8;font-style:italic">*</span><span style="color:#a99ba3;font-style:italic"> </span><span style="color:#d8ccd3;font-style:italic">work_int</span><span style="color:#857780">,</span>
+    <span style="color:#c58ba4">__attribute__</span><span style="color:#857780">((</span><span style="color:#7ba9c4">annotate</span><span style="color:#857780">(</span><span style="color:#8fbf91">"aclspv_storage_class(4)"</span><span style="color:#857780">)))</span> <span style="color:#d0aa68">int</span> <span style="color:#d8ccd3;font-style:italic">work_i32_15</span><span style="color:#857780;font-style:italic">[</span><span style="color:#d99462;font-style:italic">15</span><span style="color:#857780;font-style:italic">]</span><span style="color:#857780">,</span>
+    <span style="color:#c58ba4">__attribute__</span><span style="color:#857780">((</span><span style="color:#7ba9c4">annotate</span><span style="color:#857780">(</span><span style="color:#8fbf91">"aclspv_storage_class(4)"</span><span style="color:#857780">)))</span> <span style="color:#d0aa68">int</span> <span style="color:#d8ccd3;font-style:italic">work_int_arr_spec</span><span style="color:#857780;font-style:italic">[]</span> <span style="color:#c58ba4">__attribute__</span><span style="color:#857780">((</span><span style="color:#7ba9c4">annotate</span><span style="color:#857780">(</span><span style="color:#8fbf91">"aclspv_specid(1)"</span><span style="color:#857780">)))</span>
+<span style="color:#857780">)</span> <span style="color:#857780">{</span>
+    <span style="color:#c47791;font-weight:bold">return</span><span style="color:#857780">;</span>
+<span style="color:#857780">}</span>
 </pre>
 </div>
 ++++
@@ -285,19 +285,19 @@ ____
 
 ++++
 <div class="listingblock" style="background-color:#1c171b;color:#d8ccd3;padding:0.8em 1em;overflow-x:auto;border-radius:4px">
-<pre style="font-family:'Source Code Pro','DejaVu Sans Mono','Courier New',monospace;font-size:14px;line-height:1.3;margin:0;background:transparent;color:inherit">__attribute__((annotate(<span style="color:#8fbf91">"aclspv_execmodel(0)"</span>)))
-<span style="color:#d0aa68;font-weight:bold">void</span> entry_point_vertex(
+<pre style="font-family:'Source Code Pro','DejaVu Sans Mono','Courier New',monospace;font-size:14px;line-height:1.3;margin:0;background:transparent;color:inherit"><span style="color:#c58ba4">__attribute__</span><span style="color:#857780">((</span><span style="color:#7ba9c4">annotate</span><span style="color:#857780">(</span><span style="color:#8fbf91">"aclspv_execmodel(0)"</span><span style="color:#857780">)))</span>
+<span style="color:#d0aa68">void</span> <span style="color:#7ba9c4;font-weight:bold">entry_point_vertex</span><span style="color:#857780">(</span>
     <span style="color:#a99ba3;font-style:italic">/*** </span>
 <span style="color:#a99ba3;font-style:italic">     * 12: storage buffer</span>
 <span style="color:#a99ba3;font-style:italic">     * */</span>
-    __attribute__((annotate(<span style="color:#8fbf91">"aclspv_storage_class(12)"</span>))) <span style="color:#d0aa68;font-weight:bold">int</span> sbo_int_rtarray[] <span style="color:#a99ba3;font-style:italic">/** struct { runtimearray&lt;int&gt; a; } */</span>
-) {
+    <span style="color:#c58ba4">__attribute__</span><span style="color:#857780">((</span><span style="color:#7ba9c4">annotate</span><span style="color:#857780">(</span><span style="color:#8fbf91">"aclspv_storage_class(12)"</span><span style="color:#857780">)))</span> <span style="color:#d0aa68">int</span> <span style="color:#d8ccd3;font-style:italic">sbo_int_rtarray</span><span style="color:#857780;font-style:italic">[]</span> <span style="color:#a99ba3;font-style:italic">/** struct { runtimearray&lt;int&gt; a; } */</span>
+<span style="color:#857780">)</span> <span style="color:#857780">{</span>
     <span style="color:#a99ba3;font-style:italic">/** legal, has same storage class. */</span>
-    __attribute__((annotate(<span style="color:#8fbf91">"aclspv_storage_class(12)"</span>))) <span style="color:#d0aa68;font-weight:bold">int</span>* p0 = &amp;sbo_int_rtarray[<span style="color:#d99462">3</span>];
+    <span style="color:#c58ba4">__attribute__</span><span style="color:#857780">((</span><span style="color:#7ba9c4">annotate</span><span style="color:#857780">(</span><span style="color:#8fbf91">"aclspv_storage_class(12)"</span><span style="color:#857780">)))</span> <span style="color:#d0aa68">int</span><span style="color:#6fa6a8">*</span> <span style="color:#d8ccd3">p0</span> <span style="color:#6fa6a8">=</span> <span style="color:#6fa6a8">&amp;</span><span style="color:#d8ccd3">sbo_int_rtarray</span><span style="color:#857780">[</span><span style="color:#d99462">3</span><span style="color:#857780">];</span>
 
     <span style="color:#a99ba3;font-style:italic">/** illegal, has different storage class. */</span>
-    __attribute__((annotate(<span style="color:#8fbf91">"aclspv_storage_class(5)"</span>))) <span style="color:#d0aa68;font-weight:bold">int</span>* p1 = &amp;sbo_int_rtarray[<span style="color:#d99462">3</span>];
-}</pre>
+    <span style="color:#c58ba4">__attribute__</span><span style="color:#857780">((</span><span style="color:#7ba9c4">annotate</span><span style="color:#857780">(</span><span style="color:#8fbf91">"aclspv_storage_class(5)"</span><span style="color:#857780">)))</span> <span style="color:#d0aa68">int</span><span style="color:#6fa6a8">*</span> <span style="color:#d8ccd3">p1</span> <span style="color:#6fa6a8">=</span> <span style="color:#6fa6a8">&amp;</span><span style="color:#d8ccd3">sbo_int_rtarray</span><span style="color:#857780">[</span><span style="color:#d99462">3</span><span style="color:#857780">];</span>
+<span style="color:#857780">}</span></pre>
 </div>
 ++++
 
@@ -305,10 +305,10 @@ you can typedef it.
 
 ++++
 <div class="listingblock" style="background-color:#1c171b;color:#d8ccd3;padding:0.8em 1em;overflow-x:auto;border-radius:4px">
-<pre style="font-family:'Source Code Pro','DejaVu Sans Mono','Courier New',monospace;font-size:14px;line-height:1.3;margin:0;background:transparent;color:inherit"><span style="color:#d0aa68;font-weight:bold">typedef</span> <span style="color:#d0aa68;font-weight:bold">unsigned</span> <span style="color:#d0aa68;font-weight:bold">int</span> u32;
-<span style="color:#d0aa68;font-weight:bold">typedef</span> u32* __attribute__((annotate(<span style="color:#8fbf91">"aclspv_storage_class(12)"</span>))) p_u32_sbo_t;
-<span style="color:#d0aa68;font-weight:bold">typedef</span> <span style="color:#d0aa68;font-weight:bold">struct</span> { u32 m_lsb; u32 m_hsb; } u32x2;
-<span style="color:#d0aa68;font-weight:bold">typedef</span> u32x2* __attribute__((annotate(<span style="color:#8fbf91">"aclspv_storage_class(12)"</span>))) p_u32x2_sbo_t;</pre>
+<pre style="font-family:'Source Code Pro','DejaVu Sans Mono','Courier New',monospace;font-size:14px;line-height:1.3;margin:0;background:transparent;color:inherit"><span style="color:#c47791;font-weight:bold">typedef</span> <span style="color:#d0aa68">unsigned</span> <span style="color:#d0aa68">int</span> <span style="color:#d0aa68;font-weight:bold">u32</span><span style="color:#857780">;</span>
+<span style="color:#c47791;font-weight:bold">typedef</span> <span style="color:#d0aa68;font-weight:bold">u32</span><span style="color:#6fa6a8">*</span> <span style="color:#d0aa68;font-weight:bold">__attribute__</span><span style="color:#857780">((</span><span style="color:#d8ccd3">annotate</span><span style="color:#857780">(</span><span style="color:#8fbf91">"aclspv_storage_class(12)"</span><span style="color:#857780">)))</span> <span style="color:#d8ccd3">p_u32_sbo_t</span><span style="color:#857780">;</span>
+<span style="color:#c47791;font-weight:bold">typedef</span> <span style="color:#c47791;font-weight:bold">struct</span> <span style="color:#857780">{</span> <span style="color:#d0aa68;font-weight:bold">u32</span> <span style="color:#9b8d96">m_lsb</span><span style="color:#857780">;</span> <span style="color:#d0aa68;font-weight:bold">u32</span> <span style="color:#9b8d96">m_hsb</span><span style="color:#857780">;</span> <span style="color:#857780">}</span> <span style="color:#d0aa68;font-weight:bold">u32x2</span><span style="color:#857780">;</span>
+<span style="color:#c47791;font-weight:bold">typedef</span> <span style="color:#d0aa68;font-weight:bold">u32x2</span><span style="color:#6fa6a8">*</span> <span style="color:#d0aa68;font-weight:bold">__attribute__</span><span style="color:#857780">((</span><span style="color:#d8ccd3">annotate</span><span style="color:#857780">(</span><span style="color:#8fbf91">"aclspv_storage_class(12)"</span><span style="color:#857780">)))</span> <span style="color:#d0aa68;font-weight:bold">p_u32x2_sbo_t</span><span style="color:#857780">;</span></pre>
 </div>
 ++++
 
@@ -323,23 +323,23 @@ you can typedef it.
 
 ++++
 <div class="listingblock" style="background-color:#1c171b;color:#d8ccd3;padding:0.8em 1em;overflow-x:auto;border-radius:4px">
-<pre style="font-family:'Source Code Pro','DejaVu Sans Mono','Courier New',monospace;font-size:14px;line-height:1.3;margin:0;background:transparent;color:inherit">__attribute__((annotate(<span style="color:#8fbf91">"aclspv_execmodel(5)"</span>)))
-<span style="color:#d0aa68;font-weight:bold">void</span> entry_point_compute(
+<pre style="font-family:'Source Code Pro','DejaVu Sans Mono','Courier New',monospace;font-size:14px;line-height:1.3;margin:0;background:transparent;color:inherit"><span style="color:#c58ba4">__attribute__</span><span style="color:#857780">((</span><span style="color:#7ba9c4">annotate</span><span style="color:#857780">(</span><span style="color:#8fbf91">"aclspv_execmodel(5)"</span><span style="color:#857780">)))</span>
+<span style="color:#d0aa68">void</span> <span style="color:#7ba9c4;font-weight:bold">entry_point_compute</span><span style="color:#857780">(</span>
     <span style="color:#a99ba3;font-style:italic">/*** </span>
 <span style="color:#a99ba3;font-style:italic">     * descriptor set 2, binding 0</span>
 <span style="color:#a99ba3;font-style:italic">     * */</span>
-    __attribute__((annotate(<span style="color:#8fbf91">"aclspv_storage_class(12)"</span>)))
-    __attribute__((annotate(<span style="color:#8fbf91">"aclspv_set(2)"</span>)))
-    __attribute__((annotate(<span style="color:#8fbf91">"aclspv_bind_idx(0)"</span>)))
-    <span style="color:#d0aa68;font-weight:bold">struct</span> <span style="color:#eef1f8;background-color:#590008">{</span> <span style="color:#d0aa68;font-weight:bold">int</span> data; <span style="color:#eef1f8;background-color:#590008">}</span>* sbo_data,
+    <span style="color:#c58ba4">__attribute__</span><span style="color:#857780">((</span><span style="color:#7ba9c4">annotate</span><span style="color:#857780">(</span><span style="color:#8fbf91">"aclspv_storage_class(12)"</span><span style="color:#857780">)))</span>
+    <span style="color:#c58ba4">__attribute__</span><span style="color:#857780">((</span><span style="color:#7ba9c4">annotate</span><span style="color:#857780">(</span><span style="color:#8fbf91">"aclspv_set(2)"</span><span style="color:#857780">)))</span>
+    <span style="color:#c58ba4">__attribute__</span><span style="color:#857780">((</span><span style="color:#7ba9c4">annotate</span><span style="color:#857780">(</span><span style="color:#8fbf91">"aclspv_bind_idx(0)"</span><span style="color:#857780">)))</span>
+    <span style="color:#c47791;font-weight:bold">struct</span> <span style="color:#857780">{</span> <span style="color:#d0aa68">int</span> data<span style="color:#857780">;</span> <span style="color:#857780">}</span><span style="color:#6fa6a8;font-style:italic">*</span><span style="color:#a99ba3;font-style:italic"> </span><span style="color:#d8ccd3;font-style:italic">sbo_data</span><span style="color:#857780">,</span>
 
     <span style="color:#a99ba3;font-style:italic">/*** </span>
 <span style="color:#a99ba3;font-style:italic">     * descriptor set 2, binding 1 (auto-incremented from 0 since bind_idx not specified)</span>
 <span style="color:#a99ba3;font-style:italic">     * */</span>
-    __attribute__((annotate(<span style="color:#8fbf91">"aclspv_storage_class(12)"</span>)))
-    __attribute__((annotate(<span style="color:#8fbf91">"aclspv_set(2)"</span>)))
-    <span style="color:#d0aa68;font-weight:bold">struct</span> <span style="color:#eef1f8;background-color:#590008">{</span> <span style="color:#d0aa68;font-weight:bold">float</span> value; <span style="color:#eef1f8;background-color:#590008">}</span>* sbo_value
-) { <span style="color:#c47791;font-weight:bold">return</span>; }</pre>
+    <span style="color:#c58ba4">__attribute__</span><span style="color:#857780">((</span><span style="color:#7ba9c4">annotate</span><span style="color:#857780">(</span><span style="color:#8fbf91">"aclspv_storage_class(12)"</span><span style="color:#857780">)))</span>
+    <span style="color:#c58ba4">__attribute__</span><span style="color:#857780">((</span><span style="color:#7ba9c4">annotate</span><span style="color:#857780">(</span><span style="color:#8fbf91">"aclspv_set(2)"</span><span style="color:#857780">)))</span>
+    <span style="color:#c47791;font-weight:bold">struct</span> <span style="color:#857780">{</span> <span style="color:#d0aa68">float</span> value<span style="color:#857780">;</span> <span style="color:#857780">}</span><span style="color:#6fa6a8;font-style:italic">*</span><span style="color:#a99ba3;font-style:italic"> </span><span style="color:#d8ccd3;font-style:italic">sbo_value</span>
+<span style="color:#857780">)</span> <span style="color:#857780">{</span> <span style="color:#c47791;font-weight:bold">return</span><span style="color:#857780">;</span> <span style="color:#857780">}</span></pre>
 </div>
 ++++
 
@@ -354,23 +354,23 @@ you can typedef it.
 
 ++++
 <div class="listingblock" style="background-color:#1c171b;color:#d8ccd3;padding:0.8em 1em;overflow-x:auto;border-radius:4px">
-<pre style="font-family:'Source Code Pro','DejaVu Sans Mono','Courier New',monospace;font-size:14px;line-height:1.3;margin:0;background:transparent;color:inherit">__attribute__((annotate(<span style="color:#8fbf91">"aclspv_execmodel(5)"</span>)))
-<span style="color:#d0aa68;font-weight:bold">void</span> entry_point_compute(
+<pre style="font-family:'Source Code Pro','DejaVu Sans Mono','Courier New',monospace;font-size:14px;line-height:1.3;margin:0;background:transparent;color:inherit"><span style="color:#c58ba4">__attribute__</span><span style="color:#857780">((</span><span style="color:#7ba9c4">annotate</span><span style="color:#857780">(</span><span style="color:#8fbf91">"aclspv_execmodel(5)"</span><span style="color:#857780">)))</span>
+<span style="color:#d0aa68">void</span> <span style="color:#7ba9c4;font-weight:bold">entry_point_compute</span><span style="color:#857780">(</span>
     <span style="color:#a99ba3;font-style:italic">/*** </span>
 <span style="color:#a99ba3;font-style:italic">     * explicit binding 5 — next bindable in same set starts at 6</span>
 <span style="color:#a99ba3;font-style:italic">     * */</span>
-    __attribute__((annotate(<span style="color:#8fbf91">"aclspv_storage_class(12)"</span>)))
-    __attribute__((annotate(<span style="color:#8fbf91">"aclspv_set(0)"</span>)))
-    __attribute__((annotate(<span style="color:#8fbf91">"aclspv_bind_idx(5)"</span>)))
-    <span style="color:#d0aa68;font-weight:bold">struct</span> <span style="color:#eef1f8;background-color:#590008">{</span> <span style="color:#d0aa68;font-weight:bold">double</span> x; <span style="color:#eef1f8;background-color:#590008">}</span>* sbo_explicit,
+    <span style="color:#c58ba4">__attribute__</span><span style="color:#857780">((</span><span style="color:#7ba9c4">annotate</span><span style="color:#857780">(</span><span style="color:#8fbf91">"aclspv_storage_class(12)"</span><span style="color:#857780">)))</span>
+    <span style="color:#c58ba4">__attribute__</span><span style="color:#857780">((</span><span style="color:#7ba9c4">annotate</span><span style="color:#857780">(</span><span style="color:#8fbf91">"aclspv_set(0)"</span><span style="color:#857780">)))</span>
+    <span style="color:#c58ba4">__attribute__</span><span style="color:#857780">((</span><span style="color:#7ba9c4">annotate</span><span style="color:#857780">(</span><span style="color:#8fbf91">"aclspv_bind_idx(5)"</span><span style="color:#857780">)))</span>
+    <span style="color:#c47791;font-weight:bold">struct</span> <span style="color:#857780">{</span> <span style="color:#d0aa68">double</span> x<span style="color:#857780">;</span> <span style="color:#857780">}</span><span style="color:#6fa6a8;font-style:italic">*</span><span style="color:#a99ba3;font-style:italic"> </span><span style="color:#d8ccd3;font-style:italic">sbo_explicit</span><span style="color:#857780">,</span>
 
     <span style="color:#a99ba3;font-style:italic">/*** </span>
 <span style="color:#a99ba3;font-style:italic">     * binding 6 (auto-incremented from 5 since bind_idx was specified above)</span>
 <span style="color:#a99ba3;font-style:italic">     * */</span>
-    __attribute__((annotate(<span style="color:#8fbf91">"aclspv_storage_class(12)"</span>)))
-    __attribute__((annotate(<span style="color:#8fbf91">"aclspv_set(0)"</span>)))
-    <span style="color:#d0aa68;font-weight:bold">struct</span> <span style="color:#eef1f8;background-color:#590008">{</span> <span style="color:#d0aa68;font-weight:bold">double</span> y; <span style="color:#eef1f8;background-color:#590008">}</span>* sbo_auto
-) { <span style="color:#c47791;font-weight:bold">return</span>; }</pre>
+    <span style="color:#c58ba4">__attribute__</span><span style="color:#857780">((</span><span style="color:#7ba9c4">annotate</span><span style="color:#857780">(</span><span style="color:#8fbf91">"aclspv_storage_class(12)"</span><span style="color:#857780">)))</span>
+    <span style="color:#c58ba4">__attribute__</span><span style="color:#857780">((</span><span style="color:#7ba9c4">annotate</span><span style="color:#857780">(</span><span style="color:#8fbf91">"aclspv_set(0)"</span><span style="color:#857780">)))</span>
+    <span style="color:#c47791;font-weight:bold">struct</span> <span style="color:#857780">{</span> <span style="color:#d0aa68">double</span> y<span style="color:#857780">;</span> <span style="color:#857780">}</span><span style="color:#6fa6a8;font-style:italic">*</span><span style="color:#a99ba3;font-style:italic"> </span><span style="color:#d8ccd3;font-style:italic">sbo_auto</span>
+<span style="color:#857780">)</span> <span style="color:#857780">{</span> <span style="color:#c47791;font-weight:bold">return</span><span style="color:#857780">;</span> <span style="color:#857780">}</span></pre>
 </div>
 ++++
 
@@ -389,11 +389,11 @@ ____
 
 ++++
 <div class="listingblock" style="background-color:#1c171b;color:#d8ccd3;padding:0.8em 1em;overflow-x:auto;border-radius:4px">
-<pre style="font-family:'Source Code Pro','DejaVu Sans Mono','Courier New',monospace;font-size:14px;line-height:1.3;margin:0;background:transparent;color:inherit">__attribute__((annotate(<span style="color:#8fbf91">"aclspv_wrkgroup_size(1, 1, 1)"</span>)))  <span style="color:#a99ba3;font-style:italic">/** with workgroup size (1, 1, 1) */</span>
-__attribute__((annotate(<span style="color:#8fbf91">"aclspv_execmodel(5)"</span>)))            <span style="color:#a99ba3;font-style:italic">/** GLCompute */</span>
-<span style="color:#d0aa68;font-weight:bold">void</span> entry_point_glcompute(<span style="color:#d0aa68;font-weight:bold">void</span>) {
-    <span style="color:#c47791;font-weight:bold">return</span>;
-}</pre>
+<pre style="font-family:'Source Code Pro','DejaVu Sans Mono','Courier New',monospace;font-size:14px;line-height:1.3;margin:0;background:transparent;color:inherit"><span style="color:#c58ba4">__attribute__</span><span style="color:#857780">((</span><span style="color:#7ba9c4">annotate</span><span style="color:#857780">(</span><span style="color:#8fbf91">"aclspv_wrkgroup_size(1, 1, 1)"</span><span style="color:#857780">)))</span>  <span style="color:#a99ba3;font-style:italic">/** with workgroup size (1, 1, 1) */</span>
+<span style="color:#c58ba4">__attribute__</span><span style="color:#857780">((</span><span style="color:#7ba9c4">annotate</span><span style="color:#857780">(</span><span style="color:#8fbf91">"aclspv_execmodel(5)"</span><span style="color:#857780">)))</span>            <span style="color:#a99ba3;font-style:italic">/** GLCompute */</span>
+<span style="color:#d0aa68">void</span> <span style="color:#7ba9c4;font-weight:bold">entry_point_glcompute</span><span style="color:#857780">(</span><span style="color:#d0aa68">void</span><span style="color:#857780">)</span> <span style="color:#857780">{</span>
+    <span style="color:#c47791;font-weight:bold">return</span><span style="color:#857780">;</span>
+<span style="color:#857780">}</span></pre>
 </div>
 ++++
 
@@ -422,11 +422,11 @@ this attribute is available from spir-v version 1.2.
 <span style="color:#a99ba3;font-style:italic"> * y: 3</span>
 <span style="color:#a99ba3;font-style:italic"> * z: specified constant in id 2</span>
 <span style="color:#a99ba3;font-style:italic"> */</span>
-__attribute__((annotate(<span style="color:#8fbf91">"aclspv_wrkgroup_size_id(&amp;1, #3, &amp;2)"</span>)))
-__attribute__((annotate(<span style="color:#8fbf91">"aclspv_execmodel(5)"</span>)))            <span style="color:#a99ba3;font-style:italic">/** GLCompute */</span>
-<span style="color:#d0aa68;font-weight:bold">void</span> entry_point_glcompute(<span style="color:#d0aa68;font-weight:bold">void</span>) {
-    <span style="color:#c47791;font-weight:bold">return</span>;
-}</pre>
+<span style="color:#c58ba4">__attribute__</span><span style="color:#857780">((</span><span style="color:#7ba9c4">annotate</span><span style="color:#857780">(</span><span style="color:#8fbf91">"aclspv_wrkgroup_size_id(&amp;1, #3, &amp;2)"</span><span style="color:#857780">)))</span>
+<span style="color:#c58ba4">__attribute__</span><span style="color:#857780">((</span><span style="color:#7ba9c4">annotate</span><span style="color:#857780">(</span><span style="color:#8fbf91">"aclspv_execmodel(5)"</span><span style="color:#857780">)))</span>            <span style="color:#a99ba3;font-style:italic">/** GLCompute */</span>
+<span style="color:#d0aa68">void</span> <span style="color:#7ba9c4;font-weight:bold">entry_point_glcompute</span><span style="color:#857780">(</span><span style="color:#d0aa68">void</span><span style="color:#857780">)</span> <span style="color:#857780">{</span>
+    <span style="color:#c47791;font-weight:bold">return</span><span style="color:#857780">;</span>
+<span style="color:#857780">}</span></pre>
 </div>
 ++++
 
@@ -447,20 +447,20 @@ you cannot specify this with <<aclspv_bltin,aclspv_bltin>>
 
 ++++
 <div class="listingblock" style="background-color:#1c171b;color:#d8ccd3;padding:0.8em 1em;overflow-x:auto;border-radius:4px">
-<pre style="font-family:'Source Code Pro','DejaVu Sans Mono','Courier New',monospace;font-size:14px;line-height:1.3;margin:0;background:transparent;color:inherit">__attribute__((annotate(<span style="color:#8fbf91">"aclspv_execmodel(0)"</span>)))
-<span style="color:#d0aa68;font-weight:bold">void</span> entry_point_vertex(
+<pre style="font-family:'Source Code Pro','DejaVu Sans Mono','Courier New',monospace;font-size:14px;line-height:1.3;margin:0;background:transparent;color:inherit"><span style="color:#c58ba4">__attribute__</span><span style="color:#857780">((</span><span style="color:#7ba9c4">annotate</span><span style="color:#857780">(</span><span style="color:#8fbf91">"aclspv_execmodel(0)"</span><span style="color:#857780">)))</span>
+<span style="color:#d0aa68">void</span> <span style="color:#7ba9c4;font-weight:bold">entry_point_vertex</span><span style="color:#857780">(</span>
     <span style="color:#a99ba3;font-style:italic">/*** </span>
 <span style="color:#a99ba3;font-style:italic">     * omitted.</span>
 <span style="color:#a99ba3;font-style:italic">     * location: 0</span>
 <span style="color:#a99ba3;font-style:italic">     * */</span>
-    __attribute__((annotate(<span style="color:#8fbf91">"aclspv_storage_class(1)"</span>))) <span style="color:#d0aa68;font-weight:bold">int</span>* in_int,
+    <span style="color:#c58ba4">__attribute__</span><span style="color:#857780">((</span><span style="color:#7ba9c4">annotate</span><span style="color:#857780">(</span><span style="color:#8fbf91">"aclspv_storage_class(1)"</span><span style="color:#857780">)))</span> <span style="color:#d0aa68">int</span><span style="color:#6fa6a8;font-style:italic">*</span><span style="color:#a99ba3;font-style:italic"> </span><span style="color:#d8ccd3;font-style:italic">in_int</span><span style="color:#857780">,</span>
 
     <span style="color:#a99ba3;font-style:italic">/** </span>
 <span style="color:#a99ba3;font-style:italic">     * location: 1</span>
 <span style="color:#a99ba3;font-style:italic">     **/</span>
-    __attribute__((annotate(<span style="color:#8fbf91">"aclspv_location(1)"</span>)))
-    __attribute__((annotate(<span style="color:#8fbf91">"aclspv_storage_class(3)"</span>))) <span style="color:#d0aa68;font-weight:bold">int</span>* out_int
-) { *out_int = *in_int; }</pre>
+    <span style="color:#c58ba4">__attribute__</span><span style="color:#857780">((</span><span style="color:#7ba9c4">annotate</span><span style="color:#857780">(</span><span style="color:#8fbf91">"aclspv_location(1)"</span><span style="color:#857780">)))</span>
+    <span style="color:#c58ba4">__attribute__</span><span style="color:#857780">((</span><span style="color:#7ba9c4">annotate</span><span style="color:#857780">(</span><span style="color:#8fbf91">"aclspv_storage_class(3)"</span><span style="color:#857780">)))</span> <span style="color:#d0aa68">int</span><span style="color:#6fa6a8;font-style:italic">*</span><span style="color:#a99ba3;font-style:italic"> </span><span style="color:#d8ccd3;font-style:italic">out_int</span>
+<span style="color:#857780">)</span> <span style="color:#857780">{</span> <span style="color:#6fa6a8">*</span><span style="color:#d8ccd3">out_int</span> <span style="color:#6fa6a8">=</span> <span style="color:#6fa6a8">*</span><span style="color:#d8ccd3">in_int</span><span style="color:#857780">;</span> <span style="color:#857780">}</span></pre>
 </div>
 ++++
 
@@ -473,10 +473,10 @@ you cannot specify this with <<aclspv_bltin,aclspv_bltin>>
 
 ++++
 <div class="listingblock" style="background-color:#1c171b;color:#d8ccd3;padding:0.8em 1em;overflow-x:auto;border-radius:4px">
-<pre style="font-family:'Source Code Pro','DejaVu Sans Mono','Courier New',monospace;font-size:14px;line-height:1.3;margin:0;background:transparent;color:inherit"><span style="color:#d0aa68;font-weight:bold">void</span> foo(<span style="color:#d0aa68;font-weight:bold">void</span>) {
+<pre style="font-family:'Source Code Pro','DejaVu Sans Mono','Courier New',monospace;font-size:14px;line-height:1.3;margin:0;background:transparent;color:inherit"><span style="color:#d0aa68">void</span> <span style="color:#7ba9c4;font-weight:bold">foo</span><span style="color:#857780">(</span><span style="color:#d0aa68">void</span><span style="color:#857780">)</span> <span style="color:#857780">{</span>
     <span style="color:#a99ba3;font-style:italic">/** 3.20000005 */</span>
-    __attribute__((annotate(<span style="color:#8fbf91">"aclspv_btcast"</span>))) <span style="color:#d0aa68;font-weight:bold">float</span> bar = <span style="color:#d99462">1078774989</span>;
-}</pre>
+    <span style="color:#c58ba4">__attribute__</span><span style="color:#857780">((</span><span style="color:#7ba9c4">annotate</span><span style="color:#857780">(</span><span style="color:#8fbf91">"aclspv_btcast"</span><span style="color:#857780">)))</span> <span style="color:#d0aa68">float</span> <span style="color:#d8ccd3">bar</span> <span style="color:#6fa6a8">=</span> <span style="color:#d99462">1078774989</span><span style="color:#857780">;</span>
+<span style="color:#857780">}</span></pre>
 </div>
 ++++
 
@@ -492,17 +492,17 @@ you cannot specify this with <<aclspv_bltin,aclspv_bltin>>
 
 ++++
 <div class="listingblock" style="background-color:#1c171b;color:#d8ccd3;padding:0.8em 1em;overflow-x:auto;border-radius:4px">
-<pre style="font-family:'Source Code Pro','DejaVu Sans Mono','Courier New',monospace;font-size:14px;line-height:1.3;margin:0;background:transparent;color:inherit"><span style="color:#d0aa68;font-weight:bold">typedef</span> <span style="color:#d0aa68;font-weight:bold">int</span> i32;
-<span style="color:#d0aa68;font-weight:bold">struct</span> foo { i32 m; };
+<pre style="font-family:'Source Code Pro','DejaVu Sans Mono','Courier New',monospace;font-size:14px;line-height:1.3;margin:0;background:transparent;color:inherit"><span style="color:#c47791;font-weight:bold">typedef</span> <span style="color:#d0aa68">int</span> <span style="color:#d0aa68;font-weight:bold">i32</span><span style="color:#857780">;</span>
+<span style="color:#c47791;font-weight:bold">struct</span> <span style="color:#d0aa68;font-weight:bold">foo</span> <span style="color:#857780">{</span> <span style="color:#d0aa68;font-weight:bold">i32</span> <span style="color:#9b8d96">m</span><span style="color:#857780">;</span> <span style="color:#857780">};</span>
 
-i32 foo_read_32(<span style="color:#d0aa68;font-weight:bold">struct</span> foo* h_whatever) {
-    <span style="color:#c47791;font-weight:bold">if</span>(h_whatever) {    <span style="color:#a99ba3;font-style:italic">/** weighted as 7 */</span>
-        __attribute__((<span style="color:#8fbf91">"aclspv_bratio(7, 1)"</span>)) <span style="color:#d0aa68;font-weight:bold">typedef</span> <span style="color:#d0aa68;font-weight:bold">int</span> dummy_t;
-        <span style="color:#c47791;font-weight:bold">return</span> h_whatever-&gt;m;
-    } <span style="color:#c47791;font-weight:bold">else</span> {            <span style="color:#a99ba3;font-style:italic">/** weighted as 1 */</span>
-        <span style="color:#c47791;font-weight:bold">return</span> <span style="color:#d99462">0</span>;
-    }
-}</pre>
+<span style="color:#d0aa68;font-weight:bold">i32</span> <span style="color:#7ba9c4;font-weight:bold">foo_read_32</span><span style="color:#857780">(</span><span style="color:#c47791;font-weight:bold">struct</span> <span style="color:#d0aa68;font-weight:bold">foo</span><span style="color:#6fa6a8;font-style:italic">*</span><span style="color:#a99ba3;font-style:italic"> </span><span style="color:#d8ccd3;font-style:italic">h_whatever</span><span style="color:#857780">)</span> <span style="color:#857780">{</span>
+    <span style="color:#c47791;font-weight:bold">if</span><span style="color:#857780">(</span><span style="color:#d8ccd3">h_whatever</span><span style="color:#857780">)</span> <span style="color:#857780">{</span>    <span style="color:#a99ba3;font-style:italic">/** weighted as 7 */</span>
+        <span style="color:#c58ba4">__attribute__</span><span style="color:#857780">((</span><span style="color:#8fbf91">"aclspv_bratio(7, 1)"</span><span style="color:#857780">))</span> <span style="color:#d0aa68;font-weight:bold">typedef</span> <span style="color:#d8ccd3">int</span> <span style="color:#d8ccd3">dummy_t</span><span style="color:#857780">;</span>
+        <span style="color:#c47791;font-weight:bold">return</span> <span style="color:#d8ccd3">h_whatever</span><span style="color:#6fa6a8">-&gt;</span><span style="color:#9b8d96">m</span><span style="color:#857780">;</span>
+    <span style="color:#857780">}</span> <span style="color:#c47791;font-weight:bold">else</span> <span style="color:#857780">{</span>            <span style="color:#a99ba3;font-style:italic">/** weighted as 1 */</span>
+        <span style="color:#c47791;font-weight:bold">return</span> <span style="color:#d99462">0</span><span style="color:#857780">;</span>
+    <span style="color:#857780">}</span>
+<span style="color:#857780">}</span></pre>
 </div>
 ++++
 
@@ -517,8 +517,8 @@ i32 foo_read_32(<span style="color:#d0aa68;font-weight:bold">struct</span> foo* 
 
 ++++
 <div class="listingblock" style="background-color:#1c171b;color:#d8ccd3;padding:0.8em 1em;overflow-x:auto;border-radius:4px">
-<pre style="font-family:'Source Code Pro','DejaVu Sans Mono','Courier New',monospace;font-size:14px;line-height:1.3;margin:0;background:transparent;color:inherit">__attribute__((annotate(<span style="color:#8fbf91">"aclspv_layout(1)"</span>)))
-<span style="color:#d0aa68;font-weight:bold">typedef</span> <span style="color:#d0aa68;font-weight:bold">struct</span> { <span style="color:#d0aa68;font-weight:bold">unsigned</span> m_uint; } std140_uint_t;</pre>
+<pre style="font-family:'Source Code Pro','DejaVu Sans Mono','Courier New',monospace;font-size:14px;line-height:1.3;margin:0;background:transparent;color:inherit"><span style="color:#c58ba4">__attribute__</span><span style="color:#857780">((</span><span style="color:#7ba9c4">annotate</span><span style="color:#857780">(</span><span style="color:#8fbf91">"aclspv_layout(1)"</span><span style="color:#857780">)))</span>
+<span style="color:#d0aa68;font-weight:bold">typedef</span> <span style="color:#d8ccd3">struct</span> <span style="color:#857780">{</span> <span style="color:#d0aa68">unsigned</span> <span style="color:#d8ccd3">m_uint</span><span style="color:#857780">;</span> <span style="color:#857780">}</span> <span style="color:#d8ccd3">std140_uint_t</span><span style="color:#857780">;</span></pre>
 </div>
 ++++
 
@@ -543,27 +543,27 @@ you cannot specify this with <<aclspv_location,aclspv_location>>
 
 ++++
 <div class="listingblock" style="background-color:#1c171b;color:#d8ccd3;padding:0.8em 1em;overflow-x:auto;border-radius:4px">
-<pre style="font-family:'Source Code Pro','DejaVu Sans Mono','Courier New',monospace;font-size:14px;line-height:1.3;margin:0;background:transparent;color:inherit"><span style="color:#d0aa68;font-weight:bold">typedef</span> <span style="color:#d0aa68;font-weight:bold">float</span> f32;
-<span style="color:#d0aa68;font-weight:bold">typedef</span> f32 __attribute__((ext_vector_type(<span style="color:#d99462">4</span>))) f32x4;
+<pre style="font-family:'Source Code Pro','DejaVu Sans Mono','Courier New',monospace;font-size:14px;line-height:1.3;margin:0;background:transparent;color:inherit"><span style="color:#c47791;font-weight:bold">typedef</span> <span style="color:#d0aa68">float</span> <span style="color:#d0aa68;font-weight:bold">f32</span><span style="color:#857780">;</span>
+<span style="color:#c47791;font-weight:bold">typedef</span> <span style="color:#d0aa68;font-weight:bold">f32</span> <span style="color:#d0aa68;font-weight:bold">__attribute__</span><span style="color:#857780">((</span><span style="color:#d8ccd3">ext_vector_type</span><span style="color:#857780">(</span><span style="color:#d99462">4</span><span style="color:#857780">)))</span> <span style="color:#d8ccd3">f32x4</span><span style="color:#857780">;</span>
 
-__attribute__((annotate(<span style="color:#8fbf91">"aclspv_execmodel(0)"</span>)))
-<span style="color:#d0aa68;font-weight:bold">void</span> t12_entry_point_vertex(
+<span style="color:#c58ba4">__attribute__</span><span style="color:#857780">((</span><span style="color:#7ba9c4">annotate</span><span style="color:#857780">(</span><span style="color:#8fbf91">"aclspv_execmodel(0)"</span><span style="color:#857780">)))</span>
+<span style="color:#d0aa68">void</span> <span style="color:#7ba9c4;font-weight:bold">t12_entry_point_vertex</span><span style="color:#857780">(</span>
     <span style="color:#a99ba3;font-style:italic">/***</span>
 <span style="color:#a99ba3;font-style:italic">     * vertex shader builtin: position output</span>
 <span style="color:#a99ba3;font-style:italic">     * SPIR-V BuiltIn: Position (0)</span>
 <span style="color:#a99ba3;font-style:italic">     * */</span>
-    __attribute__((annotate(<span style="color:#8fbf91">"aclspv_storage_class(3)"</span>)))
-    __attribute__((annotate(<span style="color:#8fbf91">"aclspv_bltin(0)"</span>)))
-    f32x4* gl_Position,
+    <span style="color:#c58ba4">__attribute__</span><span style="color:#857780">((</span><span style="color:#7ba9c4">annotate</span><span style="color:#857780">(</span><span style="color:#8fbf91">"aclspv_storage_class(3)"</span><span style="color:#857780">)))</span>
+    <span style="color:#c58ba4">__attribute__</span><span style="color:#857780">((</span><span style="color:#7ba9c4">annotate</span><span style="color:#857780">(</span><span style="color:#8fbf91">"aclspv_bltin(0)"</span><span style="color:#857780">)))</span>
+    <span style="color:#d0aa68;font-weight:bold">f32x4</span><span style="color:#6fa6a8;font-style:italic">*</span><span style="color:#a99ba3;font-style:italic"> </span><span style="color:#d8ccd3;font-style:italic">gl_Position</span><span style="color:#857780">,</span>
 
     <span style="color:#a99ba3;font-style:italic">/***</span>
 <span style="color:#a99ba3;font-style:italic">     * vertex shader builtin: vertex index input</span>
 <span style="color:#a99ba3;font-style:italic">     * SPIR-V BuiltIn: VertexIndex (42)</span>
 <span style="color:#a99ba3;font-style:italic">     * */</span>
-    __attribute__((annotate(<span style="color:#8fbf91">"aclspv_storage_class(1)"</span>)))
-    __attribute__((annotate(<span style="color:#8fbf91">"aclspv_bltin(42)"</span>)))
-    <span style="color:#d0aa68;font-weight:bold">int</span>* gl_VertexIndex
-) { <span style="color:#c47791;font-weight:bold">return</span>; }</pre>
+    <span style="color:#c58ba4">__attribute__</span><span style="color:#857780">((</span><span style="color:#7ba9c4">annotate</span><span style="color:#857780">(</span><span style="color:#8fbf91">"aclspv_storage_class(1)"</span><span style="color:#857780">)))</span>
+    <span style="color:#c58ba4">__attribute__</span><span style="color:#857780">((</span><span style="color:#7ba9c4">annotate</span><span style="color:#857780">(</span><span style="color:#8fbf91">"aclspv_bltin(42)"</span><span style="color:#857780">)))</span>
+    <span style="color:#d0aa68">int</span><span style="color:#6fa6a8;font-style:italic">*</span><span style="color:#a99ba3;font-style:italic"> </span><span style="color:#d8ccd3;font-style:italic">gl_VertexIndex</span>
+<span style="color:#857780">)</span> <span style="color:#857780">{</span> <span style="color:#c47791;font-weight:bold">return</span><span style="color:#857780">;</span> <span style="color:#857780">}</span></pre>
 </div>
 ++++
 
@@ -595,16 +595,16 @@ ____
 
 ++++
 <div class="listingblock" style="background-color:#1c171b;color:#d8ccd3;padding:0.8em 1em;overflow-x:auto;border-radius:4px">
-<pre style="font-family:'Source Code Pro','DejaVu Sans Mono','Courier New',monospace;font-size:14px;line-height:1.3;margin:0;background:transparent;color:inherit"><span style="color:#d0aa68;font-weight:bold">typedef</span> <span style="color:#d0aa68;font-weight:bold">float</span> f32;
+<pre style="font-family:'Source Code Pro','DejaVu Sans Mono','Courier New',monospace;font-size:14px;line-height:1.3;margin:0;background:transparent;color:inherit"><span style="color:#c47791;font-weight:bold">typedef</span> <span style="color:#d0aa68">float</span> <span style="color:#d0aa68;font-weight:bold">f32</span><span style="color:#857780">;</span>
 
-<span style="color:#d0aa68;font-weight:bold">void</span> f32_math(f32* in, f32* out) {
-    *out = __builtin_sinf(*in);
-    *out = __builtin_cosf(*in);
-    *out = __builtin_tanf(*in);
+<span style="color:#d0aa68">void</span> <span style="color:#7ba9c4;font-weight:bold">f32_math</span><span style="color:#857780">(</span><span style="color:#d0aa68;font-weight:bold">f32</span><span style="color:#6fa6a8;font-style:italic">*</span><span style="color:#a99ba3;font-style:italic"> </span><span style="color:#d8ccd3;font-style:italic">in</span><span style="color:#857780">,</span> <span style="color:#d0aa68;font-weight:bold">f32</span><span style="color:#6fa6a8;font-style:italic">*</span><span style="color:#a99ba3;font-style:italic"> </span><span style="color:#d8ccd3;font-style:italic">out</span><span style="color:#857780">)</span> <span style="color:#857780">{</span>
+    <span style="color:#6fa6a8">*</span><span style="color:#d8ccd3">out</span> <span style="color:#6fa6a8">=</span> <span style="color:#7ba9c4">__builtin_sinf</span><span style="color:#857780">(</span><span style="color:#6fa6a8">*</span><span style="color:#d8ccd3">in</span><span style="color:#857780">);</span>
+    <span style="color:#6fa6a8">*</span><span style="color:#d8ccd3">out</span> <span style="color:#6fa6a8">=</span> <span style="color:#7ba9c4">__builtin_cosf</span><span style="color:#857780">(</span><span style="color:#6fa6a8">*</span><span style="color:#d8ccd3">in</span><span style="color:#857780">);</span>
+    <span style="color:#6fa6a8">*</span><span style="color:#d8ccd3">out</span> <span style="color:#6fa6a8">=</span> <span style="color:#7ba9c4">__builtin_tanf</span><span style="color:#857780">(</span><span style="color:#6fa6a8">*</span><span style="color:#d8ccd3">in</span><span style="color:#857780">);</span>
 
     <span style="color:#a99ba3;font-style:italic">/** folded: no OpExtInst is emitted */</span>
-    *out = __builtin_sinf(<span style="color:#d99462">0.5f</span>);
-}</pre>
+    <span style="color:#6fa6a8">*</span><span style="color:#d8ccd3">out</span> <span style="color:#6fa6a8">=</span> <span style="color:#7ba9c4">__builtin_sinf</span><span style="color:#857780">(</span><span style="color:#d99462">0.5f</span><span style="color:#857780">);</span>
+<span style="color:#857780">}</span></pre>
 </div>
 ++++
 
@@ -626,13 +626,13 @@ ____
 
 ++++
 <div class="listingblock" style="background-color:#1c171b;color:#d8ccd3;padding:0.8em 1em;overflow-x:auto;border-radius:4px">
-<pre style="font-family:'Source Code Pro','DejaVu Sans Mono','Courier New',monospace;font-size:14px;line-height:1.3;margin:0;background:transparent;color:inherit"><span style="color:#d0aa68;font-weight:bold">typedef</span> _Float16 f16;
+<pre style="font-family:'Source Code Pro','DejaVu Sans Mono','Courier New',monospace;font-size:14px;line-height:1.3;margin:0;background:transparent;color:inherit"><span style="color:#c47791;font-weight:bold">typedef</span> <span style="color:#d0aa68;font-weight:bold">_Float16</span> <span style="color:#d0aa68;font-weight:bold">f16</span><span style="color:#857780">;</span>
 
-<span style="color:#d0aa68;font-weight:bold">void</span> f16_math(f16* in, f16* out) {
-    *out = __builtin_sinf16(*in);
-    *out = __builtin_cosf16(*in);
-    *out = __builtin_tanf16(*in);
-}</pre>
+<span style="color:#d0aa68">void</span> <span style="color:#7ba9c4;font-weight:bold">f16_math</span><span style="color:#857780">(</span><span style="color:#d0aa68;font-weight:bold">f16</span><span style="color:#6fa6a8;font-style:italic">*</span><span style="color:#a99ba3;font-style:italic"> </span><span style="color:#d8ccd3;font-style:italic">in</span><span style="color:#857780">,</span> <span style="color:#d0aa68;font-weight:bold">f16</span><span style="color:#6fa6a8;font-style:italic">*</span><span style="color:#a99ba3;font-style:italic"> </span><span style="color:#d8ccd3;font-style:italic">out</span><span style="color:#857780">)</span> <span style="color:#857780">{</span>
+    <span style="color:#6fa6a8">*</span><span style="color:#d8ccd3">out</span> <span style="color:#6fa6a8">=</span> <span style="color:#7ba9c4">__builtin_sinf16</span><span style="color:#857780">(</span><span style="color:#6fa6a8">*</span><span style="color:#d8ccd3">in</span><span style="color:#857780">);</span>
+    <span style="color:#6fa6a8">*</span><span style="color:#d8ccd3">out</span> <span style="color:#6fa6a8">=</span> <span style="color:#7ba9c4">__builtin_cosf16</span><span style="color:#857780">(</span><span style="color:#6fa6a8">*</span><span style="color:#d8ccd3">in</span><span style="color:#857780">);</span>
+    <span style="color:#6fa6a8">*</span><span style="color:#d8ccd3">out</span> <span style="color:#6fa6a8">=</span> <span style="color:#7ba9c4">__builtin_tanf16</span><span style="color:#857780">(</span><span style="color:#6fa6a8">*</span><span style="color:#d8ccd3">in</span><span style="color:#857780">);</span>
+<span style="color:#857780">}</span></pre>
 </div>
 ++++
 
@@ -653,14 +653,14 @@ ____
 
 ++++
 <div class="listingblock" style="background-color:#1c171b;color:#d8ccd3;padding:0.8em 1em;overflow-x:auto;border-radius:4px">
-<pre style="font-family:'Source Code Pro','DejaVu Sans Mono','Courier New',monospace;font-size:14px;line-height:1.3;margin:0;background:transparent;color:inherit"><span style="color:#d0aa68;font-weight:bold">typedef</span> <span style="color:#d0aa68;font-weight:bold">float</span> f32;
-<span style="color:#d0aa68;font-weight:bold">typedef</span> f32 __attribute__((ext_vector_type(<span style="color:#d99462">4</span>))) f32x4;
+<pre style="font-family:'Source Code Pro','DejaVu Sans Mono','Courier New',monospace;font-size:14px;line-height:1.3;margin:0;background:transparent;color:inherit"><span style="color:#c47791;font-weight:bold">typedef</span> <span style="color:#d0aa68">float</span> <span style="color:#d0aa68;font-weight:bold">f32</span><span style="color:#857780">;</span>
+<span style="color:#c47791;font-weight:bold">typedef</span> <span style="color:#d0aa68;font-weight:bold">f32</span> <span style="color:#d0aa68;font-weight:bold">__attribute__</span><span style="color:#857780">((</span><span style="color:#d8ccd3">ext_vector_type</span><span style="color:#857780">(</span><span style="color:#d99462">4</span><span style="color:#857780">)))</span> <span style="color:#d8ccd3">f32x4</span><span style="color:#857780">;</span>
 
-<span style="color:#d0aa68;font-weight:bold">void</span> elementwise_math(f32x4* in, f32x4* out) {
-    *out = __builtin_elementwise_sin(*in);
-    *out = __builtin_elementwise_cos(*in);
-    *out = __builtin_elementwise_tan(*in);
-}</pre>
+<span style="color:#d0aa68">void</span> <span style="color:#7ba9c4;font-weight:bold">elementwise_math</span><span style="color:#857780">(</span><span style="color:#d0aa68;font-weight:bold">f32x4</span><span style="color:#6fa6a8;font-style:italic">*</span><span style="color:#a99ba3;font-style:italic"> </span><span style="color:#d8ccd3;font-style:italic">in</span><span style="color:#857780">,</span> <span style="color:#d0aa68;font-weight:bold">f32x4</span><span style="color:#6fa6a8;font-style:italic">*</span><span style="color:#a99ba3;font-style:italic"> </span><span style="color:#d8ccd3;font-style:italic">out</span><span style="color:#857780">)</span> <span style="color:#857780">{</span>
+    <span style="color:#6fa6a8">*</span><span style="color:#d8ccd3">out</span> <span style="color:#6fa6a8">=</span> <span style="color:#7ba9c4">__builtin_elementwise_sin</span><span style="color:#857780">(</span><span style="color:#6fa6a8">*</span><span style="color:#d8ccd3">in</span><span style="color:#857780">);</span>
+    <span style="color:#6fa6a8">*</span><span style="color:#d8ccd3">out</span> <span style="color:#6fa6a8">=</span> <span style="color:#7ba9c4">__builtin_elementwise_cos</span><span style="color:#857780">(</span><span style="color:#6fa6a8">*</span><span style="color:#d8ccd3">in</span><span style="color:#857780">);</span>
+    <span style="color:#6fa6a8">*</span><span style="color:#d8ccd3">out</span> <span style="color:#6fa6a8">=</span> <span style="color:#7ba9c4">__builtin_elementwise_tan</span><span style="color:#857780">(</span><span style="color:#6fa6a8">*</span><span style="color:#d8ccd3">in</span><span style="color:#857780">);</span>
+<span style="color:#857780">}</span></pre>
 </div>
 ++++
 
@@ -678,17 +678,17 @@ ____
 
 ++++
 <div class="listingblock" style="background-color:#1c171b;color:#d8ccd3;padding:0.8em 1em;overflow-x:auto;border-radius:4px">
-<pre style="font-family:'Source Code Pro','DejaVu Sans Mono','Courier New',monospace;font-size:14px;line-height:1.3;margin:0;background:transparent;color:inherit"><span style="color:#d0aa68;font-weight:bold">typedef</span> <span style="color:#d0aa68;font-weight:bold">float</span> f32;
-<span style="color:#d0aa68;font-weight:bold">typedef</span> f32 __attribute__((ext_vector_type(<span style="color:#d99462">4</span>))) f32x4;
-<span style="color:#d0aa68;font-weight:bold">typedef</span> f32 __attribute__((ext_vector_type(<span style="color:#d99462">2</span>))) f32x2;
+<pre style="font-family:'Source Code Pro','DejaVu Sans Mono','Courier New',monospace;font-size:14px;line-height:1.3;margin:0;background:transparent;color:inherit"><span style="color:#c47791;font-weight:bold">typedef</span> <span style="color:#d0aa68">float</span> <span style="color:#d0aa68;font-weight:bold">f32</span><span style="color:#857780">;</span>
+<span style="color:#c47791;font-weight:bold">typedef</span> <span style="color:#d0aa68;font-weight:bold">f32</span> <span style="color:#d0aa68;font-weight:bold">__attribute__</span><span style="color:#857780">((</span><span style="color:#d8ccd3">ext_vector_type</span><span style="color:#857780">(</span><span style="color:#d99462">4</span><span style="color:#857780">)))</span> <span style="color:#d8ccd3">f32x4</span><span style="color:#857780">;</span>
+<span style="color:#c47791;font-weight:bold">typedef</span> <span style="color:#d0aa68;font-weight:bold">f32</span> <span style="color:#d0aa68;font-weight:bold">__attribute__</span><span style="color:#857780">((</span><span style="color:#d8ccd3">ext_vector_type</span><span style="color:#857780">(</span><span style="color:#d99462">2</span><span style="color:#857780">)))</span> <span style="color:#d8ccd3">f32x2</span><span style="color:#857780">;</span>
 
-<span style="color:#d0aa68;font-weight:bold">void</span> gather(f32x4* a, f32x4* b, f32x4* out4, f32x2* out2) {
+<span style="color:#d0aa68">void</span> <span style="color:#7ba9c4;font-weight:bold">gather</span><span style="color:#857780">(</span><span style="color:#d0aa68;font-weight:bold">f32x4</span><span style="color:#6fa6a8;font-style:italic">*</span><span style="color:#a99ba3;font-style:italic"> </span><span style="color:#d8ccd3;font-style:italic">a</span><span style="color:#857780">,</span> <span style="color:#d0aa68;font-weight:bold">f32x4</span><span style="color:#6fa6a8;font-style:italic">*</span><span style="color:#a99ba3;font-style:italic"> </span><span style="color:#d8ccd3;font-style:italic">b</span><span style="color:#857780">,</span> <span style="color:#d0aa68;font-weight:bold">f32x4</span><span style="color:#6fa6a8;font-style:italic">*</span><span style="color:#a99ba3;font-style:italic"> </span><span style="color:#d8ccd3;font-style:italic">out4</span><span style="color:#857780">,</span> <span style="color:#d0aa68;font-weight:bold">f32x2</span><span style="color:#6fa6a8;font-style:italic">*</span><span style="color:#a99ba3;font-style:italic"> </span><span style="color:#d8ccd3;font-style:italic">out2</span><span style="color:#857780">)</span> <span style="color:#857780">{</span>
     <span style="color:#a99ba3;font-style:italic">/** [a.x, b.y, a.z, b.w] */</span>
-    *out4 = __builtin_shufflevector(*a, *b, <span style="color:#d99462">0</span>, <span style="color:#d99462">5</span>, <span style="color:#d99462">2</span>, <span style="color:#d99462">7</span>);
+    <span style="color:#6fa6a8">*</span><span style="color:#d8ccd3">out4</span> <span style="color:#6fa6a8">=</span> <span style="color:#7ba9c4">__builtin_shufflevector</span><span style="color:#857780">(</span><span style="color:#6fa6a8">*</span><span style="color:#d8ccd3">a</span><span style="color:#857780">,</span> <span style="color:#6fa6a8">*</span><span style="color:#d8ccd3">b</span><span style="color:#857780">,</span> <span style="color:#d99462">0</span><span style="color:#857780">,</span> <span style="color:#d99462">5</span><span style="color:#857780">,</span> <span style="color:#d99462">2</span><span style="color:#857780">,</span> <span style="color:#d99462">7</span><span style="color:#857780">);</span>
 
     <span style="color:#a99ba3;font-style:italic">/** [a.y, b.z] */</span>
-    *out2 = __builtin_shufflevector(*a, *b, <span style="color:#d99462">1</span>, <span style="color:#d99462">6</span>);
-}</pre>
+    <span style="color:#6fa6a8">*</span><span style="color:#d8ccd3">out2</span> <span style="color:#6fa6a8">=</span> <span style="color:#7ba9c4">__builtin_shufflevector</span><span style="color:#857780">(</span><span style="color:#6fa6a8">*</span><span style="color:#d8ccd3">a</span><span style="color:#857780">,</span> <span style="color:#6fa6a8">*</span><span style="color:#d8ccd3">b</span><span style="color:#857780">,</span> <span style="color:#d99462">1</span><span style="color:#857780">,</span> <span style="color:#d99462">6</span><span style="color:#857780">);</span>
+<span style="color:#857780">}</span></pre>
 </div>
 ++++
 
