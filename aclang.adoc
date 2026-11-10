@@ -556,22 +556,19 @@ Builtin expressions recognised while carving. +
 Unlike <<attributes,Attributes>>, they are not annotations: they use ordinary call syntax (or a vector expression) and are emitted as SPIR-V instructions.
 ____
 
-=== __builtin_sinf / __builtin_cosf / __builtin_tanf
+[[__builtin_sinf]]
+=== __builtin_sinf
 
 [quote]
-____
-`__builtin_sinf(x)` +
-`__builtin_cosf(x)` +
-`__builtin_tanf(x)`
-____
+`__builtin_sinf(x)`
 
-* emit `GLSL.std.450` `Sin` (instruction 13), `Cos` (14), and `Tan` (15).
+* emits `GLSL.std.450` `Sin` (instruction 13).
 * scalar only: operand and result are 32-bit floating point (`f32`).
 * the operand is cast to the result type before the call is emitted.
-* passing a vector is a clang type error, so these spellings never yield a vector.
+* passing a vector is a clang type error, so this spelling never yields a vector.
 * a scalar literal operand is folded on the host into an `OpConstant` instead of `OpExtInst`, because an extension instruction cannot appear in `OpSpecConstantOp`.
 * `f64` (`__builtin_sin`) is not supported for now.
-* the bare `sinf` / `cosf` / `tanf` names are not recognised; only the `__builtin_` spellings are.
+* the bare `sinf` name is not recognised; only the `__builtin_` spelling is.
 * the `GLSL.std.450` import is emitted on first use.
 
 ++++
@@ -589,16 +586,31 @@ ____
 </div>
 ++++
 
-=== __builtin_sinf16 / __builtin_cosf16 / __builtin_tanf16
+[[__builtin_cosf]]
+=== __builtin_cosf
 
 [quote]
-____
-`__builtin_sinf16(x)` +
-`__builtin_cosf16(x)` +
-`__builtin_tanf16(x)`
-____
+`__builtin_cosf(x)`
 
-* emit `GLSL.std.450` `Sin` (instruction 13), `Cos` (14), and `Tan` (15).
+* emits `GLSL.std.450` `Cos` (instruction 14).
+* same `f32` scalar, literal-folding, and import rules as <<__builtin_sinf,__builtin_sinf>>.
+
+[[__builtin_tanf]]
+=== __builtin_tanf
+
+[quote]
+`__builtin_tanf(x)`
+
+* emits `GLSL.std.450` `Tan` (instruction 15).
+* same `f32` scalar, literal-folding, and import rules as <<__builtin_sinf,__builtin_sinf>>.
+
+[[__builtin_sinf16]]
+=== __builtin_sinf16
+
+[quote]
+`__builtin_sinf16(x)`
+
+* emits `GLSL.std.450` `Sin` (instruction 13).
 * scalar only: operand and result are 16-bit floating point (`_Float16`).
 * the operand is cast to the result type before the call is emitted.
 * the `Float16` capability is added by the type layer.
@@ -617,19 +629,34 @@ ____
 </div>
 ++++
 
-=== __builtin_elementwise_sin / __builtin_elementwise_cos / __builtin_elementwise_tan
+[[__builtin_cosf16]]
+=== __builtin_cosf16
 
 [quote]
-____
-`__builtin_elementwise_sin(x)` +
-`__builtin_elementwise_cos(x)` +
-`__builtin_elementwise_tan(x)`
-____
+`__builtin_cosf16(x)`
 
-* emit `GLSL.std.450` `Sin` (instruction 13), `Cos` (14), and `Tan` (15), elementwise.
-* accept a scalar or a vector; the result has the same shape with 32-bit floating point (`f32`) components.
+* emits `GLSL.std.450` `Cos` (instruction 14).
+* same `f16` scalar, no-literal-folding, and import rules as <<__builtin_sinf16,__builtin_sinf16>>.
+
+[[__builtin_tanf16]]
+=== __builtin_tanf16
+
+[quote]
+`__builtin_tanf16(x)`
+
+* emits `GLSL.std.450` `Tan` (instruction 15).
+* same `f16` scalar, no-literal-folding, and import rules as <<__builtin_sinf16,__builtin_sinf16>>.
+
+[[__builtin_elementwise_sin]]
+=== __builtin_elementwise_sin
+
+[quote]
+`__builtin_elementwise_sin(x)`
+
+* emits `GLSL.std.450` `Sin` (instruction 13), elementwise.
+* accepts a scalar or a vector; the result has the same shape with 32-bit floating point (`f32`) components.
 * the operand is cast to the result type before the call is emitted.
-* a scalar `f32` literal folds exactly like the f32 family above.
+* a scalar `f32` literal folds exactly like <<__builtin_sinf,__builtin_sinf>>.
 * the `GLSL.std.450` import is emitted on first use.
 
 ++++
@@ -645,7 +672,26 @@ ____
 </div>
 ++++
 
-=== shufflevector
+[[__builtin_elementwise_cos]]
+=== __builtin_elementwise_cos
+
+[quote]
+`__builtin_elementwise_cos(x)`
+
+* emits `GLSL.std.450` `Cos` (instruction 14), elementwise.
+* same scalar/vector `f32` rules as <<__builtin_elementwise_sin,__builtin_elementwise_sin>>.
+
+[[__builtin_elementwise_tan]]
+=== __builtin_elementwise_tan
+
+[quote]
+`__builtin_elementwise_tan(x)`
+
+* emits `GLSL.std.450` `Tan` (instruction 15), elementwise.
+* same scalar/vector `f32` rules as <<__builtin_elementwise_sin,__builtin_elementwise_sin>>.
+
+[[__builtin_shufflevector]]
+=== __builtin_shufflevector
 
 [quote]
 `__builtin_shufflevector(v1, v2, i0, i1, ...)`
