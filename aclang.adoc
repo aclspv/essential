@@ -1,3 +1,7 @@
+= aclang
+:idprefix:
+:idseparator: -
+
 [quote]
 ____
 `aclang`, annotated C-family language parses subset of clang ast. +
