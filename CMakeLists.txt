@@ -44,6 +44,8 @@ endif()
 find_package(Clang)
 message(STATUS ${Clang_FOUND})
 if(Clang_FOUND)
+	unset(Clang_FOUND)
+	set(Clang_FOUND libclang)
 else()
 	unset(Clang_FOUND)
 	message(STATUS "clang is not found as package")
@@ -246,7 +248,7 @@ target_link_libraries(aclspv-essential
 	)
 
 target_link_libraries(aclspv-common
-	INTERFACE	libclang
+	INTERFACE	${Clang_FOUND}
 	INTERFACE	ae2f::Core
 	INTERFACE	ae2f::Sys
 	INTERFACE	$<BUILD_INTERFACE:SPIRV-Headers::SPIRV-Headers>
@@ -355,3 +357,5 @@ endif()
 if(${aclspv_example})
 	add_subdirectory(./example/)
 endif()
+
+message(STATUS "clang: ${Clang_FOUND}")

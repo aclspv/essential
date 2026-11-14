@@ -444,7 +444,7 @@ enum CXChildVisitResult aclexpr_visit(
 		{
 			cgjmp(aclexpr_visit_op1_plus(h_cur
 						, cgcase(OP_RECURSE_NOTHIN)
-						, cgcase(OP1_NOT)))
+						, cgcase(OP1_NOT)));
 		}
 
 		cgcsdef(OP1_NOT):
