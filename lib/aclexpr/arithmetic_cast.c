@@ -330,7 +330,7 @@ enum ACLEXPR_RET_ aclexpr_arithmetic_cast_literal(
 			case 16:
 				dbg_prefix();
 				dbg_call(fprintf, (stderr, "Cast from literal(half): %f\n"
-							, (double)aclutil_f16_bits_to_f32(
+							, (double)acltrl_f16_to_f32(
 								(aclspv_wrd_t)(c_old_literal.m_u64 & 0xFFFFu))));
 				RESULT.m_api_intmax = (imax)acltrl_f16_to_f32(
 						(aclspv_wrd_t)(c_old_literal.m_u64 & 0xFFFFu));
@@ -364,7 +364,7 @@ enum ACLEXPR_RET_ aclexpr_arithmetic_cast_literal(
 						(float)c_old_literal.m_api_intmax);
 				dbg_prefix();
 				dbg_call(fprintf, (stderr, "Literal result(half): %f\n"
-							, (double)aclutil_f16_bits_to_f32(
+							, (double)acltrl_f16_to_f32(
 								(aclspv_wrd_t)(RESULT.m_u64 & 0xFFFFu))));
 				break;
 
