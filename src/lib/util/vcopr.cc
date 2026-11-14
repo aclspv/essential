@@ -23,7 +23,7 @@
 #define	aclutil_vcopr_lbldcl(L)
 #endif
 
-#if	!__ae2f_MACRO_GENERATED
+#if	!_ae2f_MACRO_GENERATED
 
 #define	k_oper		|=
 #define	k_oper_inc	++
@@ -65,7 +65,7 @@ ae2f_MAC((L, k_oper, k_oper_inc, )) aclutil_vcopr_v(
 	_ae2f_gnuc(N_ae2f_clang(_Pragma("GCC diagnostic pop")));
 }
 
-#if !__ae2f_MACRO_GENERATED
+#if !_ae2f_MACRO_GENERATED
 #define	_aclutil_vcopr_v(L, k_oper, k_oper_inc, r, rd, c) aclutil_vcopr_v(r, rd, c)
 #endif
 

@@ -76,7 +76,7 @@ ae2f_MAC((L, )) aclutil_mkname_dbg(const aclspv_id_t c_id, const char* const c_n
 	L$$LBL_DONE: (void)0;
 }
 
-#if	!__ae2f_MACRO_GENERATED
+#if	!_ae2f_MACRO_GENERATED
 #define	_aclutil_mkname_dbg(L, c_id, c_name, cr_ctx, h_vec)	aclutil_mkname_dbg(c_id, c_name, cr_ctx, h_vec)
 #endif
 

@@ -244,33 +244,33 @@ typedef struct {
 	aclspv_wrd_t		m_sz, m_sz_real;
 } x_aclspv_vec;
 
-#undef	__ENUM
-#undef	__X
+#undef	_enum
+#undef	_x
 
-#define	__ENUM()			\
-	__X(SYMBOL),			\
-	__X(DUMP_DIAGNOSTICS),		\
-	__X(KILL_ON_DIAGNOSTICS),	\
-	__X(EXPLICIT_CAPABILITY),	\
-	__X(EXPLICIT_EXTENSION),	\
-	__X(EXPLICIT_EXTINST_IMPORT),	\
-	__X(ERROR_UNASSIGNED_VAL_USED)
+#define	_enum()			\
+	_x(SYMBOL),			\
+	_x(DUMP_DIAGNOSTICS),		\
+	_x(KILL_ON_DIAGNOSTICS),	\
+	_x(EXPLICIT_CAPABILITY),	\
+	_x(EXPLICIT_EXTENSION),	\
+	_x(EXPLICIT_EXTINST_IMPORT),	\
+	_x(ERROR_UNASSIGNED_VAL_USED)
 
-#define	__X(A)	ACLSPV_CTX_FLAGPAD0_##A
+#define	_x(A)	ACLSPV_CTX_FLAGPAD0_##A
 
 enum ACLSPV_CTX_FLAGPAD0_ {
-	__ENUM()
+	_enum()
 };
 
-#undef	__X
-#define	__X(A)	ACLSPV_CTX_FLAG0_##A = 1 << ACLSPV_CTX_FLAGPAD0_##A
+#undef	_x
+#define	_x(A)	ACLSPV_CTX_FLAG0_##A = 1 << ACLSPV_CTX_FLAGPAD0_##A
 
 enum ACLSPV_CTX_FLAG0_ {
-	__ENUM()
+	_enum()
 };
 
-#undef	__X
-#undef	__ENUM
+#undef	_x
+#undef	_enum
 
 /** 
  * type id. 
@@ -292,7 +292,12 @@ enum ACLSPV_ID_ {
 	ACLSPV_ID_U64,
 	ACLSPV_ID_I64,
 
+#if	__ACLSPV_SCLR_F16
 	ACLSPV_ID_F16,
+#else
+	ACLSPV_ID_F16_OFF,
+#endif
+
 	ACLSPV_ID_F32,
 	ACLSPV_ID_F64,
 

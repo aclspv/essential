@@ -25,13 +25,13 @@ enum ACLEXPR_RET_ aclspv_get_expr2(
 
 	ae2f_ifezerr(CTX)	return ACLEXPR_RET_FAILURE;
 
-	DATA.m_ctx		= CTX;				/* context. must be pointer to context. */
-	DATA.m_exprcount	= 0;				/* stack count. must be 0. */
-	DATA.m_id_ret		= 0;				/* result value id */
+	DATA.m_ctx		= CTX;			/* context. must be pointer to context. */
+	DATA.m_exprcount	= 0;			/* stack count. must be 0. */
+	DATA.m_id_ret		= 0;			/* result value id */
 	DATA.m_literal_flag	= ACLTRL_MASK_LTRL;	/* see enum UTIL_LITERAL_MASK_ */
-	DATA.m_tyid_current	= 0;				/* type casted */
-	DATA.m_num_cmdcounter	= 1;				/* count for operand */
-	DATA.m_id_branch	= 0;				/* bool1 merge label */
+	DATA.m_tyid_current	= 0;			/* type casted */
+	DATA.m_num_cmdcounter	= 1;			/* count for operand */
+	DATA.m_id_branch	= 0;			/* bool1 merge label */
 
 	ae2f_expected_but_else(CTX->m_tmp.m_v1.m_p)
 		return ACLEXPR_RET_FAILURE;
@@ -175,7 +175,7 @@ enum ACLEXPR_RET_ aclexpr_eval(
 	DATA.m_ctx		= CTX;				/* context. must be pointer to context. */
 	DATA.m_exprcount	= 0;				/* stack count. must be 0. */
 	DATA.m_id_ret		= 0;				/* result value id */
-	DATA.m_literal_flag	= ACLTRL_MASK_LTRL;	/* see enum UTIL_LITERAL_MASK_ */
+	DATA.m_literal_flag	= ACLTRL_MASK_LTRL;		/* see enum UTIL_LITERAL_MASK_ */
 	DATA.m_tyid_current	= 0;				/* type casted */
 	DATA.m_num_cmdcounter	= 1;				/* count for operand */
 	DATA.m_id_branch	= 0;				/* bool1 merge label */

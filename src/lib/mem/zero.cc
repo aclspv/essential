@@ -4,7 +4,7 @@
 #include <ae2f/cc/switchctl.h>
 #include <ae2f/pat/macrofunc.h>
 
-#if	!__ae2f_MACRO_GENERATED
+#if	!_ae2f_MACRO_GENERATED
 typedef unsigned	idx_t;
 typedef char		el_t;
 #endif
