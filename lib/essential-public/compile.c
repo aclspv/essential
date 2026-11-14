@@ -170,7 +170,7 @@ ae2f_extern ACLSPV_ABI_DECL aclspv_compile_t aclspv_ctx_compile2(
 
 	{
 		enum CXErrorCode CXERR = clang_parseTranslationUnit2(
-				h_cxidx, ae2f_NIL
+				h_cxidx, 0 
 				, (const char**)rd_argv_opt
 				, c_argc
 				, rdwr_unsaved, c_unsaved_count

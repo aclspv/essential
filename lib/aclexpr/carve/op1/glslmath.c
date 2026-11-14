@@ -4,6 +4,7 @@
 
 #include <aclcur/opX.h>
 #include <aclutil/extinst.h>
+#include <acltrl/f16.h>
 
 #include <aclty.h>
 
@@ -99,20 +100,36 @@ static aclspv_bool_t s_carve1_glsl_math(
 	}
 
 #if	__ACLSPV_MATH_LITERAL
-	/** scalar f32 literal: fold on the host. OpExtInst is not a legal
+	/** scalar f32/f16 literal: fold on the host. OpExtInst is not a legal
 	 * OpSpecConstantOp, so a constant context needs a plain OpConstant.
-	 * f16 literal folding is deferred; vectors have no literal folding. */
-	if(WIDTH == 32
+	 * vectors have no literal folding.
+	 *
+	 * an f16 literal carries its binary16 bit pattern, not a host float. */
+	if((WIDTH == 32 || WIDTH == 16)
 			&& aclty_get_veccfg(TY, CTX).m_num == 1
 			&& (rdwr_lst_extra[0].m_mask_literal
 				& (aclspv_wrd_t)ACLTRL_LTRL)) {
 		acltrl_t	R = rdwr_lst_extra[0].m_literal;
 		aclspv_id_t	FOLDED;
 
+		if(WIDTH == 16) {
+			R.m_flt = acltrl_f16_to_f32(
+					(aclspv_wrd_t)(R.m_u64 & 0xFFFFu));
+		}
+
 		if(!s_fold(c_inst, &R.m_flt))
 			return ACLEXPR_CARVE_NO;
 
-		ae2f_ifezerr(FOLDED = aclval_cfg_f32(R.m_flt, CTX))
+		if(WIDTH == 16) {
+			R.m_u64 = (aclspv_wrd2_t)acltrl_f32_to_f16(R.m_flt);
+			FOLDED = aclval_cfg_f16_bits(
+					(aclspv_wrd_t)(R.m_u64 & 0xFFFFu)
+					, CTX);
+		} else {
+			FOLDED = aclval_cfg_f32(R.m_flt, CTX);
+		}
+
+		ae2f_ifezerr(FOLDED)
 			return ACLEXPR_CARVE_NO;
 
 		*r_ltrl = R;

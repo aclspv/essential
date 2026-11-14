@@ -117,6 +117,7 @@ endif()
 ae2f_CoreLibFetchX(ae2f Core	main)
 ae2f_CoreLibFetchX(ae2f Pat	master)
 ae2f_CoreLibFetchX(ae2f Sys	main)
+ae2f_CoreLibFetchX(ae2f num	master)
 
 ae2fpreproctent_rel(port89 ${ae2f_port89_Wh} "ae2f/port89")
 ae2f_CoreLibFetchX_DNS(KhronosGroup KhronosGroup SPIRV-Headers main https://github.com/)

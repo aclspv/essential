@@ -42,7 +42,7 @@ int main(void) {
 			, 1
 			, &spirv_count
 			, &spirv0
-			, ae2f_NIL
+			, 0 
 			, ACLSPV_CTX_FLAG0_SYMBOL
 			);
 

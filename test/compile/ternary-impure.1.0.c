@@ -61,7 +61,7 @@ int main(void) {
 			, 1
 			, &count
 			, &spirv
-			, ae2f_NIL
+			, 0 
 			, ACLSPV_CTX_FLAG0_SYMBOL
 			);
 

@@ -14,6 +14,7 @@ ae2f_Macro_Lib_V2_REL(
 target_link_libraries(aclspv-common-essential
 	INTERFACE ae2f::Pat
 	INTERFACE aclspv::common
+	INTERFACE ae2f::num
 	)
 
 ae2f_CoreTestTentVerbose(aclspv-common-essential ./test/dummy)

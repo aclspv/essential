@@ -614,7 +614,8 @@ ____
 * scalar only: operand and result are 16-bit floating point (`_Float16`).
 * the operand is cast to the result type before the call is emitted.
 * the `Float16` capability is added by the type layer.
-* literal folding is not available for `f16` yet: a literal operand still goes through `OpExtInst`.
+* a scalar literal operand is folded on the host into an `OpConstant` instead of `OpExtInst`, because an extension instruction cannot appear in `OpSpecConstantOp`.
+* the host result is truncated to binary16 precision.
 * the `GLSL.std.450` import is emitted on first use.
 
 ++++
@@ -636,7 +637,7 @@ ____
 `__builtin_cosf16(x)`
 
 * emits `GLSL.std.450` `Cos` (instruction 14).
-* same `f16` scalar, no-literal-folding, and import rules as <<__builtin_sinf16,__builtin_sinf16>>.
+* same `f16` scalar, literal-folding, and import rules as <<__builtin_sinf16,__builtin_sinf16>>.
 
 [[__builtin_tanf16]]
 === __builtin_tanf16
@@ -645,7 +646,7 @@ ____
 `__builtin_tanf16(x)`
 
 * emits `GLSL.std.450` `Tan` (instruction 15).
-* same `f16` scalar, no-literal-folding, and import rules as <<__builtin_sinf16,__builtin_sinf16>>.
+* same `f16` scalar, literal-folding, and import rules as <<__builtin_sinf16,__builtin_sinf16>>.
 
 [[__builtin_elementwise_sin]]
 === __builtin_elementwise_sin

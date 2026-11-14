@@ -11,6 +11,8 @@
 #include <aclconst/specop.h>
 #include <aclcur/common.h>
 
+#include <acltrl/f16.h>
+
 #include <aclctx/id.h>
 #include <aclctx/err.h>
 
@@ -325,6 +327,14 @@ enum ACLEXPR_RET_ aclexpr_arithmetic_cast_literal(
 				dbg_call(fprintf, (stderr, "Cast from literal(float): %f\n", (float)c_old_literal.m_flt));
 				RESULT.m_api_intmax = (imax)c_old_literal.m_flt;
 				break;
+			case 16:
+				dbg_prefix();
+				dbg_call(fprintf, (stderr, "Cast from literal(half): %f\n"
+							, (double)aclutil_f16_bits_to_f32(
+								(aclspv_wrd_t)(c_old_literal.m_u64 & 0xFFFFu))));
+				RESULT.m_api_intmax = (imax)acltrl_f16_to_f32(
+						(aclspv_wrd_t)(c_old_literal.m_u64 & 0xFFFFu));
+				break;
 			default:
 				ae2fpat_assertassume(0 && "unknown float bit-width");
 				return ACLEXPR_RET_FAILURE;
@@ -348,6 +358,16 @@ enum ACLEXPR_RET_ aclexpr_arithmetic_cast_literal(
 				dbg_prefix();
 				dbg_call(fprintf, (stderr, "Literal result(float): %f\n", RESULT.m_flt));
 				break;
+
+			case 16:
+				RESULT.m_u64 = (aclspv_wrd2_t)acltrl_f32_to_f16(
+						(float)c_old_literal.m_api_intmax);
+				dbg_prefix();
+				dbg_call(fprintf, (stderr, "Literal result(half): %f\n"
+							, (double)aclutil_f16_bits_to_f32(
+								(aclspv_wrd_t)(RESULT.m_u64 & 0xFFFFu))));
+				break;
+
 			default:
 				ae2fpat_assertassume(0 && "unknown float bit-width");
 				return ACLEXPR_RET_FAILURE;
@@ -355,14 +375,34 @@ enum ACLEXPR_RET_ aclexpr_arithmetic_cast_literal(
 	}
 
 	else if(aclty_is_sclr_flt(c_old_type) && aclty_is_sclr_flt(c_new_type) && c_old_type != c_new_type) {
+		const unsigned	OLD_WIDTH = (unsigned)aclty_get_sclr_width(c_old_type);
+
 		dbg_puts("two are float");
 		switch(aclty_get_sclr_width(c_new_type)) {
 			case 64:
-				RESULT.m_dbl = c_old_literal.m_flt;
+				RESULT.m_dbl = (OLD_WIDTH == 16)
+					? (double)acltrl_f16_to_f32(
+							(aclspv_wrd_t)(c_old_literal.m_u64 & 0xFFFFu))
+					: (double)c_old_literal.m_flt;
 				break;
+
 			case 32:
-				RESULT.m_flt = (float)c_old_literal.m_dbl;
+				if(OLD_WIDTH == 64)
+					RESULT.m_flt = (float)c_old_literal.m_dbl;
+				else if(OLD_WIDTH == 16)
+					RESULT.m_flt = acltrl_f16_to_f32(
+							(aclspv_wrd_t)(c_old_literal.m_u64 & 0xFFFFu));
+				else
+					RESULT.m_flt = c_old_literal.m_flt;
 				break;
+
+			case 16:
+				RESULT.m_u64 = (aclspv_wrd2_t)acltrl_f32_to_f16(
+						(OLD_WIDTH == 64)
+						? (float)c_old_literal.m_dbl
+						: c_old_literal.m_flt);
+				break;
+
 			default:
 				ae2fpat_assertassume(0 && "unknown float bit-width");
 				return ACLEXPR_RET_FAILURE;
@@ -445,6 +485,13 @@ enum ACLEXPR_RET_ aclexpr_arithmetic_cast_literal(
 		*r_newid = ID_RET;
 		return ACLEXPR_RET_SUCCESS_LITERAL;
 
+		case ACLSPV_ID_F16:
+		ae2f_expected_but_else(ID_RET = aclval_cfg_f16_bits(
+					(aclspv_wrd_t)(RESULT.m_u64 & 0xFFFFu)
+					, h_ctx)) return ACLEXPR_RET_FAILURE;
+
+		*r_newid = ID_RET;
+		return ACLEXPR_RET_SUCCESS_LITERAL;
 		case ACLSPV_ID_F32:
 		ae2f_expected_but_else(ID_RET = aclval_cfg_f32(
 					RESULT.m_flt

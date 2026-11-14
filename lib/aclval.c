@@ -1,6 +1,6 @@
-
 #include <aclval.h>
 #include <aclutil/emitx.h>
+#include <acltrl/f16.h>
 #include <ae2f/c90/stdbool.h>
 
 #include <ae2f/pat/dbg.h>
@@ -147,7 +147,8 @@ aclspv_id_t aclval_cfg(
 	ae2f_ifezerr(aclty_mk_default((aclty_default_t) MAP[c_idx_ty][c_idx_nbyte], h_ctx))
 		return 0;
 
-	if(C->m_const_ids[c_idx_ty][c_idx_nbyte]) return C->m_const_ids[c_idx_ty][c_idx_nbyte];
+	if(C->m_const_ids[MAP[c_idx_ty][c_idx_nbyte]])
+		return C->m_const_ids[MAP[c_idx_ty][c_idx_nbyte]];
 
 	if(c_idx_nbyte == ACLVAL_NBYTE_8) {
 		ae2f_ifezerr(h_ctx->m_count.m_types = aclutil_emitx_5(
@@ -170,7 +171,7 @@ aclspv_id_t aclval_cfg(
 					)) return 0;
 	}
 
-	return C->m_const_ids[c_idx_ty][c_idx_nbyte] = h_ctx->m_id++;
+	return C->m_const_ids[MAP[c_idx_ty][c_idx_nbyte]] = aclctx_newid(h_ctx);
 }
 
 aclval_spec_t ae2f_ccpure aclval_get_spec(
@@ -232,6 +233,17 @@ aclval_spec_t aclval_cfg_spec(
 	C->m_spec_constant.m_val	= h_ctx->m_id++;
 
 	return C->m_spec_constant;
+}
+
+aclspv_id_t	aclval_cfg_f16_bits(
+		const aclspv_wrd_t c_bits,
+		h_aclspv_ctx_t h_ctx
+		) {
+	return aclval_cfg(
+			(aclspv_wrd2_t)(c_bits & 0xFFFFu)
+			, h_ctx, ACLVAL_NBYTE_2
+			, ACLVAL_TY_FLT
+			);
 }
 
 aclspv_id_t	aclval_cfg_f32(const float c_val, h_aclspv_ctx_t h_ctx)

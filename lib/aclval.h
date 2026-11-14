@@ -42,7 +42,7 @@ typedef struct {
 	aclspv_wrd_t		m_key_1;
 
 	/** @brief @see UTIL_CV_TY_, UTIL_CV_NBYTE_ */
-	aclspv_id_t		m_const_ids[ACLVAL_TY_MAX][ACLVAL_NBYTE_MAX];
+	aclspv_id_t		m_const_ids[ACLSPV_ID_END];
 	aclspv_vid_t		m_const_val_bool;
 
 	/** nil value. type id is key. */
@@ -113,6 +113,12 @@ aclspv_wrd_t aclval_cfg_bindidx(
 		aclspv_wrd_t c_bind_idx,
 		aclspv_wrd_t c_storage_class,
 		h_aclspv_ctx_t h_ctx);
+
+/** `c_bits` is an IEEE binary16 bit pattern, not a host float value. */
+aclspv_vid_t aclval_cfg_f16_bits(
+		const aclspv_wrd_t c_bits,
+		h_aclspv_ctx_t h_ctx
+		);
 
 aclspv_vid_t aclval_cfg_f32(
 		const float c_val, 
