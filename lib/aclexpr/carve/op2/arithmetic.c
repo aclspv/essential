@@ -108,14 +108,14 @@ ae2f_inline_f static ae2f_ccpure aclspv_opcode_t s_op_to_spv(
 	}
 }
 
-ae2f_inline_f static ae2f_ccconst struct aclutil_ltrl_eval_t	s_eval2_ltrl(
-		const aclutil_literal	c_oprndA,
-		const aclutil_literal	c_oprndB,
+ae2f_inline_f static ae2f_ccconst struct acltrl_eval	s_eval2_ltrl(
+		const acltrl_t	c_oprndA,
+		const acltrl_t	c_oprndB,
 		const enum SpvOp_	c_opcode,
 		const enum ACLSPV_ID_	c_type
 		)
 {
-	struct aclutil_ltrl_eval_t RET;
+	struct acltrl_eval RET;
 
 	switch((uintmax_t)c_type) {
 #define	EXPR_TWO(L_oper, L_mem, c_case)					\
@@ -298,18 +298,18 @@ static aclspv_bool_t s_negate(
 
 	switch(r_extra->m_mask_literal) {
 		default:
-		case ACLUTIL_LTRL_MASK_LTRL:
-		case ACLUTIL_LTRL_LTRL:
+		case ACLTRL_MASK_LTRL:
+		case ACLTRL_LTRL:
 			*r_id = 0;
 			rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_OPCODE] = opcode_old;
 
 			return 0;
 
-		case ACLUTIL_LTRL_CONST:
+		case ACLTRL_CONST:
 			rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_END] = rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_END + 1];
 			return !(*r_id = aclconst_specop(rdwr_lst_scale_buf, 5, h_ctx));
 
-		case ACLUTIL_LTRL_RT:
+		case ACLTRL_RT:
 			return !(*r_id = aclcur_cfg_op1(0
 						, (enum SpvOp_)rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_OPCODE]
 						, rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_RESTYID]
@@ -323,7 +323,7 @@ static aclspv_bool_t s_negate(
 
 /** 0 when succeed */
 aclspv_bool_t aclexpr_carve2_arithmetic_do(
-		aclutil_literal			ae2fcc_arg_sarr_restrict(r_ltrl, 1),
+		acltrl_t			ae2fcc_arg_sarr_restrict(r_ltrl, 1),
 		aclexpr_opbincfg_extra		ae2fcc_arg_sarr_restrict(r_extra, 1),
 		aclspv_id_t			ae2fcc_arg_sarr_restrict(r_id, 1),
 		const aclexpr_opbincfg_extra	ae2fcc_arg_sarr_restrict(rd_extra, 2),
@@ -348,10 +348,10 @@ aclspv_bool_t aclexpr_carve2_arithmetic_do(
 			 * so that OpConstant is emitted in dominating section instead of
 			 * OpFSub inside one if-arm only. Fixes dominance error in
 			 * chained if-else (t16_vs_main / gl-simple test). */
-			if ((r_extra->m_mask_literal & ACLUTIL_LTRL_LTRL) == 0)
-				r_extra->m_mask_literal = ACLUTIL_LTRL_MASK_RT;
+			if ((r_extra->m_mask_literal & ACLTRL_LTRL) == 0)
+				r_extra->m_mask_literal = ACLTRL_MASK_RT;
 			else
-				r_extra->m_mask_literal &= ~(aclspv_wrd_t)(ACLUTIL_LTRL_CONST);
+				r_extra->m_mask_literal &= ~(aclspv_wrd_t)(ACLTRL_CONST);
 		}
 	}
 
@@ -379,10 +379,10 @@ aclspv_bool_t aclexpr_carve2_arithmetic_do(
 #endif
 
 	unless(*r_id) switch(r_extra->m_mask_literal) {
-		case ACLUTIL_LTRL_MASK_LTRL:
-		case ACLUTIL_LTRL_LTRL:
+		case ACLTRL_MASK_LTRL:
+		case ACLTRL_LTRL:
 			{
-				struct aclutil_ltrl_eval_t EVAL_LIT
+				struct acltrl_eval EVAL_LIT
 					= s_eval2_ltrl(
 							rd_extra[0].m_literal
 							, rd_extra[1].m_literal
@@ -413,14 +413,14 @@ aclspv_bool_t aclexpr_carve2_arithmetic_do(
 			break;
 
 
-		case ACLUTIL_LTRL_MASK_CONST:
+		case ACLTRL_MASK_CONST:
 			ae2f_ifezerr(*r_id = aclconst_specop(
 						rdwr_lst_scale_buf
 						, 6
 						, h_ctx)) return 1;
 			break;
 
-		case ACLUTIL_LTRL_MASK_RT:
+		case ACLTRL_MASK_RT:
 
 			/** runtime: the operation is a graph node, flushed by aclcur_emit(). */
 			{
@@ -465,7 +465,7 @@ aclspv_bool_t aclexpr_carve2_arithmetic_do(
 			aclexpr_opbincfg_extra		ae2fcc_arg_sarr_restrict(rdwr_prv_extra, 1),
 			aclspv_wrd_t			ae2fcc_arg_sarr_restrict(rdwr_lst_scale_buf, ACLEXPR_OPBINCFG_END + 2),
 			aclexpr_opbincfg_extra		ae2fcc_arg_sarr_restrict(rdwr_lst_extra, 2),
-			aclutil_literal			ae2fcc_arg_sarr_restrict(r_ltrl, 1)
+			acltrl_t			ae2fcc_arg_sarr_restrict(r_ltrl, 1)
 			) 
 {
 	/** pointer arithmetic (`p + n`, `p - n`, `p += n`, `p -= n`, `p - q`):
@@ -500,7 +500,7 @@ aclspv_bool_t aclexpr_carve2_arithmetic_do(
 #define	OPITER(NUM_OPRND) \
 	{										\
 		{	\
-			const aclutil_literal OLD_LITERAL = rdwr_lst_extra[NUM_OPRND].m_literal;			\
+			const acltrl_t OLD_LITERAL = rdwr_lst_extra[NUM_OPRND].m_literal;			\
 			aclspv_id_t OLD_ID 									\
 			= rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_END + NUM_OPRND];					\
 			rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_END + NUM_OPRND] = CTX(rdwr_data)->m_id++;		\

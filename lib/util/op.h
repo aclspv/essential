@@ -35,7 +35,7 @@ enum UTIL_OPBIN2_ {
 typedef struct {
 	aclspv_wrd_t	m_type_original;
 	aclspv_wrd_t	m_mask_literal;
-	aclutil_literal	m_literal;
+	acltrl_t	m_literal;
 	CXCursor	m_cursor;
 
 	aclspv_bool_t	m_is_assign;

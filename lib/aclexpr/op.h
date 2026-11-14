@@ -2,7 +2,7 @@
 #define aclexpr_op_h
 
 #include <aclty/vec.h>
-#include <util/literal.h>
+#include <acltrl.h>
 
 enum ACLEXPR_OPBINCFG_ {
 	ACLEXPR_OPBINCFG_NUMOPRND,
@@ -123,7 +123,7 @@ enum ACLEXPR_OP_ {
 typedef struct {
 	aclspv_wrd_t	m_type_original;
 	aclspv_wrd_t	m_mask_literal;
-	aclutil_literal	m_literal;
+	acltrl_t	m_literal;
 	CXCursor	m_cursor;
 
 	/** see ACLEXPR_OPCFGX_STATE0_ */

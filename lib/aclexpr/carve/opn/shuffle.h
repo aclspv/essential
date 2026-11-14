@@ -10,7 +10,7 @@ aclspv_bool_t aclexpr_carve_opn_shuffle(
 		ae2f_unused h_scale_t				h_lst_scale,
 		aclspv_wrd_t* const ae2f_restrict		rdwr_lst_scale_buf,
 		aclexpr_opbincfg_extra* ae2f_restrict		rdwr_lst_extra,
-		aclutil_literal* ae2f_restrict			r_ltrl
+		acltrl_t* ae2f_restrict			r_ltrl
 		);
 
 #endif

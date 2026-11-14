@@ -123,7 +123,7 @@ aclspv_bool_t aclexpr_carve2_cmp(
 		aclexpr_opbincfg_extra		ae2fcc_arg_sarr_restrict(rdwr_prv_extra, 1),
 		aclspv_wrd_t			ae2fcc_arg_sarr_restrict(rdwr_lst_scale_buf, ACLEXPR_OPBINCFG_END + 2),
 		aclexpr_opbincfg_extra		ae2fcc_arg_sarr_restrict(rdwr_lst_extra, 2),
-		ae2f_unused aclutil_literal	ae2fcc_arg_sarr_restrict(r_ltrl, 1)
+		ae2f_unused acltrl_t	ae2fcc_arg_sarr_restrict(r_ltrl, 1)
 		) {
 
 	rdwr_prv_extra->m_type_original = rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_RESTYID] = s_decide_cast(
@@ -154,7 +154,7 @@ aclspv_bool_t aclexpr_carve2_cmp(
 #define	OPITER(NUM_OPRND) \
 	{										\
 		{	\
-			const aclutil_literal OLD_LITERAL = rdwr_lst_extra[NUM_OPRND].m_literal;			\
+			const acltrl_t OLD_LITERAL = rdwr_lst_extra[NUM_OPRND].m_literal;			\
 			aclspv_id_t OLD_ID 									\
 			= rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_END + NUM_OPRND];					\
 			rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_END + NUM_OPRND] = CTX(rdwr_data)->m_id++;		\
@@ -209,7 +209,7 @@ aclspv_bool_t aclexpr_carve2_cmp(
 	 * OpSpecConstantOp) cannot carry a bool result type cleanly, so a
 	 * comparison is ALWAYS a runtime graph node — regardless of the
 	 * operands being literal/constant foldable. */
-	rdwr_prv_extra->m_mask_literal = ACLUTIL_LTRL_MASK_RT;
+	rdwr_prv_extra->m_mask_literal = ACLTRL_MASK_RT;
 
 	ae2f_ifezerr(rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_OPCODE] = s_cmp_to_spv(
 				ACLEXPR_OPBINCFG_RESTYID[rdwr_lst_scale_buf]

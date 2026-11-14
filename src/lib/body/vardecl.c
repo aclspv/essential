@@ -60,7 +60,7 @@ static enum CXChildVisitResult	s_vardecl_init_detect(CXCursor h_cur, CXCursor h_
 /** @brief it produces error on ctx. */
 ae2f_MAC((L, )) aclemit_body_vardecl(CXCursor h_cur, h_aclspv_ctx_t h_ctx) { ae2fpat_assertassume(h_ctx); {
 	h_aclspv_ctx_t	L$$CTX = h_ctx;
-	aclutil_literal	L$$LITERAL;
+	acltrl_t	L$$LITERAL;
 	aclspv_id_t		L$$TYPEID = 0;
 	aclspv_id_t		L$$TYPE_PTR = 0;
 	aclspv_id_t		L$$REG = 0;
@@ -142,7 +142,7 @@ ae2f_MAC((L, )) aclemit_body_vardecl(CXCursor h_cur, h_aclspv_ctx_t h_ctx) { ae2
 				switch(aclexpr_arithmetic_cast_non_literal(
 							L$$NODE.m_val
 							, L$$NODE.m_ty
-							, ACLUTIL_LTRL_CONST
+							, ACLTRL_CONST
 							, &L$$INIT
 							, L$$TYPEID
 							, L$$CTX

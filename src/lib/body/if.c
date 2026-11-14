@@ -24,7 +24,7 @@ ae2f_MAC((L, )) aclemit_body_if(CXCursor h_cur, h_aclspv_ctx_t h_ctx) {
 				L$$WEIGHTS[2] = {0, 0},
 				L$$IFCTL = SpvSelectionControlMaskNone;
 
-	aclutil_literal		L$$LTLR;
+	acltrl_t		L$$LTLR;
 
 	/** fnret merged across the branches: parent | true | false. */
 	aclspv_bool_t		L$$FNRET_PAR = 0,

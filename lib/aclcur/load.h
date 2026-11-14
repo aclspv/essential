@@ -6,8 +6,7 @@
 #include <aclspv.h>
 
 #include "./flag0.h"
-
-#include <util/literal.h>
+#include <acltrl.h>
 
 typedef struct aclcur_load {
 	aclspv_id_t	m_reg;
@@ -33,7 +32,7 @@ aclcur_flag0_tent(ACLCUR_FLAG0_LOAD_, aclcur_flag0_load);
 aclspv_id_t	aclcur_load_reg(
 		aclspv_id_t c_reg,
 		h_aclspv_ctx_t h_ctx,
-		aclutil_literal* ae2f_restrict r_lit_opt
+		acltrl_t* ae2f_restrict r_lit_opt
 		);
 
 /**
@@ -44,7 +43,7 @@ aclspv_id_t	aclcur_load_reg(
 aclspv_id_t	aclcur_load_reg_explicit(
 		aclspv_id_t c_reg,
 		h_aclspv_ctx_t h_ctx,
-		aclutil_literal* ae2f_restrict r_lit_opt
+		acltrl_t* ae2f_restrict r_lit_opt
 		);
 
 #endif

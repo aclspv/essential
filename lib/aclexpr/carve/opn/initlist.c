@@ -44,7 +44,7 @@ aclspv_bool_t aclexpr_carve_opn_initlist(
 		ae2f_unused h_scale_t			h_lst_scale,
 		aclspv_wrd_t* const ae2f_restrict	rdwr_lst_scale_buf,
 		aclexpr_opbincfg_extra* ae2f_restrict rdwr_lst_extra,
-		aclutil_literal* ae2f_restrict		r_ltrl
+		acltrl_t* ae2f_restrict		r_ltrl
 		) {
 	const aclspv_wrd_t	N0	= rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_NUMOPRND];
 	aclspv_wrd_t		N	= N0;
@@ -52,7 +52,7 @@ aclspv_bool_t aclexpr_carve_opn_initlist(
 	const aclty_t* ae2f_restrict P_TY;
 	aclspv_id_t		TY_ELM	= 0;
 	aclspv_wrd_t		EXPECTED = 0;
-	aclspv_wrd_t		MASK = ACLUTIL_LTRL_MASK_LTRL;
+	aclspv_wrd_t		MASK = ACLTRL_MASK_LTRL;
 	aclspv_wrd_t		i;
 	/** local operand list: union pads append ids past the visited
 	 * operands, but the scale's operand slots and extras share one
@@ -138,7 +138,7 @@ aclspv_bool_t aclexpr_carve_opn_initlist(
 
 						aclmemzero(&XTRA[i], sizeof(XTRA[i]));
 						XTRA[i].m_type_original = TY_I;
-						XTRA[i].m_mask_literal = ACLUTIL_LTRL_MASK_CONST;
+						XTRA[i].m_mask_literal = ACLTRL_MASK_CONST;
 					}
 
 					N = EXPECTED;
@@ -166,8 +166,8 @@ aclspv_bool_t aclexpr_carve_opn_initlist(
 				/** the array length must be a plain literal (not a
 				 * spec-constant) to size the list. */
 				ae2f_ifnezerr_strict(
-						(LB.m_val_mask & ACLUTIL_LTRL_MASK_LTRL)
-						!= ACLUTIL_LTRL_MASK_LTRL) {
+						(LB.m_val_mask & ACLTRL_MASK_LTRL)
+						!= ACLTRL_MASK_LTRL) {
 					err_puts("[carve::opn::initlist] array length is not a literal");
 					return ACLEXPR_CARVE_NO;
 				}
@@ -203,7 +203,7 @@ aclspv_bool_t aclexpr_carve_opn_initlist(
 		OP[i] = rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_END + i];
 
 	for(i = 0; i < N; ++i) {
-		const aclutil_literal OLD_LITERAL = XTRA[i].m_literal;
+		const acltrl_t OLD_LITERAL = XTRA[i].m_literal;
 		const aclspv_id_t OLD_ID = OP[i];
 		const aclspv_id_t TY_I = (P_TY->m_class == ACLTY_STRUCT)
 			? aclty_get_struct_mbr((aclty_t*)P_TY, i, CTX(rdwr_data))->m_info.m_struct_mbr.m_id_mbr
@@ -263,7 +263,7 @@ aclspv_bool_t aclexpr_carve_opn_initlist(
 
 	rdwr_prv_extra->m_type_original = TY_RES;
 
-	if(MASK & ACLUTIL_LTRL_CONST) {
+	if(MASK & ACLTRL_CONST) {
 		/** all elements foldable: emit OpConstantComposite straight into
 		 * the types section. a composite is never a scalar literal, so
 		 * the mask is CONSTANT only (0x1). */
@@ -289,7 +289,7 @@ aclspv_bool_t aclexpr_carve_opn_initlist(
 				= OP[i];
 		}
 
-		rdwr_prv_extra->m_mask_literal = ACLUTIL_LTRL_MASK_CONST;
+		rdwr_prv_extra->m_mask_literal = ACLTRL_MASK_CONST;
 		*r_ltrl = rdwr_prv_extra->m_literal;
 		return ACLEXPR_CARVE_OK;
 	}
@@ -308,6 +308,6 @@ aclspv_bool_t aclexpr_carve_opn_initlist(
 		return ACLEXPR_CARVE_NO;
 	}
 
-	rdwr_prv_extra->m_mask_literal = ACLUTIL_LTRL_MASK_RT;
+	rdwr_prv_extra->m_mask_literal = ACLTRL_MASK_RT;
 	return ACLEXPR_CARVE_OK;
 }

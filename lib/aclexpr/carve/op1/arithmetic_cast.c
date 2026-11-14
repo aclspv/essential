@@ -9,11 +9,11 @@
 			aclexpr_opbincfg_extra		ae2fcc_arg_sarr_restrict(rdwr_prv_extra, 1),
 			aclspv_wrd_t			ae2fcc_arg_sarr_restrict(rdwr_lst_scale_buf, ACLEXPR_OPBINCFG_END + 1),
 			aclexpr_opbincfg_extra		ae2fcc_arg_sarr_restrict(rdwr_lst_extra, 1),
-			ae2f_unused aclutil_literal	ae2fcc_arg_sarr_restrict(r_ltrl, 1)
+			ae2f_unused acltrl_t	ae2fcc_arg_sarr_restrict(r_ltrl, 1)
 			) {
 		*rdwr_prv_idval = rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_END];
 		if(rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_RESTYID] != rdwr_lst_extra[0].m_type_original) {
-			const aclutil_literal OLD_LITERAL = rdwr_lst_extra[0].m_literal;
+			const acltrl_t OLD_LITERAL = rdwr_lst_extra[0].m_literal;
 			const aclspv_id_t OLD_ID = rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_END];
 
 			dbg_prefix(("Yup, old id is needed"));

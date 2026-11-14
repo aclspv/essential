@@ -42,7 +42,7 @@ aclspv_bool_t aclexpr_carve(
 			, &CMDSTCK_SCALE(CTX(rdwr_data))
 			, *LST_SCALE
 			);
-	aclutil_literal* ae2f_restrict RET_LITERAL
+	acltrl_t* ae2f_restrict RET_LITERAL
 		= &RET_LITERAL_REF(rdwr_data);
 
 	aclspv_wrd_t	NUM_OPRND;

@@ -12,7 +12,7 @@ static aclspv_bool_t s_cond_select(
 		aclexpr_opbincfg_extra* ae2f_restrict const	rdwr_prv_extra,
 		aclspv_wrd_t* ae2f_restrict const		rdwr_lst_scale_buf,
 		aclexpr_opbincfg_extra* ae2f_restrict const	rdwr_lst_extra,
-		aclutil_literal* ae2f_restrict const		r_ltrl
+		acltrl_t* ae2f_restrict const		r_ltrl
 		) {
 	const h_aclspv_ctx_t	CTX = rdwr_data->m_ctx;
 	const aclspv_id_t	TY = rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_RESTYID];
@@ -84,7 +84,7 @@ static aclspv_bool_t s_cond_branch(
 		aclexpr_opbincfg_extra* ae2f_restrict const	rdwr_prv_extra,
 		aclspv_wrd_t* ae2f_restrict const		rdwr_lst_scale_buf,
 		aclexpr_opbincfg_extra* ae2f_restrict const	rdwr_lst_extra,
-		aclutil_literal* ae2f_restrict const		r_ltrl
+		acltrl_t* ae2f_restrict const		r_ltrl
 		) {
 	const h_aclspv_ctx_t	CTX = rdwr_data->m_ctx;
 	const aclspv_id_t	TY = rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_RESTYID];
@@ -141,7 +141,7 @@ aclspv_bool_t aclexpr_carve3_cond(
 		aclexpr_opbincfg_extra		ae2fcc_arg_sarr_restrict(rdwr_prv_extra, 1),
 		aclspv_wrd_t			ae2fcc_arg_sarr_restrict(rdwr_lst_scale_buf, ACLEXPR_OPBINCFG_END + 3),
 		aclexpr_opbincfg_extra		ae2fcc_arg_sarr_restrict(rdwr_lst_extra, 3),
-		aclutil_literal			ae2fcc_arg_sarr_restrict(r_ltrl, 1)
+		acltrl_t			ae2fcc_arg_sarr_restrict(r_ltrl, 1)
 		) {
 	const aclspv_id_t	TY = rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_RESTYID];
 

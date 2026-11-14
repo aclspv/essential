@@ -119,7 +119,7 @@ static aclspv_bool_t s_iter(
 		)
 {										
 	if(rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_RESTYID] != rdwr_lst_extra[c_idx_oprnd].m_type_original) {
-		const aclutil_literal OLD_LITERAL = rdwr_lst_extra[c_idx_oprnd].m_literal;			
+		const acltrl_t OLD_LITERAL = rdwr_lst_extra[c_idx_oprnd].m_literal;			
 		aclspv_id_t OLD_ID 									
 			= rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_END + c_idx_oprnd];					
 		rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_END + c_idx_oprnd] = (rdwr_data)->m_ctx->m_id++;		
@@ -176,14 +176,14 @@ ae2f_inline_f static aclspv_id_t	s_ty_out(
 	return s_ty_oprnd(c_ty_origin, h_ctx);
 }
 
-ae2f_inline_f static ae2f_ccconst struct aclutil_ltrl_eval_t	s_eval2_ltrl(
-		const aclutil_literal	c_oprndA,
-		const aclutil_literal	c_oprndB,
+ae2f_inline_f static ae2f_ccconst struct acltrl_eval	s_eval2_ltrl(
+		const acltrl_t	c_oprndA,
+		const acltrl_t	c_oprndB,
 		const enum SpvOp_	c_opcode,
 		const enum ACLSPV_ID_	c_type
 		)
 {
-	struct aclutil_ltrl_eval_t RET;
+	struct acltrl_eval RET;
 
 	switch((uintmax_t)c_type) {
 #define	EXPR_TWO(L_oper, L_mem, c_case)					\
@@ -254,7 +254,7 @@ aclspv_bool_t aclexpr_carve2_bool0(
 		h_scale_t			h_lst_scale,
 		aclspv_wrd_t			ae2fcc_arg_sarr_restrict(rdwr_lst_scale_buf, ACLEXPR_OPBINCFG_END + 2),
 		aclexpr_opbincfg_extra		ae2fcc_arg_sarr_restrict(rdwr_lst_extra, 2),
-		aclutil_literal			ae2fcc_arg_sarr_restrict(r_ltrl, 1)
+		acltrl_t			ae2fcc_arg_sarr_restrict(r_ltrl, 1)
 		) {
 	aclspv_wrd_t OPNATIVE = s_opcvrt(rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_OPCODE]);
 	const aclspv_bool_t ISASS = s_is_assign(rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_OPCODE]);
@@ -325,10 +325,10 @@ aclspv_bool_t aclexpr_carve2_bool0(
 	rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_OPCODE] = OPNATIVE;
 
 	switch(rdwr_prv_extra->m_mask_literal) {
-		case ACLUTIL_LTRL_MASK_LTRL: 
-		case ACLUTIL_LTRL_LTRL:
+		case ACLTRL_MASK_LTRL: 
+		case ACLTRL_LTRL:
 			{
-				struct aclutil_ltrl_eval_t EVAL_LIT 
+				struct acltrl_eval EVAL_LIT 
 					= s_eval2_ltrl(
 							rdwr_lst_extra[0].m_literal
 							, rdwr_lst_extra[1].m_literal
@@ -359,7 +359,7 @@ aclspv_bool_t aclexpr_carve2_bool0(
 				break;
 			}
 
-		case ACLUTIL_LTRL_MASK_RT:
+		case ACLTRL_MASK_RT:
 			/** runtime: the operation is a graph node, flushed by aclcur_emit(). */
 			ae2f_ifezerr(*rdwr_prv_idval = aclcur_cfg_op2(
 						rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_RESID]
@@ -371,7 +371,7 @@ aclspv_bool_t aclexpr_carve2_bool0(
 				return ACLEXPR_CARVE_NO;
 			break;
 
-		case ACLUTIL_LTRL_MASK_CONST:
+		case ACLTRL_MASK_CONST:
 			ae2f_ifezerr(*rdwr_prv_idval = aclconst_specop(
 						rdwr_lst_scale_buf
 						, 6

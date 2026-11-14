@@ -63,7 +63,7 @@ struct aclcur {
 	aclspv_wrd_t	m_depth;
 
 	/** a value tracked on current branch (label) */
-	aclutil_literal m_val_lit;
+	acltrl_t m_val_lit;
 
 	/** 
 	 * literal mask for predicted value.

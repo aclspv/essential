@@ -17,14 +17,14 @@
 			aclexpr_opbincfg_extra		ae2fcc_arg_sarr_restrict(rdwr_prv_extra, 1),
 			aclspv_wrd_t			ae2fcc_arg_sarr_restrict(rdwr_lst_scale_buf, ACLEXPR_OPBINCFG_END + 1),
 			aclexpr_opbincfg_extra		ae2fcc_arg_sarr_restrict(rdwr_lst_extra, 1),
-			aclutil_literal			ae2fcc_arg_sarr_restrict(r_ltrl, 1)
+			acltrl_t			ae2fcc_arg_sarr_restrict(r_ltrl, 1)
 			)  {
 		const aclspv_id_t	REG = aclexpr_curreg_find(
 				clang_getCanonicalCursor(clang_getCursorDefinition(rdwr_lst_extra->m_cursor))
 				, rdwr_data->m_ctx
 				);
 
-		aclutil_literal LTRL = {0, };
+		acltrl_t LTRL = {0, };
 		aclspv_id_t	V;
 
 		aclspv_wrd_t	O = rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_OPCODE];
@@ -53,7 +53,7 @@
 			return ACLEXPR_CARVE_NO;
 		}
 
-		if(rdwr_lst_extra->m_mask_literal & (aclspv_wrd_t)ACLUTIL_LTRL_LTRL) {
+		if(rdwr_lst_extra->m_mask_literal & (aclspv_wrd_t)ACLTRL_LTRL) {
 			switch(O) {
 				case ACLEXPR_OP1_PREDEC:
 					r_ltrl->m_api_uintmax = LTRL.m_api_uintmax - 1;
@@ -127,7 +127,7 @@
 					return ACLEXPR_CARVE_NO;
 
 				case ACLEXPR_RET_SUCCESS:
-					rdwr_prv_extra->m_mask_literal &= ACLUTIL_LTRL_RT;
+					rdwr_prv_extra->m_mask_literal &= ACLTRL_RT;
 					ae2f_ifezerr(VP = aclcur_cfg_op2(
 								VP, (enum SpvOp_)RO
 								, rdwr_lst_extra->m_type_original
@@ -147,7 +147,7 @@
 						B[4] = V;
 						B[5] = ONE_CASTED;
 
-						rdwr_prv_extra->m_mask_literal &= ACLUTIL_LTRL_CONST;
+						rdwr_prv_extra->m_mask_literal &= ACLTRL_CONST;
 
 						ae2f_ifezerr(aclconst_specop(
 									B

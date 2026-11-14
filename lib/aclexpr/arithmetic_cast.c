@@ -1,7 +1,6 @@
 #include <ae2f/pat/dbg.h>
 #include <ae2f/cc/arg_sarr.h>
 
-#include <util/literal.h>
 #include <aclutil/wrdemit.h>
 
 #include <aclty.h>
@@ -21,7 +20,7 @@
 static enum ACLEXPR_RET_ s_cast_arithmetic(
 		const aclspv_vid_t	c_old_id,
 		const aclty_id_t	c_old_type,
-		const aclutil_ltrlmask_t	c_flag_literal,
+		const acltrl_mask_t	c_flag_literal,
 		aclspv_id_t			ae2fcc_arg_sarr_restrict(r_newid, 1),
 		aclspv_id_t				c_new_type,
 		const h_aclspv_ctx_t			h_ctx
@@ -33,17 +32,17 @@ static enum ACLEXPR_RET_ s_cast_arithmetic(
 	if(c_old_type == c_new_type) {
 		*r_newid = c_old_id;
 
-		if(c_flag_literal & ACLUTIL_LTRL_LTRL)
+		if(c_flag_literal & ACLTRL_LTRL)
 			return ACLEXPR_RET_SUCCESS_LITERAL;
 
-		return (c_flag_literal & ACLUTIL_LTRL_CONST)
+		return (c_flag_literal & ACLTRL_CONST)
 			? ACLEXPR_RET_SUCCESS_CONSTANT
 			: ACLEXPR_RET_SUCCESS;
 	}
 
 	/** two are float */
 	if (aclty_is_simd_flt(c_old_type, h_ctx) && aclty_is_simd_flt(c_new_type, h_ctx)) {
-		if(c_flag_literal & ACLUTIL_LTRL_CONST) {
+		if(c_flag_literal & ACLTRL_CONST) {
 			aclspv_wrd_t buf[5];
 			buf[0] = aclspv_opcode_to_wrd(SpvOpSpecConstantOp, 4);
 			buf[1] = c_new_type;
@@ -83,7 +82,7 @@ static enum ACLEXPR_RET_ s_cast_arithmetic(
 				return ACLEXPR_RET_FAILURE;
 			}
 
-			if(c_flag_literal & ACLUTIL_LTRL_CONST) {
+			if(c_flag_literal & ACLTRL_CONST) {
 				aclspv_wrd_t buf[6];
 				buf[0] = aclspv_opcode_to_wrd(SpvOpSpecConstantOp, 5);
 				buf[1] = c_new_type;
@@ -112,7 +111,7 @@ static enum ACLEXPR_RET_ s_cast_arithmetic(
 			ae2f_unreachable();
 		}
 
-		if(c_flag_literal & ACLUTIL_LTRL_CONST) {
+		if(c_flag_literal & ACLTRL_CONST) {
 			aclspv_wrd_t buf[5];
 			buf[0] = aclspv_opcode_to_wrd(SpvOpSpecConstantOp, 4);
 			buf[1] = c_new_type;
@@ -147,7 +146,7 @@ static enum ACLEXPR_RET_ s_cast_arithmetic(
 		ae2f_ifezerr(V0)
 			return ACLEXPR_RET_FAILURE;
 
-		if(c_flag_literal & ACLUTIL_LTRL_CONST) {
+		if(c_flag_literal & ACLTRL_CONST) {
 			aclspv_wrd_t buf[6];
 			buf[0] = aclspv_opcode_to_wrd(SpvOpSpecConstantOp, 5);
 			buf[1] = c_new_type;
@@ -195,11 +194,11 @@ static enum ACLEXPR_RET_ s_cast_arithmetic(
 		if(aclty_is_sclr(c_new_type)) {
 			V1 = V1_CLS;
 		} else {
-			ae2f_ifezerr(V1 = aclty_simd_broadcast(V1_CLS, c_new_type, ACLUTIL_LTRL_CONST, h_ctx))
+			ae2f_ifezerr(V1 = aclty_simd_broadcast(V1_CLS, c_new_type, ACLTRL_CONST, h_ctx))
 				return ACLEXPR_RET_FAILURE;
 		}
 
-		if(c_flag_literal & ACLUTIL_LTRL_CONST) {
+		if(c_flag_literal & ACLTRL_CONST) {
 			aclspv_wrd_t buf[7];
 			buf[0] = aclspv_opcode_to_wrd(SpvOpSpecConstantOp, 6);
 			buf[1] = c_new_type;
@@ -261,7 +260,7 @@ static enum ACLEXPR_RET_ s_cast_arithmetic(
 enum ACLEXPR_RET_ aclexpr_arithmetic_cast_non_literal(
 		const aclspv_vid_t	c_old_id,
 		const aclty_id_t	c_old_type,
-		const aclutil_ltrlmask_t	c_flag_literal,
+		const acltrl_mask_t	c_flag_literal,
 		aclspv_vid_t* ae2f_restrict		r_newid,
 		aclty_id_t				c_new_type,
 		const h_aclspv_ctx_t			h_ctx
@@ -282,7 +281,7 @@ enum ACLEXPR_RET_ aclexpr_arithmetic_cast_non_literal(
 					, c_flag_literal
 					, h_ctx)
 				, old_ty_shaped
-				, c_flag_literal & ~(aclspv_wrd_t)ACLUTIL_LTRL_LTRL
+				, c_flag_literal & ~(aclspv_wrd_t)ACLTRL_LTRL
 				, r_newid
 				, c_new_type
 				, h_ctx
@@ -293,10 +292,10 @@ enum ACLEXPR_RET_ aclexpr_arithmetic_cast_non_literal(
 
 enum ACLEXPR_RET_ aclexpr_arithmetic_cast_literal(
 		const aclty_id_t	c_old_type,
-		const aclutil_literal	c_old_literal,
+		const acltrl_t	c_old_literal,
 		aclspv_vid_t* ae2f_restrict	r_newid,
 		aclty_id_t			c_new_type,
-		aclutil_literal* ae2f_restrict	wr_new_literal_opt,
+		acltrl_t* ae2f_restrict	wr_new_literal_opt,
 		const h_aclspv_ctx_t		h_ctx
 		) {
 	aclexpr_literal	RESULT = c_old_literal;
@@ -480,12 +479,12 @@ enum ACLEXPR_RET_ aclexpr_arithmetic_cast_literal(
 enum ACLEXPR_RET_ aclexpr_arithmetic_cast(
 		const aclspv_vid_t	c_old_id,
 		const aclty_id_t	c_old_type,
-		const aclutil_ltrlmask_t	c_flag_literal,
-		const aclutil_literal	c_old_literal,
+		const acltrl_mask_t	c_flag_literal,
+		const acltrl_t	c_old_literal,
 
 		aclspv_vid_t* ae2f_restrict	r_newid,
 		aclty_id_t		c_new_type,
-		aclutil_literal* ae2f_restrict r_new_literal_opt,
+		acltrl_t* ae2f_restrict r_new_literal_opt,
 		const h_aclspv_ctx_t	h_ctx
 		)
 {
@@ -498,7 +497,7 @@ enum ACLEXPR_RET_ aclexpr_arithmetic_cast(
 
 	/** two are same */
 	if(c_old_type == c_new_type) {
-		const uint_fastenum_t	CND_LIT = c_flag_literal & ACLUTIL_LTRL_LTRL;
+		const uint_fastenum_t	CND_LIT = c_flag_literal & ACLTRL_LTRL;
 
 		dbg_puts("twoaresame");
 		*r_newid = c_old_id;
@@ -512,7 +511,7 @@ enum ACLEXPR_RET_ aclexpr_arithmetic_cast(
 		}
 
 			dbg_puts("done : nonlit");
-		return (c_flag_literal & ACLUTIL_LTRL_CONST) ? ACLEXPR_RET_SUCCESS_CONSTANT : ACLEXPR_RET_SUCCESS;
+		return (c_flag_literal & ACLTRL_CONST) ? ACLEXPR_RET_SUCCESS_CONSTANT : ACLEXPR_RET_SUCCESS;
 	}
 
 	ae2f_ifezerr(c_old_type) {
@@ -545,7 +544,7 @@ enum ACLEXPR_RET_ aclexpr_arithmetic_cast(
 				, (unsigned) c_new_type
 				));
 
-	return  (R = ((c_flag_literal & ACLUTIL_LTRL_LTRL) ? aclexpr_arithmetic_cast_literal(
+	return  (R = ((c_flag_literal & ACLTRL_LTRL) ? aclexpr_arithmetic_cast_literal(
 					c_old_type
 					, c_old_literal
 					, r_newid

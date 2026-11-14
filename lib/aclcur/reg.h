@@ -5,7 +5,7 @@
 #include "./reg/id.h"
 
 #include <aclconst/specsize.h>
-#include <util/literal.h>
+#include <acltrl.h>
 
 /** extention of ACLCUR_FLAG0_OFF_ */
 enum ACLCUR_FLAG0_REG_ {

@@ -17,7 +17,7 @@ typedef u32 u32_check[sizeof(u32) == 4];
 
 typedef union { f32 m_f; u32 m_u; } f32_u;
 
-static aclutil_literal rsqrtf_nr(aclutil_literal c) {
+static acltrl_t rsqrtf_nr(acltrl_t c) {
 	f32_u u;
 	f32 chalf;
 	int i;
@@ -41,7 +41,7 @@ static aclutil_literal rsqrtf_nr(aclutil_literal c) {
 			aclexpr_opbincfg_extra		ae2fcc_arg_sarr_restrict(rdwr_prv_extra, 1),
 			aclspv_wrd_t			ae2fcc_arg_sarr_restrict(rdwr_lst_scale_buf, ACLEXPR_OPBINCFG_END + 1),
 			aclexpr_opbincfg_extra		ae2fcc_arg_sarr_restrict(rdwr_lst_extra, 1),
-			aclutil_literal			ae2fcc_arg_sarr_restrict(r_ltrl, 1)
+			acltrl_t			ae2fcc_arg_sarr_restrict(r_ltrl, 1)
 			)
 {
 	aclspv_id_t f32_like_ty, u32_like_ty;
@@ -92,7 +92,7 @@ static aclutil_literal rsqrtf_nr(aclutil_literal c) {
 	rdwr_prv_extra->m_type_original = f32_like_ty;
 
 	if (rdwr_lst_extra[0].m_mask_literal & (aclspv_wrd_t)ACLUTIL_LITERAL_LITERAL) {
-		aclutil_literal res = rsqrtf_nr(rdwr_lst_extra[0].m_literal);
+		acltrl_t res = rsqrtf_nr(rdwr_lst_extra[0].m_literal);
 		*r_ltrl = res;
 		rdwr_prv_extra->m_literal = res;
 		rdwr_prv_extra->m_mask_literal = ACLUTIL_LITERAL_MASK_LITERAL;

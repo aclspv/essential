@@ -93,7 +93,7 @@ enum CXChildVisitResult aclexpr_visit(
 
 	h_scale_t LST_SCALE				= get_last_scale_from_vec(&CMDSTCK_SCALE);
 	aclspv_wrd_t* ae2f_restrict LST_SCALE_BUF	= get_buf_from_scale2(aclspv_wrd_t, &CMDSTCK_SCALE, *LST_SCALE);
-	aclutil_literal* ae2f_restrict RET_LITERAL		= &LITERAL;
+	acltrl_t* ae2f_restrict RET_LITERAL		= &LITERAL;
 
 	aclexpr_opbincfg_extra* ae2f_restrict	LST_EXTRA;
 
@@ -124,7 +124,7 @@ enum CXChildVisitResult aclexpr_visit(
 	}
 
 	LST_EXTRA = (void* ae2f_restrict)(&LST_SCALE_BUF[(ACLEXPR_OPBINCFG_END + LST_SCALE_BUF[0])]);
-	LST_EXTRA[GETLASTEL_CMDCOUNTERSTCK(a).m_count_oprnd].m_mask_literal = ACLUTIL_LTRL_MASK_LTRL;
+	LST_EXTRA[GETLASTEL_CMDCOUNTERSTCK(a).m_count_oprnd].m_mask_literal = ACLTRL_MASK_LTRL;
 
 	/** Recurse filter */
 	switch((uintmax_t)h_cur.kind) {
@@ -188,7 +188,7 @@ enum CXChildVisitResult aclexpr_visit(
 		{
 			dbg_puts("[visit] OP0_");
 
-			if(LST_EXTRA[GETLASTEL_CMDCOUNTERSTCK(a).m_count_oprnd].m_mask_literal & (aclspv_wrd_t)ACLUTIL_LTRL_LTRL) {
+			if(LST_EXTRA[GETLASTEL_CMDCOUNTERSTCK(a).m_count_oprnd].m_mask_literal & (aclspv_wrd_t)ACLTRL_LTRL) {
 				*RET_LITERAL = LST_EXTRA[GETLASTEL_CMDCOUNTERSTCK(i).m_count_oprnd].m_literal; 
 			}
 

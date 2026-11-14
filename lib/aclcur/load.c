@@ -660,7 +660,7 @@ static aclspv_id_t	s_ssa_entry(
 static aclspv_id_t	s_load_without_phi(
 		aclspv_id_t c_reg,
 		h_aclspv_ctx_t h_ctx,
-		aclutil_literal* ae2f_restrict r_lit_opt,
+		acltrl_t* ae2f_restrict r_lit_opt,
 		h_aclcur_t* ae2f_restrict	r_new_load,
 		const aclspv_bool_t c_explicit
 		) {
@@ -670,7 +670,7 @@ static aclspv_id_t	s_load_without_phi(
 
 	if((p->m_flag0 & aclcur_flag0_reg(ACLCUR_FLAG0_REG_TRACKED))
 			&& !c_explicit) {
-		if(r_lit_opt && p->m_val_mask & ACLUTIL_LTRL_MASK_LTRL)
+		if(r_lit_opt && p->m_val_mask & ACLTRL_MASK_LTRL)
 			*r_lit_opt = p->m_val_lit;
 
 		return p->m_val;
@@ -716,7 +716,7 @@ static aclspv_id_t	s_load_without_phi(
 			p->m_val_mask	= 0;
 
 			if(r_lit_opt && p_b
-					&& (p_b->m_val_mask & ACLUTIL_LTRL_MASK_LTRL))
+					&& (p_b->m_val_mask & ACLTRL_MASK_LTRL))
 				*r_lit_opt = p_b->m_val_lit;
 
 			return id_ssa;
@@ -844,7 +844,7 @@ static enum ACLCUR_LBL_DFS_ s_load_phi(
 static aclspv_id_t	s_load_reg(
 		aclspv_id_t c_reg,
 		h_aclspv_ctx_t h_ctx,
-		aclutil_literal* ae2f_restrict r_lit_opt,
+		acltrl_t* ae2f_restrict r_lit_opt,
 		const aclspv_bool_t c_explicit
 		) {
 	h_aclcur_t	p_load = 0;
@@ -915,7 +915,7 @@ static aclspv_id_t	s_load_reg(
 aclspv_id_t	aclcur_load_reg(
 		aclspv_id_t c_reg,
 		h_aclspv_ctx_t h_ctx,
-		aclutil_literal* ae2f_restrict r_lit_opt
+		acltrl_t* ae2f_restrict r_lit_opt
 		) {
 	return s_load_reg(c_reg, h_ctx, r_lit_opt, 0);
 }
@@ -923,7 +923,7 @@ aclspv_id_t	aclcur_load_reg(
 aclspv_id_t	aclcur_load_reg_explicit(
 		aclspv_id_t c_reg,
 		h_aclspv_ctx_t h_ctx,
-		aclutil_literal* ae2f_restrict r_lit_opt
+		acltrl_t* ae2f_restrict r_lit_opt
 		) {
 	return s_load_reg(c_reg, h_ctx, r_lit_opt, 1);
 }

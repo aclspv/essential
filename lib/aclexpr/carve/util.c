@@ -36,15 +36,15 @@ aclspv_bool_t aclexpr_carve_cast_to_ty(
 			return 1;
 
 		case ACLEXPR_RET_SUCCESS_LITERAL:
-			rw_extra->m_mask_literal = ACLUTIL_LTRL_MASK_LTRL;
+			rw_extra->m_mask_literal = ACLTRL_MASK_LTRL;
 			break;
 
 		case ACLEXPR_RET_SUCCESS_CONSTANT:
-			rw_extra->m_mask_literal = ACLUTIL_LTRL_MASK_CONST;
+			rw_extra->m_mask_literal = ACLTRL_MASK_CONST;
 			break;
 
 		case ACLEXPR_RET_SUCCESS:
-			rw_extra->m_mask_literal = ACLUTIL_LTRL_RT;
+			rw_extra->m_mask_literal = ACLTRL_RT;
 			break;
 	}
 

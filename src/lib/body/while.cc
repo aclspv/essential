@@ -20,7 +20,7 @@
 
 ae2f_MAC((L, )) aclemit_body_while(CXCursor h_cur, h_aclspv_ctx_t h_ctx) { do {
 	CXCursor			L$$CUR[2];
-	aclutil_literal			L$$LITERAL;
+	acltrl_t			L$$LITERAL;
 
 	struct aclattr_getkinder	L$$GETKINDER;
 

@@ -71,7 +71,7 @@ aclspv_bool_t aclexpr_carve_opn_shuffle(
 		ae2f_unused h_scale_t				h_lst_scale,
 		aclspv_wrd_t* const ae2f_restrict		rdwr_lst_scale_buf,
 		aclexpr_opbincfg_extra* ae2f_restrict		rdwr_lst_extra,
-		aclutil_literal* ae2f_restrict			r_ltrl
+		acltrl_t* ae2f_restrict			r_ltrl
 		) {
 	const h_aclspv_ctx_t	CTX = rdwr_data->m_ctx;
 	const aclspv_id_t	TY = rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_RESTYID];
