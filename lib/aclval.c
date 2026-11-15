@@ -97,27 +97,20 @@ aclspv_id_t aclval_cfg_bool(
 		) {
 	aclval_t* ae2f_restrict const C = aclval_cfg_node(c_val, h_ctx);
 	ae2f_ifezerr(C) return 0;
-	if(C->m_const_val_bool) return C->m_const_val_bool;
+	ae2f_ifezerr(aclty_mk_default(ACLSPV_ID_BOOL, h_ctx)) return 0;
+	if(C->m_const_ids[ACLSPV_ID_BOOL])
+		return C->m_const_ids[ACLSPV_ID_BOOL];
 
 	{
-		const aclspv_id_t T = aclty_mk_default(ACLSPV_ID_BOOL, h_ctx);
-
-		ae2f_ifezerr(T) return 0;
-	}
-
-	{
-		const aclspv_wrdcount_t N = aclutil_emitx_3(
+		ae2f_ifezerr(h_ctx->m_count.m_types = aclutil_emitx_3(
 				&h_ctx->m_section.m_types
 				, h_ctx->m_count.m_types
-				, ae2f_bll_sel_bool1(aclspv_wrd_t, c_val, SpvOpConstantTrue, SpvOpConstantFalse)
+				, ae2f_bll_sel_bool2(aclspv_bool_t, c_val, SpvOpConstantTrue, SpvOpConstantFalse)
 				, ACLSPV_ID_BOOL
-				, h_ctx->m_id);
-
-		ae2f_ifezerr(N) return 0;
-		h_ctx->m_count.m_types = N;
+				, h_ctx->m_id)) return 0;
 	}
 
-	return C->m_const_val_bool = aclctx_newid(h_ctx);
+	return C->m_const_ids[ACLSPV_ID_BOOL] = aclctx_newid(h_ctx);
 }
 
 #include <aclval/nil.h>
@@ -174,11 +167,15 @@ aclspv_id_t	aclval_cfg_f64(const double c_val, h_aclspv_ctx_t h_ctx)
 			);
 }
 
-aclspv_id_t	aclval_cfg_by_enum(const u64_least c_val, h_aclspv_ctx_t h_ctx, enum ACLSPV_ID_ c_ty) {
+aclspv_vid_t	aclval_cfg_by_enum(const aclspv_wrd2_t c_val, h_aclspv_ctx_t h_ctx, enum ACLSPV_ID_ c_ty) {
 	aclval_t* ae2f_restrict C;
 
 	unless(c_val) {
 		return aclval_cfg_nil(c_ty, h_ctx);
+	}
+
+	if(c_ty == ACLSPV_ID_BOOL) {
+		return aclval_cfg_bool(!!c_val, h_ctx);
 	}
 
 	C = aclval_cfg_node(c_val, h_ctx);
@@ -202,6 +199,8 @@ aclspv_id_t	aclval_cfg_by_enum(const u64_least c_val, h_aclspv_ctx_t h_ctx, enum
 						, (aclspv_wrd_t)((c_val >> 32) & 0xFFFFFFFF)
 						)) return 0;
 			break;
+
+		case 0:
 		case 1:
 			ae2f_ifezerr(h_ctx->m_count.m_types = aclutil_emitx_4(
 						&h_ctx->m_section.m_types
@@ -247,6 +246,8 @@ aclval_spec_t	aclutil_mk_specconstant_val_by_enum(
 						, (aclspv_wrd_t)((c_val >> 32) & 0xFFFFFFFF)
 						)) return ZERO;
 			break;
+
+		case 0:
 		case 1:
 			ae2f_ifezerr(h_ctx->m_count.m_types = aclutil_emitx_4(
 						&h_ctx->m_section.m_types

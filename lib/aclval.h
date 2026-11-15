@@ -43,7 +43,6 @@ typedef struct {
 
 	/** @brief @see UTIL_CV_TY_, UTIL_CV_NBYTE_ */
 	aclspv_id_t		m_const_ids[ACLSPV_ID_END];
-	aclspv_vid_t		m_const_val_bool;
 
 	/** nil value. type id is key. */
 	aclspv_vid_t		m_nil;
