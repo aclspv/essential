@@ -3,33 +3,33 @@
 
 
 #define ADD(r, c_x, c_y) {	\
-	(r).m_id = 0;		\
+	(r).m_id = 0u;		\
 	(r).m_lit.m_wrd = (c_x).m_lit.m_wrd + (c_y).m_lit.m_wrd;	\
 }
 
 #define SUB(r, c_x, c_y) {	\
-	(r).m_id = 0;		\
+	(r).m_id = 0u;		\
 	(r).m_lit.m_wrd = (c_x).m_lit.m_wrd - (c_y).m_lit.m_wrd;	\
 }
 
 #define RSHFT(r, c_x, c_y) {	\
-	(r).m_id = 0;		\
+	(r).m_id = 0u;		\
 	(r).m_lit.m_wrd = (c_x).m_lit.m_wrd >> (c_y).m_lit.m_wrd;	\
 }
 
 #define OR(r, c_x, c_y) {	\
-	(r).m_id = 0;		\
+	(r).m_id = 0u;		\
 	(r).m_lit.m_wrd = (c_x).m_lit.m_wrd | (c_y).m_lit.m_wrd;	\
 }
 #define AND(r, c_x, c_y) {	\
-	(r).m_id = 0;		\
+	(r).m_id = 0u;		\
 	(r).m_lit.m_wrd = (c_x).m_lit.m_wrd & (c_y).m_lit.m_wrd;	\
 }
 
 
 
 #define NOT(r, c) {				\
-	(r).m_id = 0;				\
+	(r).m_id = 0u;				\
 	(r).m_lit.m_max = ~(c).m_lit.m_max;	\
 }
 

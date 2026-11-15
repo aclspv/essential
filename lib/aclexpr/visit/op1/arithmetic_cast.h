@@ -32,7 +32,7 @@ ae2f_inline_f static aclexpr_visit_lbl_t aclexpr_visit_op1_arithmetic_cast(
 		return c_lbl_fail;
 	}
 
-	switch((uint_leastenum_t)c_cur.kind) {
+	switch((aclspv_cxcurkind_t)c_cur.kind) {
 		default:
 			return c_lbl_pass;
 

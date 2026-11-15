@@ -2,10 +2,10 @@
 #include "./vec.h"
 
 #include <util/log.h>
-
+#include <acldef.h>
 
 ae2f_ccconst aclspv_id_t aclty_mk_by_type(const CXType c_ty) {
-	switch((uint_leastenum_t)c_ty.kind) {
+	switch((aclspv_cxtykind_t)c_ty.kind) {
 #define	VECCASE(c_case, c_ret)	\
 		case c_case: return c_ret
 
@@ -60,7 +60,7 @@ aclspv_id_t aclutil_mk_cxtp_by_type2(
 	dbg_prefix();
 	dbg_call((void), fprintf(stderr, "cxtp_by_type2 tykind %u\n", (unsigned)TYPE.kind));
 
-	switch((uint_leastenum_t)TYPE.kind) {
+	switch((aclspv_cxtykind_t)TYPE.kind) {
 		case CXType_Vector: case CXType_ExtVector:
 			{
 				const CXType ELM		= clang_getElementType(TYPE);

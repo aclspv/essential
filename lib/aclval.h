@@ -72,23 +72,8 @@ typedef struct {
 
 typedef aclval_t* ae2f_restrict p_aclval_t;
 
-aclspv_vid_t aclval_cfg(
-		const aclspv_wrd2_t		c_val,
-		h_aclspv_ctx_t		h_ctx,
-		enum ACLVAL_NBYTE_	c_idx_nbyte,
-		enum ACLVAL_TY_	c_idx_ty
-		);
-
 aclval_spec_t ae2f_ccpure aclval_get_spec(
 		h_aclspv_ctx_t		h_ctx,
-		aclspv_wrd_t		c_idx_specconst
-		);
-
-aclval_spec_t aclval_cfg_spec(
-		const u64_least		c_val,
-		h_aclspv_ctx_t		h_ctx,
-		enum ACLVAL_NBYTE_	c_idx_nbyte,
-		enum ACLVAL_TY_	c_idx_ty,
 		aclspv_wrd_t		c_idx_specconst
 		);
 
@@ -168,63 +153,31 @@ struct aclutil_mk_constant_repvec_t	aclval_cfg_vec_broadcast(
 		h_aclspv_ctx_t h_ctx
 		);
 
-
-ae2f_unused ae2f_inline_f static aclspv_id_t	aclval_cfg_by_enum(const u64_least c_val, h_aclspv_ctx_t h_ctx, enum ACLSPV_ID_ c_ty) {
-	switch((uint_leastenum_t)c_ty) {
-#define	CASE_NUM(k, nbyte, ty)	case (k): return	\
-		aclval_cfg(c_val, h_ctx, (nbyte), (ty))
-
-		CASE_NUM(ACLSPV_ID_I8, ACLVAL_NBYTE_1, ACLVAL_TY_SIGNED);
-		CASE_NUM(ACLSPV_ID_I16, ACLVAL_NBYTE_2, ACLVAL_TY_SIGNED);
-		CASE_NUM(ACLSPV_ID_I32, ACLVAL_NBYTE_4, ACLVAL_TY_SIGNED);
-		CASE_NUM(ACLSPV_ID_I64, ACLVAL_NBYTE_8, ACLVAL_TY_SIGNED);
-
-		CASE_NUM(ACLSPV_ID_U8, ACLVAL_NBYTE_1, ACLVAL_TY_UNSIGNED);
-		CASE_NUM(ACLSPV_ID_U16, ACLVAL_NBYTE_2, ACLVAL_TY_UNSIGNED);
-		CASE_NUM(ACLSPV_ID_U32, ACLVAL_NBYTE_4, ACLVAL_TY_UNSIGNED);
-		CASE_NUM(ACLSPV_ID_U64, ACLVAL_NBYTE_8, ACLVAL_TY_UNSIGNED);
-
-		CASE_NUM(ACLSPV_ID_F16, ACLVAL_NBYTE_2, ACLVAL_TY_FLT);
-		CASE_NUM(ACLSPV_ID_F32, ACLVAL_NBYTE_4, ACLVAL_TY_FLT);
-		CASE_NUM(ACLSPV_ID_F64, ACLVAL_NBYTE_8, ACLVAL_TY_FLT);
-
-#undef	CASE_NUM
-
-		case ACLSPV_ID_BOOL: return aclval_cfg_bool((aclspv_bool_t)c_val, h_ctx);
-
-		default:
-			return 0;
-	}
+aclspv_vid_t	aclval_cfg_by_enum(const aclspv_wrd2_t c_val, h_aclspv_ctx_t h_ctx, enum ACLSPV_ID_ c_ty);
+ae2f_inline_f static aclspv_vid_t aclval_cfg(
+		const aclspv_wrd2_t	c_val,
+		h_aclspv_ctx_t		h_ctx,
+		enum ACLVAL_NBYTE_	c_idx_nbyte,
+		enum ACLVAL_TY_	c_idx_ty
+		) {
+	return aclval_cfg_by_enum(c_val, h_ctx, s_aclval_ty(c_idx_ty, c_idx_nbyte));
 }
 
-ae2f_unused ae2f_inline_f static aclspv_vid_t	aclutil_mk_specconstant_val_by_enum(
+
+aclval_spec_t	aclutil_mk_specconstant_val_by_enum(
 		const aclspv_wrd_t c_key,
 		const aclspv_wrd2_t c_val,
 		h_aclspv_ctx_t h_ctx,
 		enum ACLSPV_ID_ c_ty
+		);
+ae2f_inline_f static aclval_spec_t aclval_cfg_spec(
+		const u64_least		c_val,
+		h_aclspv_ctx_t		h_ctx,
+		enum ACLVAL_NBYTE_	c_idx_nbyte,
+		enum ACLVAL_TY_	c_idx_ty,
+		aclspv_wrd_t		c_idx_specconst
 		) {
-	switch((uint_leastenum_t)c_ty) {
-#define	CASE_NUM(k, nbyte, ty)	case (k): return	\
-		aclval_cfg_spec(c_val, h_ctx, (nbyte), (ty), c_key).m_val
-
-		CASE_NUM(ACLSPV_ID_I8, ACLVAL_NBYTE_1, ACLVAL_TY_SIGNED);
-		CASE_NUM(ACLSPV_ID_I16, ACLVAL_NBYTE_2, ACLVAL_TY_SIGNED);
-		CASE_NUM(ACLSPV_ID_I32, ACLVAL_NBYTE_4, ACLVAL_TY_SIGNED);
-		CASE_NUM(ACLSPV_ID_I64, ACLVAL_NBYTE_8, ACLVAL_TY_SIGNED);
-
-		CASE_NUM(ACLSPV_ID_U8, ACLVAL_NBYTE_1, ACLVAL_TY_UNSIGNED);
-		CASE_NUM(ACLSPV_ID_U16, ACLVAL_NBYTE_2, ACLVAL_TY_UNSIGNED);
-		CASE_NUM(ACLSPV_ID_U32, ACLVAL_NBYTE_4, ACLVAL_TY_UNSIGNED);
-		CASE_NUM(ACLSPV_ID_U64, ACLVAL_NBYTE_8, ACLVAL_TY_UNSIGNED);
-
-		CASE_NUM(ACLSPV_ID_F16, ACLVAL_NBYTE_2, ACLVAL_TY_FLT);
-		CASE_NUM(ACLSPV_ID_F32, ACLVAL_NBYTE_4, ACLVAL_TY_FLT);
-		CASE_NUM(ACLSPV_ID_F64, ACLVAL_NBYTE_8, ACLVAL_TY_FLT);
-
-#undef	CASE_NUM
-		default:
-			return 0;
-	}
+	return aclutil_mk_specconstant_val_by_enum(c_idx_specconst, c_val, h_ctx, s_aclval_ty(c_idx_ty, c_idx_nbyte));
 }
 
 aclval_t*  aclval_cfg_node2(
@@ -238,8 +191,8 @@ ae2f_inline_f static aclval_t* aclval_cfg_node(
 		h_aclspv_ctx_t		h_ctx
 		) {
 	return aclval_cfg_node2(
-			(aclspv_wrd_t)(c_key & 0xFFFFFFFF)
-			, (aclspv_wrd_t)(c_key >> 32) & 0xFFFFFFFFF
+			(aclspv_wrd_t)(c_key & 0xFFFFFFFFu)
+			, (aclspv_wrd_t)(c_key >> 32) & 0xFFFFFFFFFu
 			, h_ctx
 			);
 }

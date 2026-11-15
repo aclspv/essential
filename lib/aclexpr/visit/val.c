@@ -25,7 +25,7 @@ aclexpr_visit_lbl_t aclexpr_visit_op0_val(
 
 	rdwr_extra->m_mask_literal = ACLTRL_MASK_LTRL;
 
-	switch((uint_leastenum_t)c_cur.kind) {
+	switch((aclspv_cxcurkind_t)c_cur.kind) {
 		/** unknown */
 		default:
 			return c_lbl_pass;
@@ -43,7 +43,7 @@ aclexpr_visit_lbl_t aclexpr_visit_op0_val(
 					return c_lbl_fail;
 				}
 
-				switch((uint_leastenum_t)clang_EvalResult_getKind(EVAL)) {
+				switch((aclspv_cxevalreskind_t)clang_EvalResult_getKind(EVAL)) {
 					case CXEval_Int:
 						dbg_puts(("Literal: intmax"));
 						EVRES.m_api_intmax = clang_EvalResult_getAsLongLong(EVAL);

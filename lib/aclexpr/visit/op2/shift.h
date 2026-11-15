@@ -33,7 +33,7 @@ ae2f_inline_f static aclexpr_visit_lbl_t aclexpr_visit_op2_shift(
 		return c_lbl_fail;
 	}
 
-	switch((uint_leastenum_t)clang_getCursorKind(c_cur)) {
+	switch((aclspv_cxcurkind_t)clang_getCursorKind(c_cur)) {
 		default:
 			return c_lbl_pass;
 
@@ -42,7 +42,7 @@ ae2f_inline_f static aclexpr_visit_lbl_t aclexpr_visit_op2_shift(
 			break;
 	}
 
-	switch((uint_leastenum_t)clang_getCursorBinaryOperatorKind(c_cur)) {
+	switch((aclspv_cxbinopkind_t)clang_getCursorBinaryOperatorKind(c_cur)) {
 		default:
 			return c_lbl_pass;
 

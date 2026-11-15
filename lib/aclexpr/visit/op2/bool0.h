@@ -19,13 +19,13 @@ ae2f_inline_f static aclexpr_visit_lbl_t aclexpr_visit_op2_bool0(
 		)
 {
 	enum ACLEXPR_OP_	OPCODE;
-	uint_leastenum_t	BOK	= (uint_leastenum_t)clang_getCursorBinaryOperatorKind(c_cur);
+	aclspv_cxbinopkind_t	BOK	= (aclspv_cxbinopkind_t)clang_getCursorBinaryOperatorKind(c_cur);
 
 	ae2f_expected_but_else(h_ctx) {
 		return c_lbl_fail;
 	}
 
-	switch((uint_leastenum_t)clang_getCursorKind(c_cur)) {
+	switch((aclspv_cxcurkind_t)clang_getCursorKind(c_cur)) {
 		default:
 			return c_lbl_pass;
 

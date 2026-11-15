@@ -11,6 +11,7 @@
 #define	aclutil_vcopr_lbldcl(L)		\
 	void*	L##LBL[]	= { &&L##0, &&L##1, &&L##2, &&L##3, &&L##4, &&L##5, &&L##6, &&L##7 }
 
+/* cppcheck-suppress misra-c2012-20.7 */
 #define	aclutil_vcopr_swtch(L, A)	ae2f_cgoto_beg(); { aclutil_vcopr_lbldcl(L); goto *L##LBL[A]; } ae2f_cgoto_end();
 #define	aclutil_vcopr_fall
 #define	aclutil_vcopr_default
@@ -31,7 +32,8 @@
 #endif
 
 /** @brief I'm already screwed, so I'll enjoy it. Let's all die. - DXDXFFG */
-ae2f_MAC((L, k_oper, k_oper_inc, )) aclutil_vcopr_v(
+/* cppcheck-suppress misra-c2012-5.4 */
+ae2f_MAC((L, k_oper, k_oper_inc, )) v_aclutil_vcopr(
 		aclspv_wrd_t* const ae2f_restrict r,
 		const aclspv_wrd_t* const ae2f_restrict rd,
 		const aclspv_wrd_t c) {
@@ -66,14 +68,16 @@ ae2f_MAC((L, k_oper, k_oper_inc, )) aclutil_vcopr_v(
 }
 
 #if !_ae2f_MACRO_GENERATED
-#define	_aclutil_vcopr_v(L, k_oper, k_oper_inc, r, rd, c) aclutil_vcopr_v(r, rd, c)
+/* cppcheck-suppress misra-c2012-5.4 */
+#define	_v_aclutil_vcopr(L, k_oper, k_oper_inc, r, rd, c) v_aclutil_vcopr(r, rd, c)
 #endif
 
+/* cppcheck-suppress misra-c2012-5.4 */
 ae2f_MAC((L, k_oper, ))	aclutil_vcopr(
 		aclspv_wrd_t* const ae2f_restrict r,
 		const aclspv_wrd_t* const ae2f_restrict rd,
 		const aclspv_wrd_t c) {
-	_aclutil_vcopr_v(L, k_oper, ++, r, rd, c);
+	_v_aclutil_vcopr(L, k_oper, ++, r, rd, c);
 }
 
 #endif

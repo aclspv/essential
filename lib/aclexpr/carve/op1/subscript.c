@@ -96,7 +96,7 @@ static aclspv_bool_t s_subscript_resolve(
 	 * to be a defined id. */
 	C_IDX = aclexpr_expr_unwrap(O.m_c_idx);
 
-	switch((uint_leastenum_t)C_IDX.kind) {
+	switch((aclspv_cxcurkind_t)C_IDX.kind) {
 		case CXCursor_IntegerLiteral:
 			{
 				CXEvalResult EVAL = clang_Cursor_Evaluate(C_IDX);

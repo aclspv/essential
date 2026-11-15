@@ -111,7 +111,7 @@ LBL_NOT_FOUND:
 		return 0;
 	}
 
-	_aclutil_vcopr_v(L, =, --
+	_v_aclutil_vcopr(L, =, --
 			, aclutil_get_wrd_of_vec(&h_ctx->m_section.m_ext) + I + WCEXT - 1	+ (C - I)
 			, aclutil_get_wrd_of_vec(&h_ctx->m_section.m_ext) + I - 1 		+ (C - I)
 			, C - I);

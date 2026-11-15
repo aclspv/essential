@@ -44,7 +44,7 @@ ae2f_inline_f static aclexpr_visit_lbl_t aclexpr_visit_op1_deref(
 	unless(CXCursor_UnaryOperator == c_cur.kind)
 		return c_lbl_pass;
 
-	switch((uint_leastenum_t)clang_getCursorUnaryOperatorKind(c_cur)) {
+	switch((aclspv_cxunaryopkind_t)clang_getCursorUnaryOperatorKind(c_cur)) {
 		default:
 			return c_lbl_pass;
 

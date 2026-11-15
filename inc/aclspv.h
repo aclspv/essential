@@ -39,7 +39,6 @@
 #define	ACLSPV_ABI_DECL	ACLSPV_ABI_LINK
 
 #include <ae2f/c90/stdint.h>
-#include <ae2f/c90/stdint/enum.h>
 #include <stddef.h> 
 
 /**
@@ -64,11 +63,6 @@ typedef	uint_least64_t	aclspv_wrd2_t;
 #ifndef	aclspv_swrd2_t
 typedef	int_least64_t	aclspv_swrd2_t;
 #define	aclspv_swrd2_t	aclspv_swrd2_t
-#endif
-
-#ifndef	aclspv_ptr_t
-typedef intptr_t	aclspv_ptr_t;
-#define aclspv_ptr_t	aclspv_ptr_t
 #endif
 
 typedef aclspv_wrd2_t aclspv_wrdmax_t;
@@ -263,7 +257,7 @@ enum ACLSPV_CTX_FLAGPAD0_ {
 };
 
 #undef	_x
-#define	_x(A)	ACLSPV_CTX_FLAG0_##A = 1 << ACLSPV_CTX_FLAGPAD0_##A
+#define	_x(A)	ACLSPV_CTX_FLAG0_##A = 1u << ae2f_static_cast(aclspv_wrd_t, ACLSPV_CTX_FLAGPAD0_##A)
 
 enum ACLSPV_CTX_FLAG0_ {
 	_enum()

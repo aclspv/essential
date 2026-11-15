@@ -24,11 +24,11 @@ ae2f_ccconst aclty_sclr_t aclty_get_sclr_flt(aclty_sclr_width_t c);
 ae2f_ccconst aclty_sclr_t aclty_get_sclr_uint(aclty_sclr_width_t c);
 ae2f_ccconst aclty_sclr_t aclty_get_sclr_sint(aclty_sclr_width_t c);
 ae2f_ccconst aclty_sclr_t aclty_cvt_sclr_width(const aclty_sclr_t c, const aclty_sclr_width_t c_width);
-ae2f_ccconst aclspv_uiter_t aclty_get_sclr_width(const aclty_sclr_width_t c);
+ae2f_ccconst aclty_sclr_width_t aclty_get_sclr_width(const aclty_sclr_t c);
 
 /** check if `c` is scalar type. */
 ae2f_inline_f ae2f_ccconst static aclspv_bool_t aclty_is_sclr(aclty_sclr_t c) {
-	return c != ACLSPV_ID_VOID && c < ACLSPV_ID_END;
+	return ae2f_static_cast(aclspv_bool_t, c != (aclty_sclr_t)ACLSPV_ID_VOID && c < (aclty_sclr_t)ACLSPV_ID_END);
 }
 
 #endif

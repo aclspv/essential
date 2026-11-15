@@ -76,7 +76,7 @@ enum ACLEXPR_RET_ aclexpr_bit_cast(
 
 	/** two are same */
 	if(c_old_type == c_new_type) {
-		const uint_fastenum_t	CND_LIT = c_flag_literal & ACLTRL_LTRL;
+		const acltrl_mask_t	CND_LIT = c_flag_literal & (acltrl_mask_t)ACLTRL_LTRL;
 		*r_newid = c_old_id;
 
 		if(r_new_literal_opt)

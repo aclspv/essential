@@ -57,9 +57,20 @@ ae2f_inline_f static aclspv_bool_t	s_aclmem_calloc2(
 	return 0;
 }
 
+#include "./aclmem/ptr.h"
+
+#ifndef	aclmem_cvoid_aclmem_ptr
+#define aclmem_cvoid_aclmem_ptr
+
+typedef const void aclmem_cvoid;
+aclmem_ptr(aclmem_cvoid);
+
+#endif
+
 ae2f_ccconst ae2f_inline_f static aclspv_wrd_t aclmemremaddr(const void* c_p, aclspv_wrd_t c_a)
 {
-	return (aclspv_wrd_t)(((aclspv_ptr_t)c_p) & (((aclspv_ptr_t)c_a) - 1));
+	const aclmem_cvoid_aclmem_ptr_t c = aclmem_cvoid_aclmem_ptr_to_wrd(c_p);
+	return c.m_a[0] & ((c_a) - 1u);
 }
 
 void aclmem_init(x_aclspv_vec* ae2f_restrict fini, h_aclspv_ctx_t h_ctx);

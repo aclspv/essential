@@ -180,7 +180,7 @@ ae2f_ccconst aclty_default_t aclty_get_sclr_uint(aclty_sclr_width_t bit_width) {
 	ae2f_unreachable();
 }
 
-ae2f_ccconst aclspv_uiter_t aclty_get_sclr_width(const aclty_sclr_width_t c_id_default) {
+ae2f_ccconst aclspv_uiter_t aclty_get_sclr_width(const aclty_sclr_t c_id_default) {
 	switch(c_id_default) {
 		case ACLSPV_ID_BOOL:
 			return 1;

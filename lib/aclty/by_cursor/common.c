@@ -67,13 +67,13 @@ static aclspv_id_t s_helper2(
 	dbg_prefix();
 	dbg_call((void), fprintf(stderr, "cxtp_by_cursor2 tykind %u\n", (unsigned)TYPE.kind));
 
-	switch((uint_leastenum_t) TYPE.kind) {
+	switch((aclspv_cxtykind_t)TYPE.kind) {
 		case CXType_Record:
 			{
 				field_visit_t	VST;
 				VST.m_info = rd_info;
 
-				switch((uint_leastenum_t)clang_getCursorKind(c_cursor)) {
+				switch((aclspv_cxcurkind_t)clang_getCursorKind(c_cursor)) {
 					case CXCursor_UnionDecl:
 						VST.m_add_struct_mbr = aclty_add_struct_mbr_un;
 						break;

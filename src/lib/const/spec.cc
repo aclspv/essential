@@ -9,6 +9,8 @@
 #include <ae2f/pat/macrofunc.h>
 #include <aclutil/emitx.h>
 
+#include <aclctx/err.h>
+
 #include <aclty/sclr.h>
 
 ae2f_MAC((L, )) aclconst_specsize_op3_sel(
@@ -20,60 +22,60 @@ ae2f_MAC((L, )) aclconst_specsize_op3_sel(
 		) { do {
 	aclspv_id_t		L$$size_ty = aclty_mk_default(
 			aclty_get_sclr_uint(
-				h_ctx->m_usrcfg.m_byte_size_type << 3
+				(h_ctx)->m_usrcfg.m_byte_size_type << 3u
 				)
 			, h_ctx
 			);
 
-	ae2f_ifezerr(L$$size_ty) {
-		(h_ctx)->m_err = ACLSPV_COMPILE_ALLOC_FAILED; 
-		(r).m_id	= 0;
-		(r).m_lit.m_wrd	= 0;
+	ae2f_ifnezerr_strict(0u == L$$size_ty) {
+		_aclctx_err(h_ctx, ACLSPV_COMPILE_ALLOC_FAILED);
+		(r).m_id	= 0u;
+		(r).m_lit.m_wrd	= 0u;
 		break;
 	}
 
 	unless((c_cnd).m_id) {
-		(r) = (c_cnd).m_lit.m_wrd ? c_t : c_f;
+		(r) = (c_cnd).m_lit.m_wrd ? (c_t) : (c_f);
 		break;
 	}
 
-	(r).m_id = 0;
-	(r).m_lit.m_wrd = 0;
+	(r).m_id = 0u;
+	(r).m_lit.m_wrd = 0u;
 
 	{
 		aclspv_id_t	L$$T = (c_t).m_id, L$$F = (c_f).m_id, L$$v0, L$$C_bool;
 		aclspv_wrd_t	L$$arr[7];
 
-		L$$v0	=  aclval_cfg_by_enum(0, h_ctx, (enum ACLSPV_ID_)L$$size_ty);
-		unless(L$$T) L$$T = aclval_cfg_by_enum((c_t).m_lit.m_wrd2, h_ctx, (enum ACLSPV_ID_)L$$size_ty);
-		unless(L$$F) L$$F = aclval_cfg_by_enum((c_f).m_lit.m_wrd2, h_ctx, (enum ACLSPV_ID_)L$$size_ty);
+		L$$v0	=  aclval_cfg_by_enum(0u, h_ctx, (enum ACLSPV_ID_)L$$size_ty);
+		if(0 == L$$T) L$$T = aclval_cfg_by_enum((c_t).m_lit.m_wrd2, h_ctx, (enum ACLSPV_ID_)L$$size_ty);
+		if(0 == L$$F) L$$F = aclval_cfg_by_enum((c_f).m_lit.m_wrd2, h_ctx, (enum ACLSPV_ID_)L$$size_ty);
 
-		L$$arr[0] = aclspv_opcode_to_wrd(SpvOpSpecConstantOp, 5);
+		L$$arr[0] = aclspv_opcode_to_wrd(SpvOpSpecConstantOp, 5u);
 		L$$arr[1] = ACLSPV_ID_BOOL;
-		L$$arr[2] = 0;
+		L$$arr[2] = 0u;
 		L$$arr[3] = SpvOpINotEqual;
 		L$$arr[4] = L$$v0;
 		L$$arr[5] = (c_cnd).m_id;
 
-		ae2f_ifezerr(L$$C_bool = aclconst_specop(&L$$arr[0], 6, h_ctx)) {
+		ae2f_ifnezerr_strict((L$$C_bool = aclconst_specop(&L$$arr[0], 6u, (h_ctx))) == 0) {
 			(h_ctx)->m_err = ACLSPV_COMPILE_ALLOC_FAILED;
-			(r).m_id	= 0;
-			(r).m_lit.m_wrd	= 0;
+			(r).m_id	= 0u;
+			(r).m_lit.m_wrd	= 0u;
 			break;
 		}
 
-		L$$arr[0] = aclspv_opcode_to_wrd(SpvOpSpecConstantOp, 6);
+		L$$arr[0] = aclspv_opcode_to_wrd(SpvOpSpecConstantOp, 6u);
 		L$$arr[1] = L$$size_ty;
-		L$$arr[2] = 0;
+		L$$arr[2] = 0u;
 		L$$arr[3] = SpvOpSelect;
 		L$$arr[4] = L$$C_bool;
 		L$$arr[5] = L$$T;
 		L$$arr[6] = L$$F;
 
-		ae2f_ifezerr((r).m_id = aclconst_specop(&L$$arr[0], 7, h_ctx)) {
+		ae2f_ifnezerr_strict(((r).m_id = aclconst_specop(&L$$arr[0], 7u, (h_ctx))) == 0) {
 			(h_ctx)->m_err = ACLSPV_COMPILE_ALLOC_FAILED;
-			(r).m_id	= 0;
-			(r).m_lit.m_wrd	= 0;
+			(r).m_id	= 0u;
+			(r).m_lit.m_wrd	= 0u;
 			break;
 		}
 	}

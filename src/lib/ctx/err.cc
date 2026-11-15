@@ -12,7 +12,7 @@ ae2f_MAC() aclctx_err(
 		, const aclspv_compile_t c
 		) {
 	unless((h)->m_err) {
-		(h)->m_err = c;
+		(h)->m_err = (c);
 	}
 
 	err_prefix(());

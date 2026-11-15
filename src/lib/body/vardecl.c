@@ -201,7 +201,7 @@ ae2f_MAC((L, )) aclemit_body_vardecl(CXCursor h_cur, h_aclspv_ctx_t h_ctx) { ae2
 					ae2f_ifezerr(L$$INIT = aclutil_mk_specconstant_val_by_enum(L$$SPECID
 								, L$$LITERAL.m_api_uintmax
 								, L$$CTX
-								, (enum ACLSPV_ID_) L$$TYPEID)) {
+								, (enum ACLSPV_ID_) L$$TYPEID).m_val) {
 						L$$CTX->m_err = ACLSPV_COMPILE_MET_INVAL;
 						goto L$$LBL_END;
 					}
