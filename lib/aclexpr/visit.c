@@ -35,7 +35,7 @@
 
 #include <aclutil/emitx.h>
 
-enum {
+enum OP_ {
 	OP2_ARITHMETIC,
 	OP2_CMP,
 	OP2_SHIFT,
@@ -149,7 +149,7 @@ enum CXChildVisitResult aclexpr_visit(
 #	define	cgcase(a)		(&&LBL_##a)
 #	define	cgjmp(a)		ae2f_cgoto_beg(); goto *(a); ae2f_cgoto_end()
 #else
-#	define	cgswtch(a)		uint_leastenum_t LABELJMP = a; LABELJMPINIT: switch(LABELJMP)
+#	define	cgswtch(a)		enum OP_ LABELJMP = a; LABELJMPINIT: switch(LABELJMP)
 #	define	cgcsdef(a)		case a
 #	define	cgdefault(a)		case a: default
 #	define	cgcase(a)		a
