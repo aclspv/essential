@@ -303,11 +303,11 @@ enum ACLEXPR_RET_ aclexpr_arithmetic_cast_literal(
 	aclexpr_literal	RESULT = c_old_literal;
 
 	dbg_prefix(a);
-	dbg_call(ae2f_NONE, (fprintf(
+	dbg_call(fprintf, (
 					stderr
 					, "Arithmetic cast: literal old[%u] new [%u]\n"
 					, c_old_type, c_new_type
-				    )));
+				    ));
 
 	ae2f_expected_but_else(aclty_mk_default(c_old_type, h_ctx) 
 			&& aclty_mk_default(c_new_type, h_ctx))

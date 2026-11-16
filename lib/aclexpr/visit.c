@@ -98,17 +98,17 @@ enum CXChildVisitResult aclexpr_visit(
 	aclexpr_opbincfg_extra* ae2f_restrict	LST_EXTRA;
 
 	dbg_prefix(i);
-	dbg_call(ae2f_NONE, (fprintf(stderr, "[visit] OPR: %u/%u ID(scale): %u\n"
+	dbg_call(fprintf, (stderr, "[visit] OPR: %u/%u ID(scale): %u\n"
 					, (unsigned)GETLASTEL_CMDCOUNTERSTCK().m_count_oprnd
 					, (unsigned)LST_SCALE_BUF[0]
 					, (unsigned)LST_SCALE->m_id
-				    )));
+				    ));
 
 	ae2f_ifnezerr(CTX->m_err) {
 		err_prefix();
-		err_call(ae2f_NONE, (fprintf(stderr, "[visit] error %u\n"
+		err_call(fprintf, (stderr, "[visit] error %u\n"
 						, (unsigned)CTX->m_err
-					    )));
+					    ));
 		return CXChildVisit_Break;
 	}
 
