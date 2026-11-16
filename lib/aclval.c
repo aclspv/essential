@@ -171,7 +171,7 @@ aclspv_vid_t	aclval_cfg_by_enum(const aclspv_wrd2_t c_val, h_aclspv_ctx_t h_ctx,
 	aclval_t* ae2f_restrict C;
 
 	unless(c_val) {
-		return aclval_cfg_nil(c_ty, h_ctx);
+		return aclval_cfg_nil((aclty_id_t)c_ty, h_ctx);
 	}
 
 	if(c_ty == ACLSPV_ID_BOOL) {
@@ -187,13 +187,13 @@ aclspv_vid_t	aclval_cfg_by_enum(const aclspv_wrd2_t c_val, h_aclspv_ctx_t h_ctx,
 	if(C->m_const_ids[c_ty])
 		return C->m_const_ids[c_ty];
 
-	switch(aclty_get_sclr_width(c_ty) >> 5u) {
+	switch(aclty_get_sclr_width((aclty_id_t)c_ty) >> 5u) {
 		case 2:
 			ae2f_ifezerr(h_ctx->m_count.m_types = aclutil_emitx_5(
 						&h_ctx->m_section.m_types
 						, h_ctx->m_count.m_types
 						, SpvOpConstant
-						, c_ty
+						, (aclty_id_t)c_ty
 						, h_ctx->m_id
 						, (aclspv_wrd_t)(c_val & 0xFFFFFFFF)
 						, (aclspv_wrd_t)((c_val >> 32) & 0xFFFFFFFF)
@@ -206,7 +206,7 @@ aclspv_vid_t	aclval_cfg_by_enum(const aclspv_wrd2_t c_val, h_aclspv_ctx_t h_ctx,
 						&h_ctx->m_section.m_types
 						, h_ctx->m_count.m_types
 						, SpvOpConstant
-						, c_ty
+						, (aclty_id_t)c_ty
 						, h_ctx->m_id
 						, (aclspv_wrd_t)(c_val & 0xFFFFFFFF)
 						)) return 0;
@@ -234,7 +234,7 @@ aclval_spec_t	aclutil_mk_specconstant_val_by_enum(
 	if(C->m_spec_constant.m_val)
 		return C->m_spec_constant.m_ty == (aclty_id_t)c_ty ? C->m_spec_constant : ZERO;	
 
-	switch(aclty_get_sclr_width(c_ty) >> 5u) {
+	switch(aclty_get_sclr_width((aclty_id_t)c_ty) >> 5u) {
 		case 2:
 			ae2f_ifezerr(h_ctx->m_count.m_types = aclutil_emitx_5(
 						&h_ctx->m_section.m_types
