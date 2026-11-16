@@ -25,9 +25,11 @@ static const struct s_glslmath {
 	{ "__builtin_cosf",		ACLEXPR_OP1_COS, ACLSPV_ID_F32 },
 	{ "__builtin_tanf",		ACLEXPR_OP1_TAN, ACLSPV_ID_F32 },
 
-	{ "__builtin_sinf16",		ACLEXPR_OP1_SIN, ACLSPV_ID_F16 },
-	{ "__builtin_cosf16",		ACLEXPR_OP1_COS, ACLSPV_ID_F16 },
-	{ "__builtin_tanf16",		ACLEXPR_OP1_TAN, ACLSPV_ID_F16 },
+#if	__ACLSPV_SCLR_F16
+	{ "__builtin_sinf16",	ACLEXPR_OP1_SIN, ACLSPV_ID_F16 },
+	{ "__builtin_cosf16",	ACLEXPR_OP1_COS, ACLSPV_ID_F16 },
+	{ "__builtin_tanf16",	ACLEXPR_OP1_TAN, ACLSPV_ID_F16 },
+#endif
 
 	{ "__builtin_elementwise_sin",	ACLEXPR_OP1_SIN, 0 },
 	{ "__builtin_elementwise_cos",	ACLEXPR_OP1_COS, 0 },

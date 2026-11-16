@@ -31,8 +31,12 @@ ae2f_ccconst aclspv_id_t aclty_mk_by_type(const CXType c_ty) {
 		VECCASE(CXType_ULong		, ACLSPV_ID_U64);
 
 		case CXType_BFloat16:
+
+#if	__ACLSPV_SCLR_F16
 		case CXType_Float16:
 		VECCASE(CXType_Half		, ACLSPV_ID_F16);
+#endif
+
 		VECCASE(CXType_Float		, ACLSPV_ID_F32);
 		VECCASE(CXType_Double		, ACLSPV_ID_F64);
 

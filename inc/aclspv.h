@@ -288,10 +288,7 @@ enum ACLSPV_ID_ {
 
 #if	__ACLSPV_SCLR_F16
 	ACLSPV_ID_F16,
-#else
-	ACLSPV_ID_F16_OFF,
 #endif
-
 	ACLSPV_ID_F32,
 	ACLSPV_ID_F64,
 

@@ -8,6 +8,12 @@ typedef unsigned int	aclspv_uiter_t;
 #include <aclspv.h>
 #include <ae2f/c90/stdint/shorten.h>
 
+#if	__ACLSPV_SCLR_F16
+#define	ACLSPV_ID_F16_OR_Z	ACLSPV_ID_F16
+#else
+#define	ACLSPV_ID_F16_OR_Z	0
+#endif
+
 /**
  * @typedef	aclspv_opcode_t
  * @brief	integer as operation code
@@ -66,5 +72,5 @@ _aclspv_enumwrapper(aclspv_wrd_t, aclspv_cxunaryopkind_t, aclspv_cxunaryopkind_t
 _aclspv_enumwrapper(aclspv_wrd_t, aclspv_cxbinopkind_t, aclspv_cxbinopkind_test, enum CXBinaryOperatorKind);
 _aclspv_enumwrapper(aclspv_wrd_t, aclspv_cxevalreskind_t, aclspv_cxevalreskind_test, CXEvalResultKind);
 _aclspv_enumwrapper(aclspv_wrd_t, aclspv_cxtykind_t, aclspv_cxtykind_test, enum CXTypeKind);
- 
+
 #endif

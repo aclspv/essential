@@ -26,7 +26,7 @@ ae2f_ccconst static ae2f_inline_f enum ACLSPV_ID_ s_aclval_ty(
 	const enum ACLSPV_ID_ MAP[ACLVAL_TY_MAX][ACLVAL_NBYTE_MAX] = {
 		{ ACLSPV_ID_I8, ACLSPV_ID_I16, ACLSPV_ID_I32, ACLSPV_ID_I64 },
 		{ ACLSPV_ID_U8, ACLSPV_ID_U16, ACLSPV_ID_U32, ACLSPV_ID_U64 },
-		{ 0, ACLSPV_ID_F16, ACLSPV_ID_F32, ACLSPV_ID_F64 }
+		{ 0, ACLSPV_ID_F16_OR_Z, ACLSPV_ID_F32, ACLSPV_ID_F64 }
 	};
 
 	return MAP[c_ty][c_nby];
@@ -163,7 +163,7 @@ ae2f_inline_f static aclspv_vid_t aclval_cfg(
 }
 
 
-aclval_spec_t	aclutil_mk_specconstant_val_by_enum(
+aclval_spec_t	aclval_cfg_spec_by_enum(
 		const aclspv_wrd_t c_key,
 		const aclspv_wrd2_t c_val,
 		h_aclspv_ctx_t h_ctx,
@@ -176,7 +176,7 @@ ae2f_inline_f static aclval_spec_t aclval_cfg_spec(
 		enum ACLVAL_TY_	c_idx_ty,
 		aclspv_wrd_t		c_idx_specconst
 		) {
-	return aclutil_mk_specconstant_val_by_enum(c_idx_specconst, c_val, h_ctx, s_aclval_ty(c_idx_ty, c_idx_nbyte));
+	return aclval_cfg_spec_by_enum(c_idx_specconst, c_val, h_ctx, s_aclval_ty(c_idx_ty, c_idx_nbyte));
 }
 
 aclval_t*  aclval_cfg_node2(

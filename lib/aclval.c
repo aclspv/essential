@@ -218,7 +218,7 @@ aclspv_vid_t	aclval_cfg_by_enum(const aclspv_wrd2_t c_val, h_aclspv_ctx_t h_ctx,
 	return C->m_const_ids[c_ty] = aclctx_newid(h_ctx);
 }
 
-aclval_spec_t	aclutil_mk_specconstant_val_by_enum(
+aclval_spec_t	aclval_cfg_spec_by_enum(
 		const aclspv_wrd_t c_key,
 		const aclspv_wrd2_t c_val,
 		h_aclspv_ctx_t h_ctx,

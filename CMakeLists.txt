@@ -294,12 +294,7 @@ target_include_directories(aclspv-essential-test
 	INTERFACE $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/test/inc/>
 	)
 
-aclspv_CoreTestTentVerbose(aclspv-essential-test ./test/compile)
 ae2f_CoreTestTentVerbose(aclspv-essential-test ./test/util)
-
-# C++ shader variants (SPIR-V 1.3 / 1.4, GLSL450) are independent of
-# ae2f_CXX; register them with the same SPIR-V plumbing.
-aclspv_test_cxx(aclspv-essential-test ./test/compile)
 
 # one build target that materialises every module the tests can write.
 aclspv_spv_target()
@@ -339,6 +334,15 @@ aclspv_predef_switch(aclspv-aclexpr	PRIVATE		"ACLSPV_MATH_NR_RSQRTF_MAGIC"	0x5f3
 aclspv_predef_switch(aclspv-aclexpr	PRIVATE		"ACLSPV_MATH_NR_IT"		2)
 aclspv_predef_switch(aclspv-aclcur	PRIVATE		"ACLSPV_MAX_OPRND"		"0x100")
 aclspv_predef_switch(aclspv-aclexpr	PRIVATE		"ACLSPV_MAX_OPRND"		"${ACLSPV_MAX_OPRND}")
+
+# C++ shader variants (SPIR-V 1.3 / 1.4, GLSL450) are independent of
+# ae2f_CXX; register them with the same SPIR-V plumbing.
+aclspv_CoreTestTentVerbose(aclspv-essential-test ./test/compile)
+aclspv_test_cxx(aclspv-essential-test ./test/compile)
+
+if(ACLSPV_SCLR_F16)
+	aclspv_CoreTestTentVerbose(aclspv-essential-test ./test/comp-f16/)
+endif()
 
 message(STATUS ""
 	"[aclspv_essential]\n"

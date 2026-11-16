@@ -485,6 +485,7 @@ enum ACLEXPR_RET_ aclexpr_arithmetic_cast_literal(
 		*r_newid = ID_RET;
 		return ACLEXPR_RET_SUCCESS_LITERAL;
 
+#if	__ACLSPV_SCLR_F16
 		case ACLSPV_ID_F16:
 		ae2f_expected_but_else(ID_RET = aclval_cfg_f16_bits(
 					(aclspv_wrd_t)(RESULT.m_u64 & 0xFFFFu)
@@ -492,6 +493,8 @@ enum ACLEXPR_RET_ aclexpr_arithmetic_cast_literal(
 
 		*r_newid = ID_RET;
 		return ACLEXPR_RET_SUCCESS_LITERAL;
+#endif
+
 		case ACLSPV_ID_F32:
 		ae2f_expected_but_else(ID_RET = aclval_cfg_f32(
 					RESULT.m_flt
