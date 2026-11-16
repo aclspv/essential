@@ -102,7 +102,7 @@ aclexpr_visit_lbl_t aclexpr_visit_op0_val(
 						if(aclspv_chck_capability_from_ctx(h_ctx, SpvCapabilityFloat64)) {
 							EVRES.m_dbl = clang_EvalResult_getAsDouble(EVAL);
 							*wr_type_fetched = ACLSPV_ID_F64;
-							dbg_call(fprintf, (stderr, "Literal fetched: %f\n", (float)EVRES.m_dbl));
+							dbg_call(fprintf, (stderr, "Literal fetched: %f\n", (double)EVRES.m_dbl));
 
 							ae2f_ifezerr(*wr_newid = aclval_cfg_f64(
 										EVRES.m_dbl
@@ -112,7 +112,7 @@ aclexpr_visit_lbl_t aclexpr_visit_op0_val(
 						} else {
 							EVRES.m_flt = (float)clang_EvalResult_getAsDouble(EVAL);
 							*wr_type_fetched = ACLSPV_ID_F32;
-							dbg_call(fprintf, (stderr, "Literal fetched: %f\n", (float)EVRES.m_flt));
+							dbg_call(fprintf, (stderr, "Literal fetched: %f\n", (double)EVRES.m_flt));
 
 							ae2f_ifezerr(*wr_newid = aclval_cfg_f32(
 										EVRES.m_flt

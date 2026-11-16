@@ -5,7 +5,7 @@
 #include <ae2f/cc/pause.h>
 #include <aclutil/emitx.h>
 
-ACLSPV_ABI_IMPL 
+ACLSPV_ABI_LINK 
 aclspv_id_t aclspv_cfg_symbol(
 		const char* ae2f_restrict rd,
 		aclspv_wrd_t c,

@@ -8,7 +8,7 @@
 
 #include <aclutil/capability.h>
 
-ACLSPV_ABI_IMPL aclspv_compile_t aclspv_ctx_compile(h_aclspv_ctx_t h_ctx, CXCursor c_cur_root) {
+ACLSPV_ABI_LINK aclspv_compile_t aclspv_ctx_compile(h_aclspv_ctx_t h_ctx, CXCursor c_cur_root) {
 	h_ctx->m_work_data = h_ctx;
 
 	ae2f_ifezerr(h_ctx)	return ACLSPV_COMPILE_PRM_INVAL_NIL;
@@ -101,7 +101,7 @@ ACLSPV_ABI_IMPL aclspv_compile_t aclspv_ctx_compile(h_aclspv_ctx_t h_ctx, CXCurs
 	return h_ctx->m_err;
 }
 
-ae2f_extern ACLSPV_ABI_DECL aclspv_compile_t aclspv_ctx_compile1(
+ae2f_extern ACLSPV_ABI_LINK aclspv_compile_t aclspv_ctx_compile1(
 		const h_aclspv_ctx_t	h_ctx,
 		CXTranslationUnit	h_tu
 		) {
@@ -151,7 +151,7 @@ ae2f_extern ACLSPV_ABI_DECL aclspv_compile_t aclspv_ctx_compile1(
 	return aclspv_ctx_compile(h_ctx, clang_getTranslationUnitCursor(h_tu));
 }
 
-ae2f_extern ACLSPV_ABI_DECL aclspv_compile_t aclspv_ctx_compile2(
+ae2f_extern ACLSPV_ABI_LINK aclspv_compile_t aclspv_ctx_compile2(
 		const h_aclspv_ctx_t	h_ctx,
 		struct CXUnsavedFile* ae2f_restrict const 	rdwr_unsaved,
 		const unsigned					c_unsaved_count,
@@ -187,7 +187,7 @@ ae2f_extern ACLSPV_ABI_DECL aclspv_compile_t aclspv_ctx_compile2(
 	return h_ctx->m_err;
 }
 
-ae2f_extern ACLSPV_ABI_DECL aclspv_compile_t aclspv_ctx_compile3(
+ae2f_extern ACLSPV_ABI_LINK aclspv_compile_t aclspv_ctx_compile3(
 		const h_aclspv_ctx_t	h_ctx,
 		struct CXUnsavedFile* ae2f_restrict const 	rdwr_unsaved,
 		const unsigned					c_unsaved_count,

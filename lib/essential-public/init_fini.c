@@ -3,7 +3,7 @@
 
 #include <util/scale.h>
 
-ACLSPV_ABI_IMPL void aclspv_fini_ctx(
+ACLSPV_ABI_LINK void aclspv_fini_ctx(
 		const h_aclspv_ctx_t	d_ctx
 		) {
 	aclspv_compile_t	E = d_ctx->m_err;
@@ -86,7 +86,7 @@ static void s_free(void* fini_mem, aclspv_wrd_t c_sz, ae2f_unused void* h_usr) {
 #endif
 }
 
-ACLSPV_ABI_IMPL aclspv_compile_t aclspv_init_ctx(
+ACLSPV_ABI_LINK aclspv_compile_t aclspv_init_ctx(
 		const h_aclspv_ctx_t	i_ctx,
 		const aclspv_usrcfg_t*	ae2f_restrict	rd_usrcfg
 		) {

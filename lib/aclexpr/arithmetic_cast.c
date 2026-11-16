@@ -319,12 +319,12 @@ enum ACLEXPR_RET_ aclexpr_arithmetic_cast_literal(
 		switch(aclty_get_sclr_width(c_old_type)) {
 			case 64:
 				dbg_prefix();
-				dbg_call(fprintf, (stderr, "Cast from literal(double): %f\n", (float)c_old_literal.m_dbl));
+				dbg_call(fprintf, (stderr, "Cast from literal(double): %f\n", (double)c_old_literal.m_dbl));
 				RESULT.m_api_intmax = (imax)c_old_literal.m_dbl;
 				break;
 			case 32:
 				dbg_prefix();
-				dbg_call(fprintf, (stderr, "Cast from literal(float): %f\n", (float)c_old_literal.m_flt));
+				dbg_call(fprintf, (stderr, "Cast from literal(float): %f\n", (double)c_old_literal.m_flt));
 				RESULT.m_api_intmax = (imax)c_old_literal.m_flt;
 				break;
 			case 16:
@@ -347,16 +347,16 @@ enum ACLEXPR_RET_ aclexpr_arithmetic_cast_literal(
 		dbg_prefix(a);
 		dbg_call((void), (fprintf(stderr, "Cast (int -> float): %ld\n", (long)c_old_literal.m_api_intmax)));
 		switch(aclty_get_sclr_width(c_new_type)) {
+
 			case 64:
 				RESULT.m_dbl = (double)c_old_literal.m_api_intmax;
 				dbg_prefix();
-				dbg_call(fprintf, (stderr, "Literal result(double): %f\n", (float)RESULT.m_dbl));
+				dbg_call(fprintf, (stderr, "Literal result(double): %f\n", (double)RESULT.m_dbl));
 				break;
-
 			case 32:
 				RESULT.m_flt = (float)c_old_literal.m_api_intmax;
 				dbg_prefix();
-				dbg_call(fprintf, (stderr, "Literal result(float): %f\n", RESULT.m_flt));
+				dbg_call(fprintf, (stderr, "Literal result(float): %f\n", (double)RESULT.m_flt));
 				break;
 
 			case 16:

@@ -685,7 +685,7 @@ enum CXChildVisitResult aclemit_fndecl_entp_arg(
 				 **/
 				var_elm_type_id = var_type_id;
 
-				ae2f_ifnezerr(p_ty) switch((aclspv_wrd_t)p_ty->m_class) {
+				ae2f_ifnezerr(p_ty->m_type_id) switch((aclspv_wrd_t)p_ty->m_class) {
 					/** T[] -> struct { T[] } */
 					case ACLTY_ARR:
 						ae2f_ifezerr(var_elm_type_id = aclty_mk_struct_single_blk(

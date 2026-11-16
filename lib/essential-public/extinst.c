@@ -5,7 +5,7 @@
 #include <aclutil/wrdemit.h>
 #include <aclctx/id.h>
 
-ACLSPV_ABI_IMPL ae2f_ccpure ae2f_noexcept aclspv_extinst_t aclspv_chck_extinst(
+ACLSPV_ABI_LINK ae2f_ccpure ae2f_noexcept aclspv_extinst_t aclspv_chck_extinst(
 		const char* ae2f_restrict rd,
 		h_aclspv_ctx_t h_ctx
 		) { ae2f_ifezerr_strict(h_ctx && h_ctx->m_section.m_extinst.m_p && rd) return 0; {
@@ -36,7 +36,7 @@ ACLSPV_ABI_IMPL ae2f_ccpure ae2f_noexcept aclspv_extinst_t aclspv_chck_extinst(
 #undef	BUF
 }}
 
-ACLSPV_ABI_IMPL ae2f_noexcept aclspv_extinst_t aclspv_add_extinst_from_ctx(
+ACLSPV_ABI_LINK ae2f_noexcept aclspv_extinst_t aclspv_add_extinst_from_ctx(
 		const h_aclspv_ctx_t h_ctx,
 		const char* ae2f_restrict const		rd
 		) {

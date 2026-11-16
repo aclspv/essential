@@ -2,7 +2,7 @@
 #include <ae2f/cc.h>
 #include <aclutil/emitx.h>
 
-ACLSPV_ABI_IMPL ae2f_ccpure aclspv_bool_t aclspv_chck_capability_from_ctx(
+ACLSPV_ABI_LINK ae2f_ccpure aclspv_bool_t aclspv_chck_capability_from_ctx(
 		const x_aclspv_ctx* const ae2f_restrict	rd_ctx,
 		const enum SpvCapability_		c_cap
 		) {
@@ -41,7 +41,7 @@ ACLSPV_ABI_IMPL ae2f_ccpure aclspv_bool_t aclspv_chck_capability_from_ctx(
 #undef	KEY
 }
 
-ACLSPV_ABI_IMPL aclspv_bool_t aclspv_add_capability_from_ctx(
+ACLSPV_ABI_LINK aclspv_bool_t aclspv_add_capability_from_ctx(
 		h_aclspv_ctx_t				h_ctx,
 		const enum SpvCapability_		c_cap
 		) {
