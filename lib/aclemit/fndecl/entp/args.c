@@ -1,6 +1,7 @@
 #include "./args.h"
 
 #include <ae2f/pat/dbg.h>
+#include <ae2f/cc/arg_sarr.h>
 
 #include <util/scale.h>
 #include <aclutil/emitx.h>
@@ -372,64 +373,35 @@ static aclspv_compile_t	s_pcv_emit_store_explicit(aclspv_id_t c_id, h_aclspv_ctx
 	return aclcur_regvar_emit_storeof(c_id, h_ctx, s_pcv_chain, 1);
 }
 
-enum CXChildVisitResult aclemit_fndecl_entp_arg(
+/* ─────────────────────────────────────────────────────────────────────
+ * stage 1 — resolve the argument's type.
+ *
+ * decides
+ *   var_type_id     : the logical argument type, from the cursor
+ *   var_elm_type_id : the type the interface variable is declared with
+ *
+ * the vulkan block idiom lives here: a storage-buffer / workgroup pointer
+ * is materialised as an OpVariable whose pointee is a single-member
+ * wrapper struct.
+ * ───────────────────────────────────────────────────────────────────── */
+static aclspv_compile_t s_arg_ty(
+		h_aclspv_ctx_t CTX,
 		CXCursor h_cur,
-		ae2f_unused CXCursor h_parent,
-		CXClientData ae2f_restrict h_data
+		CXType PARAM_TY,
+		aclspv_wrd_t c_storage_class,
+		aclspv_id_t ae2fcc_arg_sarr_restrict(r_var_type_id, 1),
+		aclspv_id_t ae2fcc_arg_sarr_restrict(r_var_elm_type_id, 1)
 		) {
-	CXType		PARAM_TY;
-	struct aclemit_fndecl_entp_arg_data* ae2f_restrict DAT = h_data;
+	const aclspv_wrd_t storage_class = c_storage_class;
 
-#define CTX		DAT->m_ctx 
+	/** from cursor */
+	aclspv_id_t var_type_id = 0;
+	aclspv_id_t var_elm_type_id = 0;
 
-	/** global: storage class */
-	aclspv_wrd_t	storage_class;
-
-	/** global: variable id */
-	aclspv_id_t	var_id;
-	/** global: variable as native */
-	aclspv_id_t	var_native_type_id = 0;
-	/** global: from cursor */
-	aclspv_id_t	var_type_id;
-	aclspv_id_t	var_elm_type_id;
-
-	/** for bindables only */
-	aclspv_wrd_t	bind_set = 0xFFFFFFFF;
-	aclspv_wrd_t	bind_idx = 0xFFFFFFFF;
-
-	/** push constant: to access the right argument */
-	aclspv_wrd_t	pc_idx_func = 0;
-	aclspv_wrd_t	pc_idx_arg = 0;
-
-	ae2f_ifezerr(CTX)		return CXChildVisit_Break;
-	ae2f_ifnezerr(CTX->m_err) 	return CXChildVisit_Break;
-
-	ae2f_ifnezerr_strict(h_cur.kind != CXCursor_ParmDecl) {
-		return CXChildVisit_Continue;
-	}
-
-	PARAM_TY	= clang_getCursorType(h_cur);
-
-	storage_class		= SpvStorageClassPushConstant;
-
-	/** Attriburte: storage class */
-	clang_visitChildren(
-			h_cur
-			, s_attr_storage_class
-			, &storage_class
-			);
-
-#define	storage_class	((const aclspv_wrd_t)storage_class)
-
-	/** 
-	 * var_type_id 
-	 * var_elm_type_id
-	 * */
 	switch(storage_class) {
 		default:
 		case SpvStorageClassMax:
-			_aclctx_err(CTX, ACLSPV_COMPILE_STORAGE_CLASS_UNDEFINED);
-			return CXChildVisit_Break;
+			return ACLSPV_COMPILE_STORAGE_CLASS_UNDEFINED;
 
 			/** 
 			 * those are expected to be 
@@ -444,8 +416,7 @@ enum CXChildVisitResult aclemit_fndecl_entp_arg(
 
 			/*** Extension Default **/
 			ae2f_ifezerr(aclutil_add_extension_by_flag(CTX, "SPV_KHR_storage_buffer_storage_class")) {
-				_aclctx_err(DAT->m_ctx, ACLSPV_COMPILE_UNHANDLED_ARGS);
-				return CXChildVisit_Break;
+				return ACLSPV_COMPILE_UNHANDLED_ARGS;
 			}
 
 			ae2f_ifezerr(var_type_id = aclty_mk_by_cursor_dummy(
@@ -453,15 +424,13 @@ enum CXChildVisitResult aclemit_fndecl_entp_arg(
 						, PARAM_TY
 						, CTX
 						)) {
-				_aclctx_err(DAT->m_ctx, ACLSPV_COMPILE_UNHANDLED_ARGS);
-				return CXChildVisit_Break;
+				return ACLSPV_COMPILE_UNHANDLED_ARGS;
 			}
 
 			{
 				aclty_t* ae2f_restrict p_ty = aclty_find(var_type_id, CTX);
 				ae2f_ifezerr(p_ty) {
-					_aclctx_err(DAT->m_ctx, ACLSPV_COMPILE_UNHANDLED_ARGS);
-					return CXChildVisit_Break;
+					return ACLSPV_COMPILE_UNHANDLED_ARGS;
 				}
 
 				switch(p_ty->m_class) {
@@ -474,8 +443,7 @@ enum CXChildVisitResult aclemit_fndecl_entp_arg(
 									, 0
 									, CTX
 									)) {
-							_aclctx_err(DAT->m_ctx, ACLSPV_COMPILE_UNHANDLED_ARGS);
-							return CXChildVisit_Break;
+							return ACLSPV_COMPILE_UNHANDLED_ARGS;
 						}
 
 						break;
@@ -490,8 +458,7 @@ enum CXChildVisitResult aclemit_fndecl_entp_arg(
 							aclty_t* ae2f_restrict p_elm = aclty_find(id_elm, CTX);
 
 							ae2f_ifnezerr_strict(!p_elm && id_elm >= ACLSPV_ID_END) {
-								_aclctx_err(DAT->m_ctx, ACLSPV_COMPILE_UNHANDLED_ARGS);
-								return CXChildVisit_Break;
+								return ACLSPV_COMPILE_UNHANDLED_ARGS;
 							}
 
 							if(p_elm && p_elm->m_class == ACLTY_STRUCT) {
@@ -501,8 +468,7 @@ enum CXChildVisitResult aclemit_fndecl_entp_arg(
 											, 0
 											, CTX
 											)) {
-									_aclctx_err(DAT->m_ctx, ACLSPV_COMPILE_UNHANDLED_ARGS);
-									return CXChildVisit_Break;
+									return ACLSPV_COMPILE_UNHANDLED_ARGS;
 								}
 							} else {
 								aclconst_specsz a;
@@ -515,8 +481,7 @@ enum CXChildVisitResult aclemit_fndecl_entp_arg(
 											, 4
 											, CTX
 											)) {
-									_aclctx_err(DAT->m_ctx, ACLSPV_COMPILE_UNHANDLED_ARGS);
-									return CXChildVisit_Break;
+									return ACLSPV_COMPILE_UNHANDLED_ARGS;
 								}
 
 								ae2f_ifezerr(var_elm_type_id = aclty_mk_struct_single_blk(
@@ -525,8 +490,7 @@ enum CXChildVisitResult aclemit_fndecl_entp_arg(
 											, 0
 											, CTX
 											)) {
-									_aclctx_err(DAT->m_ctx, ACLSPV_COMPILE_UNHANDLED_ARGS);
-									return CXChildVisit_Break;
+									return ACLSPV_COMPILE_UNHANDLED_ARGS;
 								}
 							}
 						}
@@ -540,8 +504,7 @@ enum CXChildVisitResult aclemit_fndecl_entp_arg(
 					case ACLTY_RESERVED:
 					case ACLTY_STRUCT_MBR:
 					default:
-						_aclctx_err(DAT->m_ctx, ACLSPV_COMPILE_UNHANDLED_ARGS);
-						return CXChildVisit_Break;
+						return ACLSPV_COMPILE_UNHANDLED_ARGS;
 				}
 
 			}
@@ -555,21 +518,19 @@ enum CXChildVisitResult aclemit_fndecl_entp_arg(
 						, PARAM_TY
 						, CTX
 						)) {
-				_aclctx_err(DAT->m_ctx, ACLSPV_COMPILE_UNHANDLED_ARGS);
-				return CXChildVisit_Break;
+				return ACLSPV_COMPILE_UNHANDLED_ARGS;
 			}
 
 			var_elm_type_id = var_type_id;
 
-			ae2f_ifezerr(aclty_getsize(var_elm_type_id, DAT->m_ctx).m_id || aclty_getsize(var_elm_type_id, DAT->m_ctx).m_lit.m_max) {
-				_aclctx_err(DAT->m_ctx, ACLSPV_COMPILE_UNHANDLED_ARGS);
+			ae2f_ifezerr(aclty_getsize(var_elm_type_id, CTX).m_id || aclty_getsize(var_elm_type_id, CTX).m_lit.m_max) {
 				err_prefix(0);
 				err_call(fprintf, (
 							stderr
 							, "push constant type must have a fixed size (type id %lu)\n"
 							, (unsigned long)var_type_id)
 						);
-				return CXChildVisit_Break;
+				return ACLSPV_COMPILE_UNHANDLED_ARGS;
 			}
 
 			break;
@@ -581,43 +542,38 @@ enum CXChildVisitResult aclemit_fndecl_entp_arg(
 						, PARAM_TY
 						, CTX
 						)) {
-				_aclctx_err(DAT->m_ctx, ACLSPV_COMPILE_UNHANDLED_ARGS);
-				return CXChildVisit_Break;
+				return ACLSPV_COMPILE_UNHANDLED_ARGS;
 			}
 
 			{
 				aclty_t* ae2f_restrict p_ty = aclty_find(var_type_id, CTX);
 				ae2f_ifezerr(p_ty) {
-					_aclctx_err(DAT->m_ctx, ACLSPV_COMPILE_UNHANDLED_ARGS);
-					return CXChildVisit_Break;
+					return ACLSPV_COMPILE_UNHANDLED_ARGS;
 				}
 
 				ae2f_ifnezerr_strict(p_ty->m_class != ACLTY_PTR) {
-					_aclctx_err(DAT->m_ctx, ACLSPV_COMPILE_UNHANDLED_ARGS);
-					return CXChildVisit_Break;
+					return ACLSPV_COMPILE_UNHANDLED_ARGS;
 				}
 
 				{
 					aclty_t* ae2f_restrict p_elm = aclty_find(p_ty->m_info.m_ptr.m_type, CTX);
 
 					ae2f_ifnezerr_strict(!p_elm && p_ty->m_info.m_ptr.m_type >= ACLSPV_ID_END) {
-						_aclctx_err(DAT->m_ctx, ACLSPV_COMPILE_UNHANDLED_ARGS);
-						return CXChildVisit_Break;
+						return ACLSPV_COMPILE_UNHANDLED_ARGS;
 					}
 
 					var_elm_type_id = p_ty->m_info.m_ptr.m_type;
 				}
 			}
 
-			ae2f_ifezerr(aclty_getsize(var_elm_type_id, DAT->m_ctx).m_id || aclty_getsize(var_elm_type_id, DAT->m_ctx).m_lit.m_max) {
-				_aclctx_err(DAT->m_ctx, ACLSPV_COMPILE_UNHANDLED_ARGS);
+			ae2f_ifezerr(aclty_getsize(var_elm_type_id, CTX).m_id || aclty_getsize(var_elm_type_id, CTX).m_lit.m_max) {
 				err_prefix(0);
 				err_call(fprintf, (
 							stderr
 							, "input/output type must have a fixed size (type id %lu)\n"
 							, (unsigned long)var_type_id)
 						);
-				return CXChildVisit_Break;
+				return ACLSPV_COMPILE_UNHANDLED_ARGS;
 			}
 
 			break;
@@ -636,8 +592,7 @@ enum CXChildVisitResult aclemit_fndecl_entp_arg(
 					if(CTX->m_usrcfg.m_ver_vk < aclspv_ver_vk2(1, 2)) ae2f_ifezerr(aclutil_add_extension_by_flag(
 								CTX
 								, "VK_KHR_uniform_buffer_standard_layout")) {
-						_aclctx_err(DAT->m_ctx, ACLSPV_COMPILE_UNHANDLED_ARGS);
-						return CXChildVisit_Break;
+						return ACLSPV_COMPILE_UNHANDLED_ARGS;
 					}
 
 					break;
@@ -647,8 +602,7 @@ enum CXChildVisitResult aclemit_fndecl_entp_arg(
 
 				default:
 					/** idk what this is */
-					_aclctx_err(DAT->m_ctx, ACLSPV_COMPILE_UNHANDLED_ARGS);
-					return CXChildVisit_Break;
+					return ACLSPV_COMPILE_UNHANDLED_ARGS;
 			}
 
 			ae2f_fallthrough;
@@ -670,8 +624,7 @@ enum CXChildVisitResult aclemit_fndecl_entp_arg(
 						, PARAM_TY
 						, CTX
 						)) {
-				_aclctx_err(DAT->m_ctx, ACLSPV_COMPILE_UNHANDLED_ARGS);
-				return CXChildVisit_Break;
+				return ACLSPV_COMPILE_UNHANDLED_ARGS;
 			}
 
 			{
@@ -700,8 +653,7 @@ enum CXChildVisitResult aclemit_fndecl_entp_arg(
 									, 0
 									, CTX
 									)) {
-							_aclctx_err(DAT->m_ctx, ACLSPV_COMPILE_UNHANDLED_ARGS);
-							return CXChildVisit_Break;
+							return ACLSPV_COMPILE_UNHANDLED_ARGS;
 						}
 
 						break;
@@ -713,8 +665,7 @@ enum CXChildVisitResult aclemit_fndecl_entp_arg(
 						{
 							aclty_t* ae2f_restrict p_elm = aclty_find(p_ty->m_info.m_ptr.m_type, CTX);
 							ae2f_ifnezerr_strict(!p_elm && p_ty->m_info.m_ptr.m_type >= ACLSPV_ID_END) {
-								_aclctx_err(DAT->m_ctx, ACLSPV_COMPILE_UNHANDLED_ARGS);
-								return CXChildVisit_Break;
+								return ACLSPV_COMPILE_UNHANDLED_ARGS;
 							}
 
 							var_elm_type_id = p_ty->m_info.m_ptr.m_type;
@@ -724,8 +675,7 @@ enum CXChildVisitResult aclemit_fndecl_entp_arg(
 										, 0
 										, CTX
 										)) {
-								_aclctx_err(DAT->m_ctx, ACLSPV_COMPILE_UNHANDLED_ARGS);
-								return CXChildVisit_Break;
+								return ACLSPV_COMPILE_UNHANDLED_ARGS;
 							}
 						}
 						break;
@@ -736,33 +686,58 @@ enum CXChildVisitResult aclemit_fndecl_entp_arg(
 				}
 			}
 
-			ae2f_ifezerr(aclty_getsize(var_elm_type_id, DAT->m_ctx).m_id || aclty_getsize(var_elm_type_id, DAT->m_ctx).m_lit.m_max) {
-				_aclctx_err(
-						DAT->m_ctx
-						, ACLSPV_COMPILE_UNHANDLED_ARGS
-						);
+			ae2f_ifezerr(aclty_getsize(var_elm_type_id, CTX).m_id || aclty_getsize(var_elm_type_id, CTX).m_lit.m_max) {
 				err_prefix(0);
 				err_call(fprintf, (stderr, "workgroup/uniform type must have a fixed size (type id %lu)\n", (unsigned long)var_elm_type_id));
-				return CXChildVisit_Break;
+				return ACLSPV_COMPILE_UNHANDLED_ARGS;
 			}
 
 			break;
 	}
+	*r_var_type_id		= var_type_id;
+	*r_var_elm_type_id	= var_elm_type_id;
 
-	/** guard to make it constant */
+	return ACLSPV_COMPILE_OK;
+}
 
-#define	var_type_id	((const aclspv_id_t)var_type_id)
-#define	var_elm_type_id	((const aclspv_id_t)var_elm_type_id)
 
-	/**
-	 * variable emission
-	 *
-	 * - var_id
-	 * - bindable_idx
-	 * - bindable_set
-	 * - pc_idx_func
-	 * - pc_idx_arg
-	 * */
+/* ─────────────────────────────────────────────────────────────────────
+ * stage 2 — emit the interface variable and its decorations.
+ *
+ * fills
+ *   var_id, var_native_type_id
+ *   pc_idx_func, pc_idx_arg       (push-constant members only)
+ *
+ * the descriptor set / binding are resolved and emitted here too, but
+ * they are local to this stage.
+ * ───────────────────────────────────────────────────────────────────── */
+static aclspv_compile_t s_arg_var(
+		struct aclemit_fndecl_entp_arg_data* ae2f_restrict DAT,
+		CXCursor h_cur,
+		aclspv_wrd_t c_storage_class,
+		aclspv_id_t c_var_elm_type_id,
+		aclspv_id_t ae2fcc_arg_sarr_restrict(r_var_id, 1),
+		aclspv_id_t ae2fcc_arg_sarr_restrict(r_var_native_type_id, 1),
+		aclspv_wrd_t ae2fcc_arg_sarr_restrict(r_pc_idx_func, 1),
+		aclspv_wrd_t ae2fcc_arg_sarr_restrict(r_pc_idx_arg, 1)
+		) {
+	h_aclspv_ctx_t CTX = DAT->m_ctx;
+	const aclspv_wrd_t storage_class = c_storage_class;
+	const aclspv_id_t var_elm_type_id = c_var_elm_type_id;
+
+	/** global: variable id */
+	aclspv_id_t var_id = 0;
+	/** global: variable as native */
+	aclspv_id_t var_native_type_id = 0;
+
+	/** for bindables only */
+	aclspv_wrd_t bind_set = 0xFFFFFFFF;
+	aclspv_wrd_t bind_idx = 0xFFFFFFFF;
+
+	/** push constant: to access the right argument */
+	aclspv_wrd_t pc_idx_func = 0;
+	aclspv_wrd_t pc_idx_arg = 0;
+
 	switch(storage_class) {
 		default:
 		case SpvStorageClassMax:
@@ -776,18 +751,15 @@ enum CXChildVisitResult aclemit_fndecl_entp_arg(
 				aclty_t* ae2f_restrict p_old;
 
 				ae2f_ifezerr(p_old = aclty_find(ty_old, CTX)) {
-					_aclctx_err(DAT->m_ctx, ACLSPV_COMPILE_UNHANDLED_ARGS);
-					return CXChildVisit_Break;
+					return ACLSPV_COMPILE_UNHANDLED_ARGS;
 				}
 
 				ae2f_ifezerr(aclty_add_struct_mbr_std430(p_old, var_elm_type_id, CTX)) {
-					_aclctx_err(DAT->m_ctx, ACLSPV_COMPILE_UNHANDLED_ARGS);
-					return CXChildVisit_Break;
+					return ACLSPV_COMPILE_UNHANDLED_ARGS;
 				}
 
 				ae2f_ifezerr(p_old = aclty_build_struct(p_old->m_type_id, CTX)) {
-					_aclctx_err(DAT->m_ctx, ACLSPV_COMPILE_UNHANDLED_ARGS);
-					return CXChildVisit_Break;
+					return ACLSPV_COMPILE_UNHANDLED_ARGS;
 				}
 
 				dbg_prefix(a);
@@ -819,8 +791,7 @@ enum CXChildVisitResult aclemit_fndecl_entp_arg(
 								, var_id = DAT->m_id_push_constant = aclctx_newid(CTX)
 								, SpvStorageClassPushConstant
 								)) {
-						_aclctx_err(DAT->m_ctx, ACLSPV_COMPILE_UNHANDLED_ARGS);
-						return CXChildVisit_Break;
+						return ACLSPV_COMPILE_UNHANDLED_ARGS;
 					}
 				}
 			}
@@ -839,8 +810,7 @@ enum CXChildVisitResult aclemit_fndecl_entp_arg(
 						);
 
 				ae2f_ifezerr(var_native_type_id) {
-					_aclctx_err(DAT->m_ctx, ACLSPV_COMPILE_UNHANDLED_ARGS);
-					return CXChildVisit_Break;
+					return ACLSPV_COMPILE_UNHANDLED_ARGS;
 				}
 
 				clang_visitChildren(h_cur
@@ -854,8 +824,7 @@ enum CXChildVisitResult aclemit_fndecl_entp_arg(
 						);
 
 				ae2f_ifnezerr_strict(bind_set != 0xFFFFFFFF && bind_idx == 0xFFFFFFFF) {
-					_aclctx_err(DAT->m_ctx, ACLSPV_COMPILE_UNHANDLED_ARGS);
-					return CXChildVisit_Break;
+					return ACLSPV_COMPILE_UNHANDLED_ARGS;
 				}
 
 				if(bind_set == 0xFFFFFFFF)
@@ -866,13 +835,11 @@ enum CXChildVisitResult aclemit_fndecl_entp_arg(
 					bind_idx = aclval_inc_bind_last_index(bind_set, CTX);
 
 				ae2f_ifnezerr_strict( 0xFFFFFFFF == bind_idx) {
-					_aclctx_err(DAT->m_ctx, ACLSPV_COMPILE_UNHANDLED_ARGS);
-					return CXChildVisit_Break;
+					return ACLSPV_COMPILE_UNHANDLED_ARGS;
 				}
 
 				ae2f_ifnezerr_strict( 0xFFFFFFFF == bind_set) {
-					_aclctx_err(DAT->m_ctx, ACLSPV_COMPILE_UNHANDLED_ARGS);
-					return CXChildVisit_Break;
+					return ACLSPV_COMPILE_UNHANDLED_ARGS;
 				}
 
 				ae2f_ifnezerr_strict( storage_class != aclval_cfg_bind_storage_class(
@@ -880,8 +847,7 @@ enum CXChildVisitResult aclemit_fndecl_entp_arg(
 							, bind_idx
 							, storage_class
 							, CTX) ) {
-					_aclctx_err(DAT->m_ctx, ACLSPV_COMPILE_UNHANDLED_ARGS);
-					return CXChildVisit_Break;
+					return ACLSPV_COMPILE_UNHANDLED_ARGS;
 				}
 
 				ae2f_ifezerr(CTX->m_count.m_decorate = aclutil_emitx_4(
@@ -893,8 +859,7 @@ enum CXChildVisitResult aclemit_fndecl_entp_arg(
 							, SpvDecorationDescriptorSet
 							, bind_set
 							)) {
-					_aclctx_err(DAT->m_ctx, ACLSPV_COMPILE_UNHANDLED_ARGS);
-					return CXChildVisit_Break;
+					return ACLSPV_COMPILE_UNHANDLED_ARGS;
 				}
 
 				ae2f_ifezerr(CTX->m_count.m_decorate = aclutil_emitx_4(
@@ -906,8 +871,7 @@ enum CXChildVisitResult aclemit_fndecl_entp_arg(
 							, SpvDecorationBinding
 							, bind_idx
 							)) {
-					_aclctx_err(DAT->m_ctx, ACLSPV_COMPILE_UNHANDLED_ARGS);
-					return CXChildVisit_Break;
+					return ACLSPV_COMPILE_UNHANDLED_ARGS;
 				}
 
 				ae2f_ifezerr(CTX->m_count.m_vars = aclutil_emitx_4(
@@ -918,8 +882,7 @@ enum CXChildVisitResult aclemit_fndecl_entp_arg(
 							, var_id
 							, storage_class
 							)) {
-					_aclctx_err(DAT->m_ctx, ACLSPV_COMPILE_UNHANDLED_ARGS);
-					return CXChildVisit_Break;
+					return ACLSPV_COMPILE_UNHANDLED_ARGS;
 				}
 			}
 
@@ -933,15 +896,13 @@ enum CXChildVisitResult aclemit_fndecl_entp_arg(
 					ae2f_ifezerr(aclutil_add_capability_by_flag(
 								CTX
 								, SpvCapabilityWorkgroupMemoryExplicitLayoutKHR)) {
-						_aclctx_err(DAT->m_ctx, ACLSPV_COMPILE_UNHANDLED_ARGS);
-						return CXChildVisit_Break;
+						return ACLSPV_COMPILE_UNHANDLED_ARGS;
 					}
 
 					ae2f_ifezerr(aclutil_add_extension_by_flag(
 								CTX
 								, "SPV_KHR_workgroup_memory_explicit_layout")) {
-						_aclctx_err(DAT->m_ctx, ACLSPV_COMPILE_UNHANDLED_ARGS);
-						return CXChildVisit_Break;
+						return ACLSPV_COMPILE_UNHANDLED_ARGS;
 					}
 				}
 
@@ -949,8 +910,7 @@ enum CXChildVisitResult aclemit_fndecl_entp_arg(
 							var_elm_type_id
 							, SpvStorageClassWorkgroup
 							, CTX)) {
-					_aclctx_err(DAT->m_ctx, ACLSPV_COMPILE_UNHANDLED_ARGS);
-					return CXChildVisit_Break;
+					return ACLSPV_COMPILE_UNHANDLED_ARGS;
 				}
 
 				ae2f_ifezerr(CTX->m_count.m_vars = util_emitx_variable(
@@ -960,8 +920,7 @@ enum CXChildVisitResult aclemit_fndecl_entp_arg(
 							, var_id = aclctx_newid(CTX)
 							, SpvStorageClassWorkgroup
 							)) {
-					_aclctx_err(DAT->m_ctx, ACLSPV_COMPILE_UNHANDLED_ARGS);
-					return CXChildVisit_Break;
+					return ACLSPV_COMPILE_UNHANDLED_ARGS;
 				}
 
 				/** with explicit layout, every Block Workgroup variable in
@@ -973,8 +932,7 @@ enum CXChildVisitResult aclemit_fndecl_entp_arg(
 								, SpvOpDecorate
 								, var_id
 								, SpvDecorationAliased)) {
-						_aclctx_err(DAT->m_ctx, ACLSPV_COMPILE_UNHANDLED_ARGS);
-						return CXChildVisit_Break;
+						return ACLSPV_COMPILE_UNHANDLED_ARGS;
 					}
 				}
 			}
@@ -1016,8 +974,7 @@ enum CXChildVisitResult aclemit_fndecl_entp_arg(
 							, var_id = aclctx_newid(CTX)
 							, storage_class
 							)) {
-					_aclctx_err(DAT->m_ctx, ACLSPV_COMPILE_UNHANDLED_ARGS);
-					return CXChildVisit_Break;
+					return ACLSPV_COMPILE_UNHANDLED_ARGS;
 				}
 
 
@@ -1030,8 +987,7 @@ enum CXChildVisitResult aclemit_fndecl_entp_arg(
 								, SpvDecorationLocation
 								, location
 								)) {
-						_aclctx_err(DAT->m_ctx, ACLSPV_COMPILE_UNHANDLED_ARGS);
-						return CXChildVisit_Break;
+						return ACLSPV_COMPILE_UNHANDLED_ARGS;
 					}
 				}
 
@@ -1044,24 +1000,39 @@ enum CXChildVisitResult aclemit_fndecl_entp_arg(
 								, SpvDecorationBuiltIn
 								, bltin
 								)) {
-						_aclctx_err(DAT->m_ctx, ACLSPV_COMPILE_UNHANDLED_ARGS);
-						return CXChildVisit_Break;
+						return ACLSPV_COMPILE_UNHANDLED_ARGS;
 					}
 				}
 			}
 
 			break;
 	}
+	*r_var_id		= var_id;
+	*r_var_native_type_id	= var_native_type_id;
+	*r_pc_idx_func		= pc_idx_func;
+	*r_pc_idx_arg		= pc_idx_arg;
 
-#define	var_id			((const aclspv_id_t)var_id)
-#define	var_native_type_id	((const aclspv_id_t)var_native_type_id)
+	return ACLSPV_COMPILE_OK;
+}
 
-#define	pc_idx_func		((const aclspv_wrd_t)pc_idx_func)
-#define	pc_idx_arg		((const aclspv_wrd_t)pc_idx_arg)
 
-	/** 
-	 * adding to entry point as interface
-	 * */
+/* ─────────────────────────────────────────────────────────────────────
+ * stage 3 — add the variable to the OpEntryPoint interface list.
+ *
+ * the interface may only list Input/Output variables before SPIR-V 1.4;
+ * from 1.4 on every global (except PushConstant) must be listed.
+ * ───────────────────────────────────────────────────────────────────── */
+static aclspv_compile_t s_arg_iface(
+		struct aclemit_fndecl_entp_arg_data* ae2f_restrict DAT,
+		aclspv_wrd_t c_storage_class,
+		aclspv_id_t c_var_id,
+		aclspv_wrd_t c_pc_idx_arg
+		) {
+	h_aclspv_ctx_t CTX = DAT->m_ctx;
+	const aclspv_wrd_t storage_class = c_storage_class;
+	const aclspv_id_t var_id = c_var_id;
+	const aclspv_wrd_t pc_idx_arg = c_pc_idx_arg;
+
 	switch(storage_class) {
 		case SpvStorageClassMax:
 		default:
@@ -1092,7 +1063,7 @@ enum CXChildVisitResult aclemit_fndecl_entp_arg(
 						, CTX->m_count.m_entp + 1
 						, sizeof(aclspv_wrd_t)
 						, ACLSPV_COMPILE_ALLOC_FAILED_ENTP_ARGS))
-				return CXChildVisit_Break;
+				return ACLSPV_COMPILE_ALLOC_FAILED_ENTP_ARGS;
 
 			((aclspv_wrd_t* ae2f_restrict)CTX->m_section.m_entp.m_p)[CTX->m_count.m_entp++]
 				= var_id;
@@ -1100,12 +1071,38 @@ enum CXChildVisitResult aclemit_fndecl_entp_arg(
 			((aclspv_wrd_t* ae2f_restrict)CTX->m_section.m_entp.m_p)[DAT->m_idx_entp_buf_count]
 				+= 0x10000;
 	}
+	return ACLSPV_COMPILE_OK;
+}
 
-	/** 
-	 * register binding: the arg cursor resolves to its interface
-	 * variable. m_id == var_id makes the register id the OpVariable
-	 * result id, so expressions can load/store the entry-point argument.
-	 * */
+
+/* ─────────────────────────────────────────────────────────────────────
+ * stage 4 — bind the argument cursor to a register.
+ *
+ * the arg cursor resolves to its interface variable. m_id == var_id makes
+ * the register id the OpVariable result id, so expressions can load/store
+ * the entry-point argument. push-constant members get a member view over
+ * the shared block instead (R1 packing view -> per-argument leaf).
+ * ───────────────────────────────────────────────────────────────────── */
+static aclspv_compile_t s_arg_reg(
+		struct aclemit_fndecl_entp_arg_data* ae2f_restrict DAT,
+		CXCursor h_cur,
+		aclspv_wrd_t c_storage_class,
+		aclspv_id_t c_var_id,
+		aclspv_id_t c_var_native_type_id,
+		aclspv_id_t c_var_type_id,
+		aclspv_id_t c_var_elm_type_id,
+		aclspv_wrd_t c_pc_idx_func,
+		aclspv_wrd_t c_pc_idx_arg
+		) {
+	h_aclspv_ctx_t CTX = DAT->m_ctx;
+	const aclspv_wrd_t storage_class = c_storage_class;
+	const aclspv_id_t var_id = c_var_id;
+	const aclspv_id_t var_native_type_id = c_var_native_type_id;
+	const aclspv_id_t var_type_id = c_var_type_id;
+	const aclspv_id_t var_elm_type_id = c_var_elm_type_id;
+	const aclspv_wrd_t pc_idx_func = c_pc_idx_func;
+	const aclspv_wrd_t pc_idx_arg = c_pc_idx_arg;
+
 	switch(storage_class) {
 		case SpvStorageClassMax:
 		default:
@@ -1121,15 +1118,13 @@ enum CXChildVisitResult aclemit_fndecl_entp_arg(
 				ae2f_ifezerr(cst_func = aclutil_mk_constant_val_id(
 							pc_idx_func
 							, CTX)) {
-					_aclctx_err(DAT->m_ctx, ACLSPV_COMPILE_UNHANDLED_ARGS);
-					return CXChildVisit_Break;
+					return ACLSPV_COMPILE_UNHANDLED_ARGS;
 				}
 				ae2f_ifezerr(cst_arg = aclutil_mk_constant_val_id(
 							pc_idx_arg
 							, CTX
 							)) {
-					_aclctx_err(DAT->m_ctx, ACLSPV_COMPILE_UNHANDLED_ARGS);
-					return CXChildVisit_Break;
+					return ACLSPV_COMPILE_UNHANDLED_ARGS;
 				}
 
 				/** packing-level view R1 over the shared variable,
@@ -1151,12 +1146,10 @@ enum CXChildVisitResult aclemit_fndecl_entp_arg(
 								, 0
 								, CTX
 								)) {
-						_aclctx_err(DAT->m_ctx, ACLSPV_COMPILE_UNHANDLED_ARGS);
-						return CXChildVisit_Break;
+						return ACLSPV_COMPILE_UNHANDLED_ARGS;
 					}
 					ae2f_ifezerr(p_root = aclcur_get_node(reg_root, CTX)) {
-						_aclctx_err(DAT->m_ctx, ACLSPV_COMPILE_UNHANDLED_ARGS);
-						return CXChildVisit_Break;
+						return ACLSPV_COMPILE_UNHANDLED_ARGS;
 					}
 					p_root->m_id = var_id;
 
@@ -1169,8 +1162,7 @@ enum CXChildVisitResult aclemit_fndecl_entp_arg(
 								, ACLCUR_REGVIEW_STEP_MEMBER
 								, CTX
 								)) {
-						_aclctx_err(DAT->m_ctx, ACLSPV_COMPILE_UNHANDLED_ARGS);
-						return CXChildVisit_Break;
+						return ACLSPV_COMPILE_UNHANDLED_ARGS;
 					}
 				}
 
@@ -1185,13 +1177,11 @@ enum CXChildVisitResult aclemit_fndecl_entp_arg(
 							, ACLCUR_REGVIEW_STEP_MEMBER
 							, CTX
 							)) {
-					_aclctx_err(DAT->m_ctx, ACLSPV_COMPILE_UNHANDLED_ARGS);
-					return CXChildVisit_Break;
+					return ACLSPV_COMPILE_UNHANDLED_ARGS;
 				}
 
 				ae2f_ifezerr(p_view = aclcur_get_node(reg_leaf, CTX)) {
-					_aclctx_err(DAT->m_ctx, ACLSPV_COMPILE_UNHANDLED_ARGS);
-					return CXChildVisit_Break;
+					return ACLSPV_COMPILE_UNHANDLED_ARGS;
 				}
 				p_view->m_d.m_reg.m_in.m_emit_load		= s_pcv_emit_load;
 				p_view->m_d.m_reg.m_in.m_emit_load_explicit	= s_pcv_emit_load_explicit;
@@ -1222,14 +1212,12 @@ enum CXChildVisitResult aclemit_fndecl_entp_arg(
 							, &REGIN
 							, CTX
 							)) {
-					_aclctx_err(DAT->m_ctx, ACLSPV_COMPILE_UNHANDLED_ARGS);
-					return CXChildVisit_Break;
+					return ACLSPV_COMPILE_UNHANDLED_ARGS;
 				}
 
 				/** the register id must BE the OpVariable result id. */
 				ae2f_ifezerr(p_reg = aclcur_get_node(reg, CTX)) {
-					_aclctx_err(DAT->m_ctx, ACLSPV_COMPILE_UNHANDLED_ARGS);
-					return CXChildVisit_Break;
+					return ACLSPV_COMPILE_UNHANDLED_ARGS;
 				}
 				p_reg->m_id = var_id;
 				/** the OpVariable's storage type, when it differs from the
@@ -1252,8 +1240,7 @@ enum CXChildVisitResult aclemit_fndecl_entp_arg(
 
 					if(p_mbr0) {
 						ae2f_ifezerr(cst0 = aclutil_mk_constant_val_id(0, CTX)) {
-							_aclctx_err(DAT->m_ctx, ACLSPV_COMPILE_UNHANDLED_ARGS);
-							return CXChildVisit_Break;
+							return ACLSPV_COMPILE_UNHANDLED_ARGS;
 						}
 
 						/** ELEMENT step (not MEMBER) so this view is
@@ -1270,21 +1257,107 @@ enum CXChildVisitResult aclemit_fndecl_entp_arg(
 									, ACLCUR_REGVIEW_STEP_ELEMENT
 									, CTX
 									)) {
-							_aclctx_err(DAT->m_ctx, ACLSPV_COMPILE_UNHANDLED_ARGS);
-							return CXChildVisit_Break;
+							return ACLSPV_COMPILE_UNHANDLED_ARGS;
 						}
 
 						/** aclcur_reg_view allocates; and m_id is now
 						 * var_id, so re-fetch by that. */
 						ae2f_ifezerr(p_reg = aclcur_get_node(var_id, CTX)) {
-							_aclctx_err(DAT->m_ctx, ACLSPV_COMPILE_UNHANDLED_ARGS);
-							return CXChildVisit_Break;
+							return ACLSPV_COMPILE_UNHANDLED_ARGS;
 						}
 						p_reg->m_d.m_reg.m_id_native = id_nat;
 					}
 				}
 			}
 			break;
+	}
+	return ACLSPV_COMPILE_OK;
+}
+
+
+/* ─────────────────────────────────────────────────────────────────────
+ * one argument of an entry point.
+ *
+ * a parameter is not a parameter in aclang: a pointer parameter is a
+ * global variable plus its descriptor binding, a plain parameter is a
+ * member of the shared push-constant block, and an input/output pointer
+ * is an interface variable. the four stages above each walk the storage
+ * class once instead of one switch carrying the whole pipeline.
+ * ───────────────────────────────────────────────────────────────────── */
+enum CXChildVisitResult aclemit_fndecl_entp_arg(
+		CXCursor h_cur,
+		ae2f_unused CXCursor h_parent,
+		CXClientData ae2f_restrict h_data
+		) {
+	CXType PARAM_TY;
+	struct aclemit_fndecl_entp_arg_data* ae2f_restrict DAT = h_data;
+	aclspv_compile_t RET;
+
+	/** per-argument values, threaded through the four stages below */
+	aclspv_wrd_t storage_class;
+	aclspv_id_t var_type_id = 0;
+	aclspv_id_t var_elm_type_id = 0;
+	aclspv_id_t var_id = 0;
+	aclspv_id_t var_native_type_id = 0;
+	aclspv_wrd_t pc_idx_func = 0;
+	aclspv_wrd_t pc_idx_arg = 0;
+
+#define CTX		DAT->m_ctx
+
+	ae2f_ifezerr(CTX)		return CXChildVisit_Break;
+	ae2f_ifnezerr(CTX->m_err)	return CXChildVisit_Break;
+
+	ae2f_ifnezerr_strict(h_cur.kind != CXCursor_ParmDecl) {
+		return CXChildVisit_Continue;
+	}
+
+	PARAM_TY	= clang_getCursorType(h_cur);
+
+	storage_class		= SpvStorageClassPushConstant;
+
+	/** attribute: storage class */
+	clang_visitChildren(
+			h_cur
+			, s_attr_storage_class
+			, &storage_class
+			);
+
+	RET = s_arg_ty(
+			CTX, h_cur, PARAM_TY, storage_class
+			, &var_type_id
+			, &var_elm_type_id
+			);
+
+	if(!RET)
+		RET = s_arg_var(
+				DAT, h_cur, storage_class, var_elm_type_id
+				, &var_id
+				, &var_native_type_id
+				, &pc_idx_func
+				, &pc_idx_arg
+				);
+
+	if(!RET)
+		RET = s_arg_iface(
+				DAT, storage_class
+				, var_id
+				, pc_idx_arg
+				);
+
+	if(!RET)
+		RET = s_arg_reg(
+				DAT, h_cur, storage_class
+				, var_id
+				, var_native_type_id
+				, var_type_id
+				, var_elm_type_id
+				, pc_idx_func
+				, pc_idx_arg
+				);
+
+	ae2f_ifnezerr(RET) {
+		_aclctx_err(DAT->m_ctx, RET);
+		return CXChildVisit_Break;
 	}
 
 	return CXChildVisit_Continue;
