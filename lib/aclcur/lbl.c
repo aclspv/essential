@@ -6,13 +6,13 @@
 
 #include <util/log.h>
 
-aclspv_id_t ae2f_ccpure aclcur_get_lbl_last(h_aclspv_ctx_t h_ctx) {
+ae2f_ccpure aclspv_id_t aclcur_get_lbl_last(h_aclspv_ctx_t h_ctx) {
 	h_aclcur_t r = aclcur_get_lbl_last1(h_ctx);
 	return r ? r->m_id : 0;
 }
 
 
-struct aclcur* ae2f_ccpure aclcur_get_lbl_last1(h_aclspv_ctx_t h_ctx) {
+ae2f_ccpure struct aclcur* aclcur_get_lbl_last1(h_aclspv_ctx_t h_ctx) {
 	aclspv_wrd_t i;
 	const aclspv_wrd_t c = h_ctx->m_num_cursor;
 
@@ -57,17 +57,17 @@ static const aclcur_t* s_get_root1_c(const x_aclspv_ctx* ae2f_restrict h_ctx) {
 	return (p && p->m_class == ACLCUR_LBL) ? p : 0;
 }
 
-aclcur_idx_t ae2f_ccpure aclcur_get_idx_lbl_cur(const x_aclspv_ctx* ae2f_restrict h_ctx) {
+ae2f_ccpure aclcur_idx_t aclcur_get_idx_lbl_cur(const x_aclspv_ctx* ae2f_restrict h_ctx) {
 	const aclcur_t* p_root = s_get_root1_c(h_ctx);
 
 	return p_root ? p_root->m_d.m_lbl.m_idx_cur : ACLCUR_IDX_INVAL;
 }
 
-aclcur_t* ae2f_ccpure aclcur_get_lbl_cur1(h_aclspv_ctx_t h_ctx) {
+ae2f_ccpure aclcur_t* aclcur_get_lbl_cur1(h_aclspv_ctx_t h_ctx) {
 	return aclcur_get_node_idx(aclcur_get_idx_lbl_cur(h_ctx), h_ctx);
 }
 
-aclspv_id_t ae2f_ccpure aclcur_get_lbl_cur(h_aclspv_ctx_t h_ctx) {
+ae2f_ccpure aclspv_id_t aclcur_get_lbl_cur(h_aclspv_ctx_t h_ctx) {
 	h_aclcur_t p = aclcur_get_lbl_cur1(h_ctx);
 	return p ? p->m_id : 0;
 }
@@ -80,7 +80,7 @@ static void s_set_idx_lbl_cur(aclcur_idx_t c_idx, h_aclspv_ctx_t h_ctx) {
 		p_root->m_d.m_lbl.m_idx_cur = c_idx;
 }
 
-aclspv_bool_t ae2f_ccpure aclcur_get_fnret(const x_aclspv_ctx* ae2f_restrict h_ctx) {
+ae2f_ccpure aclspv_bool_t aclcur_get_fnret(const x_aclspv_ctx* ae2f_restrict h_ctx) {
 	const aclcur_t* p_root = s_get_root1_c(h_ctx);
 	return p_root ? p_root->m_d.m_lbl.m_fnret : 0;
 }
@@ -92,12 +92,12 @@ void aclcur_set_fnret(aclspv_bool_t c_ret, h_aclspv_ctx_t h_ctx) {
 		p_root->m_d.m_lbl.m_fnret = c_ret;
 }
 
-aclspv_id_t ae2f_ccpure aclcur_get_break_loop(const x_aclspv_ctx* ae2f_restrict h_ctx) {
+ae2f_ccpure aclspv_id_t aclcur_get_break_loop(const x_aclspv_ctx* ae2f_restrict h_ctx) {
 	const aclcur_t* p_root = s_get_root1_c(h_ctx);
 	return p_root ? p_root->m_d.m_lbl.m_break_loop : 0;
 }
 
-aclspv_id_t ae2f_ccpure aclcur_get_continue_loop(const x_aclspv_ctx* ae2f_restrict h_ctx) {
+ae2f_ccpure aclspv_id_t aclcur_get_continue_loop(const x_aclspv_ctx* ae2f_restrict h_ctx) {
 	const aclcur_t* p_root = s_get_root1_c(h_ctx);
 	return p_root ? p_root->m_d.m_lbl.m_continue_loop : 0;
 }
@@ -116,7 +116,7 @@ void aclcur_set_continue_loop(aclspv_id_t c_lbl, h_aclspv_ctx_t h_ctx) {
 		p_root->m_d.m_lbl.m_continue_loop = c_lbl;
 }
 
-aclspv_id_t ae2f_ccpure aclcur_get_retty(const x_aclspv_ctx* ae2f_restrict h_ctx) {
+ae2f_ccpure aclspv_id_t aclcur_get_retty(const x_aclspv_ctx* ae2f_restrict h_ctx) {
 	const aclcur_t* p;
 
 	ae2f_ifezerr(h_ctx)			return ACLSPV_ID_VOID;

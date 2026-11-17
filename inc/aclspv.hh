@@ -15,18 +15,18 @@ namespace aclspv {
 	typedef aclspv_ver_vk_t		ver_vk_t;
 	typedef aclspv_ver_spv_t	ver_spirv_t;
 
-	ae2f_constexprfun ae2f_inline_f ae2f_ccconst static ver_spirv_t ver_spv(const wrd_t c_mjr, const wrd_t c_mnr) {
+	ae2f_constexprfun ae2f_ccconst ae2f_inline_f static ver_spirv_t ver_spv(const wrd_t c_mjr, const wrd_t c_mnr) {
 		return aclspv_ver_spv(c_mjr, c_mnr);
 	}
 
-	ae2f_constexprfun ae2f_inline_f ae2f_ccconst static ver_vk_t ver_vk(
+	ae2f_constexprfun ae2f_ccconst ae2f_inline_f static ver_vk_t ver_vk(
 			const wrd_t c_var, const wrd_t c_mjr,
 			const wrd_t c_mnr, const wrd_t c_patch
 			) {
 		return aclspv_ver_vk(c_var, c_mjr, c_mnr, c_patch);
 	}
 
-	ae2f_constexprfun ae2f_inline_f ae2f_ccconst static ver_vk_t ver_vk(
+	ae2f_constexprfun ae2f_ccconst ae2f_inline_f static ver_vk_t ver_vk(
 			const wrd_t c_mjr, const wrd_t c_mnr
 			) {
 		return aclspv_ver_vk2(c_mjr, c_mnr);
@@ -34,11 +34,11 @@ namespace aclspv {
 
 	struct ctx_base : protected a_aclspv_ctx {
 		public:
-			ae2f_constexprmethod ae2f_inline_f a_aclspv_ctx& ae2f_ccconst me() {
+			ae2f_constexprmethod ae2f_inline_f ae2f_ccconst a_aclspv_ctx& me() {
 				return *this;
 			}
 
-			ae2f_constexprmethod ae2f_inline_f const a_aclspv_ctx& ae2f_ccconst c_me() const {
+			ae2f_constexprmethod ae2f_inline_f ae2f_ccconst const a_aclspv_ctx& c_me() const {
 				return *this;
 			}
 

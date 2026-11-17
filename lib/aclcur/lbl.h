@@ -41,27 +41,27 @@ typedef struct aclcur_lbl {
  * get current branch label.
  * has a possibility to fail.
  * */
-aclcur_lblid_t ae2f_ccpure aclcur_get_lbl_last(h_aclspv_ctx_t h_ctx);
-aclcur_t* ae2f_ccpure aclcur_get_lbl_last1(h_aclspv_ctx_t h_ctx);
+ae2f_ccpure aclcur_lblid_t aclcur_get_lbl_last(h_aclspv_ctx_t h_ctx);
+ae2f_ccpure aclcur_t* aclcur_get_lbl_last1(h_aclspv_ctx_t h_ctx);
 
 /** cursor-buffer index of the currently open label (the one the next node
  * belongs to). O(1): read from the root label. ACLCUR_IDX_INVAL before the
  * root is bootstrapped. */
-aclcur_idx_t ae2f_ccpure aclcur_get_idx_lbl_cur(const x_aclspv_ctx* ae2f_restrict h_ctx);
+ae2f_ccpure aclcur_idx_t aclcur_get_idx_lbl_cur(const x_aclspv_ctx* ae2f_restrict h_ctx);
 
 /** the currently open label, or 0 before the root is bootstrapped. */
-aclcur_t* ae2f_ccpure aclcur_get_lbl_cur1(h_aclspv_ctx_t h_ctx);
+ae2f_ccpure aclcur_t* aclcur_get_lbl_cur1(h_aclspv_ctx_t h_ctx);
 
 /** id of the currently open label, or 0. */
-aclspv_id_t ae2f_ccpure aclcur_get_lbl_cur(h_aclspv_ctx_t h_ctx);
+ae2f_ccpure aclspv_id_t aclcur_get_lbl_cur(h_aclspv_ctx_t h_ctx);
 
 /** function-level "last top-level path returned" bit. */
-aclspv_bool_t ae2f_ccpure aclcur_get_fnret(const x_aclspv_ctx* ae2f_restrict h_ctx);
+ae2f_ccpure aclspv_bool_t aclcur_get_fnret(const x_aclspv_ctx* ae2f_restrict h_ctx);
 void aclcur_set_fnret(aclspv_bool_t c_ret, h_aclspv_ctx_t h_ctx);
 
 /** current lexical loop targets, 0 when not in a loop. */
-aclspv_id_t ae2f_ccpure aclcur_get_break_loop(const x_aclspv_ctx* ae2f_restrict h_ctx);
-aclspv_id_t ae2f_ccpure aclcur_get_continue_loop(const x_aclspv_ctx* ae2f_restrict h_ctx);
+ae2f_ccpure aclspv_id_t aclcur_get_break_loop(const x_aclspv_ctx* ae2f_restrict h_ctx);
+ae2f_ccpure aclspv_id_t aclcur_get_continue_loop(const x_aclspv_ctx* ae2f_restrict h_ctx);
 void aclcur_set_break_loop(aclspv_id_t c_lbl, h_aclspv_ctx_t h_ctx);
 void aclcur_set_continue_loop(aclspv_id_t c_lbl, h_aclspv_ctx_t h_ctx);
 
@@ -88,7 +88,7 @@ aclcur_lblid_t aclcur_cfg_lbl_loop(aclcur_lblid_t c, h_aclspv_ctx_t h_ctx);
  * this is the single source of truth for the return type. returns
  * ACLSPV_ID_VOID when the buffer has no root yet.
  * */
-aclspv_id_t ae2f_ccpure aclcur_get_retty(const x_aclspv_ctx* ae2f_restrict h_ctx);
+ae2f_ccpure aclspv_id_t aclcur_get_retty(const x_aclspv_ctx* ae2f_restrict h_ctx);
 
 /** 
  * bootstrap the root label as the first node of the cursor buffer.
