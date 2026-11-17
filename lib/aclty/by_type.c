@@ -4,6 +4,25 @@
 #include <util/log.h>
 #include <acldef.h>
 
+#include <string.h>
+
+#if	__ACLSPV_SCLR_BF16
+/** libclang does not map `BuiltinType::BFloat16` to `CXType_BFloat16`.
+ *
+ * `GetBuiltinTypeKind` in libclang falls through to `CXType_Unexposed`, so
+ * recognize the builtin by its canonical spelling instead.
+ * */
+static aclspv_bool_t s_is_bfloat16_type(const CXType c_ty) {
+	CXString	spell	= clang_getTypeSpelling(c_ty);
+	const char*	c_str	= clang_getCString(spell);
+	aclspv_bool_t	ret	= c_str
+		&& (!strcmp(c_str, "__bf16") || !strcmp(c_str, "__nv_bfloat16"));
+
+	clang_disposeString(spell);
+	return ret;
+}
+#endif
+
 ae2f_ccconst aclspv_id_t aclty_mk_by_type(const CXType c_ty) {
 	switch((aclspv_cxtykind_t)c_ty.kind) {
 #define	VECCASE(c_case, c_ret)	\
@@ -30,10 +49,19 @@ ae2f_ccconst aclspv_id_t aclty_mk_by_type(const CXType c_ty) {
 		case CXType_ULongLong:
 		VECCASE(CXType_ULong		, ACLSPV_ID_U64);
 
+#if	__ACLSPV_SCLR_BF16
 		case CXType_BFloat16:
+			return ACLSPV_ID_BF16;
+
+		/** libclang reports `__bf16` as an unexposed builtin. */
+		case CXType_Unexposed:
+			if(s_is_bfloat16_type(c_ty))
+				return ACLSPV_ID_BF16;
+			return 0;
+#endif
 
 #if	__ACLSPV_SCLR_F16
-		case CXType_Float16:
+		VECCASE(CXType_Float16		, ACLSPV_ID_F16);
 		VECCASE(CXType_Half		, ACLSPV_ID_F16);
 #endif
 

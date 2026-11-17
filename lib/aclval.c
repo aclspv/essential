@@ -136,6 +136,19 @@ aclspv_id_t	aclval_cfg_f16_bits(
 			);
 }
 
+#if	__ACLSPV_SCLR_BF16
+aclspv_id_t	aclval_cfg_bf16_bits(
+		const aclspv_wrd_t c_bits,
+		h_aclspv_ctx_t h_ctx
+		) {
+	return aclval_cfg_by_enum(
+			(aclspv_wrd2_t)(c_bits & 0xFFFFu)
+			, h_ctx
+			, ACLSPV_ID_BF16
+			);
+}
+#endif
+
 aclspv_id_t	aclval_cfg_f32(const float c_val, h_aclspv_ctx_t h_ctx)
 {
 	union {

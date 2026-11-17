@@ -5,6 +5,7 @@
 #include <aclcur/opX.h>
 #include <aclutil/extinst.h>
 #include <acltrl/f16.h>
+#include <acltrl/bf16.h>
 
 #include <aclty.h>
 
@@ -13,6 +14,13 @@
 #if	__ACLSPV_MATH_LITERAL
 #	include <math.h>
 #	include <aclval.h>
+
+#if	ae2f_stdc_v < 199900L
+#define	sinf(x)		((float)sin((double)x))
+#define	cosf(x)		((float)cos((double)x))
+#define	tanf(x)		((float)tan((double)x))
+#endif
+
 #endif
 
 #if	__ACLSPV_MATH_LITERAL
@@ -113,18 +121,34 @@ static aclspv_bool_t s_carve1_glsl_math(
 		aclspv_id_t	FOLDED;
 
 		if(WIDTH == 16) {
-			R.m_flt = acltrl_f16_to_f32(
-					(aclspv_wrd_t)(R.m_u64 & 0xFFFFu));
+#if	__ACLSPV_SCLR_BF16
+			if(SCLR == ACLSPV_ID_BF16)
+				R.m_flt = acltrl_bf16_to_f32(
+						(aclspv_wrd_t)(R.m_u64 & 0xFFFFu));
+			else
+#endif
+				R.m_flt = acltrl_f16_to_f32(
+						(aclspv_wrd_t)(R.m_u64 & 0xFFFFu));
 		}
 
 		if(!s_fold(c_inst, &R.m_flt))
 			return ACLEXPR_CARVE_NO;
 
 		if(WIDTH == 16) {
-			R.m_u64 = (aclspv_wrd2_t)acltrl_f32_to_f16(R.m_flt);
-			FOLDED = aclval_cfg_f16_bits(
-					(aclspv_wrd_t)(R.m_u64 & 0xFFFFu)
-					, CTX);
+#if	__ACLSPV_SCLR_BF16
+			if(SCLR == ACLSPV_ID_BF16) {
+				R.m_u64 = (aclspv_wrd2_t)acltrl_f32_to_bf16(R.m_flt);
+				FOLDED = aclval_cfg_bf16_bits(
+						(aclspv_wrd_t)(R.m_u64 & 0xFFFFu)
+						, CTX);
+			} else
+#endif
+			{
+				R.m_u64 = (aclspv_wrd2_t)acltrl_f32_to_f16(R.m_flt);
+				FOLDED = aclval_cfg_f16_bits(
+						(aclspv_wrd_t)(R.m_u64 & 0xFFFFu)
+						, CTX);
+			}
 		} else {
 			FOLDED = aclval_cfg_f32(R.m_flt, CTX);
 		}
@@ -139,6 +163,17 @@ static aclspv_bool_t s_carve1_glsl_math(
 		*rdwr_prv_idval = FOLDED;
 
 		return ACLEXPR_CARVE_OK;
+	}
+#endif
+
+#if	__ACLSPV_SCLR_BF16
+	/** SPV_KHR_bfloat16 only allows constants, memory, function, conversion,
+	 * composite and a few other instructions on bf16. there is no
+	 * GLSL.std.450 arithmetic for it. literal operands were folded above;
+	 * a runtime bf16 operand cannot be lowered. */
+	if(SCLR == ACLSPV_ID_BF16) {
+		CTX->m_err = ACLSPV_COMPILE_UNHANDLED_CARVE;
+		return ACLEXPR_CARVE_NO;
 	}
 #endif
 

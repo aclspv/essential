@@ -12,11 +12,56 @@
 #include <aclcur/common.h>
 
 #include <acltrl/f16.h>
+#include <acltrl/bf16.h>
 
 #include <aclctx/id.h>
 #include <aclctx/err.h>
 
 #include <aclutil/emitx.h>
+
+/** decode a 16-bit float literal (stored in the low half of `m_u64`). */
+static float s_literal_flt16_to_f32(
+		const aclty_id_t	c_ty,
+		const acltrl_t		c_literal
+		) {
+	const aclspv_wrd_t	BITS = (aclspv_wrd_t)(c_literal.m_u64 & 0xFFFFu);
+
+	(void)BITS;
+
+	switch(c_ty) {
+#if	__ACLSPV_SCLR_F16
+		case ACLSPV_ID_F16:
+			return acltrl_f16_to_f32(BITS);
+#endif
+#if	__ACLSPV_SCLR_BF16
+		case ACLSPV_ID_BF16:
+			return acltrl_bf16_to_f32(BITS);
+#endif
+		default:
+			return c_literal.m_flt;
+	}
+}
+
+/** encode a host float as the 16-bit float encoding of `c_ty`. */
+static aclspv_wrd2_t s_literal_flt16_from_f32(
+		const aclty_id_t	c_ty,
+		const float		c_val
+		) {
+	(void)c_val;
+
+	switch(c_ty) {
+#if	__ACLSPV_SCLR_F16
+		case ACLSPV_ID_F16:
+			return (aclspv_wrd2_t)acltrl_f32_to_f16(c_val);
+#endif
+#if	__ACLSPV_SCLR_BF16
+		case ACLSPV_ID_BF16:
+			return (aclspv_wrd2_t)acltrl_f32_to_bf16(c_val);
+#endif
+		default:
+			return 0;
+	}
+}
 
 /** c_old_type and c_new_type's shape MUST BE SAME */
 static enum ACLEXPR_RET_ s_cast_arithmetic(
@@ -328,12 +373,16 @@ enum ACLEXPR_RET_ aclexpr_arithmetic_cast_literal(
 				RESULT.m_api_intmax = (imax)c_old_literal.m_flt;
 				break;
 			case 16:
-				dbg_prefix();
-				dbg_call(fprintf, (stderr, "Cast from literal(half): %f\n"
-							, (double)acltrl_f16_to_f32(
-								(aclspv_wrd_t)(c_old_literal.m_u64 & 0xFFFFu))));
-				RESULT.m_api_intmax = (imax)acltrl_f16_to_f32(
-						(aclspv_wrd_t)(c_old_literal.m_u64 & 0xFFFFu));
+				{
+					const float FLT = s_literal_flt16_to_f32(
+							c_old_type
+							, c_old_literal);
+
+					dbg_prefix();
+					dbg_call(fprintf, (stderr, "Cast from literal(flt16): %f\n"
+								, (double)FLT));
+					RESULT.m_api_intmax = (imax)FLT;
+				}
 				break;
 			default:
 				ae2fpat_assertassume(0 && "unknown float bit-width");
@@ -360,12 +409,14 @@ enum ACLEXPR_RET_ aclexpr_arithmetic_cast_literal(
 				break;
 
 			case 16:
-				RESULT.m_u64 = (aclspv_wrd2_t)acltrl_f32_to_f16(
-						(float)c_old_literal.m_api_intmax);
+				RESULT.m_u64 = s_literal_flt16_from_f32(
+						c_new_type
+						, (float)c_old_literal.m_api_intmax);
 				dbg_prefix();
-				dbg_call(fprintf, (stderr, "Literal result(half): %f\n"
-							, (double)acltrl_f16_to_f32(
-								(aclspv_wrd_t)(RESULT.m_u64 & 0xFFFFu))));
+				dbg_call(fprintf, (stderr, "Literal result(flt16): %f\n"
+							, (double)s_literal_flt16_to_f32(
+								c_new_type
+								, RESULT)));
 				break;
 
 			default:
@@ -381,8 +432,9 @@ enum ACLEXPR_RET_ aclexpr_arithmetic_cast_literal(
 		switch(aclty_get_sclr_width(c_new_type)) {
 			case 64:
 				RESULT.m_dbl = (OLD_WIDTH == 16)
-					? (double)acltrl_f16_to_f32(
-							(aclspv_wrd_t)(c_old_literal.m_u64 & 0xFFFFu))
+					? (double)s_literal_flt16_to_f32(
+							c_old_type
+							, c_old_literal)
 					: (double)c_old_literal.m_flt;
 				break;
 
@@ -390,16 +442,20 @@ enum ACLEXPR_RET_ aclexpr_arithmetic_cast_literal(
 				if(OLD_WIDTH == 64)
 					RESULT.m_flt = (float)c_old_literal.m_dbl;
 				else if(OLD_WIDTH == 16)
-					RESULT.m_flt = acltrl_f16_to_f32(
-							(aclspv_wrd_t)(c_old_literal.m_u64 & 0xFFFFu));
+					RESULT.m_flt = s_literal_flt16_to_f32(
+							c_old_type
+							, c_old_literal);
 				else
 					RESULT.m_flt = c_old_literal.m_flt;
 				break;
 
 			case 16:
-				RESULT.m_u64 = (aclspv_wrd2_t)acltrl_f32_to_f16(
-						(OLD_WIDTH == 64)
+				RESULT.m_u64 = s_literal_flt16_from_f32(
+						c_new_type
+						, (OLD_WIDTH == 64)
 						? (float)c_old_literal.m_dbl
+						: (OLD_WIDTH == 16)
+						? s_literal_flt16_to_f32(c_old_type, c_old_literal)
 						: c_old_literal.m_flt);
 				break;
 
@@ -488,6 +544,16 @@ enum ACLEXPR_RET_ aclexpr_arithmetic_cast_literal(
 #if	__ACLSPV_SCLR_F16
 		case ACLSPV_ID_F16:
 		ae2f_expected_but_else(ID_RET = aclval_cfg_f16_bits(
+					(aclspv_wrd_t)(RESULT.m_u64 & 0xFFFFu)
+					, h_ctx)) return ACLEXPR_RET_FAILURE;
+
+		*r_newid = ID_RET;
+		return ACLEXPR_RET_SUCCESS_LITERAL;
+#endif
+
+#if	__ACLSPV_SCLR_BF16
+		case ACLSPV_ID_BF16:
+		ae2f_expected_but_else(ID_RET = aclval_cfg_bf16_bits(
 					(aclspv_wrd_t)(RESULT.m_u64 & 0xFFFFu)
 					, h_ctx)) return ACLEXPR_RET_FAILURE;
 

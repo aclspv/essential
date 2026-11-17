@@ -318,7 +318,8 @@ message(STATUS "[aclspv_essential_predef]")
 
 
 aclspv_predef_switch(aclspv-common		INTERFACE "ACLSPV_SHARED"		0)
-aclspv_predef_switch(aclspv-common		INTERFACE "ACLSPV_SCLR_F16"		1)
+aclspv_predef_switch(aclspv-common		INTERFACE "ACLSPV_SCLR_F16"		0)
+aclspv_predef_switch(aclspv-common		INTERFACE "ACLSPV_SCLR_BF16"		0)
 aclspv_predef_switch(aclspv-common-essential 	INTERFACE "ACLSPV_OpCapabilityKernel" "0")
 aclspv_predef_switch(aclspv-common-essential	INTERFACE "ACLSPV_OpCapabilityShader" "1")
 aclspv_predef_switch(aclspv-common-essential	INTERFACE "ACLSPV_CHECK_EXTRA" 1)
@@ -342,6 +343,10 @@ aclspv_test_cxx(aclspv-essential-test ./test/compile)
 
 if(ACLSPV_SCLR_F16)
 	aclspv_CoreTestTentVerbose(aclspv-essential-test ./test/comp-f16/)
+endif()
+
+if(ACLSPV_SCLR_BF16)
+	aclspv_CoreTestTentVerbose(aclspv-essential-test ./test/comp-bf16/)
 endif()
 
 message(STATUS ""

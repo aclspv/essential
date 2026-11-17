@@ -32,7 +32,7 @@ enum ACLCUR_ {
 	ACLCUR_ST
 };
 
-typedef struct aclcur	aclcur_t;
+/** `aclcur_t` is forward-declared in the public context header. */
 typedef struct aclcur* ae2f_restrict h_aclcur_t;
 
 #endif

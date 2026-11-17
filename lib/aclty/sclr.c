@@ -2,6 +2,7 @@
 
 #include <aclutil/emitx.h>
 #include <aclutil/capability.h>
+#include <aclutil/extension.h>
 #include <ae2f/pat/dbg.h>
 
 ae2f_ccconst aclspv_bool_t aclty_is_sclr_uint(const aclty_sclr_t c) {
@@ -18,6 +19,9 @@ ae2f_ccconst aclspv_bool_t aclty_is_sclr_uint(const aclty_sclr_t c) {
 		case ACLSPV_ID_I64:
 #if	__ACLSPV_SCLR_F16
 		case ACLSPV_ID_F16:
+#endif
+#if	__ACLSPV_SCLR_BF16
+		case ACLSPV_ID_BF16:
 #endif
 		case ACLSPV_ID_F32:
 		case ACLSPV_ID_F64:
@@ -40,6 +44,9 @@ ae2f_ccconst aclspv_bool_t aclty_is_sclr_sint(const aclty_sclr_t c) {
 
 #if	__ACLSPV_SCLR_F16
 		case ACLSPV_ID_F16:
+#endif
+#if	__ACLSPV_SCLR_BF16
+		case ACLSPV_ID_BF16:
 #endif
 		case ACLSPV_ID_F32:
 		case ACLSPV_ID_F64:
@@ -66,6 +73,9 @@ ae2f_ccconst aclspv_bool_t aclty_is_sclr_signed(const aclty_sclr_t c) {
 #if	__ACLSPV_SCLR_F16
 		case ACLSPV_ID_F16:
 #endif
+#if	__ACLSPV_SCLR_BF16
+		case ACLSPV_ID_BF16:
+#endif
 		case ACLSPV_ID_F32:
 		case ACLSPV_ID_F64:
 			return 1;
@@ -88,6 +98,9 @@ ae2f_ccconst aclspv_bool_t aclty_is_sclr_flt(const aclty_sclr_t c_id_default) {
 	switch(c_id_default) {
 #if	__ACLSPV_SCLR_F16
 		case ACLSPV_ID_F16:
+#endif
+#if	__ACLSPV_SCLR_BF16
+		case ACLSPV_ID_BF16:
 #endif
 		case ACLSPV_ID_F32:
 		case ACLSPV_ID_F64:
@@ -115,6 +128,9 @@ ae2f_ccconst aclspv_bool_t aclty_is_default(const aclty_default_t c_id_default) 
 	switch(c_id_default) {
 #if	__ACLSPV_SCLR_F16
 		case ACLSPV_ID_F16:
+#endif
+#if	__ACLSPV_SCLR_BF16
+		case ACLSPV_ID_BF16:
 #endif
 		case ACLSPV_ID_F32:
 		case ACLSPV_ID_F64:
@@ -146,6 +162,8 @@ ae2f_ccconst aclty_default_t aclty_get_sclr_flt(aclty_sclr_width_t bit_width) {
 		case 16:
 #if	__ACLSPV_SCLR_F16
 			return ACLSPV_ID_F16;
+#elif	__ACLSPV_SCLR_BF16
+			return ACLSPV_ID_BF16;
 #endif
 		case 32:
 			return ACLSPV_ID_F32;
@@ -205,6 +223,9 @@ ae2f_ccconst aclspv_uiter_t aclty_get_sclr_width(const aclty_sclr_t c_id_default
 		case ACLSPV_ID_U16:
 #if	__ACLSPV_SCLR_F16
 		case ACLSPV_ID_F16:
+#endif
+#if	__ACLSPV_SCLR_BF16
+		case ACLSPV_ID_BF16:
 #endif
 			return 16;
 
@@ -391,6 +412,25 @@ aclspv_id_t aclty_mk_default(
 			break;
 #endif
 
+#if	__ACLSPV_SCLR_BF16
+		case ACLSPV_ID_BF16:
+			ae2f_ifezerr(aclutil_add_capability_by_flag(CTX, SpvCapabilityBFloat16TypeKHR))
+				return 0;
+			ae2f_ifezerr(aclutil_add_extension_by_flag(CTX, "SPV_KHR_bfloat16"))
+				return 0;
+
+			/** 16-bit float with the BFloat16KHR encoding. */
+			ae2f_ifezerr(ret_count = aclutil_emitx_4(
+						&CTX->m_section.m_types
+						, ret_count
+						, SpvOpTypeFloat
+						, ACLSPV_ID_BF16
+						, 16
+						, SpvFPEncodingBFloat16KHR
+						)) return 0;
+			break;
+#endif
+
 		case ACLSPV_ID_F32:
 			ae2f_ifezerr(ret_count = aclutil_emitx_3(
 						&CTX->m_section.m_types
@@ -421,14 +461,18 @@ aclspv_id_t aclty_mk_default(
 
 
 ae2f_ccconst aclty_default_t aclty_cvt_sclr_width(const aclty_sclr_t c_id, const aclty_sclr_width_t bitcount) {
+	if(aclty_get_sclr_width(c_id) == bitcount)
+		return c_id;
+
 	if(aclty_is_sclr_uint(c_id))
 		return aclty_get_sclr_uint(bitcount);
 
 	if(aclty_is_sclr_sint(c_id))
 		return aclty_get_sclr_sint(bitcount);
 
-	if(aclty_is_sclr_flt(c_id))
+	if(aclty_is_sclr_flt(c_id)) {
 		return aclty_get_sclr_flt(bitcount);
+	}
 
 	return (aclty_default_t)ae2f_expected_not(0);
 }

@@ -54,6 +54,12 @@ ae2f_inline_f static ae2f_ccpure aclspv_opcode_t s_op_to_spv(
 {
 	aclspv_id_t	ID = aclty_get_simd_sclr(c_id, h_ctx);
 
+#if	__ACLSPV_SCLR_BF16
+	/** SPV_KHR_bfloat16 defines no arithmetic instructions for bf16. */
+	if(ID == ACLSPV_ID_BF16)
+		return 0;
+#endif
+
 	switch((enum S_ARITHMETIC_)c_op2) {
 		default:
 			return 0;

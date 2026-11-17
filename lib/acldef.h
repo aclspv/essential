@@ -10,6 +10,8 @@ typedef unsigned int	aclspv_uiter_t;
 
 #if	__ACLSPV_SCLR_F16
 #define	ACLSPV_ID_F16_OR_Z	ACLSPV_ID_F16
+#elif	__ACLSPV_SCLR_BF16
+#define	ACLSPV_ID_F16_OR_Z	ACLSPV_ID_BF16
 #else
 #define	ACLSPV_ID_F16_OR_Z	0
 #endif

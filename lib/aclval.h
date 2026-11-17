@@ -37,7 +37,9 @@ typedef struct {
 	aclty_id_t	m_ty;
 } aclval_spec_t;
 
-typedef struct aclval {
+/** `aclval_t` is forward-declared in the public context header; C90 does not
+ * allow redefining it here. */
+struct aclval {
 	aclspv_wrd_t		m_key_0;
 	aclspv_wrd_t		m_key_1;
 
@@ -67,7 +69,7 @@ typedef struct aclval {
 
 	aclspv_vid_t		m_repvec;
 	aclspv_wrd_t		m_repvec_literal_mask;
-} aclval_t;
+};
 
 typedef aclval_t* ae2f_restrict p_aclval_t;
 
@@ -103,6 +105,14 @@ aclspv_vid_t aclval_cfg_f16_bits(
 		const aclspv_wrd_t c_bits,
 		h_aclspv_ctx_t h_ctx
 		);
+
+#if	__ACLSPV_SCLR_BF16
+/** `c_bits` is a bfloat16 bit pattern, not a host float value. */
+aclspv_vid_t aclval_cfg_bf16_bits(
+		const aclspv_wrd_t c_bits,
+		h_aclspv_ctx_t h_ctx
+		);
+#endif
 
 aclspv_vid_t aclval_cfg_f32(
 		const float c_val, 
