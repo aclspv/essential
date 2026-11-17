@@ -563,8 +563,12 @@ enum CXChildVisitResult aclemit_fndecl_entp_arg(
 
 			ae2f_ifezerr(aclty_getsize(var_elm_type_id, DAT->m_ctx).m_id || aclty_getsize(var_elm_type_id, DAT->m_ctx).m_lit.m_max) {
 				_aclctx_err(DAT->m_ctx, ACLSPV_COMPILE_UNHANDLED_ARGS);
-				err_prefix(i);
-				err_call(fprintf, (stderr, "is abstract. and is push constant. is shit. %lu\n", (unsigned long)var_type_id));
+				err_prefix(0);
+				err_call(fprintf, (
+							stderr
+							, "push constant type must have a fixed size (type id %lu)\n"
+							, (unsigned long)var_type_id)
+						);
 				return CXChildVisit_Break;
 			}
 
@@ -607,10 +611,10 @@ enum CXChildVisitResult aclemit_fndecl_entp_arg(
 
 			ae2f_ifezerr(aclty_getsize(var_elm_type_id, DAT->m_ctx).m_id || aclty_getsize(var_elm_type_id, DAT->m_ctx).m_lit.m_max) {
 				_aclctx_err(DAT->m_ctx, ACLSPV_COMPILE_UNHANDLED_ARGS);
-				err_prefix(i);
+				err_prefix(0);
 				err_call(fprintf, (
 							stderr
-							, "is abstract. and is input/output. is shit. %lu\n"
+							, "input/output type must have a fixed size (type id %lu)\n"
 							, (unsigned long)var_type_id)
 						);
 				return CXChildVisit_Break;
@@ -685,7 +689,9 @@ enum CXChildVisitResult aclemit_fndecl_entp_arg(
 				 **/
 				var_elm_type_id = var_type_id;
 
-				ae2f_ifnezerr(p_ty->m_type_id) switch((aclspv_wrd_t)p_ty->m_class) {
+				/** p_ty is 0 for a builtin scalar | vector (see above), so
+				 * the node is only inspected when it actually exists. */
+				ae2f_ifnezerr(p_ty && p_ty->m_type_id) switch((aclspv_wrd_t)p_ty->m_class) {
 					/** T[] -> struct { T[] } */
 					case ACLTY_ARR:
 						ae2f_ifezerr(var_elm_type_id = aclty_mk_struct_single_blk(
@@ -735,8 +741,8 @@ enum CXChildVisitResult aclemit_fndecl_entp_arg(
 						DAT->m_ctx
 						, ACLSPV_COMPILE_UNHANDLED_ARGS
 						);
-				err_prefix(i);
-				err_call(fprintf, (stderr, "is abstract. and is workgroup | uniform. is shit. %lu\n", (unsigned long)var_elm_type_id));
+				err_prefix(0);
+				err_call(fprintf, (stderr, "workgroup/uniform type must have a fixed size (type id %lu)\n", (unsigned long)var_elm_type_id));
 				return CXChildVisit_Break;
 			}
 
@@ -1050,8 +1056,6 @@ enum CXChildVisitResult aclemit_fndecl_entp_arg(
 #define	var_id			((const aclspv_id_t)var_id)
 #define	var_native_type_id	((const aclspv_id_t)var_native_type_id)
 
-#define	bindable_set		((const aclspv_wrd_t)bindable_set)
-#define	bindable_idx		((const aclspv_wrd_t)bindable_idx)
 #define	pc_idx_func		((const aclspv_wrd_t)pc_idx_func)
 #define	pc_idx_arg		((const aclspv_wrd_t)pc_idx_arg)
 
