@@ -193,7 +193,7 @@ aclty_t* aclty_add_struct_mbr_std430(
 	 * and are never opaque, so the check only applies to dynamic ids. */
 	{
 		aclty_t* mbrid = aclty_find(c_id, h_ctx);
-		ae2f_ifnezerr(mbrid->m_type_id) {
+		ae2f_ifnezerr(mbrid) {
 			if(mbrid->m_field0 & ACLTY_FIELD0_NOPOD) {
 				ae2f_ifnezerr_strict(rdwr_struct->m_field0 >> ACLTY_FIELD0_OFF_NOPOD & 1) {
 					err_puts("it is already not pod.");
@@ -296,7 +296,7 @@ aclty_t* aclty_add_struct_mbr_std140(
 	 * and are never opaque, so the check only applies to dynamic ids. */
 	{
 		aclty_t* mbrid = aclty_find(c_id, h_ctx);
-		ae2f_ifnezerr(mbrid->m_type_id) {
+		ae2f_ifnezerr(mbrid) {
 			if(mbrid->m_field0 & ACLTY_FIELD0_NOPOD) {
 				ae2f_ifnezerr_strict(rdwr_struct->m_field0 >> ACLTY_FIELD0_OFF_NOPOD & 1) {
 					err_puts("it is already not pod.");
@@ -317,7 +317,7 @@ aclty_t* aclty_add_struct_mbr_std140(
 	{
 		aclty_t* ae2f_restrict mbrty = aclty_find(c_id, h_ctx);
 		/** builtin ids (< ACLSPV_ID_END) have no type node: nothing to bump. */
-		ae2f_ifnezerr(mbrty->m_type_id)
+		ae2f_ifnezerr(mbrty)
 		switch((aclspv_wrd_t)mbrty->m_class) {
 			case ACLTY_STRUCT:
 			case ACLTY_VEC:
@@ -415,7 +415,7 @@ aclty_t* aclty_add_struct_mbr_un(
 		/** builtin ids (< ACLSPV_ID_END) have no type node and are never
 		 * opaque, so the check only applies to dynamic ids. (mirrors
 		 * aclty_add_struct_mbr_std430) */
-		ae2f_ifnezerr(mbrid->m_type_id) {
+		ae2f_ifnezerr(mbrid) {
 			if(mbrid->m_field0 & ACLTY_FIELD0_NOPOD) {
 				ae2f_ifnezerr_strict(rdwr_struct->m_field0 >> ACLTY_FIELD0_OFF_NOPOD & 1) {
 					err_puts("it is already not pod.");

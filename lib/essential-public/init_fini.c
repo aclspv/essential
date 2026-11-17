@@ -151,3 +151,29 @@ ACLSPV_ABI_LINK aclspv_compile_t aclspv_init_ctx(
 
 	return i_ctx->m_err; 
 }
+
+
+ACLSPV_ABI_LINK void aclspv_ctx_free(x_aclspv_ctx* d) { if(d) {
+	aclspv_usrcfg_t cfg = d->m_usrcfg;
+	aclspv_fini_ctx(d);
+	cfg.m_free(d->m_ctx_base, d->m_ctx_sz, cfg.m_usrdata);
+}}
+
+ACLSPV_ABI_LINK ae2f_retnew1(aclspv_ctx_free) x_aclspv_ctx* aclspv_ctx_make(const aclspv_usrcfg_t* ae2f_restrict rd_usrcfg) {
+	void* base;
+	x_aclspv_ctx* ctx;
+	aclspv_wrd_t sz_real;
+	ae2f_ifezerr(rd_usrcfg && rd_usrcfg->m_malloc) return 0;
+
+	ctx = rd_usrcfg->m_malloc(
+			sizeof(x_aclspv_ctx)
+			, &sz_real
+			, &base
+			, rd_usrcfg->m_usrdata);
+
+	ae2f_ifezerr(ctx) return 0;
+	ctx->m_ctx_sz = sz_real;
+	ctx->m_ctx_base = base;
+
+	return ctx;
+}

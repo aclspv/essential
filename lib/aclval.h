@@ -37,7 +37,7 @@ typedef struct {
 	aclty_id_t	m_ty;
 } aclval_spec_t;
 
-typedef struct {
+typedef struct aclval {
 	aclspv_wrd_t		m_key_0;
 	aclspv_wrd_t		m_key_1;
 

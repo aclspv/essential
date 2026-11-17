@@ -1,6 +1,8 @@
 #ifndef	aclmem_ptr_h
 #define aclmem_ptr_h
 
+#include <ae2f/cc/arg_sarr.h>
+
 /* cppcheck-suppress misra-c2012-14.2 */
 #define	aclmem_ptr_t(ty)	\
 	typedef union {	\

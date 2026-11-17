@@ -43,7 +43,7 @@ typedef aclspv_wrd_t	aclty_field0_t;
 /** data type id */
 typedef aclspv_id_t aclty_id_t;
 
-typedef struct {
+typedef struct aclty {
 	union {
 		struct {
 			aclconst_specsz	m_num;
