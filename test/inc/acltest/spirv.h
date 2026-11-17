@@ -6,6 +6,9 @@
 /** opcodes this checker understands. */
 enum ACLTEST_SPV_OP_ {
 	ACLTEST_SPV_OP_EXT_INST			= 12,
+	ACLTEST_SPV_OP_TYPE_STRUCT		= 30,
+	ACLTEST_SPV_OP_VARIABLE			= 59,
+	ACLTEST_SPV_OP_DECORATE			= 71,
 	ACLTEST_SPV_OP_VECTOR_SHUFFLE		= 79,
 	ACLTEST_SPV_OP_LOGICAL_NOT		= 168,
 	ACLTEST_SPV_OP_SELECT			= 169,
@@ -46,6 +49,59 @@ typedef struct {
 	/** every merge / branch target names a defined OpLabel. */
 	int		m_targets_ok;
 } acltest_spirv_stats;
+
+/** number of instructions with opcode `c_op`. */
+ae2f_unused static unsigned acltest_spirv_count_op(
+		const aclspv_wrd_t*	rd,
+		aclspv_wrdcount_t	c,
+		unsigned		c_op
+		) {
+	aclspv_wrdcount_t i = 5;
+	unsigned n = 0;
+
+	while(i < c) {
+		const unsigned wc = (unsigned)(rd[i] >> 16);
+
+		if(!wc || i + wc > c)
+			break;
+
+		if((unsigned)(rd[i] & 0xffff) == c_op)
+			++n;
+
+		i += wc;
+	}
+
+	return n;
+}
+
+/** number of OpVariable instructions whose storage class is
+ * `c_storage_class`.
+ *
+ * OpVariable layout is [op][result type][result id][storage class]. */
+ae2f_unused static unsigned acltest_spirv_count_var_in(
+		const aclspv_wrd_t*	rd,
+		aclspv_wrdcount_t	c,
+		aclspv_wrd_t		c_storage_class
+		) {
+	aclspv_wrdcount_t i = 5;
+	unsigned n = 0;
+
+	while(i < c) {
+		const unsigned wc = (unsigned)(rd[i] >> 16);
+
+		if(!wc || i + wc > c)
+			break;
+
+		if((unsigned)(rd[i] & 0xffff) == ACLTEST_SPV_OP_VARIABLE
+				&& wc >= 4
+				&& rd[i + 3] == c_storage_class)
+			++n;
+
+		i += wc;
+	}
+
+	return n;
+}
 
 /** true when `c_id` is the result id of an OpLabel. */
 static int s_acltest_spirv_has_lbl(
