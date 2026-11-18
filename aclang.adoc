@@ -187,6 +187,7 @@ ____
 ====
 using spec constant id on execution mode requires spir-v >= 1.2. +
 these do not resolve capabilities and extensions automatically.
+when used as id, they SHOULD BE specified somewhere else.
 ====
 
 [NOTE]
