@@ -12,7 +12,6 @@ aclspv_id_t	aclcur_store_reg(aclcur_regid_t c_reg, aclspv_vid_t c_val, h_aclspv_
 	h_aclcur_t p;
 	h_aclcur_t p_reg;
 	h_aclcur_t p_val;
-	h_aclcur_t p_old;
 
 	/** the caller may have passed an alias: it is referenced, too. */
 	c_ref	= c_reg;
@@ -49,14 +48,13 @@ aclspv_id_t	aclcur_store_reg(aclcur_regid_t c_reg, aclspv_vid_t c_val, h_aclspv_
 	 * carved still forces its OpStore out. */
 	c_mem = aclcur_reg_needs_memory(c_reg, h_ctx);
 
-	/** a register never loaded (or already untracked) has no old value to release.
-	 * the old tracked value may also be a node-less constant (stored straight
-	 * from m_types): such a value never acquired a reference, so skip it. */
-	if(p_reg->m_val) {
-		p_old = aclcur_get_node(p_reg->m_val, h_ctx);
-		if(p_old)
-			(void)--p_old->m_num_ref;
-	}
+	/** the register's tracked value is only a cache of a value some node
+	 * already owns: a store operand, an op result, a phi. tracking takes
+	 * no reference, so replacing it must release none. decrementing here
+	 * would cancel the reference of the instruction that produced the
+	 * value, and the emit pass drops a LOAD whose count reaches zero —
+	 * leaving the store that still names it dangling. (an untracked old
+	 * value also has no node at all: a constant served from m_types.) */
 
 	p->m_class		= ACLCUR_STORE;
 	p->m_d.m_store.m_reg	= c_reg;
