@@ -1,4 +1,5 @@
 #include "./imports.h"
+#include "./sym.h"
 
 #include <aclsym/fn.h>
 
@@ -20,6 +21,7 @@ static aclspv_compile_t s_declare(
 		) {
 	aclspv_id_t			id_fn_ty;
 	aclty_t* ae2f_restrict		p_fn_ty;
+	aclspv_wrd_t			c_fnctrl;
 	aclspv_sz_t			c;
 
 	ae2f_ifezerr(id_fn_ty = aclty_mk_fn1(
@@ -42,6 +44,19 @@ static aclspv_compile_t s_declare(
 
 	p_sym->m_id = h_ctx->m_id++;
 
+	/** name the symbol when the flag asks for it. */
+	ae2f_ifnezerr(aclemit_fndecl_sym_name(p_sym, h_ctx))
+		return h_ctx->m_err;
+
+	/** a body-less function has no body to analyse: its declared promise
+	 * (__attribute__((pure)) / const) is all there is, and the control mask
+	 * is the only place the module can carry it. */
+	c_fnctrl = 0;
+	if(p_sym->m_flag0 & aclsym_fn_flag0(ACLSYM_FN_FLAG0_CONST))
+		c_fnctrl |= (aclspv_wrd_t)SpvFunctionControlConstMask;
+	if(p_sym->m_flag0 & aclsym_fn_flag0(ACLSYM_FN_FLAG0_PURE))
+		c_fnctrl |= (aclspv_wrd_t)SpvFunctionControlPureMask;
+
 	/** [result type][result id][control][function type], then no blocks:
 	 * a declaration. the parameter types live in the OpTypeFunction. */
 	c = aclutil_emitx_5(
@@ -50,7 +65,7 @@ static aclspv_compile_t s_declare(
 			, SpvOpFunction
 			, p_fn_ty->m_info.m_fn.m_ret_id
 			, p_sym->m_id
-			, 0
+			, c_fnctrl
 			, id_fn_ty
 			);
 

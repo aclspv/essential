@@ -168,9 +168,14 @@ int main(void) {
 
 	free(spv);
 
-	/** no entry point yet, so the module is only legal under Linkage. */
-	if(c_fn != 1 || c_call != 0 || c_link || c_entp || !c_linkcap) {
+	if(c_fn != 1 || c_call != 0 || c_link || c_entp) {
 		fputs("[split] compile phase emitted a deferred body\n", stderr);
+		goto LBL_FAIL;
+	}
+
+	/** no import and no export yet: Linkage is not requested. */
+	if(c_linkcap) {
+		fputs("[split] Linkage without an import or an export\n", stderr);
 		goto LBL_FAIL;
 	}
 

@@ -2,7 +2,10 @@
 
 #include <aclsym/fn.h>
 
+#include <aclattr/fnctrl.h>
+
 #include <aclemit/fndecl/body.h>
+#include <aclemit/fndecl/sym.h>
 #include <aclemit/root.h>
 
 #include <aclcur/common.h>
@@ -36,6 +39,8 @@ enum CXChildVisitResult aclemit_fndecl_norm(
 	aclcur_t* ae2f_restrict		p_root;
 	aclspv_id_t			id_fn_ty;
 	aclspv_id_t			id_ret;
+	aclspv_wrd_t			c_fnctrl;
+	aclspv_sz_t			c_fn_wrd;
 	const int			NARG = clang_Cursor_getNumArguments(h_parent);
 	int				i;
 
@@ -67,13 +72,26 @@ enum CXChildVisitResult aclemit_fndecl_norm(
 	/** the symbol carries the emitted identity for call sites. */
 	p_sym->m_id = ctx->m_id++;
 
+	/** name the symbol when the flag asks for it. */
+	ae2f_ifnezerr(aclemit_fndecl_sym_name(p_sym, ctx))
+		return CXChildVisit_Break;
+
+	/** the attribute half of the control mask is a property of the
+	 * declaration, read lazily here. the purity half can only be answered
+	 * after the body is carved, so the word is patched below. */
+	c_fnctrl = aclattr_get_fnctrl(h_parent);
+
+	/** where this OpFunction's control word lands:
+	 * [op][result type][result id][control][function type]. */
+	c_fn_wrd = ctx->m_count.m_fndef;
+
 	ae2f_ifezerr(ctx->m_count.m_fndef = aclutil_emitx_5(
 				&ctx->m_section.m_fndef
 				, ctx->m_count.m_fndef
 				, SpvOpFunction
 				, id_ret
 				, p_sym->m_id
-				, 0
+				, c_fnctrl
 				, id_fn_ty))
 		return CXChildVisit_Break;
 
@@ -198,6 +216,28 @@ enum CXChildVisitResult aclemit_fndecl_norm(
 			p_sym->m_flag0 |= aclsym_fn_flag0(ACLSYM_FN_FLAG0_PURE);
 
 		p_sym->m_flag0 |= aclsym_fn_flag0(ACLSYM_FN_FLAG0_EMITTED);
+
+		/** the body answered the purity question: fold it into the control
+		 * word that was written before the body existed. */
+		{
+			aclspv_wrd_t* ae2f_restrict p_wrds
+				= aclutil_get_wrd_of_vec(&ctx->m_section.m_fndef);
+
+			/** SPIR-V Const implies Pure. the analysis answers the two
+			 * questions independently (const: reads no external state,
+			 * pure: writes none), so a body that writes external state
+			 * gets neither bit. */
+			if(p_sym->m_flag0
+					& aclsym_fn_flag0(ACLSYM_FN_FLAG0_PURE)) {
+				p_wrds[c_fn_wrd + 3] |= (aclspv_wrd_t)
+					SpvFunctionControlPureMask;
+
+				if(p_sym->m_flag0
+						& aclsym_fn_flag0(ACLSYM_FN_FLAG0_CONST))
+					p_wrds[c_fn_wrd + 3] |= (aclspv_wrd_t)
+						SpvFunctionControlConstMask;
+			}
+		}
 
 		return ret;
 	}

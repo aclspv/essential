@@ -23,12 +23,12 @@ namespace TEST {
 
 int main(int argc, const char* argv[]) {
 	aclspv::ctx ctx{};
-
 	const char* outpath = argv[1];
-
 	TEST::scoped<CXIndex, void, clang_disposeIndex> 
 		cxidx(clang_createIndex(0, 0
 					));
+
+	ctx.me().m_usrcfg.m_flag0 |= ACLSPV_CTX_FLAG0_SYMBOL;
 
 	if(argc < 3) {
 		puts("comp.cc <file_output> ...<file_to_compile>");

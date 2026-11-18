@@ -164,13 +164,9 @@ ACLSPV_ABI_LINK aclspv_compile_t aclspv_ctx_compile(
 	ae2f_ifnezerr(aclemit_compile_bodies(h_ctx, c_cur_root))
 		return h_ctx->m_err;
 
-	/** an entry point can be deferred too (it may call an import), and a
-	 * module with no OpEntryPoint is only legal under Linkage. */
-	if(!h_ctx->m_count.m_entp) {
-		ae2f_ifezerr(aclutil_add_capability_by_flag(
-					h_ctx, SpvCapabilityLinkage))
-			return h_ctx->m_err;
-	}
+	/** Linkage is not requested here: the compile phase cannot know whether
+	 * the module will have an entry point — one may still be deferred. the
+	 * build phase decides, after every body is out. */
 
 	return h_ctx->m_err;
 }
@@ -213,6 +209,15 @@ ACLSPV_ABI_LINK aclspv_compile_t aclspv_ctx_build(
 
 	ae2f_ifnezerr(aclemit_build_bodies(h_ctx, c_cur_root))
 		return h_ctx->m_err;
+
+	/** a module without any entry point is only valid under Linkage, so ask
+	 * for it now that every body is out. imports and exports request it
+	 * themselves; this is the last, real reason to carry it. */
+	if(!h_ctx->m_count.m_entp) {
+		ae2f_ifezerr(aclutil_add_capability_by_flag(
+					h_ctx, SpvCapabilityLinkage))
+			return h_ctx->m_err;
+	}
 
 	/** every emitted body has an id now: decorate the exports. */
 	return aclemit_export(h_ctx, c_cur_root);

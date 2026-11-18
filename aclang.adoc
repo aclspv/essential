@@ -89,6 +89,32 @@ int also_exported(int x) { return x * 2; }</pre>
 `__declspec(dllexport)` is the Microsoft spelling. a target that does not understand it drops the attribute (clang warns), so there is nothing to detect; use `visibility("default")` there.
 ====
 
+=== FunctionControlAttributes
+
+[quote]
+____
+The `OpFunction` control mask is read from the declaration when the function is emitted. +
+It is a hint for a downstream inliner; this compiler emits the declaration as written.
+____
+
+* `__attribute__((always_inline))`, or the `inline` keyword where the language mode has it, emits `Inline`.
+* `__attribute__((noinline))` emits `DontInline`. when both are present, `noinline` wins.
+* a defined body is analysed: one that writes no state it does not own emits `Pure`, and one that also reads none emits `Const` (`Const` implies `Pure`).
+* a body-less declaration has nothing to analyse: its `__attribute__((pure))` / `__attribute__((const))` is what the declaration carries.
+* without any of these, the mask is `None`. an entry point always carries `None`.
+
+++++
+<div class="listingblock" style="background-color:#1c171b;color:#d8ccd3;padding:0.8em 1em;overflow-x:auto;border-radius:4px">
+<pre style="font-family:'Source Code Pro','DejaVu Sans Mono','Courier New',monospace;font-size:14px;line-height:1.3;margin:0;background:transparent;color:inherit">__attribute__((always_inline))
+int inl(int x) { return x + 1; }    /* OpFunction ... Inline */
+
+__attribute__((noinline))
+int never(int x) { return x + 2; }  /* OpFunction ... DontInline */
+
+int plain(int x) { return x + 3; }  /* OpFunction ... None */</pre>
+</div>
+++++
+
 === AnnotationAttributes
 
 [quote]
