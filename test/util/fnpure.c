@@ -1,7 +1,8 @@
 #include <aclspv.h>
 
 #include "../../lib/aclcur/lbl/pure.h"
-#include "../../lib/util/entp.h"
+#include "../../lib/aclsym/entp.h"
+#include "../../lib/aclsym/fn.h"
 
 #include <acltest/onefile.h>
 
@@ -10,8 +11,8 @@
 
 /** compile one entry point and check the function-level purity bits the
  * pipeline captured. the cursor arena is reset at FunctionEnd, so the
- * durable answer is the entry-point record; the aclcur predicates are only
- * valid inside that carve/emit window (see aclcur_fn_cfg_pure). */
+ * durable answer is the pass-1 function symbol; the aclcur predicates are
+ * only valid inside that carve/emit window (see aclcur_fn_cfg_pure). */
 static int s_check(
 		const char*	c_src,
 		aclspv_bool_t	c_expect_const,
@@ -22,7 +23,9 @@ static int s_check(
 	struct CXUnsavedFile	files[2];
 	const char*		ARG[] = {"main.c"};
 	aclspv_compile_t	ret;
-	aclutil_entp_t*		p_entp;
+	aclsym_entp_t*		p_entp;
+	aclspv_wrd_t		c_mask;
+	aclspv_wrd_t		c_want;
 
 	memset(&cfg, 0, sizeof(cfg));
 
@@ -39,34 +42,37 @@ static int s_check(
 		return 1;
 	}
 
-	ret = aclspv_ctx_compile3(&ctx, files, 2, ARG, 1, 0);
+	ret = aclspv_ctx_build3(&ctx, files, 2, ARG, 1, 0);
 	if(ret != ACLSPV_COMPILE_OK) {
 		fprintf(stderr, "[fnpure] compile failed: %d\n", (int)ret);
 		aclspv_fini_ctx(&ctx);
 		return 1;
 	}
 
-	if(ctx.m_fnlist.m_num_entp != 1) {
-		fprintf(stderr, "[fnpure] entry point count: %u\n"
-				, (unsigned)ctx.m_fnlist.m_num_entp);
+	/** an entry point is not a call target, so the gather pass gives it no
+	 * symbol: one entry record, zero symbols. */
+	if(ctx.m_fnlist.m_num_entp != 1 || !ctx.m_ctx_slave
+			|| ctx.m_ctx_slave->m_fnlist.m_num_fn != 0) {
+		fprintf(stderr, "[fnpure] function count: %u entry, %u symbol\n"
+				, (unsigned)ctx.m_fnlist.m_num_entp
+				, (unsigned)(ctx.m_ctx_slave
+					? ctx.m_ctx_slave->m_fnlist.m_num_fn : 0));
 		aclspv_fini_ctx(&ctx);
 		return 1;
 	}
 
-	p_entp = &((aclutil_entp_t*)ctx.m_fnlist.m_entp.m_p)[0];
+	p_entp = &((aclsym_entp_t*)ctx.m_fnlist.m_entp.m_p)[0];
 
-	if(p_entp->m_is_const != c_expect_const) {
-		fprintf(stderr, "[fnpure] const: got %d, expected %d\n"
-				, (int)p_entp->m_is_const
-				, (int)c_expect_const);
-		aclspv_fini_ctx(&ctx);
-		return 1;
-	}
+	c_mask = aclsym_fn_flag0(ACLSYM_FN_FLAG0_CONST)
+		| aclsym_fn_flag0(ACLSYM_FN_FLAG0_PURE);
+	c_want = (c_expect_const ? aclsym_fn_flag0(ACLSYM_FN_FLAG0_CONST) : 0)
+		| (c_expect_pure ? aclsym_fn_flag0(ACLSYM_FN_FLAG0_PURE) : 0);
 
-	if(p_entp->m_is_pure != c_expect_pure) {
-		fprintf(stderr, "[fnpure] pure: got %d, expected %d\n"
-				, (int)p_entp->m_is_pure
-				, (int)c_expect_pure);
+	if((p_entp->m_flag0 & c_mask) != c_want) {
+		fprintf(stderr, "[fnpure] flags 0x%x, want 0x%x in 0x%x\n"
+				, (unsigned)p_entp->m_flag0
+				, (unsigned)c_want
+				, (unsigned)c_mask);
 		aclspv_fini_ctx(&ctx);
 		return 1;
 	}

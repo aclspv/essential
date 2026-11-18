@@ -22,6 +22,8 @@ static aclspv_id_t s_cfg_opx_build(
 		const aclspv_vid_t	c_os[],
 		aclspv_wrd_t	c_num,
 		aclspv_wrd_t	c_num_val,
+		aclspv_wrd_t	c_idx_val_from,
+		aclspv_bool_t	c_dedup,
 		h_aclspv_ctx_t	h_ctx
 		) {
 	aclspv_wrd_t i;
@@ -42,7 +44,7 @@ static aclspv_id_t s_cfg_opx_build(
 	}
 
 	/** all operands are order-sensitive: no swap here. */
-	{
+	if(c_dedup) {
 		const aclcur_t* ae2f_restrict buf = s_get_buf_c(h_ctx);
 		aclspv_wrd_t k;
 
@@ -138,7 +140,7 @@ static aclspv_id_t s_cfg_opx_build(
 
 		/** member links may have regrown (realloc'd) the buffer: re-resolve.
 		 * only the value operands carry a reference. */
-		for(i = 0; i < c_num_val; ++i) {
+		for(i = c_idx_val_from; i < c_num_val; ++i) {
 			h_aclcur_t p_os_i = aclcur_get_node(c_os[i], h_ctx);
 			if(p_os_i)	(void)++p_os_i->m_num_ref;
 		}
@@ -184,7 +186,7 @@ static aclspv_id_t s_cfg_opx(
 
 	return s_cfg_opx_build(
 			c_newid_opt, c_op, c_ty, c_set, c_inst
-			, c_os, c_num, c_num, h_ctx);
+			, c_os, c_num, c_num, 0, 1, h_ctx);
 }
 
 aclspv_id_t aclcur_cfg_opx(
@@ -249,5 +251,58 @@ aclspv_id_t aclcur_cfg_shuffle(
 			, os
 			, (aclspv_wrd_t)2 + c_num
 			, 2
+			, 0
+			, 1
 			, h_ctx);
+}
+
+aclspv_id_t aclcur_cfg_call(
+		aclspv_id_t		c_fn,
+		aclty_id_t		c_ty,
+		const aclspv_vid_t	c_args[],
+		aclspv_wrd_t		c_num,
+		h_aclspv_ctx_t		h_ctx
+		) {
+	aclspv_wrd_t		os[__ACLSPV_MAX_OPRND];
+	aclspv_wrd_t		i;
+
+	unless(c_fn) return 0;
+
+	if((aclspv_wrd_t)1 + c_num > __ACLSPV_MAX_OPRND)
+		return 0;
+
+	/** operand 0 is the callee's OpFunction id: a raw id, not a value node.
+	 * operands 1.. are the already-converted argument values. */
+	os[0] = c_fn;
+
+	for(i = 0; i < c_num; ++i)
+		os[i + 1] = c_args[i];
+
+	/** NO dedup: a call is not a pure value, so two identical calls in
+	 * different blocks must not collapse onto one instruction (dominance). */
+	{
+		aclspv_id_t		id;
+		h_aclcur_t		p;
+
+		ae2f_ifezerr(id = s_cfg_opx_build(
+					0
+					, SpvOpFunctionCall
+					, c_ty
+					, 0, 0
+					, os
+					, (aclspv_wrd_t)1 + c_num
+					, (aclspv_wrd_t)1 + c_num
+					, 1
+					, 0
+					, h_ctx))
+			return 0;
+
+		/** an unused call is still a call. */
+		ae2f_ifezerr(p = aclcur_get_node(id, h_ctx))
+			return id;
+
+		p->m_flag0 |= aclcur_flag0(ACLCUR_FLAG0_EFFECT);
+
+		return id;
+	}
 }

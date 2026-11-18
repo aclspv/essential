@@ -13,7 +13,7 @@
 #include <aclutil/capability.h>
 
 #include <aclutil/emitx.h>
-#include <util/entp.h>
+#include <aclsym/entp.h>
 #include <util/scale.h>
 #include <util/log.h>
 
@@ -25,7 +25,7 @@ enum CXChildVisitResult aclemit_fndecl_entp(
 		CXClientData h_ctx
 		) {
 	h_aclspv_ctx_t	ctx = h_ctx;
-	aclutil_entp_t	entp = {0, };
+	aclsym_entp_t	entp = {0, };
 	struct aclemit_fndecl_entp_arg_data DATA;
 	const int NPARAMS = clang_Cursor_getNumArguments(h_parent);
 
@@ -163,14 +163,14 @@ enum CXChildVisitResult aclemit_fndecl_entp(
 				, ACLSPV_COMPILE_ALLOC_FAILED_ENTP
 				)) return CXChildVisit_Break;
 
-	((aclutil_entp_t* ae2f_restrict)ctx->m_fnlist.m_entp.m_p)
+	((aclsym_entp_t* ae2f_restrict)ctx->m_fnlist.m_entp.m_p)
 		[ctx->m_fnlist.m_num_entp++] = entp;
 
 	{
 		aclspv_bool_t			c_is_const = 0;
 		aclspv_bool_t			c_is_pure = 0;
 		enum CXChildVisitResult		ret;
-		aclutil_entp_t* ae2f_restrict	p_entp;
+		aclsym_entp_t* ae2f_restrict	p_entp;
 
 		ret = aclemit_fndecl_bodycfg(
 				h_cur
@@ -179,16 +179,18 @@ enum CXChildVisitResult aclemit_fndecl_entp(
 				, &c_is_pure
 				);
 
-		/** persist on the record appended just above: the cursor arena,
-		 * and with it the answer, is reset when bodycfg returns. */
+		/** an entry point has no function symbol: the purity snapshot,
+		 * taken while the cursor arena was alive, lives on its own record. */
 		p_entp = ctx->m_fnlist.m_num_entp
-			? &((aclutil_entp_t* ae2f_restrict)ctx->m_fnlist.m_entp.m_p)
+			? &((aclsym_entp_t* ae2f_restrict)ctx->m_fnlist.m_entp.m_p)
 				[ctx->m_fnlist.m_num_entp - 1]
 			: 0;
 
 		if(p_entp) {
-			p_entp->m_is_const	= c_is_const;
-			p_entp->m_is_pure	= c_is_pure;
+			if(c_is_const)
+				p_entp->m_flag0 |= aclsym_fn_flag0(ACLSYM_FN_FLAG0_CONST);
+			if(c_is_pure)
+				p_entp->m_flag0 |= aclsym_fn_flag0(ACLSYM_FN_FLAG0_PURE);
 		}
 
 		return ret;

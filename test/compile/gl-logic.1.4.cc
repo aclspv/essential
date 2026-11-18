@@ -47,7 +47,7 @@ int main(void) {
 	puts(files[1].Contents);
 	puts("opencl-c-base.h::::::::::::::::::");
 
-	RET = CTX.compile3(files, 2, ARG, 1, 0);
+	RET = CTX.build3(files, 2, ARG, 1, 0);
 	ae2f_ifnezerr(RET) printf("[err] aclspv_compile:	%d\n", static_cast<int>(RET));
 
 	RET = CTX.dump_output(spirv_count, spirv0);

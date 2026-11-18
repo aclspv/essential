@@ -200,6 +200,7 @@ add_subdirectory(src)
 include(./cmake/abitent.cmake)
 include(./cmake/test.cmake)
 
+aclspv_abitent(aclsym)
 aclspv_abitent(aclconst)
 aclspv_abitent(aclcur)
 aclspv_abitent(aclexpr)
@@ -237,6 +238,7 @@ endif()
 
 target_link_libraries(aclspv-essential
 	PUBLIC	aclspv::common
+	PRIVATE	$<BUILD_INTERFACE:aclspv::aclsym>
 	PRIVATE	$<BUILD_INTERFACE:aclspv::aclconst>
 	PRIVATE	$<BUILD_INTERFACE:aclspv::aclcur>
 	PRIVATE	$<BUILD_INTERFACE:aclspv::aclexpr>
@@ -306,8 +308,10 @@ if(ae2f_TEST)
 			scale
 			lblpure
 			fnpure
+			aclsym
 			)
 		target_link_libraries(Test-c-aclspv-essential-test-${prm_internal_test}
+			PRIVATE	$<BUILD_INTERFACE:aclspv::aclsym>
 			PRIVATE	$<BUILD_INTERFACE:aclspv::aclconst>
 			PRIVATE	$<BUILD_INTERFACE:aclspv::aclcur>
 			PRIVATE	$<BUILD_INTERFACE:aclspv::aclexpr>

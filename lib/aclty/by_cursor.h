@@ -19,7 +19,15 @@ aclspv_id_t aclty_mk_by_cursor(
 		const aclty_mk_by_cursor_info_t* ae2f_restrict	rd_info
 		);
 
-aclspv_id_t aclty_mk_by_cursor_dummy(
+/** the one entry for building a type from a cursor: it applies the declared
+ * layout (std430 unless aclspv_layout says otherwise) and parses whatever
+ * compound type the type needs. "default" names that default-layout path,
+ * not a degraded variant.
+ *
+ * the cursor carries the annotations (aclspv_storage_class, aclspv_layout,
+ * ...), which the clang type does not; pass the DECLARED type, not a
+ * canonicalised one, or the typedef holding them is already gone. */
+aclspv_id_t aclty_mk_by_cursor_default(
 		const CXCursor		c_cursor,
 		const CXType		c_type,
 		const h_aclspv_ctx_t	h_ctx

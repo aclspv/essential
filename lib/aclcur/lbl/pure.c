@@ -3,6 +3,8 @@
 #include "../ssa.h"
 #include "../util.h"
 
+#include <aclty.h>
+
 /** c_reg is a register node defined by c_lbl itself. an unknown id, a
  * non-register node, or a register owned by another label is external. */
 static aclspv_bool_t s_reg_defined_in(
@@ -114,11 +116,17 @@ aclspv_bool_t aclcur_lbl_is_pure(aclcur_lblid_t c_lbl, h_aclspv_ctx_t h_ctx) {
  * pure aliases were already resolved by the load/store carving. a ghost
  * anchors on a pointer value, owns no storage, and is not SCOPED: the
  * pointee is external by definition. unknown ids and non-register nodes
- * count as external (conservative). */
+ * count as external (conservative).
+ *
+ * a POINTER PARAMETER is the same case: the parameter is an owned SSA value,
+ * but the storage a view of it reaches is the caller's, not this function's.
+ * reading the parameter's own value is not an access through a view, so the
+ * hop count tells them apart. */
 static aclspv_bool_t s_reg_owned(aclspv_id_t c_reg, h_aclspv_ctx_t h_ctx) {
 	aclspv_wrd_t	n = h_ctx ? h_ctx->m_num_cursor : 0;
 	aclspv_id_t	c = c_reg;
 	h_aclcur_t	p;
+	aclspv_bool_t	c_view = 0;
 
 	while(c && n--) {
 		ae2f_ifezerr(p = aclcur_get_node(c, h_ctx))
@@ -129,6 +137,7 @@ static aclspv_bool_t s_reg_owned(aclspv_id_t c_reg, h_aclspv_ctx_t h_ctx) {
 		if(!(p->m_flag0 & aclcur_flag0_reg(ACLCUR_FLAG0_REG_ALIAS2)))
 			break;
 
+		c_view = 1;
 		c = p->m_d.m_reg.m_d.m_ref.m_id;
 	}
 
@@ -138,6 +147,20 @@ static aclspv_bool_t s_reg_owned(aclspv_id_t c_reg, h_aclspv_ctx_t h_ctx) {
 		return 0;
 	ae2f_ifnezerr_strict(p->m_class != ACLCUR_REG)
 		return 0;
+
+	/** an access through a view of a parameter reaches the caller's storage. */
+	if(c_view && (p->m_flag0 & aclcur_flag0_reg(ACLCUR_FLAG0_REG_PARAM)))
+		return 0;
+
+	/** a POINTER parameter is an owned SSA value, but storing through it
+	 * (the register itself is the address) reaches the caller's storage. a
+	 * scalar parameter stays owned. */
+	if(p->m_flag0 & aclcur_flag0_reg(ACLCUR_FLAG0_REG_PARAM)) {
+		aclty_t* ae2f_restrict p_ty = aclty_find(p->m_ty, h_ctx);
+
+		if(p_ty && p_ty->m_class == ACLTY_PTR)
+			return 0;
+	}
 
 	return (aclspv_bool_t)(p->m_flag0
 			& aclcur_flag0_reg(ACLCUR_FLAG0_REG_SCOPED));

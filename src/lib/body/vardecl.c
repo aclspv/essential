@@ -70,7 +70,7 @@ ae2f_MAC((L, )) aclemit_body_vardecl(CXCursor h_cur, h_aclspv_ctx_t h_ctx) { ae2
 
 	L$$LITERAL.m_api_uintmax = 0;
 
-	ae2f_ifneznrm((L$$TYPEID = aclty_mk_by_cursor_dummy(h_cur, L$$TYPE, L$$CTX))) {
+	ae2f_ifneznrm((L$$TYPEID = aclty_mk_by_cursor_default(h_cur, L$$TYPE, L$$CTX))) {
 		L$$TYPE_PTR = aclty_mk_ptr(
 				L$$TYPEID
 				, SpvStorageClassFunction

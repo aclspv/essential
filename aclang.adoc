@@ -46,6 +46,49 @@ ____
 </div>
 ++++
 
+=== ExportAttributes
+
+[quote]
+____
+Some functions are meant to leave the module: a linker resolves them, not this translation unit. +
+These are ordinary clang attributes, not <<AnnotationAttributes,annotations>>.
+____
+
+[cols="1,2",options="header"]
+|===
+| attribute | meaning
+| `__declspec(dllexport)` | the function is exported
+| `__attribute__((visibility("default")))` | the function is exported
+| `__attribute__((visibility("hidden")))` | the function is not exported by the export-by-default policy
+|===
+
+* a function is exported when it says so explicitly, or when the export-by-default policy is on and it is not `visibility("hidden")`. an explicit export wins over `hidden`.
+* an exported definition gets `OpDecorate %fn LinkageAttributes "<name>" Export`, and the first export adds the `Linkage` capability.
+* only a definition with a body is exported: a declaration alone has nothing to export yet.
+* entry points are not exported. they are reached through `OpEntryPoint`, not through linkage.
+* `ACLSPV_CTX_FLAG0_EXPORT_BY_DEFAULT` turns the policy on: every defined function is exported unless it is `visibility("hidden")`. use it when this module is one part of a larger linked program.
+* the opposite direction is an import: a called function that is declared without a body in this translation unit is declared `LinkageAttributes "<name>" Import`, before every definition in the module.
+
+++++
+<div class="listingblock" style="background-color:#1c171b;color:#d8ccd3;padding:0.8em 1em;overflow-x:auto;border-radius:4px">
+<pre style="font-family:'Source Code Pro','DejaVu Sans Mono','Courier New',monospace;font-size:14px;line-height:1.3;margin:0;background:transparent;color:inherit">/** exported explicitly */
+__attribute__((visibility("default")))
+int exported(int x) { return x + 1; }
+
+/** stays in the module, even under the export-by-default policy */
+__attribute__((visibility("hidden")))
+int internal(int x) { return x - 1; }
+
+/** exported only by ACLSPV_CTX_FLAG0_EXPORT_BY_DEFAULT */
+int also_exported(int x) { return x * 2; }</pre>
+</div>
+++++
+
+[NOTE]
+====
+`__declspec(dllexport)` is the Microsoft spelling. a target that does not understand it drops the attribute (clang warns), so there is nothing to detect; use `visibility("default")` there.
+====
+
 === AnnotationAttributes
 
 [quote]
@@ -733,3 +776,4 @@ Some statements / extensions may not be planned to be supported for now.
 * pointer arithmetic on non-physical addressing model
 * global variables
 * pointer to struct on input | output buffer
+* recursion, direct or mutual: the call graph must be acyclic. a cycle is reported as `ACLSPV_COMPILE_RECURSIVE_CALL` instead of emitted, because SPIR-V has no recursive `OpFunctionCall`.

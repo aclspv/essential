@@ -30,6 +30,7 @@
 #include "./visit/op3/cond.h"
 #include "./visit/op1/glslmath.h"
 #include "./visit/opn/shuffle.h"
+#include "./visit/opn/call.h"
 
 #include "./beforevisit.h"
 
@@ -53,6 +54,7 @@ enum OP_ {
 	OP1_BITNOT,
 	OP3_COND,
 	OP1_GLSL_MATH,
+	OPN_CALL,
 	OPN_SHUFFLE,
 	OPN_INITLIST,
 	OP0_,
@@ -296,6 +298,17 @@ enum CXChildVisitResult aclexpr_visit(
 			cgjmp(aclexpr_visit_op1_glsl_math(
 						h_cur, rdwr_data
 						, cgcase(OP_DONE)
+						, cgcase(OP_FAIL)
+						, cgcase(OPN_CALL)
+						));
+		}
+
+		cgcsdef(OPN_CALL):
+		{
+			cgjmp(aclexpr_visit_opn_call(
+						h_cur, rdwr_data
+						, cgcase(OP_DONE)
+						, cgcase(OP0_)
 						, cgcase(OP_FAIL)
 						, cgcase(OPN_SHUFFLE)
 						));

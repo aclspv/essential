@@ -28,7 +28,9 @@ aclspv_compile_t EMIT_aclcur_opx(h_aclcur_t h, h_aclspv_ctx_t h_ctx) {
 	s_assume(h->m_flag0 & aclcur_flag0(ACLCUR_FLAG0_VALUE), ACLSPV_COMPILE_UNHANDLED);
 	s_assume(h_ctx, ACLSPV_COMPILE_UNHANDLED);
 
-	unless(h->m_num_ref) return ACLSPV_COMPILE_OK;
+	unless(h->m_num_ref
+			|| (h->m_flag0 & aclcur_flag0(ACLCUR_FLAG0_EFFECT)))
+		return ACLSPV_COMPILE_OK;
 
 	ae2f_ifezerr(h_ctx->m_count.m_fnimpl = aclutil_emit_wrd(
 				&h_ctx->m_section.m_fnimpl

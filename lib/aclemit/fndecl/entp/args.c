@@ -419,7 +419,7 @@ static aclspv_compile_t s_arg_ty(
 				return ACLSPV_COMPILE_UNHANDLED_ARGS;
 			}
 
-			ae2f_ifezerr(var_type_id = aclty_mk_by_cursor_dummy(
+			ae2f_ifezerr(var_type_id = aclty_mk_by_cursor_default(
 						h_cur
 						, PARAM_TY
 						, CTX
@@ -513,7 +513,7 @@ static aclspv_compile_t s_arg_ty(
 
 			/** this is an only type which type should NOT be a pointer */
 		case SpvStorageClassPushConstant:
-			ae2f_ifezerr(var_type_id = aclty_mk_by_cursor_dummy(
+			ae2f_ifezerr(var_type_id = aclty_mk_by_cursor_default(
 						h_cur
 						, PARAM_TY
 						, CTX
@@ -537,7 +537,7 @@ static aclspv_compile_t s_arg_ty(
 
 		case SpvStorageClassInput:
 		case SpvStorageClassOutput:
-			ae2f_ifezerr(var_type_id = aclty_mk_by_cursor_dummy(
+			ae2f_ifezerr(var_type_id = aclty_mk_by_cursor_default(
 						h_cur
 						, PARAM_TY
 						, CTX
@@ -619,7 +619,7 @@ static aclspv_compile_t s_arg_ty(
 			 * on anything: this should be understood as a thing inside a struct
 			 **/
 		case SpvStorageClassWorkgroup:
-			ae2f_ifezerr(var_type_id = aclty_mk_by_cursor_dummy(
+			ae2f_ifezerr(var_type_id = aclty_mk_by_cursor_default(
 						h_cur
 						, PARAM_TY
 						, CTX

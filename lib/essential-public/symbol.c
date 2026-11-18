@@ -24,28 +24,42 @@ aclspv_id_t aclspv_cfg_symbol(
 		return 0;
 	}
 
-#define	WRDSTR(rd, c_pad, c_idx)	(((rd)[(c_pad) + ((c_idx) >> 2)] >> (((c_idx) & 0x3) << 3)) & 0xFF)
-#define STRWRDK(rd, c_idx, c_prv)	(((c_prv) ? (((wrd_t)(rd)[c_idx]) << ((c_idx) << 3)) : 0) | (wrd_t)(c_prv))
-#define STRWRDK0(rd, c_idx)		((wrd_t)(rd)[c_idx])
-#define	STRWRDK1(rd, c_idx)		STRWRDK(rd, c_idx + 1, STRWRDK0(rd, c_idx))
-#define	STRWRDK2(rd, c_idx)		STRWRDK(rd, c_idx + 1, STRWRDK1(rd, c_idx))
-#define	STRWRDK3(rd, c_idx)		STRWRDK(rd, c_idx + 1, STRWRDK2(rd, c_idx))
-#define	STRWRDK4(rd, c_idx)		STRWRDK(rd, c_idx + 1, STRWRDK3(rd, c_idx))
-#define STRWRD(rd, c_idx, c_len)	(c_idx < c_len ? STRWRDK4(rd, c_idx) : 0)
-
-
-	i = 0; while(i < lenchunk) {
+	/** one name, one OpName: a repeated name returns the id it already
+	 * carries. the chunk is header, target id, then the zero-padded bytes,
+	 * so the whole-word compare below is exact. */
+	i = 0;
+	while(i < lenchunk) {
 		const wrd_t read_opn = (chunk[i] >> 16) & 0xFFFF;
-		wrd_t j;
+		aclspv_bool_t c_same = 1;
+		wrd_t k;
 
-		/** word count mismatch */
+		/** a different chunk size is a different name. */
 		if(opn != read_opn) { i += read_opn; continue; }
-		for(j = opn; j --> 0 && STRWRD(rd, j, c) != chunk[i + 2]; ) ae2fcc_pause();
-		if(j > opn) { return chunk[i + 1]; };
+
+		for(k = 0; k < aligned && c_same; ++k) {
+			const wrd_t n_base = k << 2;
+			wrd_t c_pack = 0;
+			wrd_t b;
+
+			for(b = 0; b < 4; ++b) {
+				const wrd_t n_idx = n_base + b;
+
+				if(n_idx < c)
+					c_pack |= ((wrd_t)(unsigned char)rd[n_idx])
+						<< (b << 3);
+			}
+
+			if(c_pack != chunk[i + 2 + k])
+				c_same = 0;
+		}
+
+		if(c_same)
+			return chunk[i + 1];
 
 		i += read_opn;
 	}
 
+	/** append: header, target id, then the zero-padded name. */
 	ae2f_ifezerr(h->m_count.m_name_symbol = aclutil_emit_wrd(
 				&h->m_section.m_name_symbol
 				, lenchunk + opn - 1
@@ -53,7 +67,20 @@ aclspv_id_t aclspv_cfg_symbol(
 				)) return 0;
 
 	chunk = h->m_section.m_name_symbol.m_p;
-	chunk[lenchunk] = (opn << 16) | (wrd_t)(SpvOpName);
+
+	{
+		const wrd_t n_end = lenchunk + opn;
+		wrd_t k;
+
+		for(k = lenchunk; k < n_end; ++k)
+			chunk[k] = 0;
+	}
+
+	chunk[lenchunk]		= (opn << 16) | (wrd_t)(SpvOpName);
+	chunk[lenchunk + 1]	= c_new && c_new < h->m_id
+		? c_new
+		: aclctx_newid(h);
 	aclmemcpy(&chunk[lenchunk + 2], rd, c);
-	return (chunk[lenchunk + 1] = c_new && c_new < h->m_id ? c_new : aclctx_newid(h));
+
+	return chunk[lenchunk + 1];
 }

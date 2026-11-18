@@ -94,7 +94,13 @@ enum ACLCUR_FLAG0_REG_ {
 	ACLCUR_FLAG0_REG_SCOPED,
 
 	/**
-	 * its value has been changed to different value than first on current branch.
+	 * its value has been changed to a different value than the one the branch
+	 * started with.
+	 *
+	 * two producers: a store, and an impure call for every register whose
+	 * storage the call can reach (see aclcur_reg_needs_memory). the load path
+	 * treats the latter as "memory is authoritative now" and skips both the
+	 * tracked cache and the SSA resolution, so the next read loads.
 	 * */
 	ACLCUR_FLAG0_REG_CHANGED,
 
@@ -119,6 +125,15 @@ enum ACLCUR_FLAG0_REG_ {
 	 * forwarded through m_base.
 	 * */
 	ACLCUR_FLAG0_REG_GHOST,
+
+	/**
+	 * a function parameter: its m_id IS the value (an SSA value, never a
+	 * pointer to load from), and it is valid in every block.
+	 *
+	 * the load path hands the id back instead of creating a LOAD node — a
+	 * parameter is not storage and must never become an OpLoad operand.
+	 * */
+	ACLCUR_FLAG0_REG_PARAM,
 
 	ACLCUR_FLAG0_REG_MAX
 };

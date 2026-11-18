@@ -13,6 +13,7 @@
 #endif
 #include "./carve/opn/initlist.h"
 #include "./carve/opn/shuffle.h"
+#include "./carve/opn/call.h"
 #include "./carve/op2/arithmetic.h"
 #include "./carve/op2/cmp.h"
 #include "./carve/op2/shift.h"
@@ -65,6 +66,17 @@ aclspv_bool_t aclexpr_carve(
 	switch((enum ACLEXPR_OP_)LST_SCALE_BUF[ACLEXPR_OPBINCFG_OPCODE]) {
 		case ACLEXPR_OPN_INITLIST:
 			return (aclspv_bool_t)ae2f_expected_not_strict(aclexpr_carve_opn_initlist(
+						rdwr_data
+						, rdwr_prv_idval
+						, rdwr_prv_extra
+						, LST_SCALE
+						, LST_SCALE_BUF
+						, LST_EXTRA
+						, RET_LITERAL
+						));
+
+		case ACLEXPR_OPN_CALL:
+			return (aclspv_bool_t)ae2f_expected_not_strict(aclexpr_carve_opn_call(
 						rdwr_data
 						, rdwr_prv_idval
 						, rdwr_prv_extra

@@ -82,9 +82,11 @@ aclspv_bool_t aclcur_lbl_is_pure(aclcur_lblid_t c_lbl, h_aclspv_ctx_t h_ctx);
  * LIFETIME: the answer is a property of the carved graph, and aclemit resets
  * the cursor arena at FunctionEnd (see aclemit_fndecl_bodycfg's
  * h_ctx->m_num_cursor = 0). call these while the function is being carved:
- * the pipeline does it post-carve / pre-emit and persists the bits on the
- * function record (aclutil_entp_t::m_is_const / m_is_pure). afterwards the
- * arena is empty and the queries report 0 (unknown).
+ * the pipeline does it post-carve / pre-emit and persists the bits as
+ * ACLSYM_FN_FLAG0_CONST / ACLSYM_FN_FLAG0_PURE — in aclsym_fn_t::m_flag0
+ * for a normal function, or aclsym_entp_t::m_flag0 for an entry point
+ * (which has no symbol: it is not a call target). afterwards the arena is
+ * empty and the queries report 0 (unknown).
  *
  * note the boundary differs from the label-level rule on purpose. label
  * membership cannot answer this question: entry-point argument registers

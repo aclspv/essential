@@ -116,6 +116,12 @@ enum ACLEXPR_OP_ {
 	 * components are literal words, not value operands. */
 	ACLEXPR_OPN_SHUFFLE,
 
+	/** a call to a user function: OpFunctionCall. operands are the
+	 * arguments; the callee's OpFunction id rides in
+	 * ACLEXPR_OPBINCFG_SPECCONSTANTOP and its function type in
+	 * ACLEXPR_OPBINCFG_RESID, because the callee is not an operand value. */
+	ACLEXPR_OPN_CALL,
+
 	/** N-ary: variable operand count (see OPN_ stages) */
 	ACLEXPR_OPN_INITLIST
 };

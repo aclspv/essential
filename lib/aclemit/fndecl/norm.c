@@ -1,80 +1,204 @@
 #include "./norm.h"
 
-#include <util/fn.h>
-#include <aclty.h>
-
-
-#include <aclmem.h>
+#include <aclsym/fn.h>
 
 #include <aclemit/fndecl/body.h>
 #include <aclemit/root.h>
 
+#include <aclcur/common.h>
+#include <aclcur/reg.h>
+#include <aclcur/reg/var.h>
+#include <aclcur/store.h>
+
+#include <aclty.h>
+#include <aclty/fn/arg.h>
+
+#include <aclutil/emitx.h>
+#include <aclutil/capability.h>
+#include <aclutil/extension.h>
+
+#include <ae2f/pat/dbg.h>
+
+/** a normal function body: OpFunction, its parameters, then the body.
+ *
+ * one function per invocation. the cursor arena was bootstrapped by
+ * aclemit_root with a void return type; the root label's m_ty is the
+ * function return type, so it is patched before the body is carved.
+ * */
 enum CXChildVisitResult aclemit_fndecl_norm(
-		ae2f_unused CXCursor h_cur,
-		ae2f_unused CXCursor h_parent,
+		CXCursor h_cur,
+		CXCursor h_parent,
 		CXClientData h_ctx
 		) {
-	h_aclspv_ctx_t ctx = h_ctx;
-	aclutil_fn_t fn;
+	h_aclspv_ctx_t			ctx = h_ctx;
+	aclsym_fn_t* ae2f_restrict	p_sym;
+	aclty_t* ae2f_restrict		p_root_ty;
+	aclcur_t* ae2f_restrict		p_root;
+	aclspv_id_t			id_fn_ty;
+	aclspv_id_t			id_ret;
+	const int			NARG = clang_Cursor_getNumArguments(h_parent);
+	int				i;
 
-#if	1
-	{
+	p_sym = aclsym_fn_find(h_parent, ctx);
+
+	/** a body this translation unit did not declare (an inline body in an
+	 * included header): not a symbol, nothing to emit here. */
+	unless(p_sym) {
 		ctx->m_work_nxt = aclemit_root;
 		return CXChildVisit_Continue;
 	}
-#endif
 
-	ctx->m_num_cursor	= 0;
+	/** the cursor arena and its root label were bootstrapped by
+	 * aclemit_root; do not reset them here. */
 
-	fn.m_is_const		= 0;
-	fn.m_is_pure		= 0;
+	/** the emitting context builds its own signature: the gather's id lives
+	 * in the slave context and is only a comparison key. */
+	ae2f_ifezerr(id_fn_ty = aclty_mk_fn1(
+				h_parent
+				, clang_getCursorType(h_parent)
+				, ctx))
+		return CXChildVisit_Break;
 
-	fn.m_fn		= h_parent;
-	fn.m_id		= ctx->m_id++;
-	fn.m_type_id	= aclty_mk_fn1(
-			h_parent
-			, clang_getCursorType(h_parent)
-			, ctx
-			);
+	ae2f_ifezerr(p_root_ty = aclty_find(id_fn_ty, ctx))
+		return CXChildVisit_Break;
 
-	/** TODO: find if static or not and conditionally add */
-	goto OUT;
+	id_ret = p_root_ty->m_info.m_fn.m_ret_id;
 
-OUT:
-	ae2f_ifnezerr_strict(s_aclmem_cgrow2(
-			&ctx->m_fnlist.m_fn
-			, ctx->m_fnlist.m_num_fn + 1
-			, sizeof(fn)
-			, ACLSPV_COMPILE_ALLOC_FAILED_FUNCTION
-		       )) return CXChildVisit_Break;
+	/** the symbol carries the emitted identity for call sites. */
+	p_sym->m_id = ctx->m_id++;
 
-	((aclutil_fn_t* ae2f_restrict)ctx->m_fnlist.m_fn.m_p)
-		[ctx->m_fnlist.m_num_fn++] = fn;
+	ae2f_ifezerr(ctx->m_count.m_fndef = aclutil_emitx_5(
+				&ctx->m_section.m_fndef
+				, ctx->m_count.m_fndef
+				, SpvOpFunction
+				, id_ret
+				, p_sym->m_id
+				, 0
+				, id_fn_ty))
+		return CXChildVisit_Break;
+
+	for(i = 0; i < NARG; ++i) {
+		const CXCursor		c_parm	= clang_Cursor_getArgument(h_parent, (unsigned)i);
+		aclty_t* ae2f_restrict	p_arg;
+		aclspv_id_t		id_parm;
+		aclspv_id_t		id_reg;
+		aclcur_t* ae2f_restrict	p_reg;
+
+		/** the parameter type is taken from the interned signature, so the
+		 * emitted parameter always matches the OpTypeFunction. */
+		ae2f_ifezerr(p_root_ty = aclty_find(id_fn_ty, ctx))
+			return CXChildVisit_Break;
+
+		ae2f_ifezerr(p_arg = aclty_get_fn_arg(p_root_ty, (aclspv_wrd_t)i, ctx))
+			return CXChildVisit_Break;
+
+		/** a pointer parameter into storage the function does not own
+		 * (StorageBuffer, Uniform, Workgroup, ...) travels as a pointer
+		 * argument: SPIR-V admits that through variable pointers. request
+		 * the StorageBuffer form the annotations produce. */
+		{
+			aclty_t* ae2f_restrict p_pty = aclty_find(
+					p_arg->m_info.m_fn_arg.m_prm_id
+					, ctx
+					);
+
+			if(p_pty
+					&& p_pty->m_class == ACLTY_PTR
+					&& p_pty->m_info.m_ptr.m_storage
+						!= SpvStorageClassFunction) {
+				ae2f_ifezerr(aclutil_add_extension_by_flag(
+							ctx, "SPV_KHR_variable_pointers"))
+					return CXChildVisit_Break;
+
+				ae2f_ifezerr(aclutil_add_capability_by_flag(
+							ctx
+							, SpvCapabilityVariablePointersStorageBuffer))
+					return CXChildVisit_Break;
+			}
+		}
+
+		id_parm = ctx->m_id++;
+
+		ae2f_ifezerr(ctx->m_count.m_fndef = aclutil_emitx_3(
+					&ctx->m_section.m_fndef
+					, ctx->m_count.m_fndef
+					, SpvOpFunctionParameter
+					, p_arg->m_info.m_fn_arg.m_prm_id
+					, id_parm))
+			return CXChildVisit_Break;
+
+		/** the parameter's value node: its id IS the OpFunctionParameter
+		 * result. it is left unbound (null cursor) because it only feeds
+		 * the variable below — a body reference must resolve to something
+		 * assignable. */
+		ae2f_ifezerr(id_reg = aclcur_cfg_reg(
+					clang_getNullCursor()
+					, p_arg->m_info.m_fn_arg.m_prm_id
+					, SpvStorageClassFunction
+					, 0
+					, ctx))
+			return CXChildVisit_Break;
+
+		ae2f_ifezerr(p_reg = aclcur_get_node(id_reg, ctx))
+			return CXChildVisit_Break;
+
+		p_reg->m_id = id_parm;
+		p_reg->m_val = id_parm;
+		p_reg->m_flag0 |= aclcur_flag0(ACLCUR_FLAG0_VALUE)
+			| aclcur_flag0_reg(ACLCUR_FLAG0_REG_PARAM);
+
+		/** the variable the body refers to. every parameter gets one: an
+		 * assignment is then an ordinary store the graph already knows how
+		 * to handle (SSA definition, phi at a join, memory when the address
+		 * escapes) instead of a fragile scan of the AST. the initial value
+		 * is the parameter, defined at the entry. */
+		{
+			const aclcur_reg_t REGIN = aclcur_regvar_in();
+			aclspv_id_t id_var;
+
+			ae2f_ifezerr(id_var = aclcur_cfg_reg(
+						c_parm
+						, p_arg->m_info.m_fn_arg.m_prm_id
+						, SpvStorageClassFunction
+						, &REGIN
+						, ctx))
+				return CXChildVisit_Break;
+
+			ae2f_ifezerr(aclcur_store_reg(id_var, id_parm, ctx))
+				return CXChildVisit_Break;
+		}
+	}
+
+	/** the root label's m_ty is the return type the body's return path
+	 * evaluates against. aclemit_root bootstrapped it as void. */
+	ae2f_ifezerr(p_root = aclcur_get_node_idx(ACLCUR_IDX_ROOT, ctx))
+		return CXChildVisit_Break;
+
+	p_root->m_ty = id_ret;
 
 	{
 		aclspv_bool_t			c_is_const = 0;
 		aclspv_bool_t			c_is_pure = 0;
 		enum CXChildVisitResult		ret;
-		aclutil_fn_t* ae2f_restrict	p_fn;
 
-		ret = aclemit_fndecl_bodycfg(
-				h_cur
-				, h_ctx
-				, &c_is_const
-				, &c_is_pure
-				);
+		ret = aclemit_fndecl_bodycfg(h_cur, h_ctx, &c_is_const, &c_is_pure);
 
-		p_fn = ctx->m_fnlist.m_num_fn
-			? &((aclutil_fn_t* ae2f_restrict)ctx->m_fnlist.m_fn.m_p)
-				[ctx->m_fnlist.m_num_fn - 1]
-			: 0;
+		if(ctx->m_err)
+			return ret;
 
-		if(p_fn) {
-			p_fn->m_is_const	= c_is_const;
-			p_fn->m_is_pure		= c_is_pure;
-		}
+		/** the body is the truth: the analysed answer replaces the declared
+		 * promise gathered from the attributes. */
+		p_sym->m_flag0 &= (aclspv_wrd_t)~(
+				aclsym_fn_flag0(ACLSYM_FN_FLAG0_CONST)
+				| aclsym_fn_flag0(ACLSYM_FN_FLAG0_PURE));
+
+		if(c_is_const)
+			p_sym->m_flag0 |= aclsym_fn_flag0(ACLSYM_FN_FLAG0_CONST);
+		if(c_is_pure)
+			p_sym->m_flag0 |= aclsym_fn_flag0(ACLSYM_FN_FLAG0_PURE);
+
+		p_sym->m_flag0 |= aclsym_fn_flag0(ACLSYM_FN_FLAG0_EMITTED);
 
 		return ret;
 	}
-
 }

@@ -196,11 +196,11 @@ ERR:
 	return CXChildVisit_Break;
 }
 
-aclutil_entp_t aclemit_fndecl_entp_cfg(CXCursor h_parent, h_aclspv_ctx_t CTX) {
+aclsym_entp_t aclemit_fndecl_entp_cfg(CXCursor h_parent, h_aclspv_ctx_t CTX) {
 	const CXString NAME = clang_getCursorSpelling(h_parent);
 	struct	aclattr_wrkgroup_prm	XYZ;
 	enum SpvExecutionModel_	EXEC_MODEL = SpvExecutionModelMax;
-	aclutil_entp_t		THIS_ENTRY_POINT;
+	aclsym_entp_t		THIS_ENTRY_POINT;
 	aclspv_wrdcount_t	POS = CTX->m_count.m_entp;
 
 	aclmemzero(&THIS_ENTRY_POINT, sizeof(THIS_ENTRY_POINT));
@@ -255,7 +255,6 @@ aclutil_entp_t aclemit_fndecl_entp_cfg(CXCursor h_parent, h_aclspv_ctx_t CTX) {
 #undef	S_GETSPECID
 	}
 
-	THIS_ENTRY_POINT.m_fn	= h_parent;
 	THIS_ENTRY_POINT.m_id	= aclctx_newid(CTX);
 
 	{

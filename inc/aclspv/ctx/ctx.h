@@ -18,7 +18,17 @@ typedef aclspv_wrd2_t	aclcur_lbl_dfs_visit_t;
 typedef struct aclspv_entp	aclspv_entp_t;
 typedef struct aclspv_fn	aclspv_fn_t;
 
+/** internal: which emission phase has run. see aclspv_ctx_compile / build. */
+enum ACLSPV_CTX_PHASE_ {
+	ACLSPV_CTX_PHASE_NONE = 0,
+	ACLSPV_CTX_PHASE_COMPILE,
+	ACLSPV_CTX_PHASE_BUILD
+};
+
 struct a_aclspv_ctx {
+	/** sub-ctx for something not should be emitted */
+	x_aclspv_ctx* ae2f_restrict m_ctx_slave;
+
 	/** cache for elements related to unsigned integer constants [lib_build_constant] */
 	x_aclspv_vec		m_constant_cache;
 
@@ -65,6 +75,9 @@ struct a_aclspv_ctx {
 	}	m_tmp;
 
 	aclspv_compile_t	m_err;
+
+	/** internal: enum ACLSPV_CTX_PHASE_. 0 on a fresh context. */
+	aclspv_wrd_t		m_phase;
 
 	/** 
 	 * @brief
@@ -124,6 +137,19 @@ struct a_aclspv_ctx {
 		 * @see		lib_build_entp_t
 		 * */
 		x_aclspv_vec	m_entp;
+
+		/**
+		 * @var		m_fn_name
+		 * @brief	flat byte storage for the names of `m_fn`: each symbol
+		 *		owns [m_idx_name, m_idx_name + m_len_name).
+		 *		no cursor is kept: names are the durable identity and a
+		 *		4-byte mark points back into a live translation unit.
+		 * @see		aclsym_fn_t
+		 * */
+		x_aclspv_vec	m_fn_name;
+
+		/** number of bytes in `m_fn_name`. */
+		aclspv_wrdcount_t	m_num_fn_name;
 	}			m_fnlist;
 
 	/**

@@ -47,7 +47,7 @@ int main(int argc, const char* argv[]) {
 			, 0));
 
 	{
-		aclspv_compile_t c = ctx.compile1(tu.get());
+		aclspv_compile_t c = ctx.build1(tu.get());
 		std::cout << "output: " << c << "\n";
 		T_assert(!c);
 	}

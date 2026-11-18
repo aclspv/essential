@@ -2,18 +2,15 @@
 
 #include <util/log.h>
 
-#include <aclemit/root.h>
-#include <aclattr/main.h>
+#include <aclemit/bodies.h>
+#include <aclemit/export.h>
+#include <aclsym/fn.h>
 #include <aclctx/err.h>
 
 #include <aclutil/capability.h>
 
-ACLSPV_ABI_LINK aclspv_compile_t aclspv_ctx_compile(h_aclspv_ctx_t h_ctx, CXCursor c_cur_root) {
-	h_ctx->m_work_data = h_ctx;
-
-	ae2f_ifezerr(h_ctx)	return ACLSPV_COMPILE_PRM_INVAL_NIL;
-	ae2f_ifnezerr(h_ctx->m_err) return h_ctx->m_err;
-
+/** addressing-model and memory-model capabilities, once per context. */
+static aclspv_compile_t s_setup(h_aclspv_ctx_t h_ctx) {
 	switch(h_ctx->m_usrcfg.m_mdl_addr) {
 		case SpvAddressingModelLogical:
 		case SpvAddressingModelMax:
@@ -89,33 +86,23 @@ ACLSPV_ABI_LINK aclspv_compile_t aclspv_ctx_compile(h_aclspv_ctx_t h_ctx, CXCurs
 			break;
 	}
 
-	h_ctx->m_work_nxt	= aclemit_root;
-	h_ctx->m_work_data	= h_ctx;
-
-	clang_visitChildren(c_cur_root, s_aclattr_main, h_ctx);
-
-	ae2f_ifnezerr_strict(h_ctx->m_work_nxt != aclemit_root)  {
-		_aclctx_err(h_ctx, ACLSPV_COMPILE_NOT_INIT_STATE);
-	}
-
 	return h_ctx->m_err;
 }
 
-ae2f_extern ACLSPV_ABI_LINK aclspv_compile_t aclspv_ctx_compile1(
-		const h_aclspv_ctx_t	h_ctx,
-		CXTranslationUnit	h_tu
-		) {
-	unsigned	CXTU_IDX_ERR;
-
-	ae2f_ifezerr(h_ctx)	return ACLSPV_COMPILE_PRM_INVAL_NIL;
-	ae2f_ifezerr(h_tu)	return ACLSPV_COMPILE_ERR_CXTU;
+static void s_diagnostics(h_aclspv_ctx_t h_ctx, CXTranslationUnit h_tu) {
+	unsigned CXTU_IDX_ERR;
 
 	CXTU_IDX_ERR = clang_getNumDiagnostics(h_tu);
-	if(h_ctx->m_usrcfg.m_flag0 & ACLSPV_CTX_FLAG0_DUMP_DIAGNOSTICS) while(CXTU_IDX_ERR-- && !h_ctx->m_err) {
+
+	if(h_ctx->m_usrcfg.m_flag0 & ACLSPV_CTX_FLAG0_DUMP_DIAGNOSTICS)
+	while(CXTU_IDX_ERR-- && !h_ctx->m_err) {
 		const CXDiagnostic DIAG = clang_getDiagnostic(h_tu, CXTU_IDX_ERR);
 		enum CXDiagnosticSeverity SEVERITY = clang_getDiagnosticSeverity(DIAG);
 
-		CXString TXT = clang_formatDiagnostic(DIAG, clang_defaultDiagnosticDisplayOptions());
+		CXString TXT = clang_formatDiagnostic(
+				DIAG
+				, clang_defaultDiagnosticDisplayOptions()
+				);
 
 		dbg_puts(TXT.data);
 
@@ -147,12 +134,110 @@ ae2f_extern ACLSPV_ABI_LINK aclspv_compile_t aclspv_ctx_compile1(
 
 		clang_disposeString(TXT);
 	}
-
-	return aclspv_ctx_compile(h_ctx, clang_getTranslationUnitCursor(h_tu));
 }
 
-ae2f_extern ACLSPV_ABI_LINK aclspv_compile_t aclspv_ctx_compile2(
-		const h_aclspv_ctx_t	h_ctx,
+ACLSPV_ABI_LINK aclspv_compile_t aclspv_ctx_compile(
+		h_aclspv_ctx_t	h_ctx,
+		CXCursor	c_cur_root
+		) {
+	ae2f_ifezerr(h_ctx)		return ACLSPV_COMPILE_PRM_INVAL_NIL;
+	ae2f_ifnezerr(h_ctx->m_err)	return h_ctx->m_err;
+
+	/** the phases are one shot: compile once, then build once. */
+	if(h_ctx->m_phase >= ACLSPV_CTX_PHASE_COMPILE)
+		return h_ctx->m_err;
+
+	ae2f_ifnezerr(s_setup(h_ctx))
+		return h_ctx->m_err;
+
+	/** pass 1: declarations before bodies. every file-scope function of
+	 * the main file is cached with its function type and checked for a
+	 * conflicting redeclaration. */
+	ae2f_ifnezerr(h_ctx->m_err = aclsym_fn_gather(h_ctx, c_cur_root))
+		return h_ctx->m_err;
+
+	h_ctx->m_phase = ACLSPV_CTX_PHASE_COMPILE;
+
+	/** pass 2, compile half: every body that can be emitted now, in
+	 * dependency order. a body waiting on a body-less callee is the build
+	 * phase's job. */
+	ae2f_ifnezerr(aclemit_compile_bodies(h_ctx, c_cur_root))
+		return h_ctx->m_err;
+
+	/** an entry point can be deferred too (it may call an import), and a
+	 * module with no OpEntryPoint is only legal under Linkage. */
+	if(!h_ctx->m_count.m_entp) {
+		ae2f_ifezerr(aclutil_add_capability_by_flag(
+					h_ctx, SpvCapabilityLinkage))
+			return h_ctx->m_err;
+	}
+
+	return h_ctx->m_err;
+}
+
+ACLSPV_ABI_LINK aclspv_compile_t aclspv_ctx_compile1(
+		h_aclspv_ctx_t		h_ctx,
+		CXTranslationUnit	h_tu
+		) {
+	ae2f_ifezerr(h_ctx)	return ACLSPV_COMPILE_PRM_INVAL_NIL;
+	ae2f_ifezerr(h_tu)	return ACLSPV_COMPILE_ERR_CXTU;
+
+	s_diagnostics(h_ctx, h_tu);
+
+	if(h_ctx->m_err)
+		return h_ctx->m_err;
+
+	return aclspv_ctx_compile(
+			h_ctx
+			, clang_getTranslationUnitCursor(h_tu)
+			);
+}
+
+ACLSPV_ABI_LINK aclspv_compile_t aclspv_ctx_build(
+		h_aclspv_ctx_t	h_ctx,
+		CXCursor	c_cur_root
+		) {
+	ae2f_ifezerr(h_ctx)		return ACLSPV_COMPILE_PRM_INVAL_NIL;
+	ae2f_ifnezerr(h_ctx->m_err)	return h_ctx->m_err;
+
+	if(h_ctx->m_phase >= ACLSPV_CTX_PHASE_BUILD)
+		return h_ctx->m_err;
+
+	/** a build without a compile: run the compile phase first. */
+	ae2f_ifnezerr(aclspv_ctx_compile(h_ctx, c_cur_root))
+		return h_ctx->m_err;
+
+	/** the build half: the imports, then the deferred bodies in dependency
+	 * order. */
+	h_ctx->m_phase = ACLSPV_CTX_PHASE_BUILD;
+
+	ae2f_ifnezerr(aclemit_build_bodies(h_ctx, c_cur_root))
+		return h_ctx->m_err;
+
+	/** every emitted body has an id now: decorate the exports. */
+	return aclemit_export(h_ctx, c_cur_root);
+}
+
+ACLSPV_ABI_LINK aclspv_compile_t aclspv_ctx_build1(
+		h_aclspv_ctx_t		h_ctx,
+		CXTranslationUnit	h_tu
+		) {
+	ae2f_ifezerr(h_ctx)	return ACLSPV_COMPILE_PRM_INVAL_NIL;
+	ae2f_ifezerr(h_tu)	return ACLSPV_COMPILE_ERR_CXTU;
+
+	s_diagnostics(h_ctx, h_tu);
+
+	if(h_ctx->m_err)
+		return h_ctx->m_err;
+
+	return aclspv_ctx_build(
+			h_ctx
+			, clang_getTranslationUnitCursor(h_tu)
+			);
+}
+
+ACLSPV_ABI_LINK aclspv_compile_t aclspv_ctx_build2(
+		h_aclspv_ctx_t	h_ctx,
 		struct CXUnsavedFile* ae2f_restrict const 	rdwr_unsaved,
 		const unsigned					c_unsaved_count,
 		const char* ae2f_restrict const * ae2f_restrict const	rd_argv_opt,
@@ -170,7 +255,7 @@ ae2f_extern ACLSPV_ABI_LINK aclspv_compile_t aclspv_ctx_compile2(
 
 	{
 		enum CXErrorCode CXERR = clang_parseTranslationUnit2(
-				h_cxidx, 0 
+				h_cxidx, 0
 				, (const char**)rd_argv_opt
 				, c_argc
 				, rdwr_unsaved, c_unsaved_count
@@ -181,14 +266,14 @@ ae2f_extern ACLSPV_ABI_LINK aclspv_compile_t aclspv_ctx_compile2(
 	}
 
 	ae2f_ifezerr(CXTU)		return h_ctx->m_err = ACLSPV_COMPILE_ERR_CXTU;
-	ae2f_ifeznrm(h_ctx->m_err)	h_ctx->m_err = aclspv_ctx_compile1(h_ctx, CXTU);
+	ae2f_ifeznrm(h_ctx->m_err)	h_ctx->m_err = aclspv_ctx_build1(h_ctx, CXTU);
 	clang_disposeTranslationUnit(CXTU);
 
 	return h_ctx->m_err;
 }
 
-ae2f_extern ACLSPV_ABI_LINK aclspv_compile_t aclspv_ctx_compile3(
-		const h_aclspv_ctx_t	h_ctx,
+ACLSPV_ABI_LINK aclspv_compile_t aclspv_ctx_build3(
+		h_aclspv_ctx_t	h_ctx,
 		struct CXUnsavedFile* ae2f_restrict const 	rdwr_unsaved,
 		const unsigned					c_unsaved_count,
 		const char* ae2f_restrict const * ae2f_restrict const	rd_argv_opt,
@@ -200,11 +285,11 @@ ae2f_extern ACLSPV_ABI_LINK aclspv_compile_t aclspv_ctx_compile3(
 
 	{
 		const CXIndex CXIDX		= clang_createIndex(0, 0);
-		ae2f_ifezerr(CXIDX)		{ 
+		ae2f_ifezerr(CXIDX)		{
 			clang_disposeIndex(CXIDX);
-			return h_ctx->m_err = ACLSPV_COMPILE_ERR_CXIDX; 
+			return h_ctx->m_err = ACLSPV_COMPILE_ERR_CXIDX;
 		}
-		h_ctx->m_err = aclspv_ctx_compile2(h_ctx, rdwr_unsaved, c_unsaved_count, rd_argv_opt, c_argc, rwr_cxerr_opt, CXIDX);
+		h_ctx->m_err = aclspv_ctx_build2(h_ctx, rdwr_unsaved, c_unsaved_count, rd_argv_opt, c_argc, rwr_cxerr_opt, CXIDX);
 		clang_disposeIndex(CXIDX);
 	}
 

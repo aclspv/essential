@@ -2,7 +2,7 @@
 #define aclemit_fndecl_entp_args_h
 
 #include <aclspv.h>
-#include <util/entp.h>
+#include <aclsym/entp.h>
 
 struct	aclemit_fndecl_entp_arg_data {
 
@@ -20,7 +20,7 @@ struct	aclemit_fndecl_entp_arg_data {
 	/** @brief context */
 	h_aclspv_ctx_t		m_ctx;
 
-	aclutil_entp_t		m_entp;
+	aclsym_entp_t		m_entp;
 };
 
 

@@ -132,6 +132,15 @@ aclspv_compile_t aclcur_emit(h_aclspv_ctx_t h_ctx) {
 						  h_aclcur_t p_reg = aclcur_get_node(p->m_d.m_load.m_reg, h_ctx);
 						  aclcur_reg_emit_t* hook;
 
+						  /** nobody reads this value: the call-site
+						   * clobber materialises reloads ahead of their
+						   * reads, and the unused ones are dead weight.
+						   * a volatile load is never elided. */
+						  unless(p->m_num_ref
+								  || (p->m_flag0 & aclcur_flag0_load(
+										  ACLCUR_FLAG0_LOAD_EXPLICIT)))
+							  continue;
+
 						  ae2f_ifezerr(p_reg)
 							  return h_ctx->m_err = ACLSPV_COMPILE_UNHANDLED;
 

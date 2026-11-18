@@ -668,12 +668,30 @@ static aclspv_id_t	s_load_without_phi(
 	ae2f_ifezerr(p) return 0;
 	ae2fpat_assertassume_strict(p->m_class == ACLCUR_REG);
 
+	/** a function parameter is an SSA value: its value id is the value, and
+	 * it stays valid across labels. no LOAD node, no OpLoad. */
+	if(p->m_flag0 & aclcur_flag0_reg(ACLCUR_FLAG0_REG_PARAM))
+		return p->m_val;
+
 	if((p->m_flag0 & aclcur_flag0_reg(ACLCUR_FLAG0_REG_TRACKED))
 			&& !c_explicit) {
 		if(r_lit_opt && p->m_val_mask & ACLTRL_MASK_LTRL)
 			*r_lit_opt = p->m_val_lit;
 
 		return p->m_val;
+	}
+
+	/** CHANGED on a register whose storage a call can reach means the change
+	 * happened behind our back (an impure call): the SSA value flow predates
+	 * it, so the read must come from memory. a CHANGED SSA-only register
+	 * (needs no memory) keeps the SSA resolution. */
+	{
+		const aclspv_bool_t c_stale = (aclspv_bool_t)(
+				(p->m_flag0 & aclcur_flag0_reg(ACLCUR_FLAG0_REG_CHANGED))
+				&& aclcur_reg_needs_memory(c_reg, h_ctx));
+
+		if(c_stale)
+			goto LBL_MEM;
 	}
 
 	/** 
@@ -769,6 +787,7 @@ static aclspv_id_t	s_load_without_phi(
 		}
 	}
 
+LBL_MEM:
 	{
 		aclspv_id_t load = aclcur_cfg_node(0, h_ctx);
 		h_aclcur_t p_load = aclcur_get_node(load, h_ctx);

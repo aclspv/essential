@@ -6,7 +6,7 @@
 
 #include <aclattr/layout.h>
 
-aclspv_id_t aclty_mk_by_cursor_dummy(
+aclspv_id_t aclty_mk_by_cursor_default(
 		const CXCursor		c_cursor,
 		const CXType		c_type,
 		const h_aclspv_ctx_t	h_ctx

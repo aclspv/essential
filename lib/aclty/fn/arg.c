@@ -41,9 +41,14 @@ aclty_t* aclty_add_fn_arg(
 	aclty_t	cxtp;
 	p_cxtp_t	new_p;
 	struct __ret	node;
+	aclspv_wrd_t	idx_fn;
 
 	ae2f_ifnezerr_strict(rdwr_fn->m_class != ACLTY_FN)
 		return 0;
+
+	/** the arena can grow while the argument node is created: keep the
+	 * function as an index and re-resolve it after every allocating step. */
+	idx_fn = (aclspv_wrd_t)(rdwr_fn - &__get_type_uniques(h_ctx)[0]);
 
 	aclmemzero(&cxtp, sizeof(cxtp));
 	cxtp.m_class = ACLTY_FN_ARG;
@@ -56,6 +61,8 @@ aclty_t* aclty_add_fn_arg(
 
 	ae2f_ifezerr(new_p = aclty_find(node.m_id, h_ctx))
 		return 0;
+
+	rdwr_fn = &__get_type_uniques(h_ctx)[idx_fn];
 
 	/** have arg? */
 	if(rdwr_fn->m_info.m_fn.m_num_arg) {

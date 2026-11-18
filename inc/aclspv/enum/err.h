@@ -105,7 +105,16 @@ enum ACLSPV_COMPILE_ {
 	ACLSPV_COMPILE_UNASSIGNED_VALUE,
 
 	/** see ACLSPV_CTX_FLAG0_EXPLICIT_EXTINST_IMPORT */
-	ACLSPV_COMPILE_NOIMPL_EXTINST
+	ACLSPV_COMPILE_NOIMPL_EXTINST,
+
+	/** two declarations of the same name do not share a canonical function
+	 * type. the language model has no overloading, so the conflict is
+	 * rejected before any body is parsed. see aclemit_fn_gather(). */
+	ACLSPV_COMPILE_MET_INVAL_FN_REDECL,
+
+	/** build phase: a deferred body never becomes emittable — a call cycle
+	 * (recursion), or a callee that never got a body. */
+	ACLSPV_COMPILE_RECURSIVE_CALL
 };
 
 /** 

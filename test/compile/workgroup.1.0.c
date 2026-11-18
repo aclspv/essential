@@ -18,21 +18,25 @@
  * note: the test targets are compiled with -DNDEBUG, so assert() is a
  * no-op here. every check must be an explicit branch returning failure.
  * */
-static const char s_src_wg[] =
-"typedef int i32;\n"
-"__attribute__((annotate(\"aclspv_execmodel(5)\")))\n"
-"__attribute__((annotate(\"aclspv_wrkgroup_size(1, 1, 1)\")))\n"
-"void t_wg(\n"
-"    __attribute__((annotate(\"aclspv_storage_class(4)\"))) i32* w_out,\n"
-"    __attribute__((annotate(\"aclspv_storage_class(4)\"))) i32* w_scratch,\n"
-"    __attribute__((annotate(\"aclspv_storage_class(1)\"))) i32* in_n,\n"
-"    __attribute__((annotate(\"aclspv_storage_class(3)\"))) i32* out_v\n"
-") {\n"
-"    i32 t = *in_n;\n"
-"    w_scratch[0] = t + 1;\n"
-"    w_out[0] = w_scratch[0] * 2;\n"
-"    *out_v = w_out[0];\n"
-"}\n";
+static const char* const s_src_wg_lines[] = {
+	"typedef int i32;\n",
+	"__attribute__((annotate(\"aclspv_execmodel(5)\")))\n",
+	"__attribute__((annotate(\"aclspv_wrkgroup_size(1, 1, 1)\")))\n",
+	"void t_wg(\n",
+	"    __attribute__((annotate(\"aclspv_storage_class(4)\"))) i32* w_out,\n",
+	"    __attribute__((annotate(\"aclspv_storage_class(4)\"))) i32* w_scratch,\n",
+	"    __attribute__((annotate(\"aclspv_storage_class(1)\"))) i32* in_n,\n",
+	"    __attribute__((annotate(\"aclspv_storage_class(3)\"))) i32* out_v\n",
+	") {\n",
+	"    i32 t = *in_n;\n",
+	"    w_scratch[0] = t + 1;\n",
+	"    w_out[0] = w_scratch[0] * 2;\n",
+	"    *out_v = w_out[0];\n",
+	"}\n",
+};
+/** C90 caps a concatenated string literal at 509 characters: the source is
+ * assembled at runtime instead. */
+static char s_src_wg[4096];
 
 int main(void);
 
@@ -46,10 +50,12 @@ int main(void) {
 	unsigned		num_wg;
 
 	acltestcfg();
+	acltest_concat(s_src_wg, s_src_wg_lines,
+			(unsigned)(sizeof(s_src_wg_lines) / sizeof(s_src_wg_lines[0])));
 
 	files[0].Contents	= s_src_wg;
 	files[0].Filename	= "main.c";
-	files[0].Length		= sizeof(s_src_wg) - 1;
+	files[0].Length		= (unsigned long)strlen(s_src_wg);
 
 	files[1].Contents	= s_oclbase;
 	files[1].Filename	= "opencl-c-base.h";

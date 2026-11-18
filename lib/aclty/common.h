@@ -1,7 +1,7 @@
 #ifndef	aclutil_cxtp_common_h
 #define	aclutil_cxtp_common_h
 
-#include <aclspv.h>
+#include <acldef.h>
 #include <aclconst/specsize.h>
 
 
@@ -42,6 +42,7 @@ typedef aclspv_wrd_t	aclty_field0_t;
 
 /** data type id */
 typedef aclspv_id_t aclty_id_t;
+typedef aclspv_subid_t	aclty_subid_t;
 
 /** `aclty_t` is forward-declared in the public context header; C90 does not
  * allow redefining it here. */

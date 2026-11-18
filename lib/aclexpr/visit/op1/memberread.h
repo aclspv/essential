@@ -84,7 +84,7 @@ ae2f_inline_f static aclexpr_visit_lbl_t aclexpr_visit_op1_memberread(
 
 	TY_C = clang_getCursorType(FD);
 
-	ae2f_ifezerr(TY_M = aclty_mk_by_cursor_dummy(FD, TY_C, h_ctx)) {
+	ae2f_ifezerr(TY_M = aclty_mk_by_cursor_default(FD, TY_C, h_ctx)) {
 		err_puts("[visit::op1::memberread] failed to make the member type");
 		h_ctx->m_err = ACLSPV_COMPILE_CXTP_ZERO;
 		return c_lbl_fail;

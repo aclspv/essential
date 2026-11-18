@@ -61,7 +61,7 @@ ae2f_inline_f static aclexpr_visit_lbl_t aclexpr_visit_opn_initlist(
 	unless(N)
 		return c_lbl_fail;
 
-	ae2f_ifezerr(TY_RES = aclty_mk_by_cursor_dummy(
+	ae2f_ifezerr(TY_RES = aclty_mk_by_cursor_default(
 				c_cur
 				, clang_getCanonicalType(clang_getCursorType(c_cur))
 				, h_ctx

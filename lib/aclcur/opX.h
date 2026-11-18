@@ -37,6 +37,20 @@ aclcur_vid_t aclcur_cfg_opx(
 		h_aclspv_ctx_t	h_ctx
 		);
 
+/** SpvOpFunctionCall: [type][result][function][args...].
+ *
+ * c_fn is the callee's OpFunction result id; c_args are value ids already
+ * converted to the callee's parameter types. never deduplicated: a call has
+ * effects, so two identical calls in different blocks must stay two
+ * instructions. */
+aclspv_id_t aclcur_cfg_call(
+		aclspv_id_t		c_fn,
+		aclty_id_t		c_ty,
+		const aclspv_vid_t	c_args[],
+		aclspv_wrd_t		c_num,
+		h_aclspv_ctx_t		h_ctx
+		);
+
 /** SpvOpExtInst: [type][result][set id][instruction][operands...] */
 aclspv_id_t aclcur_cfg_extinst(
 		aclspv_id_reserved_t	c_newid_opt,

@@ -25,6 +25,9 @@ ae2f_extern enum CXChildVisitResult aclemit_root(
 	unless(h_cur.kind == CXCursor_CompoundStmt && h_parent.kind == CXCursor_FunctionDecl)
 		return CXChildVisit_Recurse;
 
+	/** which bodies go out, and when, is the scheduler's call: see
+	 * aclemit/bodies.c. reaching here means the body is being emitted now. */
+
 	/** per-function aclcur bootstrap: the root label occupies node 0 and
 	 * becomes the current label for the argument + body walk. */
 	CTX->m_num_cursor = 0;

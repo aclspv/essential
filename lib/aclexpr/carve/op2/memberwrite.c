@@ -88,7 +88,7 @@ static enum CXChildVisitResult s_memberwrite_cnt(
 			 * ParenExpr / nested-member base rejection. */
 			{
 				const aclspv_id_t TY_M
-					= aclty_mk_by_cursor_dummy(FD, clang_getCursorType(FD), rdwr_data->m_ctx);
+					= aclty_mk_by_cursor_default(FD, clang_getCursorType(FD), rdwr_data->m_ctx);
 
 				ae2f_ifezerr(TY_M) {
 					err_puts("[carve2::memberwrite] failed to make the member type\n");
@@ -257,7 +257,7 @@ static enum CXChildVisitResult s_memberwrite_cnt(
 						 * type; P_TY/TY_BASE are captured before the cast
 						 * because it can allocate and move the arena. */
 						{
-							const aclspv_id_t TY_M_VAL = aclty_mk_by_cursor_dummy(
+							const aclspv_id_t TY_M_VAL = aclty_mk_by_cursor_default(
 									FD
 									, clang_getCursorType(FD)
 									, rdwr_data->m_ctx);

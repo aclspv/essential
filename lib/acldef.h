@@ -61,6 +61,14 @@ typedef aclspv_wrd_t	aclspv_num_opprm_t;
 typedef aclspv_id_t	aclspv_vid_t;
 
 /** 
+ * this is an id but not by master but the slave one.
+ * see x_aclspv_ctx::m_ctx_slave.
+ *
+ * NEVER assume this type stores a value is valid an to be emitted.
+ * */
+typedef aclspv_id_t	aclspv_subid_t;
+
+/** 
  * reserved id 
  * does not have any role yet.
  * */

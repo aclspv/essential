@@ -16,6 +16,11 @@ enum ACLCUR_FLAG0_ {
 	/** is end of a function explicitly. */
 	ACLCUR_FLAG0_FNNTERM,
 
+	/** a value node with an observable effect: the emitter must not drop it
+	 * for lack of a reference (a call statement's result is unused, but the
+	 * call still happens). */
+	ACLCUR_FLAG0_EFFECT,
+
 	ACLCUR_FLAG0_MAX
 };
 

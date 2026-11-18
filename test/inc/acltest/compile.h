@@ -47,7 +47,7 @@ ae2f_unused static aclspv_compile_t  dbg_aclspv_compile(
 				, &usrcfg
 				)) return CTX.m_err;
 
-	ae2f_ifeznrm(aclspv_ctx_compile3(
+	ae2f_ifeznrm(aclspv_ctx_build3(
 				&CTX
 				, rdwr_unsaved
 				, c_unsaved_count

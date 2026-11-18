@@ -98,7 +98,7 @@ ae2f_inline static void *compile_spirv(const char src[len], size_t *out_word_cou
 	files[0].Filename  = "shader.c";
 	files[0].Length    = len - 1;
 
-	aclspv_compile_t ret = ctx.compile3(files, 1, argv, 1, 0);
+	aclspv_compile_t ret = ctx.build3(files, 1, argv, 1, 0);
 	if (ret != ACLSPV_COMPILE_OK) {
 		fprintf(stderr, "compile failed: %d\n", (int)ret);
 		return NULL;

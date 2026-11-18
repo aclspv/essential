@@ -150,6 +150,14 @@ void	aclcur_reg_untrack(aclspv_id_t c_reg, h_aclspv_ctx_t h_ctx) {
 	c_self = aclcur_reg_resolve(c_reg, h_ctx);
 	ae2f_ifezerr(c_self)	return;
 
+	/** a function parameter is an SSA value, not branch state: no label
+	 * sweep may clear it. */
+	ae2f_ifezerr(p = aclcur_get_node(c_self, h_ctx))
+		return;
+
+	if(p->m_flag0 & aclcur_flag0_reg(ACLCUR_FLAG0_REG_PARAM))
+		return;
+
 	/** 
 	 * the register itself and every ALIAS2 ancestor no longer match memory:
 	 * each hop resolves first, so a pure alias sitting between an ALIAS2

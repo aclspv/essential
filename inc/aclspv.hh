@@ -71,33 +71,45 @@ namespace aclspv {
 							);
 				}
 
+			/** COMPILE phase: symbols + bodies that need no import. */
 			ae2f_inline_f aclspv_compile_t
 				compile(const CXCursor c_cursor) {
 					return aclspv_ctx_compile(this, c_cursor);
 				}
 
+			/** COMPILE phase from a caller-owned TU (keep it until build). */
 			ae2f_inline_f aclspv_compile_t
 				compile1(const CXTranslationUnit c_cxtu) {
 					return aclspv_ctx_compile1(this, c_cxtu);
 				}
 
-			ae2f_inline_f aclspv_compile_t compile2(
+			ae2f_inline_f aclspv_compile_t
+				build(const CXCursor c_cursor) {
+					return aclspv_ctx_build(this, c_cursor);
+				}
+
+			ae2f_inline_f aclspv_compile_t
+				build1(const CXTranslationUnit c_cxtu) {
+					return aclspv_ctx_build1(this, c_cxtu);
+				}
+
+			ae2f_inline_f aclspv_compile_t build2(
 					struct CXUnsavedFile *ae2f_restrict const rdwr_unsaved,
 					const unsigned c_unsaved_count,
 					const char *ae2f_restrict const *ae2f_restrict const rd_argv_opt,
 					const int c_argc, enum CXErrorCode *ae2f_restrict rwr_cxerr_opt,
 					CXIndex h_cxidx) {
-				return aclspv_ctx_compile2(this, rdwr_unsaved, c_unsaved_count,
+				return aclspv_ctx_build2(this, rdwr_unsaved, c_unsaved_count,
 						rd_argv_opt, c_argc, rwr_cxerr_opt,
 						h_cxidx);
 			}
 
-			ae2f_inline_f aclspv_compile_t compile3(
+			ae2f_inline_f aclspv_compile_t build3(
 					struct CXUnsavedFile *ae2f_restrict const rdwr_unsaved,
 					const unsigned c_unsaved_count,
 					const char *ae2f_restrict const *ae2f_restrict const rd_argv_opt,
 					const int c_argc, enum CXErrorCode *ae2f_restrict rwr_cxerr_opt) {
-				return aclspv_ctx_compile3(this, rdwr_unsaved, c_unsaved_count,
+				return aclspv_ctx_build3(this, rdwr_unsaved, c_unsaved_count,
 						rd_argv_opt, c_argc, rwr_cxerr_opt);
 			}
 
