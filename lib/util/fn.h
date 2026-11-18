@@ -14,6 +14,13 @@ typedef struct {
 
 	/* @brief LLVM function reference */
 	CXCursor	m_fn;
+
+	/* @brief function-level purity, captured post-carve by
+	 * aclemit_fndecl_bodycfg. see aclcur_fn_is_const(). */
+	aclspv_bool_t	m_is_const;
+
+	/* @brief see aclcur_fn_is_pure(). */
+	aclspv_bool_t	m_is_pure;
 } aclutil_fn_t;
 
 #endif

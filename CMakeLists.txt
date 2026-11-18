@@ -300,16 +300,24 @@ ae2f_CoreTestTentVerbose(aclspv-essential-test ./test/util)
 aclspv_spv_target()
 
 if(ae2f_TEST)
-	target_link_libraries(Test-c-aclspv-essential-test-scale 
-		PRIVATE	$<BUILD_INTERFACE:aclspv::aclconst>
-		PRIVATE	$<BUILD_INTERFACE:aclspv::aclcur>
-		PRIVATE	$<BUILD_INTERFACE:aclspv::aclexpr>
-		PRIVATE	$<BUILD_INTERFACE:aclspv::aclemit>
-		PRIVATE	$<BUILD_INTERFACE:aclspv::aclmem>
-		PRIVATE	$<BUILD_INTERFACE:aclspv::aclty>
-		PRIVATE	$<BUILD_INTERFACE:aclspv::aclval>
-		PRIVATE $<BUILD_INTERFACE:aclspv::common-essential>
-		)
+	# tests that drive the internal library modules directly (not just the
+	# public aclspv API) link the object libraries themselves.
+	foreach(prm_internal_test
+			scale
+			lblpure
+			fnpure
+			)
+		target_link_libraries(Test-c-aclspv-essential-test-${prm_internal_test}
+			PRIVATE	$<BUILD_INTERFACE:aclspv::aclconst>
+			PRIVATE	$<BUILD_INTERFACE:aclspv::aclcur>
+			PRIVATE	$<BUILD_INTERFACE:aclspv::aclexpr>
+			PRIVATE	$<BUILD_INTERFACE:aclspv::aclemit>
+			PRIVATE	$<BUILD_INTERFACE:aclspv::aclmem>
+			PRIVATE	$<BUILD_INTERFACE:aclspv::aclty>
+			PRIVATE	$<BUILD_INTERFACE:aclspv::aclval>
+			PRIVATE $<BUILD_INTERFACE:aclspv::common-essential>
+			)
+	endforeach()
 endif()
 
 include(./cmake/predef.cmake)

@@ -9,6 +9,15 @@
 enum ACLCUR_FLAG0_LBL_ {
 	ACLCUR_FLAG0_LBL_ROOT	= ACLCUR_FLAG0_MAX,
 	ACLCUR_FLAG0_LBL_LOOP,
+
+	/** the label reads a register its own region does not define.
+	 * see aclcur_lbl_is_const() / aclcur_lbl_cfg_pure(). */
+	ACLCUR_FLAG0_LBL_NOCONSTANT,
+
+	/** the label writes a register its own region does not define.
+	 * see aclcur_lbl_is_pure() / aclcur_lbl_cfg_pure(). */
+	ACLCUR_FLAG0_LBL_NOPURE,
+
 	ACLCUR_FLAG0_LBL_MAX
 
 };
@@ -30,6 +39,16 @@ typedef struct aclcur_lbl {
 	/** function-level: the last traversed top-level path ended in a
 	 * return. only the root label's value is authoritative. */
 	aclspv_bool_t		m_fnret;
+
+	/** function-level: the current function reads a register it does not
+	 * own (a non-Function storage register). only the root label's value
+	 * is authoritative, like m_fnret. see aclcur_fn_is_const(). */
+	aclspv_bool_t		m_fn_noconstant;
+
+	/** function-level: the current function writes a register it does not
+	 * own. only the root label's value is authoritative. see
+	 * aclcur_fn_is_pure(). */
+	aclspv_bool_t		m_fn_nopure;
 
 	/** current lexical loop targets. only the root label's values are
 	 * authoritative; a while saves/sets/restores them around its body. */
@@ -107,5 +126,6 @@ aclspv_compile_t EMIT_aclcur_lbl(h_aclcur_t h, h_aclspv_ctx_t h_ctx);
 
 #include "./lbl/dfs.h"
 #include "./lbl/reach.h"
+#include "./lbl/pure.h"
 
 #endif

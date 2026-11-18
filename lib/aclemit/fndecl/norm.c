@@ -26,6 +26,9 @@ enum CXChildVisitResult aclemit_fndecl_norm(
 
 	ctx->m_num_cursor	= 0;
 
+	fn.m_is_const		= 0;
+	fn.m_is_pure		= 0;
+
 	fn.m_fn		= h_parent;
 	fn.m_id		= ctx->m_id++;
 	fn.m_type_id	= aclty_mk_fn1(
@@ -49,7 +52,29 @@ OUT:
 		[ctx->m_fnlist.m_num_fn++] = fn;
 
 	{
-		return aclemit_fndecl_bodycfg(h_cur, h_ctx);
+		aclspv_bool_t			c_is_const = 0;
+		aclspv_bool_t			c_is_pure = 0;
+		enum CXChildVisitResult		ret;
+		aclutil_fn_t* ae2f_restrict	p_fn;
+
+		ret = aclemit_fndecl_bodycfg(
+				h_cur
+				, h_ctx
+				, &c_is_const
+				, &c_is_pure
+				);
+
+		p_fn = ctx->m_fnlist.m_num_fn
+			? &((aclutil_fn_t* ae2f_restrict)ctx->m_fnlist.m_fn.m_p)
+				[ctx->m_fnlist.m_num_fn - 1]
+			: 0;
+
+		if(p_fn) {
+			p_fn->m_is_const	= c_is_const;
+			p_fn->m_is_pure		= c_is_pure;
+		}
+
+		return ret;
 	}
 
 }

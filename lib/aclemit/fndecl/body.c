@@ -5,10 +5,13 @@
 #include <aclattr/main.h>
 #include <aclcur/common.h>
 #include <aclcur/ssa.h>
+#include <aclcur/lbl/pure.h>
 
 enum CXChildVisitResult	aclemit_fndecl_bodycfg(
 		CXCursor h_cur,
-		h_aclspv_ctx_t	h_ctx
+		h_aclspv_ctx_t	h_ctx,
+		aclspv_bool_t* ae2f_restrict	wr_is_const,
+		aclspv_bool_t* ae2f_restrict	wr_is_pure
 		) {
 	h_ctx->m_count.m_fnimpl = 0;
 
@@ -29,6 +32,16 @@ enum CXChildVisitResult	aclemit_fndecl_bodycfg(
 	 * the graph while the header's reads resolve). */
 	ae2f_ifnezerr(h_ctx->m_err = aclcur_ssa_loop_carry_fill(h_ctx))
 		return CXChildVisit_Break;
+
+	/** the cursor graph is final here: carve is done and aclcur_emit has
+	 * not mutated the reference counts yet. capture the function-level
+	 * purity now, because the arena is reset at FunctionEnd below, so this
+	 * is the only point where the whole function is inspectable. */
+	ae2f_ifnezerr(h_ctx->m_err = aclcur_fn_cfg_pure(h_ctx))
+		return CXChildVisit_Break;
+
+	if(wr_is_const)	*wr_is_const	= aclcur_fn_is_const(h_ctx);
+	if(wr_is_pure)	*wr_is_pure	= aclcur_fn_is_pure(h_ctx);
 
 	/** flush the cursor graph into m_fnimpl: labels, branches, ops, and
 	 * register storage (OpVariable) via the register interfaces. */

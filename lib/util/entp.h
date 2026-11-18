@@ -10,6 +10,14 @@ typedef struct {
 	aclspv_wrd_t	m_idx_push_constant;
 	aclspv_wrd_t	m_descriptor_set;
 	CXCursor	m_fn;
+
+	/** function-level purity, captured post-carve by
+	 * aclemit_fndecl_bodycfg (the cursor arena is reset at FunctionEnd).
+	 * see aclcur_fn_is_const(). */
+	aclspv_bool_t	m_is_const;
+
+	/** see aclcur_fn_is_pure(). */
+	aclspv_bool_t	m_is_pure;
 } aclutil_entp_t;
 
 #endif

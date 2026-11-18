@@ -167,7 +167,31 @@ enum CXChildVisitResult aclemit_fndecl_entp(
 		[ctx->m_fnlist.m_num_entp++] = entp;
 
 	{
-		return aclemit_fndecl_bodycfg(h_cur, h_ctx);
+		aclspv_bool_t			c_is_const = 0;
+		aclspv_bool_t			c_is_pure = 0;
+		enum CXChildVisitResult		ret;
+		aclutil_entp_t* ae2f_restrict	p_entp;
+
+		ret = aclemit_fndecl_bodycfg(
+				h_cur
+				, h_ctx
+				, &c_is_const
+				, &c_is_pure
+				);
+
+		/** persist on the record appended just above: the cursor arena,
+		 * and with it the answer, is reset when bodycfg returns. */
+		p_entp = ctx->m_fnlist.m_num_entp
+			? &((aclutil_entp_t* ae2f_restrict)ctx->m_fnlist.m_entp.m_p)
+				[ctx->m_fnlist.m_num_entp - 1]
+			: 0;
+
+		if(p_entp) {
+			p_entp->m_is_const	= c_is_const;
+			p_entp->m_is_pure	= c_is_pure;
+		}
+
+		return ret;
 	}
 
 	ae2f_unreachable();
