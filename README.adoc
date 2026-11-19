@@ -22,7 +22,7 @@ summary
 * this project compiles c-family language with annotation attributes to SPIR-V compiler library.
 * this project is can generate flexible form of entry points.
 * uses clang-c as frontend to generate ast.
-* list of attribute specs is written link:./aclang.adoc[here].
+* list of attribute specs is written link:aclang.adoc[here].
 
 tree
 
