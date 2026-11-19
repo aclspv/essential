@@ -26,13 +26,18 @@ aclspv_id_t aclcur_cfg_op1r(
 		aclspv_vid_t	c_o0,
 		h_aclspv_ctx_t	h_ctx
 		) {
+	/** only nodes of the currently open block are eligible: an earlier
+	 * node in the same block always dominates the new one, while a node
+	 * from another block may only reach the merge through a sibling arm. */
 	{
 		aclspv_wrd_t i;
+		aclspv_id_t lbl_cur = aclcur_get_lbl_cur(h_ctx);
 		const aclcur_t* ae2f_restrict buf = s_get_buf_c(h_ctx);
 
 		for(i = h_ctx->m_num_cursor; i --> 0; ae2fcc_pause()) {
 			if(
 					buf[i].m_class == ACLCUR_OP1
+					&& buf[i].m_lbl == lbl_cur
 					&& buf[i].m_d.m_op.m_op	== c_op
 					&& buf[i].m_ty			== c_ty
 					&& buf[i].m_d.m_op.m_o[0]	== c_o0
@@ -84,13 +89,18 @@ aclspv_id_t aclcur_cfg_op1ri(
 		aclspv_wrd_t	c_imm,
 		h_aclspv_ctx_t	h_ctx
 		) {
+	/** only nodes of the currently open block are eligible: an earlier
+	 * node in the same block always dominates the new one, while a node
+	 * from another block may only reach the merge through a sibling arm. */
 	{
 		aclspv_wrd_t i;
+		aclspv_id_t lbl_cur = aclcur_get_lbl_cur(h_ctx);
 		const aclcur_t* ae2f_restrict buf = s_get_buf_c(h_ctx);
 
 		for(i = h_ctx->m_num_cursor; i --> 0; ae2fcc_pause()) {
 			if(
 					buf[i].m_class == ACLCUR_OP2
+					&& buf[i].m_lbl == lbl_cur
 					&& buf[i].m_d.m_op.m_op	== c_op
 					&& buf[i].m_ty			== c_ty
 					&& buf[i].m_d.m_op.m_o[0]	== c_o0
