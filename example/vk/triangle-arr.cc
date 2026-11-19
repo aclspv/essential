@@ -482,16 +482,16 @@ int main(void) {
 
 	VkDescriptorPool desc_pool;
 	{
-		VkDescriptorPoolSize pool_sizes[2] = {};
+		/** the shader uses two storage buffers and push constants; push
+		 * constants are not descriptors, so they take no pool size. */
+		VkDescriptorPoolSize pool_sizes[1] = {};
 		pool_sizes[0].type            = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
 		pool_sizes[0].descriptorCount = 2;
-		pool_sizes[1].type            = VK_DESCRIPTOR_TYPE_INLINE_UNIFORM_BLOCK;
-		pool_sizes[1].descriptorCount = 16;
 
 		VkDescriptorPoolCreateInfo pool_ci = {};
 		pool_ci.sType               = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
 		pool_ci.maxSets             = 1;
-		pool_ci.poolSizeCount       = 2;
+		pool_ci.poolSizeCount       = 1;
 		pool_ci.pPoolSizes          = pool_sizes;
 		VK_CHECK(vkCreateDescriptorPool(device, &pool_ci, NULL, &desc_pool));
 	}
