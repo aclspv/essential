@@ -79,6 +79,17 @@ TAILJMP:
 				return ACLCUR_LBL_DFS_BREAK;
 
 			case ACLCUR_LBL_DFS_IN:
+				/** fn() may carve nodes itself (a load's phi is
+				 * created from inside the callback), which grows
+				 * and reallocates the node buffer: the pointer read
+				 * before the call is stale, so re-fetch it by id. */
+				p_cur = aclcur_get_node(
+						(aclspv_wrd_t)(elm & 0xFFFFFFFF)
+						, h_ctx);
+				ae2f_ifezerr(p_cur) {
+					c_code = ACLCUR_LBL_DFS_CONTINUE;
+					goto TAILJMP;
+				}
 				ae2f_ifnezerr_strict(p_cur->m_class != ACLCUR_LBL)
 					return c_code;
 
