@@ -252,127 +252,6 @@ static aclspv_compile_t	s_argv_emit_load(aclspv_id_t c_id, h_aclspv_ctx_t h_ctx)
 	return ACLSPV_COMPILE_OK;
 }
 
-/** OpAccessChain index-chain depth cap (fixed-size accumulator),
- * mirroring lib/aclcur/reg/view.c's ACLCUR_REGVIEW_CHAIN_MAX. */
-#define	ACLCUR_ARG_PCV_CHAIN_MAX		__ACLSPV_OPACC_IDX_MAX
-
-/** pointer producer for push-constant leaf registers: appends one
- * OpAccessChain per ALIAS2 level (root-most first) directly into the
- * function body as raw words — the indices are module-level constants
- * and the base is the shared OpVariable id, so no op-node minting at
- * emit time (which would land at the buffer tail / be elided). */
-static aclspv_compile_t	s_pcv_chain(
-		aclspv_id_t c_reg
-		, aclspv_id_t* ae2f_restrict wr_ptr
-		, h_aclspv_ctx_t h_ctx
-		) {
-	aclspv_id_t idx_s[ACLCUR_ARG_PCV_CHAIN_MAX];
-	aclspv_id_t tys[ACLCUR_ARG_PCV_CHAIN_MAX];
-	aclspv_wrd_t nidx;
-	aclspv_wrd_t bound;
-	aclspv_id_t id_cur;
-	h_aclcur_t p;
-	h_aclcur_t p_self;
-	aclspv_id_t id_base;
-	aclspv_wrd_t i;
-
-	/** the leaf register whose address is requested. */
-	ae2f_ifezerr(p_self = aclcur_get_node(c_reg, h_ctx))
-		return ACLSPV_COMPILE_UNHANDLED;
-	ae2f_ifnezerr_strict(p_self->m_class != ACLCUR_REG)
-		return ACLSPV_COMPILE_UNHANDLED;
-
-	/** ancestor walk: view-first, collecting each m_id_idx together
-	 * with the type that step lands on; the root is reached when the
-	 * ALIAS2 flag is absent. iterative and bounded, exactly as
-	 * lib/aclcur/reg/view.c's addr walk. */
-	nidx	= 0;
-	bound	= h_ctx ? h_ctx->m_num_cursor : 0;
-	id_cur	= c_reg;
-	p	= 0;
-	while(bound-- && nidx < ACLCUR_ARG_PCV_CHAIN_MAX) {
-		ae2f_ifezerr(p = aclcur_get_node(id_cur, h_ctx))
-			return ACLSPV_COMPILE_UNHANDLED;
-		ae2f_ifnezerr_strict(p->m_class != ACLCUR_REG)
-			return ACLSPV_COMPILE_UNHANDLED;
-
-		unless(p->m_flag0 & aclcur_flag0_reg(ACLCUR_FLAG0_REG_ALIAS2))
-			break;
-
-		idx_s[nidx]	= p->m_d.m_reg.m_id_idx;
-		tys[nidx]	= p->m_ty;
-		++nidx;
-		id_cur		= p->m_d.m_reg.m_d.m_ref.m_id;
-	}
-
-	/** the walk must have stopped on a root: exhausting the bound
-	 * (cyclic parent chain) or the accumulator is a failure. */
-	ae2f_ifezerr(p)
-		return ACLSPV_COMPILE_UNHANDLED;
-	ae2f_ifnezerr_strict(p->m_flag0 & aclcur_flag0_reg(ACLCUR_FLAG0_REG_ALIAS2))
-		return ACLSPV_COMPILE_UNHANDLED;
-
-	/** first chain step's base: the root register's id, which IS the
-	 * shared OpVariable result id (m_id fixup in the binding switch). */
-	id_base	= p->m_id;
-
-	for(i = 0; i < nidx; ++i) {
-		const aclspv_wrd_t J = nidx - 1 - i;
-		const aclspv_id_t TY_ELEM = aclty_mk_ptr(
-				tys[J]
-				, (enum SpvStorageClass_)p_self->m_d.m_reg.m_storage_class
-				, h_ctx
-				);
-		const aclspv_id_t id_nxt = aclctx_newid(h_ctx);
-
-		ae2f_ifezerr(TY_ELEM)
-			return ACLSPV_COMPILE_ALLOC_FAILED_ID;
-		ae2f_ifezerr(id_nxt)
-			return ACLSPV_COMPILE_ALLOC_FAILED_ID;
-
-		/** OpAccessChain word layout: [op|5] [result type] [result id]
-		 * [base] [index], one index per level. the result type is the
-		 * pointer to the level's own type under the leaf's storage
-		 * class, exactly as reg/view.c derives it. */
-		ae2f_ifezerr(h_ctx->m_count.m_fnimpl = aclutil_emitx_5(
-					&h_ctx->m_section.m_fnimpl
-					, h_ctx->m_count.m_fnimpl
-					, SpvOpAccessChain
-					, TY_ELEM
-					, id_nxt
-					, id_base
-					, idx_s[J]
-					)) return ACLSPV_COMPILE_ALLOC_FAILED_CURSOR;
-
-		id_base	= id_nxt;
-	}
-
-	*wr_ptr	= id_base;
-	return ACLSPV_COMPILE_OK;
-}
-
-/** push-constant leaf load: parameterized form of the stock variable
- * load, with the chain producer supplying the memory operand. */
-static aclspv_compile_t	s_pcv_emit_load(aclspv_id_t c_id, h_aclspv_ctx_t h_ctx) {
-	return aclcur_regvar_emit_loadof(c_id, h_ctx, s_pcv_chain, 0);
-}
-
-/** explicit (volatile) variant of the push-constant leaf load. */
-static aclspv_compile_t	s_pcv_emit_load_explicit(aclspv_id_t c_id, h_aclspv_ctx_t h_ctx) {
-	return aclcur_regvar_emit_loadof(c_id, h_ctx, s_pcv_chain, 1);
-}
-
-/** push-constant leaf store: the non-explicit gating (pure SSA
- * definition, no memory write) lives inside the of-variant. */
-static aclspv_compile_t	s_pcv_emit_store(aclspv_id_t c_id, h_aclspv_ctx_t h_ctx) {
-	return aclcur_regvar_emit_storeof(c_id, h_ctx, s_pcv_chain, 0);
-}
-
-/** explicit push-constant leaf store. */
-static aclspv_compile_t	s_pcv_emit_store_explicit(aclspv_id_t c_id, h_aclspv_ctx_t h_ctx) {
-	return aclcur_regvar_emit_storeof(c_id, h_ctx, s_pcv_chain, 1);
-}
-
 /* ─────────────────────────────────────────────────────────────────────
  * stage 1 — resolve the argument's type.
  *
@@ -511,7 +390,11 @@ static aclspv_compile_t s_arg_ty(
 
 			break;
 
-			/** this is an only type which type should NOT be a pointer */
+			/** a push-constant argument is a pointer to its own block:
+			 * the user's struct is the payload, so the padding is the
+			 * user's to control — per entry point, per argument. the
+			 * variable's pointee is a single-member Block wrapper (the
+			 * Vulkan idiom), exactly like a storage-buffer argument. */
 		case SpvStorageClassPushConstant:
 			ae2f_ifezerr(var_type_id = aclty_mk_by_cursor_default(
 						h_cur
@@ -521,16 +404,36 @@ static aclspv_compile_t s_arg_ty(
 				return ACLSPV_COMPILE_UNHANDLED_ARGS;
 			}
 
-			var_elm_type_id = var_type_id;
+			{
+				aclty_t* ae2f_restrict p_ty = aclty_find(var_type_id, CTX);
+				aclty_t* ae2f_restrict p_elm;
 
-			ae2f_ifezerr(aclty_getsize(var_elm_type_id, CTX).m_id || aclty_getsize(var_elm_type_id, CTX).m_lit.m_max) {
-				err_prefix(0);
-				err_call(fprintf, (
-							stderr
-							, "push constant type must have a fixed size (type id %lu)\n"
-							, (unsigned long)var_type_id)
-						);
-				return ACLSPV_COMPILE_UNHANDLED_ARGS;
+				ae2f_ifezerr(p_ty) {
+					return ACLSPV_COMPILE_UNHANDLED_ARGS;
+				}
+
+				ae2f_ifnezerr_strict(p_ty->m_class != ACLTY_PTR) {
+					err_prefix(0);
+					err_puts("a push constant argument must be a pointer to a struct\n");
+					return ACLSPV_COMPILE_UNHANDLED_ARGS;
+				}
+
+				p_elm = aclty_find(p_ty->m_info.m_ptr.m_type, CTX);
+
+				ae2f_ifnezerr_strict(!p_elm || p_elm->m_class != ACLTY_STRUCT) {
+					err_prefix(0);
+					err_puts("a push constant pointer must point to a struct\n");
+					return ACLSPV_COMPILE_UNHANDLED_ARGS;
+				}
+
+				ae2f_ifezerr(var_elm_type_id = aclty_mk_struct_single_blk(
+							p_ty->m_info.m_ptr.m_type
+							, ACLTY_STRUCT_FIELD0_BLOCK
+							, 0
+							, CTX
+							)) {
+					return ACLSPV_COMPILE_UNHANDLED_ARGS;
+				}
 			}
 
 			break;
@@ -706,7 +609,6 @@ static aclspv_compile_t s_arg_ty(
  *
  * fills
  *   var_id, var_native_type_id
- *   pc_idx_func, pc_idx_arg       (push-constant members only)
  *
  * the descriptor set / binding are resolved and emitted here too, but
  * they are local to this stage.
@@ -717,9 +619,7 @@ static aclspv_compile_t s_arg_var(
 		aclspv_wrd_t c_storage_class,
 		aclspv_id_t c_var_elm_type_id,
 		aclspv_id_t ae2fcc_arg_sarr_restrict(r_var_id, 1),
-		aclspv_id_t ae2fcc_arg_sarr_restrict(r_var_native_type_id, 1),
-		aclspv_wrd_t ae2fcc_arg_sarr_restrict(r_pc_idx_func, 1),
-		aclspv_wrd_t ae2fcc_arg_sarr_restrict(r_pc_idx_arg, 1)
+		aclspv_id_t ae2fcc_arg_sarr_restrict(r_var_native_type_id, 1)
 		) {
 	h_aclspv_ctx_t CTX = DAT->m_ctx;
 	const aclspv_wrd_t storage_class = c_storage_class;
@@ -734,10 +634,6 @@ static aclspv_compile_t s_arg_var(
 	aclspv_wrd_t bind_set = 0xFFFFFFFF;
 	aclspv_wrd_t bind_idx = 0xFFFFFFFF;
 
-	/** push constant: to access the right argument */
-	aclspv_wrd_t pc_idx_func = 0;
-	aclspv_wrd_t pc_idx_arg = 0;
-
 	switch(storage_class) {
 		default:
 		case SpvStorageClassMax:
@@ -746,54 +642,25 @@ static aclspv_compile_t s_arg_var(
 
 
 		case SpvStorageClassPushConstant:
-			{
-				aclspv_id_t ty_old = aclty_cfg_struct2(CTX, DAT->m_id_push_constant_struct_ty);
-				aclty_t* ae2f_restrict p_old;
+			/** one push-constant variable per argument. the pointee is the
+			 * Block wrapper s_arg_ty built around the user's struct, so the
+			 * block layout (and its padding) is the argument's own. */
+			ae2f_ifezerr(var_native_type_id = aclty_mk_ptr(
+						var_elm_type_id
+						, SpvStorageClassPushConstant
+						, CTX)) {
+				return ACLSPV_COMPILE_UNHANDLED_ARGS;
+			}
 
-				ae2f_ifezerr(p_old = aclty_find(ty_old, CTX)) {
-					return ACLSPV_COMPILE_UNHANDLED_ARGS;
-				}
-
-				ae2f_ifezerr(aclty_add_struct_mbr_std430(p_old, var_elm_type_id, CTX)) {
-					return ACLSPV_COMPILE_UNHANDLED_ARGS;
-				}
-
-				ae2f_ifezerr(p_old = aclty_build_struct(p_old->m_type_id, CTX)) {
-					return ACLSPV_COMPILE_UNHANDLED_ARGS;
-				}
-
-				dbg_prefix(a);
-				dbg_call(fprintf, (stderr, "number member of push constant (arg): %u\n"
-							, (unsigned)p_old->m_info.m_struct.m_num_mbr));
-
-				DAT->m_id_push_constant_struct_ty = p_old->m_type_id;
-
-				pc_idx_func	= CTX->m_num_push_constant_func;
-				pc_idx_arg	= DAT->m_idx_push_constant_prm++;
-
-				if (CTX->m_push_size_ty_pad) {
-					/** the shared OpVariable was emitted once into
-					 * m_section.m_vars by the first push-constant
-					 * argument; its result id sits at the word right
-					 * after the type word (m_push_size_ty_pad is the
-					 * type-word index, patched at finalization). */
-					var_id = DAT->m_id_push_constant = aclutil_get_wrd_of_vec(
-							&CTX->m_section.m_vars
-							)[CTX->m_push_size_ty_pad + 1];
-				} else {
-					CTX->m_push_size_ty_pad = DAT->m_ctx->m_count.m_vars + 1;
-					ae2f_ifezerr(DAT->m_ctx->m_count.m_vars
-							= aclutil_emitx_4(
-								&DAT->m_ctx->m_section.m_vars
-								, DAT->m_ctx->m_count.m_vars
-								, SpvOpVariable
-								, 0
-								, var_id = DAT->m_id_push_constant = aclctx_newid(CTX)
-								, SpvStorageClassPushConstant
-								)) {
-						return ACLSPV_COMPILE_UNHANDLED_ARGS;
-					}
-				}
+			ae2f_ifezerr(CTX->m_count.m_vars = aclutil_emitx_4(
+						&CTX->m_section.m_vars
+						, CTX->m_count.m_vars
+						, SpvOpVariable
+						, var_native_type_id
+						, var_id = aclctx_newid(CTX)
+						, SpvStorageClassPushConstant
+						)) {
+				return ACLSPV_COMPILE_UNHANDLED_ARGS;
 			}
 
 			break;
@@ -1009,8 +876,6 @@ static aclspv_compile_t s_arg_var(
 	}
 	*r_var_id		= var_id;
 	*r_var_native_type_id	= var_native_type_id;
-	*r_pc_idx_func		= pc_idx_func;
-	*r_pc_idx_arg		= pc_idx_arg;
 
 	return ACLSPV_COMPILE_OK;
 }
@@ -1025,13 +890,11 @@ static aclspv_compile_t s_arg_var(
 static aclspv_compile_t s_arg_iface(
 		struct aclemit_fndecl_entp_arg_data* ae2f_restrict DAT,
 		aclspv_wrd_t c_storage_class,
-		aclspv_id_t c_var_id,
-		aclspv_wrd_t c_pc_idx_arg
+		aclspv_id_t c_var_id
 		) {
 	h_aclspv_ctx_t CTX = DAT->m_ctx;
 	const aclspv_wrd_t storage_class = c_storage_class;
 	const aclspv_id_t var_id = c_var_id;
-	const aclspv_wrd_t pc_idx_arg = c_pc_idx_arg;
 
 	switch(storage_class) {
 		case SpvStorageClassMax:
@@ -1041,17 +904,14 @@ static aclspv_compile_t s_arg_iface(
 
 
 		case SpvStorageClassPushConstant:
-			if(pc_idx_arg)
-				break;
-
-			ae2f_fallthrough;
 		case SpvStorageClassWorkgroup:
 		case SpvStorageClassStorageBuffer:
 		case SpvStorageClassUniform:
 		case SpvStorageClassUniformConstant:
 			/** the OpEntryPoint interface may only list Input/Output
-			 * variables (SPIR-V 1.3 and earlier). Uniform/Workgroup/
-			 * PushConstant storage never joins the interface list. */
+			 * variables (SPIR-V 1.3 and earlier). from 1.4 on, every
+			 * global the entry point uses — PushConstant included — must
+			 * be listed. */
 			if(DAT->m_ctx->m_usrcfg.m_ver_spv < aclspv_ver_spv(1, 4))
 				break;
 
@@ -1090,9 +950,7 @@ static aclspv_compile_t s_arg_reg(
 		aclspv_id_t c_var_id,
 		aclspv_id_t c_var_native_type_id,
 		aclspv_id_t c_var_type_id,
-		aclspv_id_t c_var_elm_type_id,
-		aclspv_wrd_t c_pc_idx_func,
-		aclspv_wrd_t c_pc_idx_arg
+		aclspv_id_t c_var_elm_type_id
 		) {
 	h_aclspv_ctx_t CTX = DAT->m_ctx;
 	const aclspv_wrd_t storage_class = c_storage_class;
@@ -1100,8 +958,6 @@ static aclspv_compile_t s_arg_reg(
 	const aclspv_id_t var_native_type_id = c_var_native_type_id;
 	const aclspv_id_t var_type_id = c_var_type_id;
 	const aclspv_id_t var_elm_type_id = c_var_elm_type_id;
-	const aclspv_wrd_t pc_idx_func = c_pc_idx_func;
-	const aclspv_wrd_t pc_idx_arg = c_pc_idx_arg;
 
 	switch(storage_class) {
 		case SpvStorageClassMax:
@@ -1110,86 +966,6 @@ static aclspv_compile_t s_arg_reg(
 			ae2f_unreachable();
 
 		case SpvStorageClassPushConstant:
-			{
-				aclspv_id_t cst_func, cst_arg, reg_leaf;
-				aclcur_t* ae2f_restrict p_view;
-
-				/** member ordinals as i32 OpConstants. */
-				ae2f_ifezerr(cst_func = aclutil_mk_constant_val_id(
-							pc_idx_func
-							, CTX)) {
-					return ACLSPV_COMPILE_UNHANDLED_ARGS;
-				}
-				ae2f_ifezerr(cst_arg = aclutil_mk_constant_val_id(
-							pc_idx_arg
-							, CTX
-							)) {
-					return ACLSPV_COMPILE_UNHANDLED_ARGS;
-				}
-
-				/** packing-level view R1 over the shared variable,
-				 * once per function. */
-				unless(DAT->m_id_push_constant_reg_view) {
-					aclspv_id_t reg_root;
-					aclcur_t* ae2f_restrict p_root;
-
-					/** per-function root register (R0): the cursor
-					 * arena resets per function, and the shared
-					 * push-constant variable belongs to the module,
-					 * so recreate the root each function; its m_id IS
-					 * the shared OpVariable result id so R1/leaf
-					 * chains resolve it. */
-					ae2f_ifezerr(reg_root = aclcur_cfg_reg(
-								clang_getNullCursor()
-								, 0
-								, SpvStorageClassPushConstant
-								, 0
-								, CTX
-								)) {
-						return ACLSPV_COMPILE_UNHANDLED_ARGS;
-					}
-					ae2f_ifezerr(p_root = aclcur_get_node(reg_root, CTX)) {
-						return ACLSPV_COMPILE_UNHANDLED_ARGS;
-					}
-					p_root->m_id = var_id;
-
-					ae2f_ifezerr(DAT->m_id_push_constant_reg_view = aclcur_reg_view(
-								clang_getNullCursor()
-								, var_id
-								, DAT->m_id_push_constant_struct_ty
-								, cst_func
-								, SpvStorageClassPushConstant
-								, ACLCUR_REGVIEW_STEP_MEMBER
-								, CTX
-								)) {
-						return ACLSPV_COMPILE_UNHANDLED_ARGS;
-					}
-				}
-
-				/** the argument's member view: bound to h_cur so
-				 * expressions find it. */
-				ae2f_ifezerr(reg_leaf = aclcur_reg_view(
-							h_cur
-							, DAT->m_id_push_constant_reg_view
-							, var_elm_type_id
-							, cst_arg
-							, SpvStorageClassPushConstant
-							, ACLCUR_REGVIEW_STEP_MEMBER
-							, CTX
-							)) {
-					return ACLSPV_COMPILE_UNHANDLED_ARGS;
-				}
-
-				ae2f_ifezerr(p_view = aclcur_get_node(reg_leaf, CTX)) {
-					return ACLSPV_COMPILE_UNHANDLED_ARGS;
-				}
-				p_view->m_d.m_reg.m_in.m_emit_load		= s_pcv_emit_load;
-				p_view->m_d.m_reg.m_in.m_emit_load_explicit	= s_pcv_emit_load_explicit;
-				p_view->m_d.m_reg.m_in.m_emit_store		= s_pcv_emit_store;
-				p_view->m_d.m_reg.m_in.m_emit_store_explicit	= s_pcv_emit_store_explicit;
-			}
-			break;
-
 		case SpvStorageClassStorageBuffer:
 		case SpvStorageClassUniform:
 		case SpvStorageClassUniformConstant:
@@ -1279,10 +1055,11 @@ static aclspv_compile_t s_arg_reg(
  * one argument of an entry point.
  *
  * a parameter is not a parameter in aclang: a pointer parameter is a
- * global variable plus its descriptor binding, a plain parameter is a
- * member of the shared push-constant block, and an input/output pointer
- * is an interface variable. the four stages above each walk the storage
- * class once instead of one switch carrying the whole pipeline.
+ * global variable (plus its descriptor binding when it is bindable), and
+ * an input/output pointer is an interface variable. a push-constant
+ * pointer owns one PushConstant variable, whose block is the struct it
+ * points to. the four stages above each walk the storage class once
+ * instead of one switch carrying the whole pipeline.
  * ───────────────────────────────────────────────────────────────────── */
 enum CXChildVisitResult aclemit_fndecl_entp_arg(
 		CXCursor h_cur,
@@ -1299,8 +1076,6 @@ enum CXChildVisitResult aclemit_fndecl_entp_arg(
 	aclspv_id_t var_elm_type_id = 0;
 	aclspv_id_t var_id = 0;
 	aclspv_id_t var_native_type_id = 0;
-	aclspv_wrd_t pc_idx_func = 0;
-	aclspv_wrd_t pc_idx_arg = 0;
 
 #define CTX		DAT->m_ctx
 
@@ -1333,15 +1108,12 @@ enum CXChildVisitResult aclemit_fndecl_entp_arg(
 				DAT, h_cur, storage_class, var_elm_type_id
 				, &var_id
 				, &var_native_type_id
-				, &pc_idx_func
-				, &pc_idx_arg
 				);
 
 	if(!RET)
 		RET = s_arg_iface(
 				DAT, storage_class
 				, var_id
-				, pc_idx_arg
 				);
 
 	if(!RET)
@@ -1351,12 +1123,13 @@ enum CXChildVisitResult aclemit_fndecl_entp_arg(
 				, var_native_type_id
 				, var_type_id
 				, var_elm_type_id
-				, pc_idx_func
-				, pc_idx_arg
 				);
 
 	ae2f_ifnezerr(RET) {
-		_aclctx_err(DAT->m_ctx, RET);
+		/** a source-level rejection, not an invariant: report it. */
+		if(!DAT->m_ctx->m_err)
+			DAT->m_ctx->m_err = RET;
+
 		return CXChildVisit_Break;
 	}
 

@@ -6,30 +6,49 @@
 #include <acltest/compile.h>
 #include <acltest/spirv.h>
 
+#include <string.h>
+
 /**
  * push-constant entry-point arguments.
  *
- * a non-pointer parameter with no `storage class` is a push constant
- * member, not a variable of its own: all members of one entry point share
- * a single OpVariable with storage class PushConstant. the test checks
- *  - exactly one PushConstant OpVariable is emitted for two arguments
- *  - the shared block struct exists
- *  - a load of a push-constant member resolves to a working expression
+ * a push-constant argument is a pointer to a struct with
+ * `aclspv_storage_class(9)`. each argument owns its OpVariable, so the block
+ * layout — including its padding — belongs to that argument alone, and one
+ * entry point's choice cannot constrain another's. the test checks
+ *  - one PushConstant OpVariable per argument (three here: two in one entry
+ *    point, one in another)
+ *  - the Block wrapper structs exist
+ *  - the bodies load the members through their own blocks
  *
  * note: the test targets are compiled with -DNDEBUG, so assert() is a
  * no-op here. every check must be an explicit branch returning failure.
  * */
-static const char s_src_pc[] =
-"typedef int i32;\n"
-"__attribute__((annotate(\"aclspv_execmodel(5)\")))\n"
-"__attribute__((annotate(\"aclspv_wrkgroup_size(1, 1, 1)\")))\n"
-"void t_pc(\n"
-"    i32 a,\n"
-"    i32 b,\n"
-"    __attribute__((annotate(\"aclspv_storage_class(3)\"))) i32* out_v\n"
-") {\n"
-"    *out_v = a + b;\n"
-"}\n";
+static const char* const s_src_lines[] = {
+	"typedef int i32;\n",
+	"__attribute__((annotate(\"aclspv_execmodel(5)\")))\n",
+	"__attribute__((annotate(\"aclspv_wrkgroup_size(1, 1, 1)\")))\n",
+	"void t_pc(\n",
+	"    __attribute__((annotate(\"aclspv_storage_class(9)\")))\n",
+	"    struct { i32 x; i32 pad; i32 y; }* a,\n",
+	"    __attribute__((annotate(\"aclspv_storage_class(9)\")))\n",
+	"    struct { i32 z; }* b,\n",
+	"    __attribute__((annotate(\"aclspv_storage_class(3)\"))) i32* out_v\n",
+	") {\n",
+	"    *out_v = a->x + a->y + b->z;\n",
+	"}\n",
+	"__attribute__((annotate(\"aclspv_execmodel(5)\")))\n",
+	"__attribute__((annotate(\"aclspv_wrkgroup_size(1, 1, 1)\")))\n",
+	"void t_pc2(\n",
+	"    __attribute__((annotate(\"aclspv_storage_class(9)\")))\n",
+	"    struct { i32 pad0; i32 only; }* c,\n",
+	"    __attribute__((annotate(\"aclspv_storage_class(3)\"))) i32* out_v\n",
+	") {\n",
+	"    *out_v = c->only;\n",
+	"}\n",
+};
+
+/** C90 caps a concatenated string literal at 509 characters. */
+static char s_src[1024];
 
 int main(void);
 
@@ -44,9 +63,12 @@ int main(void) {
 
 	acltestcfg();
 
-	files[0].Contents	= s_src_pc;
+	acltest_concat(s_src, s_src_lines,
+			(unsigned)(sizeof(s_src_lines) / sizeof(s_src_lines[0])));
+
+	files[0].Contents	= s_src;
 	files[0].Filename	= "main.c";
-	files[0].Length		= sizeof(s_src_pc) - 1;
+	files[0].Length		= (unsigned long)strlen(s_src);
 
 	files[1].Contents	= s_oclbase;
 	files[1].Filename	= "opencl-c-base.h";
@@ -85,28 +107,32 @@ int main(void) {
 	num_pc = acltest_spirv_count_var_in(
 			spirv, count, (aclspv_wrd_t)SpvStorageClassPushConstant);
 
-	printf("inst=%u pc_var=%u type_struct=%u\n"
+	printf("inst=%u pc_var=%u type_struct=%u load=%u\n"
 			, stats.m_num_inst
 			, num_pc
 			, acltest_spirv_count_op(spirv, count, ACLTEST_SPV_OP_TYPE_STRUCT)
+			, acltest_spirv_count_op(spirv, count, (unsigned)SpvOpLoad)
 			);
 
-	/** both scalar arguments share the one push-constant block. */
-	if(num_pc != 1) {
-		fputs("[pushconstant.1.0] expected exactly one push-constant variable\n", stderr);
+	/** one block per push-constant argument, across entry points. */
+	if(num_pc != 3) {
+		fprintf(stderr, "[pushconstant.1.0] pc variables: %u, expected 3\n"
+				, num_pc);
 		free(spirv);
 		return EXIT_FAILURE;
 	}
 
-	if(acltest_spirv_count_op(spirv, count, ACLTEST_SPV_OP_TYPE_STRUCT) < 1) {
-		fputs("[pushconstant.1.0] push-constant block struct missing\n", stderr);
+	/** the Block wrappers, one per variable. */
+	if(acltest_spirv_count_op(spirv, count, ACLTEST_SPV_OP_TYPE_STRUCT) < 3) {
+		fputs("[pushconstant.1.0] push-constant block structs missing\n", stderr);
 		free(spirv);
 		return EXIT_FAILURE;
 	}
 
-	/** the body must actually be emitted: a store plus at least one load. */
-	if(acltest_spirv_count_op(spirv, count, ACLTEST_SPV_OP_LABEL) < 1
-			|| stats.m_num_inst < 10) {
+	/** the members are read through their own blocks: a->x, a->y, b->z,
+	 * c->only. */
+	if(acltest_spirv_count_op(spirv, count, (unsigned)SpvOpLoad) < 4
+			|| acltest_spirv_count_op(spirv, count, ACLTEST_SPV_OP_LABEL) < 1) {
 		fputs("[pushconstant.1.0] function body missing\n", stderr);
 		free(spirv);
 		return EXIT_FAILURE;

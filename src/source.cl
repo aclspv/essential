@@ -90,7 +90,9 @@ void t3_entry_point_vertex(void) {
 
 __attribute__((annotate("aclspv_execmodel(0)")))
 void t4_entry_point_vertex(
-    int pc_int /** becomes a push constant's element. follows std430 memory layout. */,
+    /*** 9: push constant — the argument's own block; its layout is ours */
+    __attribute__((annotate("aclspv_storage_class(9)")))
+    struct { int pc_int; int pc2; }* pc,
 
     /*** 3: output */
     __attribute__((annotate("aclspv_storage_class(3)")))
@@ -122,9 +124,7 @@ void t4_entry_point_vertex(
     /*** 4: workgroup */
     __attribute__((annotate("aclspv_storage_class(4)"))) int* work_int,
     __attribute__((annotate("aclspv_storage_class(4)"))) int work_i32_15[15],
-    __attribute__((annotate("aclspv_storage_class(4)"))) int work_int_arr_spec[] __attribute__((annotate("aclspv_specid(1)"))),
-
-    int pc2
+    __attribute__((annotate("aclspv_storage_class(4)"))) int work_int_arr_spec[] __attribute__((annotate("aclspv_specid(1)")))
 ) {
 	sbo_struct->c = 3;
 	(sbo_struct)->c = 4;
@@ -276,7 +276,8 @@ void t12_entry_point_vertex(
 __attribute__((annotate("aclspv_execmode0(7)")))
 __attribute__((annotate("aclspv_execmodel(4)")))
 void t13_fragment_main(
-    f32 pc_color_r,
+    __attribute__((annotate("aclspv_storage_class(9)")))
+    struct { f32 r; }* pc,
     __attribute__((annotate("aclspv_location(0)")))
     __attribute__((annotate("aclspv_storage_class(3)")))
     f32* out_color
@@ -288,9 +289,9 @@ void t13_fragment_main(
 
 __attribute__((annotate("aclspv_execmodel(0)")))
 void t14_vs_main(
-    /* push-constant parameters — become a single PushConstant block */
-    int pc_offset,
-    int pc_count,
+    /* push-constant parameter — its own PushConstant block */
+    __attribute__((annotate("aclspv_storage_class(9)")))
+    struct { int offset; int count; }* pc,
 
     /* storage-buffer arrays indexed by vertex index */
     __attribute__((annotate("aclspv_storage_class(12)")))
@@ -313,7 +314,7 @@ void t14_vs_main(
     __attribute__((annotate("aclspv_storage_class(3)")))
     f32x3* out_color
 ) {
-    int idx = *in_vertidx + pc_offset;
+    int idx = *in_vertidx + pc->offset;
     *out_pos = (in_pos[idx]);
     *out_color = (in_color[idx]);
 }

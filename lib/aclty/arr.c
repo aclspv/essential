@@ -27,6 +27,9 @@ aclspv_id_t aclty_mk_arr3(
 	}
 
 	if(c_stride != 0xFFFFFFFF) {
+		/** appending the decoration may grow (and move) the type array:
+		 * keep the array's id, not the pointer, across the call. */
+		const aclspv_id_t c_id_arr = arr->m_type_id;
 		p_cxtp_t arr_stride = aclty_cfg_arr_dcr(
 				arr
 				, SpvDecorationArrayStride
@@ -53,6 +56,10 @@ aclspv_id_t aclty_mk_arr3(
 
 		arr_stride->m_info.m_dcr.m_num_oprnd = 1;
 		arr_stride->m_info.m_dcr.m_oprnd[0] = stride;
+
+		ae2f_ifezerr(arr = aclty_find(c_id_arr, h_ctx)) {
+			return 0;
+		}
 	}
 
 	r = aclty_build_arr(arr, h_ctx);
@@ -202,6 +209,7 @@ aclty_t* aclty_cfg_arr_dcr(
 		const h_aclspv_ctx_t		h_ctx
 		) {
 	aclty_t* ae2f_restrict r;
+	aclspv_wrd_t c_idx_arr;
 
 	ae2f_ifezerr(rdwr_arr) {
 		h_ctx->m_err = ACLSPV_COMPILE_CXTP_ZERO;
@@ -212,6 +220,10 @@ aclty_t* aclty_cfg_arr_dcr(
 		h_ctx->m_err = ACLSPV_COMPILE_CXTP_TYINVL_ARR_DCR;
 		return 0;
 	}
+
+	/** s_ret_new below may grow the type array, so the caller's pointer
+	 * cannot be used after it: remember the array's slot instead. */
+	c_idx_arr = (aclspv_wrd_t)(rdwr_arr - __get_type_uniques(h_ctx));
 
 	if(rdwr_arr->m_info.m_arr.m_dcr) {
 		aclty_t* g;
@@ -238,6 +250,8 @@ aclty_t* aclty_cfg_arr_dcr(
 	}
 
 	ae2f_ifezerr(r)	return 0;
+
+	rdwr_arr = &__get_type_uniques(h_ctx)[c_idx_arr];
 
 	++rdwr_arr->m_info.m_arr.m_num_dcr;
 	unless(rdwr_arr->m_info.m_arr.m_dcr) {

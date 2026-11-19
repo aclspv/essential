@@ -20,6 +20,10 @@
 typedef struct {
 	h_aclspv_ctx_t	m_ctx;
 	aclspv_id_t	m_entp;
+
+	/** a LocalSize mode was already declared: the workgroup-size default
+	 * below must not emit a second one. */
+	aclspv_bool_t	m_flag_localsize;
 } s_execmode_t;
 
 static enum CXChildVisitResult s_execmode(CXCursor c, ae2f_unused CXCursor u0, CXClientData h) {
@@ -103,13 +107,14 @@ static enum CXChildVisitResult s_execmode(CXCursor c, ae2f_unused CXCursor u0, C
 		char b1;
 		char b2;
 
-		sscanf(ndl
-				, "aclspv_execmode2 ( %lu , %c%lu , %c%lu , %c%lu ) "
+		if(sscanf(ndl
+				, "aclspv_execmode3 ( %lu , %c%lu , %c%lu , %c%lu ) "
 				, &opcode
 				, &b0, &o0
 				, &b1, &o1
 				, &b2, &o2
-				);
+				) != 7)
+			goto END;
 
 		num_operands = 3;
 		execmode = (aclspv_wrd_t)opcode;
@@ -125,6 +130,9 @@ static enum CXChildVisitResult s_execmode(CXCursor c, ae2f_unused CXCursor u0, C
 
 	dbg_puts("s_execmode\n");
 
+	if(execmode == (aclspv_wrd_t)SpvExecutionModeLocalSize)
+		p->m_flag_localsize = 1;
+
 	{
 		aclspv_wrd_t i;
 		for(i = num_operands; i --> 0; )
@@ -137,7 +145,9 @@ static enum CXChildVisitResult s_execmode(CXCursor c, ae2f_unused CXCursor u0, C
 	buf[2] = execmode;
 
 	ae2f_ifnezerr(needs_id && p->m_ctx->m_usrcfg.m_ver_spv < aclspv_ver_spv(1, 2)) {
-		_aclctx_err(p->m_ctx, ACLSPV_COMPILE_NOIMPL_V_WRKGROUP_SIZE);
+		/** a capability diagnostic, not an invariant: report it and stop. */
+		if(!p->m_ctx->m_err)
+			p->m_ctx->m_err = ACLSPV_COMPILE_NOIMPL_V_WRKGROUP_SIZE;
 		err_puts("execution mode id is for spirv 1.2");
 		goto ERR;
 	}
@@ -191,7 +201,8 @@ END:
 	return CXChildVisit_Continue;
 
 ERR:
-	_aclctx_err(p->m_ctx, ACLSPV_COMPILE_UNHANDLED);
+	if(!p->m_ctx->m_err)
+		p->m_ctx->m_err = ACLSPV_COMPILE_UNHANDLED;
 	clang_disposeString(attr);
 	return CXChildVisit_Break;
 }
@@ -202,6 +213,7 @@ aclsym_entp_t aclemit_fndecl_entp_cfg(CXCursor h_parent, h_aclspv_ctx_t CTX) {
 	enum SpvExecutionModel_	EXEC_MODEL = SpvExecutionModelMax;
 	aclsym_entp_t		THIS_ENTRY_POINT;
 	aclspv_wrdcount_t	POS = CTX->m_count.m_entp;
+	aclspv_bool_t		c_localsize = 0;
 
 	aclmemzero(&THIS_ENTRY_POINT, sizeof(THIS_ENTRY_POINT));
 
@@ -261,7 +273,9 @@ aclsym_entp_t aclemit_fndecl_entp_cfg(CXCursor h_parent, h_aclspv_ctx_t CTX) {
 		s_execmode_t ex;
 		ex.m_ctx = CTX;
 		ex.m_entp = THIS_ENTRY_POINT.m_id;
+		ex.m_flag_localsize = 0;
 		clang_visitChildren(h_parent, s_execmode, &ex);
+		c_localsize = ex.m_flag_localsize;
 		ae2f_ifnezerr(CTX->m_err)
 			goto LBL_ABRT;
 	}
@@ -302,8 +316,11 @@ aclsym_entp_t aclemit_fndecl_entp_cfg(CXCursor h_parent, h_aclspv_ctx_t CTX) {
 
 #endif
 
-	/** OpExecMode */
-	if(EXEC_MODEL == SpvExecutionModelGLCompute || EXEC_MODEL == SpvExecutionModelKernel)
+	/** OpExecMode: the workgroup-size default, unless an annotation already
+	 * declared LocalSize. */
+	if((EXEC_MODEL == SpvExecutionModelGLCompute
+				|| EXEC_MODEL == SpvExecutionModelKernel)
+			&& !c_localsize)
 		ae2f_expected_but_else(CTX->m_count.m_execmode = aclutil_emitx_6(
 					&CTX->m_section.m_execmode
 					, CTX->m_count.m_execmode

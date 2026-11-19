@@ -265,7 +265,7 @@ arguments
 ____
 unlike normal function, arguments of entry point have different meaning. +
 for pointers with <<aclspv_storage_class,storage class>> will be a variable declared globally binded. +
-for non-pointers will be an element appended on one push constant block. +
+a push-constant argument is a pointer to a struct with `aclspv_storage_class(9)`: it gets its own `PushConstant` variable, so the block layout and its padding belong to that argument alone. +
 without `storage class` specified on pointer parameter, compiler should emit an error.
 ____
 
