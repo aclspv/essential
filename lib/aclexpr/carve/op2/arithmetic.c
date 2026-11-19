@@ -299,6 +299,10 @@ static aclspv_bool_t s_negate(
 			break;
 
 		default:
+			/** not a negation. the id the caller pre-allocated is not a
+			 * value: release it, so the result switch below creates the
+			 * real node or constant. */
+			*r_id = 0;
 			return 0;
 	}
 
@@ -452,9 +456,10 @@ aclspv_bool_t aclexpr_carve2_arithmetic_do(
 	if(IS_ASSIGN) {
 		/** view-rooted (`*q += x`, `p->m += x`, `a[i] += x`), vector element
 		 * (`v[i] += x`) or plain variable: one shared store-back, keyed on
-		 * what the l-value's own read recorded on extra[0]. */
+		 * what the l-value's own read recorded on operand 0's extra. the
+		 * result extra is not that extra — it never saw the l-value. */
 		ae2f_ifezerr(aclexpr_lvalue_storeback(
-					r_extra
+					&rd_extra[0]
 					, *r_id
 					, h_ctx
 					, "[carve2::arithmetic] the l-value store back failed")) {

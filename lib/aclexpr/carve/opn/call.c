@@ -126,9 +126,28 @@ aclspv_bool_t aclexpr_call_make(
 
 	p_sym = aclsym_fn_find_id(c_fn, h_ctx);
 
-	/** only PURE says "no writes". CONST is the reads dimension: a function
-	 * can read nothing external and still write (setv here), so CONST alone
-	 * must not keep the caches alive. */
+	/** the callee's promise is the call site's effect, and it propagates:
+	 * a caller of a non-const callee may read external state, a caller of a
+	 * non-pure callee may write it. an unknown callee promises nothing.
+	 * CONST alone must not keep the clobbered caches alive (a const
+	 * function may still write), but it does describe the reads. */
+	{
+		h_aclcur_t p_call = aclcur_get_node(*wr_id, h_ctx);
+
+		if(p_call) {
+			if(!p_sym || !(p_sym->m_flag0
+						& aclsym_fn_flag0(ACLSYM_FN_FLAG0_CONST)))
+				p_call->m_flag0 |= aclcur_flag0(
+						ACLCUR_FLAG0_CALL_NONCONST);
+
+			if(!p_sym || !(p_sym->m_flag0
+						& aclsym_fn_flag0(ACLSYM_FN_FLAG0_PURE)))
+				p_call->m_flag0 |= aclcur_flag0(
+						ACLCUR_FLAG0_CALL_NONPURE);
+		}
+	}
+
+	/** only PURE says "no writes". */
 	if(p_sym)
 		is_pure = (aclspv_bool_t)!!(p_sym->m_flag0
 				& aclsym_fn_flag0(ACLSYM_FN_FLAG0_PURE));

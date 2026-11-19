@@ -45,7 +45,7 @@
 
 #if	defined(NDEBUG) && NDEBUG
 ae2f_inline_f static aclspv_bool_t aclexpr_lvalue_storeback(
-		aclexpr_opbincfg_extra* ae2f_restrict	rdwr_lst_extra,
+		const aclexpr_opbincfg_extra* ae2f_restrict	rdwr_lst_extra,
 		const aclspv_id_t			c_val,
 		const h_aclspv_ctx_t			h_ctx
 		)
@@ -53,7 +53,7 @@ ae2f_inline_f static aclspv_bool_t aclexpr_lvalue_storeback(
 		aclexpr_lvalue_storeback(rdwr_lst_extra, c_val, h_ctx)
 #else
 ae2f_inline_f static aclspv_bool_t aclexpr_lvalue_storeback(
-		aclexpr_opbincfg_extra* ae2f_restrict	rdwr_lst_extra,
+		const aclexpr_opbincfg_extra* ae2f_restrict	rdwr_lst_extra,
 		const aclspv_id_t			c_val,
 		const h_aclspv_ctx_t			h_ctx,
 		const char*				c_tag

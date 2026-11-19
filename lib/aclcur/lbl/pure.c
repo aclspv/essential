@@ -211,6 +211,13 @@ aclspv_compile_t aclcur_fn_cfg_pure(h_aclspv_ctx_t h_ctx) {
 				c_reg = p->m_d.m_store.m_reg;
 				break;
 
+			case ACLCUR_OPX:
+				/** a call node carries its callee's promise (see
+				 * aclexpr_call_make): nothing is owned here, the flags
+				 * below decide. */
+				c_reg = 0;
+				break;
+
 			default:
 				continue;
 		}
@@ -226,10 +233,18 @@ aclspv_compile_t aclcur_fn_cfg_pure(h_aclspv_ctx_t h_ctx) {
 		unless(is_live)
 			continue;
 
-		if(s_reg_owned(c_reg, h_ctx))
+		if(p->m_class == ACLCUR_OPX) {
+			if(p->m_flag0
+					& aclcur_flag0(ACLCUR_FLAG0_CALL_NONCONST))
+				noconstant = 1;
+			if(p->m_flag0
+					& aclcur_flag0(ACLCUR_FLAG0_CALL_NONPURE))
+				nopure = 1;
+		}
+		else if(s_reg_owned(c_reg, h_ctx)) {
 			continue;
-
-		if(p->m_class == ACLCUR_STORE) {
+		}
+		else if(p->m_class == ACLCUR_STORE) {
 			nopure = 1;
 		}
 		else {

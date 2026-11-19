@@ -21,6 +21,15 @@ enum ACLCUR_FLAG0_ {
 	 * call still happens). */
 	ACLCUR_FLAG0_EFFECT,
 
+	/** a call whose callee may read state this function does not own
+	 * (the callee is not CONST). carried on the call node, consumed by
+	 * aclcur_fn_cfg_pure(). */
+	ACLCUR_FLAG0_CALL_NONCONST,
+
+	/** a call whose callee may write state this function does not own
+	 * (the callee is not PURE). */
+	ACLCUR_FLAG0_CALL_NONPURE,
+
 	ACLCUR_FLAG0_MAX
 };
 

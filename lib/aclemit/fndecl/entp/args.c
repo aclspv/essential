@@ -1051,6 +1051,28 @@ static aclspv_compile_t s_arg_reg(
 }
 
 
+/** true when the argument's pointee is const-qualified: a read-only storage
+ * buffer or storage image.
+ *
+ * libclang keeps an array parameter as an array type (it only decays in the
+ * C AST), so the element type answers for `const T arg[]`; a pointer answers
+ * through its pointee. `const` on the pointer itself is not the resource's
+ * constness and is ignored.
+ * */
+static aclspv_bool_t s_arg_pointee_const(CXType c_ty) {
+	if(c_ty.kind == CXType_Pointer)
+		return (aclspv_bool_t)clang_isConstQualifiedType(
+				clang_getPointeeType(c_ty));
+
+	if(c_ty.kind == CXType_ConstantArray
+			|| c_ty.kind == CXType_IncompleteArray
+			|| c_ty.kind == CXType_VariableArray)
+		return (aclspv_bool_t)clang_isConstQualifiedType(
+				clang_getArrayElementType(c_ty));
+
+	return 0;
+}
+
 /* ─────────────────────────────────────────────────────────────────────
  * one argument of an entry point.
  *
@@ -1076,6 +1098,7 @@ enum CXChildVisitResult aclemit_fndecl_entp_arg(
 	aclspv_id_t var_elm_type_id = 0;
 	aclspv_id_t var_id = 0;
 	aclspv_id_t var_native_type_id = 0;
+	aclspv_bool_t c_nonwritable;
 
 #define CTX		DAT->m_ctx
 
@@ -1097,6 +1120,11 @@ enum CXChildVisitResult aclemit_fndecl_entp_arg(
 			, &storage_class
 			);
 
+	c_nonwritable = (aclspv_bool_t)(
+			(storage_class == SpvStorageClassStorageBuffer
+			 || storage_class == SpvStorageClassUniformConstant)
+			&& s_arg_pointee_const(PARAM_TY));
+
 	RET = s_arg_ty(
 			CTX, h_cur, PARAM_TY, storage_class
 			, &var_type_id
@@ -1109,6 +1137,18 @@ enum CXChildVisitResult aclemit_fndecl_entp_arg(
 				, &var_id
 				, &var_native_type_id
 				);
+
+	/** a const resource is read-only: declare it, so a vertex-stage storage
+	 * buffer does not demand vertexPipelineStoresAndAtomics. */
+	if(!RET && c_nonwritable) {
+		ae2f_ifezerr(DAT->m_ctx->m_count.m_decorate = aclutil_emitx_3(
+					&DAT->m_ctx->m_section.m_decorate
+					, DAT->m_ctx->m_count.m_decorate
+					, SpvOpDecorate
+					, var_id
+					, SpvDecorationNonWritable))
+			RET = ACLSPV_COMPILE_UNHANDLED_ARGS;
+	}
 
 	if(!RET)
 		RET = s_arg_iface(

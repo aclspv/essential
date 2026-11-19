@@ -11,18 +11,25 @@
  *
  * add3 reads and writes nothing it does not own: the analysed body is both
  * Const and Pure. ext has no body, so its declared `pure` is what the
- * declaration can carry: Pure only. the entry point carries neither.
+ * declaration can carry: Pure only.
+ *
+ * readp reads through its pointer parameter: external state, so Pure only.
+ * fwd only forwards to readp: the call's callee promise propagates, so fwd
+ * is Pure only as well — not Const. the entry point carries neither.
  * */
 static const char s_src_norm_pure[] =
 "typedef int i32;\n"
 "i32 add3(i32 a) { return a + 3; }\n"
 "__attribute__((pure)) i32 ext(i32 x);\n"
+"i32 readp(i32* p) { return *p; }\n"
+"i32 fwd(i32* p) { return readp(p); }\n"
 "__attribute__((annotate(\"aclspv_execmodel(5)\")))\n"
 "__attribute__((annotate(\"aclspv_wrkgroup_size(1, 1, 1)\")))\n"
 "void t_pure(\n"
 "    __attribute__((annotate(\"aclspv_storage_class(3)\"))) i32* out\n"
 ") {\n"
-"    *out = add3(1) + ext(2);\n"
+"    i32 x = 0;\n"
+"    *out = add3(1) + ext(2) + fwd(&x);\n"
 "}\n";
 
 struct s_ctrl {
@@ -123,8 +130,9 @@ int main(void) {
 
 	printf("fn=%u const=%u pure=%u\n", ctrl.m_fn, ctrl.m_const, ctrl.m_pure);
 
-	/** add3, the ext declaration, and the entry point. */
-	if(ctrl.m_fn != 3 || ctrl.m_const != 1 || ctrl.m_pure != 2) {
+	/** add3, ext, readp, fwd, and the entry point. the call in fwd keeps
+	 * it Pure, not Const. */
+	if(ctrl.m_fn != 5 || ctrl.m_const != 1 || ctrl.m_pure != 4) {
 		fputs("[norm-pure] function control mismatch\n", stderr);
 		free(spirv);
 		return EXIT_FAILURE;
