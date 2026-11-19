@@ -28,6 +28,7 @@
 #include <aclattr/storage_class.h>
 #include <aclattr/location.h>
 #include <aclattr/layout.h>
+#include <aclattr/flat.h>
 
 
 /** aclspv_wrd_t* */
@@ -811,6 +812,7 @@ static aclspv_compile_t s_arg_var(
 			{
 				aclspv_wrd_t location = 0xFFFFFFFF;
 				aclspv_wrd_t bltin = SpvBuiltInMax;
+				aclspv_wrd_t flat = 0;
 
 				var_native_type_id = aclty_mk_ptr(
 						var_elm_type_id
@@ -828,6 +830,12 @@ static aclspv_compile_t s_arg_var(
 						h_cur
 						, s_attr_bltin
 						, &bltin
+						);
+
+				clang_visitChildren(
+						h_cur
+						, s_attr_flat
+						, &flat
 						);
 
 				if(location == 0xFFFFFFFF && bltin == SpvBuiltInMax)
@@ -866,6 +874,18 @@ static aclspv_compile_t s_arg_var(
 								, var_id
 								, SpvDecorationBuiltIn
 								, bltin
+								)) {
+						return ACLSPV_COMPILE_UNHANDLED_ARGS;
+					}
+				}
+
+				if(flat) {
+					ae2f_ifezerr(CTX->m_count.m_decorate = aclutil_emitx_3(
+								&CTX->m_section.m_decorate
+								, CTX->m_count.m_decorate
+								, SpvOpDecorate
+								, var_id
+								, SpvDecorationFlat
 								)) {
 						return ACLSPV_COMPILE_UNHANDLED_ARGS;
 					}

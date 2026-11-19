@@ -11,6 +11,7 @@ struct aclattr_wrkgroup_prm {
 #include <string.h>
 #include <stdio.h>
 #include <util/log.h>
+#include <aclattr/alias.h>
 
 /**
  * @param wr_data	: struct aclattr_wrkgroup
@@ -35,19 +36,7 @@ static enum CXChildVisitResult aclattr_wrkgroup(CXCursor h_cur, ae2f_unused CXCu
 		return CXChildVisit_Break;
 	}
 
-	else if((NIDDLE = strstr(ATTR_KIND.data, "reqd_work_group_size"))) {
-
-		sscanf(NIDDLE, "reqd_work_group_size ( %u , %u , %u )"
-				, &RETDATA->m_0
-				, &RETDATA->m_1
-				, &RETDATA->m_2
-		      );
-
-		RETDATA->m_flag_specid = 0;
-
-		clang_disposeString(ATTR_KIND);
-		return CXChildVisit_Break;
-	} else if ((NIDDLE = strstr(ATTR_KIND.data, "aclspv_wrkgroup_size"))) {
+	else if ((NIDDLE = strstr(ATTR_KIND.data, "aclspv_wrkgroup_size"))) {
 		sscanf(NIDDLE, "aclspv_wrkgroup_size ( %u , %u , %u )"
 				, &RETDATA->m_0
 				, &RETDATA->m_1
@@ -59,6 +48,21 @@ static enum CXChildVisitResult aclattr_wrkgroup(CXCursor h_cur, ae2f_unused CXCu
 		clang_disposeString(ATTR_KIND);
 		return CXChildVisit_Break;
 	}
+
+#if __ACLSPV_ATTR_ALIASES
+	/** clang exposes `__attribute__((reqd_work_group_size(...)))` as an
+	 * unexposed attr with an empty spelling; its extent still names the
+	 * attribute and its operands. */
+	if(h_cur.kind == CXCursor_UnexposedAttr
+			&& s_attr_wrkgroup_alias(h_cur
+				, &RETDATA->m_0
+				, &RETDATA->m_1
+				, &RETDATA->m_2)) {
+		RETDATA->m_flag_specid = 0;
+		clang_disposeString(ATTR_KIND);
+		return CXChildVisit_Break;
+	}
+#endif
 
 	clang_disposeString(ATTR_KIND);
 	return CXChildVisit_Continue;

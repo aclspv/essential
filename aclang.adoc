@@ -124,6 +124,25 @@ Many will be annotation attribute so seem as `__attribute__((annotate("<here>"))
 arguments should be literal. it is not done by travelling ast.
 ____
 
+[NOTE]
+====
+`ACLSPV_ATTR_ALIASES` is needed only for the foreign spellings below.
+The native `aclspv_*` annotations always work.
+
+Without `-DACLSPV_ATTR_ALIASES=1`, these aliases are ignored:
+
+* `__attribute__((annotate("flat")))` — alias of `annotate("aclspv_flat")`
+  (see <<aclspv_flat,aclspv_flat>>).
+* `__attribute__((reqd_work_group_size(x, y, z)))` — alias of
+  `annotate("aclspv_wrkgroup_size(x, y, z)")`
+  (see <<aclspv_wrkgroup_size,aclspv_wrkgroup_size>>).
+
+`reqd_work_group_size` is not a clang annotation, so it is recovered from the
+declaration's source extent rather than from the ast. clang treats it as
+OpenCL-only and reports an error in C mode, but the spelling is still
+preserved there.
+====
+
 ==== aclspv_specid
 
 [quote]
@@ -439,6 +458,13 @@ ____
 * this attribute is ignored when its execution model is not either `Kernel(6)` or `GLCompute(5)`.
 * this attribute adds execution mode on an given entry point. to attach others, see <<aclspv_execmode,execution mode>>
 
+[NOTE]
+====
+`__attribute__((reqd_work_group_size(x, y, z)))` is accepted only when built
+with `-DACLSPV_ATTR_ALIASES=1`. Without it the alias is ignored; only
+`annotate("aclspv_wrkgroup_size(x, y, z)")` is recognised.
+====
+
 ++++
 <div class="listingblock" style="background-color:#1c171b;color:#d8ccd3;padding:0.8em 1em;overflow-x:auto;border-radius:4px">
 <pre style="font-family:'Source Code Pro','DejaVu Sans Mono','Courier New',monospace;font-size:14px;line-height:1.3;margin:0;background:transparent;color:inherit"><span style="color:#c58ba4">__attribute__</span><span style="color:#857780">((</span><span style="color:#7ba9c4">annotate</span><span style="color:#857780">(</span><span style="color:#8fbf91">"aclspv_wrkgroup_size(1, 1, 1)"</span><span style="color:#857780">)))</span>  <span style="color:#a99ba3;font-style:italic">/** with workgroup size (1, 1, 1) */</span>
@@ -513,6 +539,45 @@ you cannot specify this with <<aclspv_bltin,aclspv_bltin>>
     <span style="color:#c58ba4">__attribute__</span><span style="color:#857780">((</span><span style="color:#7ba9c4">annotate</span><span style="color:#857780">(</span><span style="color:#8fbf91">"aclspv_location(1)"</span><span style="color:#857780">)))</span>
     <span style="color:#c58ba4">__attribute__</span><span style="color:#857780">((</span><span style="color:#7ba9c4">annotate</span><span style="color:#857780">(</span><span style="color:#8fbf91">"aclspv_storage_class(3)"</span><span style="color:#857780">)))</span> <span style="color:#d0aa68">int</span><span style="color:#6fa6a8;font-style:italic">*</span><span style="color:#a99ba3;font-style:italic"> </span><span style="color:#d8ccd3;font-style:italic">out_int</span>
 <span style="color:#857780">)</span> <span style="color:#857780">{</span> <span style="color:#6fa6a8">*</span><span style="color:#d8ccd3">out_int</span> <span style="color:#6fa6a8">=</span> <span style="color:#6fa6a8">*</span><span style="color:#d8ccd3">in_int</span><span style="color:#857780">;</span> <span style="color:#857780">}</span></pre>
+</div>
+++++
+
+==== aclspv_flat
+
+[quote]
+`aclspv_flat`
+
+* used on declaring arguments in entry point.
+* adds `Flat` decoration to an `input(1)` or `output(3)` interface variable,
+  disabling interpolation.
+* maps to `OpDecorate %var Flat`.
+* has no effect on arguments with any other storage class.
+* typically required for integer fragment shader inputs.
+
+[NOTE]
+====
+`__attribute__((annotate("flat")))` is accepted only when built with
+`-DACLSPV_ATTR_ALIASES=1`. Without it the alias is ignored; only
+`annotate("aclspv_flat")` is recognised.
+====
+
+++++
+<div class="listingblock" style="background-color:#1c171b;color:#d8ccd3;padding:0.8em 1em;overflow-x:auto;border-radius:4px">
+<pre style="font-family:'Source Code Pro','DejaVu Sans Mono','Courier New',monospace;font-size:14px;line-height:1.3;margin:0;background:transparent;color:inherit"><span style="color:#c47791;font-weight:bold">typedef</span> <span style="color:#d0aa68">int</span> <span style="color:#d0aa68;font-weight:bold">i32</span><span style="color:#857780">;</span>
+
+<span style="color:#c58ba4">__attribute__</span><span style="color:#857780">((</span><span style="color:#7ba9c4">annotate</span><span style="color:#857780">(</span><span style="color:#8fbf91">"aclspv_execmode0(7)"</span><span style="color:#857780">)))</span>            <span style="color:#a99ba3;font-style:italic">/** OriginUpperLeft */</span>
+<span style="color:#c58ba4">__attribute__</span><span style="color:#857780">((</span><span style="color:#7ba9c4">annotate</span><span style="color:#857780">(</span><span style="color:#8fbf91">"aclspv_execmodel(4)"</span><span style="color:#857780">)))</span>            <span style="color:#a99ba3;font-style:italic">/** Fragment */</span>
+<span style="color:#d0aa68">void</span> <span style="color:#7ba9c4;font-weight:bold">fragment_entry</span><span style="color:#857780">(</span>
+    <span style="color:#a99ba3;font-style:italic">/** flat integer input */</span>
+    <span style="color:#c58ba4">__attribute__</span><span style="color:#857780">((</span><span style="color:#7ba9c4">annotate</span><span style="color:#857780">(</span><span style="color:#8fbf91">"aclspv_location(0)"</span><span style="color:#857780">)))</span>
+    <span style="color:#c58ba4">__attribute__</span><span style="color:#857780">((</span><span style="color:#7ba9c4">annotate</span><span style="color:#857780">(</span><span style="color:#8fbf91">"aclspv_storage_class(1)"</span><span style="color:#857780">)))</span>
+    <span style="color:#c58ba4">__attribute__</span><span style="color:#857780">((</span><span style="color:#7ba9c4">annotate</span><span style="color:#857780">(</span><span style="color:#8fbf91">"aclspv_flat"</span><span style="color:#857780">)))</span>
+    <span style="color:#d0aa68">i32</span><span style="color:#6fa6a8;font-style:italic">*</span><span style="color:#a99ba3;font-style:italic"> </span><span style="color:#d8ccd3;font-style:italic">in_mode</span><span style="color:#857780">,</span>
+
+    <span style="color:#c58ba4">__attribute__</span><span style="color:#857780">((</span><span style="color:#7ba9c4">annotate</span><span style="color:#857780">(</span><span style="color:#8fbf91">"aclspv_location(0)"</span><span style="color:#857780">)))</span>
+    <span style="color:#c58ba4">__attribute__</span><span style="color:#857780">((</span><span style="color:#7ba9c4">annotate</span><span style="color:#857780">(</span><span style="color:#8fbf91">"aclspv_storage_class(3)"</span><span style="color:#857780">)))</span>
+    <span style="color:#d0aa68">i32</span><span style="color:#6fa6a8;font-style:italic">*</span><span style="color:#a99ba3;font-style:italic"> </span><span style="color:#d8ccd3;font-style:italic">out_value</span>
+<span style="color:#857780">)</span> <span style="color:#857780">{</span> <span style="color:#6fa6a8">*</span><span style="color:#d8ccd3">out_value</span> <span style="color:#6fa6a8">=</span> <span style="color:#6fa6a8">*</span><span style="color:#d8ccd3">in_mode</span><span style="color:#857780">;</span> <span style="color:#857780">}</span></pre>
 </div>
 ++++
 
