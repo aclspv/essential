@@ -7,6 +7,13 @@ typedef struct aclcur_phi {
 	aclspv_id_t	m_lbl;
 	aclspv_id_t	m_val;
 	aclspv_id_t	m_nxt;
+
+	/** register the SELF/AUTH chain carries (0: not a value-flow chain;
+	 * LOAD-attached chains use the load's own register). necessary
+	 * because a chain's first operand is not unique: two registers
+	 * initialized to the same value in the same block share it, and a
+	 * nested loop resolves one header's chain through the other. */
+	aclspv_id_t	m_reg;
 } aclcur_phi_t;
 
 #include "./flag0.h"

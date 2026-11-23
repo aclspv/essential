@@ -7,7 +7,11 @@
 #include <acltest/spirv.h>
 
 /**
- * a loop with a value-phi carry and both loop-control statements.
+ * a loop with a value-phi carry and both loop-control statements, plus a
+ * nested loop (the outer variable is written in the outer body, the inner
+ * loop reads it): the nested header's entry resolution used to recurse
+ * forever between the two loop headers.
+ *
  * the point of this test is structure, not the numerical result:
  *  - OpLoopMerge must exist (while was carved as a loop)
  *  - OpBranchConditional must exist (condition + ifs)
@@ -16,24 +20,36 @@
  * note: the test targets are compiled with -DNDEBUG, so assert() is a
  * no-op here. every check must be an explicit branch returning failure.
  * */
-static const char s_src_while[] =
-"typedef int i32;\n"
-"__attribute__((annotate(\"aclspv_execmodel(5)\")))\n"
-"__attribute__((annotate(\"aclspv_wrkgroup_size(1, 1, 1)\")))\n"
-"void t_while(\n"
-"    __attribute__((annotate(\"aclspv_storage_class(1)\"))) i32* in_n,\n"
-"    __attribute__((annotate(\"aclspv_storage_class(3)\"))) i32* out_sum\n"
-") {\n"
-"    i32 i = 0;\n"
-"    i32 sum = 0;\n"
-"    while (i < *in_n) {\n"
-"        i = i + 1;\n"
-"        if (i == 3) { continue; }\n"
-"        if (i == 7) { break; }\n"
-"        sum = sum + i;\n"
-"    }\n"
-"    *out_sum = sum;\n"
-"}\n";
+static const char* const s_src_while_lines[] = {
+"typedef int i32;\n",
+"__attribute__((annotate(\"aclspv_execmodel(5)\")))\n",
+"__attribute__((annotate(\"aclspv_wrkgroup_size(1, 1, 1)\")))\n",
+"void t_while(\n",
+"    __attribute__((annotate(\"aclspv_storage_class(1)\"))) i32* in_n,\n",
+"    __attribute__((annotate(\"aclspv_storage_class(3)\"))) i32* out_sum\n",
+") {\n",
+"    i32 i = 0;\n",
+"    i32 sum = 0;\n",
+"    i32 a = 0;\n",
+"    while (i < *in_n) {\n",
+"        i = i + 1;\n",
+"        if (i == 3) { continue; }\n",
+"        if (i == 7) { break; }\n",
+"        sum = sum + i;\n",
+"    }\n",
+"    while (a < 2) {\n",
+"        i32 b = 0;\n",
+"        while (b < 2) {\n",
+"            sum = sum + a + b;\n",
+"            b = b + 1;\n",
+"        }\n",
+"        a = a + 1;\n",
+"    }\n",
+"    *out_sum = sum + a;\n",
+"}\n"
+};
+
+static char s_src_while[2048];
 
 int main(void);
 
@@ -47,9 +63,12 @@ int main(void) {
 
 	acltestcfg();
 
+	acltest_concat(s_src_while, s_src_while_lines,
+			(unsigned)(sizeof(s_src_while_lines) / sizeof(s_src_while_lines[0])));
+
 	files[0].Contents	= s_src_while;
 	files[0].Filename	= "main.c";
-	files[0].Length		= sizeof(s_src_while) - 1;
+	files[0].Length		= (unsigned long)strlen(s_src_while);
 
 	files[1].Contents	= s_oclbase;
 	files[1].Filename	= "opencl-c-base.h";
@@ -97,8 +116,8 @@ int main(void) {
 			);
 
 	if(!stats.m_num_lbl
-			|| stats.m_num_loopmerge < 1
-			|| stats.m_num_brc < 1
+			|| stats.m_num_loopmerge < 3
+			|| stats.m_num_brc < 3
 			|| stats.m_num_phi < 1
 			|| !stats.m_targets_ok) {
 		fputs("[while.1.0] loop control flow missing or targets invalid\n", stderr);

@@ -5,6 +5,7 @@
 
 #include <.aclspv/body/if.h>
 #include <.aclspv/body/while.h>
+#include <.aclspv/body/for.h>
 #include <.aclspv/body/switch.h>
 #include <.aclspv/body/vardecl.h>
 #include <.aclspv/util/mkname.h>
@@ -317,6 +318,10 @@ enum CXChildVisitResult aclemit_body(CXCursor h_cur, ae2f_unused CXCursor h_pare
 			_aclemit_body_while(WHILE, h_cur, *DAT);
 			ctxcheck(CTX) else goto LBL_DONE;
 
+		case CXCursor_ForStmt:
+			_aclemit_body_for(FOR, h_cur, *DAT);
+			ctxcheck(CTX) else goto LBL_DONE;
+
 		case CXCursor_SwitchStmt:
 			_aclemit_body_switch(SW, h_cur, *DAT);
 			ctxcheck(CTX) else goto LBL_DONE;
@@ -355,7 +360,6 @@ enum CXChildVisitResult aclemit_body(CXCursor h_cur, ae2f_unused CXCursor h_pare
 			ctxcheck(CTX) else goto LBL_DONE;
 
 		case CXCursor_DoStmt:
-		case CXCursor_ForStmt:
 
 		case CXCursor_CaseStmt:
 		case CXCursor_AsmStmt: case CXCursor_MSAsmStmt:

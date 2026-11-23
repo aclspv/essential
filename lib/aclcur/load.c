@@ -70,7 +70,9 @@ static aclspv_id_t	s_ssa_entry_r(
 		aclspv_wrd_t* ae2f_restrict rw_nvis
 		);
 
-/** head of the loop-header authoritative chain serving c_reg (0: none). */
+/** head of the loop-header authoritative chain serving c_reg (0: none);
+ * see the definition for why the chain, not the entry value, identifies
+ * the register. */
 static aclspv_id_t	s_ssa_loop_head(
 		aclspv_id_t c_reg,
 		aclspv_id_t c_lbl,
@@ -339,6 +341,7 @@ static aclspv_id_t	s_ssa_entry_r(
 				if(f_np) {
 					aclspv_id_t f_p0 = f_pds[0];
 					aclspv_id_t f_v0 = 0;
+					const aclspv_wrd_t c_saved = *rw_nvis;
 					h_aclcur_t p_st;
 					aclspv_id_t id_st = aclcur_get_node_store(c_reg, f_p0, h_ctx);
 
@@ -348,6 +351,10 @@ static aclspv_id_t	s_ssa_entry_r(
 					}
 					if(!f_v0)
 						f_v0 = s_ssa_entry_r(c_reg, f_p0, f_p0, h_ctx, 0, r_vis, rw_nvis);
+
+					/** the probe answers whether the entry exists; it is
+					 * not part of the caller's walk. */
+					*rw_nvis = c_saved;
 
 					if(f_v0 && f_v0 != ACLCUR_SSA_NONE) {
 						f_vals[0]	= f_v0;
@@ -494,6 +501,7 @@ static aclspv_id_t	s_ssa_entry_r(
 			p_phi->m_d.m_phi.m_lbl	= plbs[i];
 			p_phi->m_d.m_phi.m_val	= vals[i];
 			p_phi->m_d.m_phi.m_nxt	= 0;
+			p_phi->m_d.m_phi.m_reg	= c_reg;
 			p_phi->m_flag0 = aclcur_flag0(ACLCUR_FLAG0_VALUE)
 				| aclcur_flag0_phi(ACLCUR_FLAG0_PHI_SELF);
 
@@ -524,70 +532,30 @@ static aclspv_id_t	s_ssa_entry_i(
 	return s_ssa_entry_r(c_reg, c_lbl, c_root, h_ctx, c_depth, vis, &nvis);
 }
 
-/** head of the loop-header authoritative chain that serves c_reg (the
- * chain whose first operand is the store-walk entry of c_reg from the
- * header's forward predecessor), 0: none. the phi nodes carry no
- * register id; the create-time entry recomputes deterministically, so
- * a chain is identified per register by its first (value, label). */
+/** head of the loop-header authoritative chain that serves c_reg (0: none).
+ *
+ * the chain records the register it carries (phi.m_reg): the create-time
+ * entry value is not an identity, because two registers initialized to the
+ * same value in the same block present the same (value, label) pair.
+ * matching on that pair served one register's chain for another as soon
+ * as a nested loop resolved one header's chain through the other. */
 static aclspv_id_t	s_ssa_loop_head(
 		aclspv_id_t c_reg,
 		aclspv_id_t c_lbl,
 		h_aclspv_ctx_t h_ctx
 		) {
-	aclspv_id_t pds[ACLCUR_SSA_MAX_PRED];
-	aclspv_id_t v0 = 0;
-	aclspv_id_t p0 = 0;
-	aclspv_wrd_t np;
 	aclspv_wrd_t j;
 
-	np = s_ssa_preds(c_lbl, pds, ACLCUR_SSA_MAX_PRED, h_ctx);
-	if(!np)
-		return 0;
-
-	/** the create-time predecessor is the earliest-carved one: the
-	 * forward edge into the loop (the back edge carves after the body
-	 * and the continue trampoline). */
-	p0 = pds[0];
-
-	/** the create-time entry value: the store walk of the forward
-	 * predecessor. */
-	{
-		h_aclcur_t p_st;
-		aclspv_id_t id_st = aclcur_get_node_store(c_reg, p0, h_ctx);
-
-		if(id_st) {
-			p_st = aclcur_get_node(id_st, h_ctx);
-			v0 = p_st ? p_st->m_val : 0;
-		}
-		if(!v0)
-			v0 = s_ssa_entry_i(c_reg, p0, p0, h_ctx, 0);
-	}
-
-	if(!v0 || v0 == ACLCUR_SSA_NONE)
-		return 0;
-
-	/** find the authoritative chain whose head carries the entry. */
 	for(j = 0; j < h_ctx->m_num_cursor; ++j) {
 		h_aclcur_t q = &s_get_buf(h_ctx)[j];
-		aclspv_id_t head;
 
 		if(q->m_class != ACLCUR_PHI
 				|| !(q->m_flag0 & aclcur_flag0_phi(ACLCUR_FLAG0_PHI_AUTH))
-				|| q->m_lbl != c_lbl)
+				|| q->m_lbl != c_lbl
+				|| q->m_d.m_phi.m_reg != c_reg)
 			continue;
 
-		head = aclcur_phi_head(q->m_id, h_ctx);
-		ae2f_ifezerr(head)
-			continue;
-
-		{
-			h_aclcur_t p_h = aclcur_get_node(head, h_ctx);
-
-			if(p_h
-					&& p_h->m_d.m_phi.m_lbl == p0
-					&& p_h->m_d.m_phi.m_val == v0)
-				return head;
-		}
+		return aclcur_phi_head(q->m_id, h_ctx);
 	}
 
 	return 0;
@@ -630,6 +598,7 @@ static aclspv_id_t	s_ssa_chain_create(
 		p_phi->m_d.m_phi.m_lbl	= r_plbs[i];
 		p_phi->m_d.m_phi.m_val	= r_vals[i];
 		p_phi->m_d.m_phi.m_nxt	= 0;
+		p_phi->m_d.m_phi.m_reg	= c_reg;
 		p_phi->m_flag0 = aclcur_flag0(ACLCUR_FLAG0_VALUE)
 			| aclcur_flag0_phi(ACLCUR_FLAG0_PHI_SELF)
 			| (c_auth ? aclcur_flag0_phi(ACLCUR_FLAG0_PHI_AUTH) : 0);
@@ -1022,6 +991,22 @@ aclspv_id_t	aclcur_load_reg_explicit(
 	return s_load_reg(c_reg, h_ctx, r_lit_opt, 1);
 }
 
+/** number of authoritative loop chains currently in the graph. */
+static aclspv_wrd_t	s_ssa_auth_count(h_aclspv_ctx_t h_ctx) {
+	aclspv_wrd_t n = 0;
+	aclspv_wrd_t i;
+
+	for(i = 0; i < h_ctx->m_num_cursor; ++i) {
+		h_aclcur_t q = &s_get_buf(h_ctx)[i];
+
+		if(q->m_class == ACLCUR_PHI
+				&& (q->m_flag0 & aclcur_flag0_phi(ACLCUR_FLAG0_PHI_AUTH)))
+			++n;
+	}
+
+	return n;
+}
+
 /** post-carve, pre-emit: complete the loop-header authoritative phi
  * chains (ACLCUR_FLAG0_PHI_AUTH) with the final-graph carries.
  *
@@ -1037,7 +1022,7 @@ aclspv_id_t	aclcur_load_reg_explicit(
  *               dominates the back-edge predecessor).
  * the chain then holds exactly the header's final predecessors: the
  * OpPhi emitted by the block hoist is complete and val-valid. */
-aclspv_compile_t aclcur_ssa_loop_carry_fill(h_aclspv_ctx_t h_ctx) {
+static aclspv_compile_t	s_ssa_fill_pass(h_aclspv_ctx_t h_ctx) {
 	aclspv_wrd_t i, j;
 
 	for(i = 0; i < h_ctx->m_num_cursor; ++i) {
@@ -1073,15 +1058,8 @@ aclspv_compile_t aclcur_ssa_loop_carry_fill(h_aclspv_ctx_t h_ctx) {
 			ae2f_ifezerr(head)
 				continue;
 
-			/** the chain's register: the register whose create-time
-			 * entry matches the chain head. */
-			for(k = 0; k < h_ctx->m_num_cursor && !reg; ++k) {
-				h_aclcur_t qr = &s_get_buf(h_ctx)[k];
-
-				if(qr->m_class == ACLCUR_REG
-						&& s_ssa_loop_head(qr->m_id, lbl, h_ctx) == head)
-					reg = qr->m_id;
-			}
+			/** the chain's register: recorded when the chain was created. */
+			reg = qp->m_d.m_phi.m_reg;
 			if(!reg)
 				continue;
 
@@ -1164,6 +1142,7 @@ aclspv_compile_t aclcur_ssa_loop_carry_fill(h_aclspv_ctx_t h_ctx) {
 					p_phi->m_d.m_phi.m_lbl	= pds[k];
 					p_phi->m_d.m_phi.m_val	= carry;
 					p_phi->m_d.m_phi.m_nxt	= 0;
+					p_phi->m_d.m_phi.m_reg	= reg;
 					p_phi->m_flag0 = aclcur_flag0(ACLCUR_FLAG0_VALUE)
 						| aclcur_flag0_phi(ACLCUR_FLAG0_PHI_SELF)
 						| aclcur_flag0_phi(ACLCUR_FLAG0_PHI_AUTH);
@@ -1173,6 +1152,31 @@ aclspv_compile_t aclcur_ssa_loop_carry_fill(h_aclspv_ctx_t h_ctx) {
 				}
 			}
 		}
+	}
+
+	return ACLSPV_COMPILE_OK;
+}
+
+/** post-carve entry: run fill passes until no new authoritative chain can
+ * appear.
+ *
+ * resolving a carry can create a chain that did not exist at carve time
+ * (a header that only reads the register through a nested loop). such a
+ * chain lands after its own header's pass, so a single sweep can leave it
+ * one-operand-short. every pass completes every chain it visits, and one
+ * (register, header) pair owns at most one chain, so the sweep converges. */
+aclspv_compile_t aclcur_ssa_loop_carry_fill(h_aclspv_ctx_t h_ctx) {
+	aclspv_wrd_t pass;
+
+	for(pass = 0; pass < 256; ++pass) {
+		const aclspv_wrd_t c_before = s_ssa_auth_count(h_ctx);
+		aclspv_compile_t ret = s_ssa_fill_pass(h_ctx);
+
+		ae2f_ifnezerr(ret)
+			return ret;
+
+		if(s_ssa_auth_count(h_ctx) == c_before)
+			break;
 	}
 
 	return ACLSPV_COMPILE_OK;
