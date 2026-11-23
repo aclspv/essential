@@ -7,7 +7,7 @@
 
 #include <aclspv.h>
 #include <aclmem.h>
-#include <aclval.h>
+#include <aclval/spec.h>
 
 #include <aclty/sclr.h>
 
@@ -163,11 +163,11 @@ static enum CXChildVisitResult s_execmode(CXCursor c, ae2f_unused CXCursor u0, C
 					ae2f_ifezerr_strict(aclty_is_sclr_int((aclty_default_t) nd.m_ty)) {
 						p->m_ctx->m_err = ACLSPV_COMPILE_WORKGROUP_SIZE_NO_INT;
 						goto ERR;
-					}						
+					}
 					buf[3 + i]	= nd.m_val;		
-				} else {							
-					ae2f_ifezerr(buf[3 + i] = aclutil_mk_constant_spec_id(
-								buf[3 + i], 1, p->m_ctx)) {	
+				} else {
+					ae2f_ifezerr(buf[3 + i] = aclval_cfg_spec_i32(
+								buf[3 + i], 1, p->m_ctx)) {
 						goto ERR;
 					}								
 				}
@@ -242,7 +242,7 @@ aclsym_entp_t aclemit_fndecl_entp_cfg(CXCursor h_parent, h_aclspv_ctx_t CTX) {
 				}								\
 				XYZ.m_##K_idx	= nd.m_val;					\
 			} else {								\
-				ae2f_ifezerr(XYZ.m_##K_idx = aclutil_mk_constant_spec_id(	\
+				ae2f_ifezerr(XYZ.m_##K_idx = aclval_cfg_spec_i32(	\
 							XYZ.m_##K_idx, 1, CTX)) {		\
 					goto LBL_ABRT;						\
 				}								\

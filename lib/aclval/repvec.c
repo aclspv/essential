@@ -10,14 +10,14 @@
 
 #include <ae2f/pat/dbg.h>
 
-ae2f_inline_f static struct aclutil_mk_constant_repvec_t ae2f_ccconst s_mkret(const aclspv_wrd_t c_id, const aclspv_wrd_t c_mask) {
-	struct aclutil_mk_constant_repvec_t R;
+ae2f_inline_f static aclval_cfg_vec_broadcast_t ae2f_ccconst s_mkret(const aclspv_wrd_t c_id, const aclspv_wrd_t c_mask) {
+	aclval_cfg_vec_broadcast_t R;
 	R.m_id = c_id;
 	R.m_literal_mask = c_mask;
 	return R;
 }
 
-struct aclutil_mk_constant_repvec_t	aclval_cfg_vec_broadcast(
+aclval_cfg_vec_broadcast_t	aclval_cfg_vec_broadcast(
 		const aclty_id_t	c_id_ty,
 		const aclspv_vid_t c_val,
 		const aclspv_wrd_t c_literal,

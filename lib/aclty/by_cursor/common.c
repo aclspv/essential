@@ -7,6 +7,7 @@
 #include "../arr.h"
 
 #include <aclty.h>
+#include <aclval/spec.h>
 
 #include <util/log.h>
 
@@ -159,10 +160,10 @@ static aclspv_id_t s_helper2(
 
 				if(SPECID ^ 0xFFFFFFFF) {
 					/** specid */
-					aclspv_id_t SPECID_WRD = aclutil_mk_constant_spec_id(
+					aclspv_id_t SPECID_WRD = aclval_cfg_spec_i32(
 							SPECID, 1, h_ctx);
 					unless(SPECID_WRD)
-						SPECID_WRD = aclutil_mk_constant_spec64_id(
+						SPECID_WRD = aclval_cfg_spec_i64(
 								SPECID, 1, h_ctx);
 
 					ae2f_expected_but_else(SPECID_WRD) {
@@ -213,10 +214,10 @@ static aclspv_id_t s_helper2(
 
 				if(SPECID != 0xFFFFFFFF) {
 					/** specid */
-					aclspv_id_t SPECID_WRD = aclutil_mk_constant_spec_id(
+					aclspv_id_t SPECID_WRD = aclval_cfg_spec_i32(
 							SPECID, ELMCOUNT, h_ctx);
 					unless(SPECID_WRD)
-						SPECID_WRD = aclutil_mk_constant_spec64_id(
+						SPECID_WRD = aclval_cfg_spec_i64(
 								SPECID, ELMCOUNT, h_ctx);
 
 					ae2f_ifezerr(SPECID_WRD) {

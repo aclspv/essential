@@ -6,6 +6,7 @@
 #include <aclty.h>
 
 #include <ae2f/pat/dbg.h>
+#include <ae2f/cc/tail.h>
 
 #include <string.h>
 
@@ -123,7 +124,7 @@ static aclspv_bool_t s_is_entry(CXCursor c_fn) {
  * lives by are attached to the typedef, not to the clang type. aclty is the
  * layer that understands them, and it interns by structure, so spelling
  * variants of the same signature still land on one id. */
-static aclty_subid_t s_type(CXCursor c_fn, h_aclspv_ctx_t h_ctx) {
+ae2f_inline_f static aclty_subid_t s_type(CXCursor c_fn, h_aclspv_ctx_t h_ctx) {
 	return (aclty_subid_t)aclty_mk_fn1(
 			c_fn
 			, clang_getCursorType(c_fn)
@@ -334,7 +335,7 @@ aclspv_bool_t aclsym_fn_needs_import(CXCursor c_fn, h_aclspv_ctx_t h_ctx) {
 				& aclsym_fn_flag0(ACLSYM_FN_FLAG0_DEFINED)))
 		return 0;
 
-	return aclsym_body_needs_import(c_fn, h_ctx);
+	ae2fcc_tail_f return aclsym_body_needs_import(c_fn, h_ctx);
 }
 
 struct s_body_import {
@@ -381,7 +382,6 @@ aclspv_bool_t aclsym_body_needs_import(CXCursor c_body, h_aclspv_ctx_t h_ctx) {
 	p.m_hit	= 0;
 
 	clang_visitChildren(c_body, s_body_import_visit, &p);
-
 	return p.m_hit;
 }
 
@@ -448,5 +448,5 @@ aclspv_bool_t aclsym_fn_ready(CXCursor c_fn, h_aclspv_ctx_t h_ctx) {
 
 	/** the same predicate as aclsym_body_ready, asked from the function
 	 * cursor: every callee must already have an id in the module. */
-	return aclsym_body_ready(c_fn, h_ctx);
+	ae2fcc_tail_f return aclsym_body_ready(c_fn, h_ctx);
 }

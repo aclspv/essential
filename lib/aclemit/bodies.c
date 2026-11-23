@@ -11,6 +11,7 @@
 
 #include <aclmem.h>
 #include <aclutil/wrdemit.h>
+#include <ae2f/cc/tail.h>
 
 #include <string.h>
 
@@ -182,7 +183,7 @@ static aclspv_compile_t s_imports(
 }
 
 /** collect, declare imports when building, then emit in dependency order. */
-static aclspv_compile_t s_run(
+ae2f_inline_f static aclspv_compile_t s_run(
 		h_aclspv_ctx_t	h_ctx,
 		CXCursor	c_root,
 		aclspv_bool_t	c_build

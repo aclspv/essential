@@ -1,7 +1,5 @@
-/** @file flat.h */
-
-#ifndef lib_attr_flat_h
-#define lib_attr_flat_h
+#ifndef	aclemit_fndecl_entp_args_flat_h
+#define aclemit_fndecl_entp_args_flat_h
 
 #include <ae2f/Keys.h>
 #include <string.h>

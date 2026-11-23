@@ -123,39 +123,13 @@ aclspv_vid_t aclval_cfg_f32(
 aclspv_vid_t aclval_cfg_f64(
 		const double c_val, h_aclspv_ctx_t h_ctx);
 
-aclspv_vid_t	aclutil_mk_constant_spec_id(
-		const aclspv_wrd_t c_key, const aclspv_wrd_t c_val, 
-		h_aclspv_ctx_t h_ctx
-		);
-
-aclspv_vid_t aclutil_mk_specconstant_bool_id(
-		const aclspv_wrd_t	c_idx_spec,
-		const aclspv_bool_t	c_val,
-		h_aclspv_ctx_t h_ctx
-		);
-
-aclspv_vid_t	aclutil_mk_constant_spec64_id(
-		const aclspv_wrd_t c_key, 
-		const aclspv_wrd2_t c_val,
-		h_aclspv_ctx_t h_ctx
-		);
-
-aclspv_vid_t	aclutil_mk_constant_spec_id_f64(
-		const aclspv_wrd_t c_key, 
-		const double c_val, h_aclspv_ctx_t h_ctx);
-
-
-aclspv_vid_t	aclutil_mk_constant_spec_id_f32(
-		const aclspv_wrd_t c_key, 
-		const float c_val, h_aclspv_ctx_t h_ctx);
-
-struct aclutil_mk_constant_repvec_t {
+typedef struct {
 	aclspv_vid_t	m_id;
 	aclspv_wrd_t	m_literal_mask;
-};
+} aclval_cfg_vec_broadcast_t;
 
 /** @brief repeating vector */
-struct aclutil_mk_constant_repvec_t	aclval_cfg_vec_broadcast(
+aclval_cfg_vec_broadcast_t 	aclval_cfg_vec_broadcast(
 		const aclty_id_t c_id_ty,
 		const aclspv_vid_t c_val,
 		const aclspv_wrd_t c_literal_mask,

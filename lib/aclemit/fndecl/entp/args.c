@@ -1,4 +1,6 @@
 #include "./args.h"
+#include "./args/flat.h"
+#include "./args/noperspective.h"
 
 #include <ae2f/pat/dbg.h>
 #include <ae2f/cc/arg_sarr.h>
@@ -28,7 +30,6 @@
 #include <aclattr/storage_class.h>
 #include <aclattr/location.h>
 #include <aclattr/layout.h>
-#include <aclattr/flat.h>
 
 
 /** aclspv_wrd_t* */
@@ -813,6 +814,7 @@ static aclspv_compile_t s_arg_var(
 				aclspv_wrd_t location = 0xFFFFFFFF;
 				aclspv_wrd_t bltin = SpvBuiltInMax;
 				aclspv_wrd_t flat = 0;
+				aclspv_wrd_t noperspective = 0;
 
 				var_native_type_id = aclty_mk_ptr(
 						var_elm_type_id
@@ -836,6 +838,12 @@ static aclspv_compile_t s_arg_var(
 						h_cur
 						, s_attr_flat
 						, &flat
+						);
+
+				clang_visitChildren(
+						h_cur
+						, s_attr_noperspective
+						, &noperspective
 						);
 
 				if(location == 0xFFFFFFFF && bltin == SpvBuiltInMax)
@@ -886,6 +894,18 @@ static aclspv_compile_t s_arg_var(
 								, SpvOpDecorate
 								, var_id
 								, SpvDecorationFlat
+								)) {
+						return ACLSPV_COMPILE_UNHANDLED_ARGS;
+					}
+				}
+
+				if(noperspective) {
+					ae2f_ifezerr(CTX->m_count.m_decorate = aclutil_emitx_3(
+								&CTX->m_section.m_decorate
+								, CTX->m_count.m_decorate
+								, SpvOpDecorate
+								, var_id
+								, SpvDecorationNoPerspective
 								)) {
 						return ACLSPV_COMPILE_UNHANDLED_ARGS;
 					}
