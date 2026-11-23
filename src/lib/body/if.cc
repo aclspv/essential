@@ -25,9 +25,8 @@ ae2f_MAC((L, )) aclemit_body_if(CXCursor h_cur, aclemit_body_t& rdwr_body) {
 
 	acltrl_t		L$$LTLR;
 
-	/** fnret merged across the branches: parent | true | false. */
-	aclspv_bool_t		L$$FNRET_PAR = 0,
-				L$$FNRET_TRUE = 0,
+	/** fnret of each arm: did it fail to fall through to the merge? */
+	aclspv_bool_t		L$$FNRET_TRUE = 0,
 				L$$FNRET_FALSE = 0;
 
 	(rdwr_body).m_vid = 0;
@@ -127,7 +126,6 @@ ae2f_MAC((L, )) aclemit_body_if(CXCursor h_cur, aclemit_body_t& rdwr_body) {
 				)) goto L$$LBL_END;
 
 	{
-		L$$FNRET_PAR = aclcur_get_fnret((rdwr_body).m_ctx);
 		L$$FNRET_TRUE = L$$FNRET_FALSE = 0;
 		aclcur_set_fnret(0, (rdwr_body).m_ctx);
 
@@ -190,7 +188,13 @@ ae2f_MAC((L, )) aclemit_body_if(CXCursor h_cur, aclemit_body_t& rdwr_body) {
 				);
 	}
 
-	aclcur_set_fnret(L$$FNRET_PAR | L$$FNRET_TRUE | L$$FNRET_FALSE, (rdwr_body).m_ctx);
+	/** the merge label below is opened and left unterminated: fall-through
+	 * here means "the current block still needs its terminator", which is
+	 * what the parent (or the function tail) supplies. it used to be 1 as
+	 * soon as one arm returned, so an enclosing loop skipped its own
+	 * fall-through branch and left the live merge block without a
+	 * terminator. */
+	aclcur_set_fnret(0, (rdwr_body).m_ctx);
 
 	aclutil_mkname_dbg_fn(
 			L$$IFPART.m_b_default

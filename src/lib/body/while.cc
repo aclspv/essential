@@ -29,8 +29,7 @@ ae2f_MAC((L, )) aclemit_body_while(CXCursor h_cur, aclemit_body_t& rdwr_body) { 
 	aclspv_wrd_t			L$$WEIGHTS[2]	= {0, 0};
 
 	/** loop-scope frame: saved before the body, restored after it. */
-	aclspv_bool_t			L$$FNRET_PAR	= 0,
-					L$$FNRET_BODY	= 0;
+	aclspv_bool_t			L$$FNRET_BODY	= 0;
 	aclspv_id_t			L$$BRK_PAR	= 0,
 					L$$CNT_PAR	= 0;
 
@@ -149,7 +148,6 @@ ae2f_MAC((L, )) aclemit_body_while(CXCursor h_cur, aclemit_body_t& rdwr_body) { 
 			ae2f_ifezerr(aclcur_cfg_lbl(L$$LOOPSTART, (rdwr_body).m_ctx))
 				goto L$$ERR;
 
-			L$$FNRET_PAR	= aclcur_get_fnret((rdwr_body).m_ctx);
 			L$$BRK_PAR	= aclcur_get_break_loop((rdwr_body).m_ctx);
 			L$$CNT_PAR	= aclcur_get_continue_loop((rdwr_body).m_ctx);
 
@@ -170,7 +168,11 @@ ae2f_MAC((L, )) aclemit_body_while(CXCursor h_cur, aclemit_body_t& rdwr_body) { 
 
 			aclcur_set_break_loop(L$$BRK_PAR, (rdwr_body).m_ctx);
 			aclcur_set_continue_loop(L$$CNT_PAR, (rdwr_body).m_ctx);
-			aclcur_set_fnret(L$$FNRET_PAR | L$$FNRET_BODY, (rdwr_body).m_ctx);
+			/** LOOPEND below is opened and left unterminated: the parent
+			 * supplies the terminator. reporting the body's fnret here
+			 * made an enclosing loop skip its fall-through branch when the
+			 * body only ended in a return, leaving LOOPEND unterminated. */
+			aclcur_set_fnret(0, (rdwr_body).m_ctx);
 
 			ae2f_ifnezerr((rdwr_body).m_ctx->m_err) {
 				break;

@@ -73,10 +73,19 @@ enum CXChildVisitResult	aclemit_fndecl_bodycfg(
 	}
 
 	unless(aclcur_get_fnret(h_ctx)) {
+		/** falling off the end of a void function is a plain return.
+		 * a non-void function that reaches here returned on no known
+		 * path (its merge block is dead); plain OpReturn is illegal
+		 * there, and C calls the fall-off undefined in any case. */
+		const aclspv_wrd_t c_op
+			= aclcur_get_retty(h_ctx) == ACLSPV_ID_VOID
+			? SpvOpReturn
+			: SpvOpUnreachable;
+
 		ae2f_ifezerr(h_ctx->m_count.m_fndef = emit_opcode(
 					&h_ctx->m_section.m_fndef
 					, h_ctx->m_count.m_fndef
-					, SpvOpReturn, 0
+					, c_op, 0
 					)) {
 			h_ctx->m_err = ACLSPV_COMPILE_ALLOC_FAILED;
 			return CXChildVisit_Break;

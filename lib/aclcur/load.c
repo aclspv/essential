@@ -402,8 +402,17 @@ static aclspv_id_t	s_ssa_entry_r(
 		}
 
 		/** no store inside the predecessor: its entry value flows out. */
-		if(!e)
+		if(!e) {
+			const aclspv_wrd_t c_saved = *rw_nvis;
+
 			e = s_ssa_entry_r(c_reg, pds[i], c_root, h_ctx, c_depth + 1, r_vis, rw_nvis);
+
+			/** the visited set is the active chain, not a memo: each
+			 * predecessor is its own branch of the walk. leaving one
+			 * branch's blocks behind masks a value on the next one and
+			 * can drop a live predecessor from the phi below. */
+			*rw_nvis = c_saved;
+		}
 
 		if(e == ACLCUR_SSA_NONE)
 			continue;
@@ -630,6 +639,7 @@ static aclspv_id_t	s_ssa_loop_read(
 	aclspv_id_t pds[ACLCUR_SSA_MAX_PRED];
 	aclspv_id_t vals[ACLCUR_SSA_MAX_PRED];
 	aclspv_id_t plbs[ACLCUR_SSA_MAX_PRED];
+	aclspv_id_t c_lbl;
 	aclspv_wrd_t np;
 	aclspv_wrd_t nv = 0;
 	aclspv_wrd_t i;
@@ -638,15 +648,19 @@ static aclspv_id_t	s_ssa_loop_read(
 	if(!(p_lbl->m_flag0 & aclcur_flag0_lbl(ACLCUR_FLAG0_LBL_LOOP)))
 		return 0;
 
+	/** the resolutions below append cursor nodes and may realloc and free
+	 * the buffer: keep the label id, never the pointer. */
+	c_lbl = p_lbl->m_id;
+
 	/** a chain already serves the register: return its head. */
 	{
-		aclspv_id_t h = s_ssa_loop_head(c_reg, p_lbl->m_id, h_ctx);
+		aclspv_id_t h = s_ssa_loop_head(c_reg, c_lbl, h_ctx);
 
 		if(h)
 			return h;
 	}
 
-	np = s_ssa_preds(p_lbl->m_id, pds, ACLCUR_SSA_MAX_PRED, h_ctx);
+	np = s_ssa_preds(c_lbl, pds, ACLCUR_SSA_MAX_PRED, h_ctx);
 	if(!np)
 		return 0;
 
@@ -679,7 +693,7 @@ static aclspv_id_t	s_ssa_loop_read(
 	/** create the authoritative chain: one phi node per entry. */
 	return s_ssa_chain_create(
 			c_reg
-			, p_lbl->m_id
+			, c_lbl
 			, h_ctx
 			, vals
 			, plbs
@@ -814,8 +828,14 @@ static aclspv_id_t	s_load_without_phi(
 		 * assigned on one arm and not another still resolves to its single
 		 * stored value and is accepted. */
 		{
-			const aclty_t* const ae2f_restrict P_TY
-				= aclty_find(p->m_ty, h_ctx);
+			const aclty_t* ae2f_restrict P_TY;
+
+			/** the failed resolution above may have grown the cursor
+			 * buffer: the register pointer fetched at entry is stale. */
+			p = aclcur_get_node(c_reg, h_ctx);
+			ae2f_ifezerr(p) return 0;
+
+			P_TY = aclty_find(p->m_ty, h_ctx);
 
 			if(	(h_ctx->m_usrcfg.m_flag0
 						& ACLSPV_CTX_FLAG0_ERROR_UNASSIGNED_VAL_USED)

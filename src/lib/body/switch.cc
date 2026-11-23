@@ -365,9 +365,7 @@ ae2f_MAC((L, )) aclemit_body_switch(CXCursor h_cur, aclemit_body_t& rdwr_body) {
 	aclspv_wrd_t			L$$NGROUP;
 	aclspv_wrd_t			L$$I;
 	aclspv_swrd2_t			L$$SELLEN;
-	aclspv_bool_t			L$$MERGE_REACHED = 0;
 	CXType				L$$SELTYPE;
-	h_aclcur_t			L$$P_MERGE;
 
 	(rdwr_body).m_vid = 0;
 
@@ -530,33 +528,12 @@ ae2f_MAC((L, )) aclemit_body_switch(CXCursor h_cur, aclemit_body_t& rdwr_body) {
 		goto L$$LBL_END;
 	}
 
-	/** the switch statement always continues here unless every path
-	 * returned. the selection-merge edge itself does not count: it is a
-	 * structural reference, not a control-flow choice. a default that
-	 * falls to the merge and any `break`/fall-through jump do count. */
-	if(L$$DEFAULT == L$$MERGE)
-		L$$MERGE_REACHED = 1;
-
-	{
-		aclspv_wrd_t K;
-
-		for(K = 0; K < (rdwr_body).m_ctx->m_num_cursor; ++K) {
-			h_aclcur_t P = aclcur_get_node_idx(K, (rdwr_body).m_ctx);
-
-			if(P && P->m_class == ACLCUR_J && P->m_d.m_j.m_lbl == L$$MERGE) {
-				L$$MERGE_REACHED = 1;
-				break;
-			}
-		}
-	}
-
-	L$$P_MERGE = aclcur_get_node(L$$MERGE, (rdwr_body).m_ctx);
-	unless(L$$P_MERGE) {
-		(rdwr_body).m_ctx->m_err = ACLSPV_COMPILE_UNHANDLED_SWITCH;
-		goto L$$LBL_END;
-	}
-
-	aclcur_set_fnret(L$$MERGE_REACHED ? 0 : 1, (rdwr_body).m_ctx);
+	/** the merge label above is open and left unterminated: the parent
+	 * supplies the terminator, exactly as for an if. reachability of the
+	 * merge does not change that — a merge block referenced by the
+	 * selection instruction is emitted whether or not control can reach
+	 * it, and skipping the parent's branch left an unterminated block. */
+	aclcur_set_fnret(0, (rdwr_body).m_ctx);
 
 	/** name the group labels now that they exist. */
 	for(L$$I = 0; L$$I < L$$NGROUP; ++L$$I)
