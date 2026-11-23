@@ -133,6 +133,9 @@ Without `-DACLSPV_ATTR_ALIASES=1`, these aliases are ignored:
 
 * `__attribute__((annotate("flat")))` — alias of `annotate("aclspv_flat")`
   (see <<aclspv_flat,aclspv_flat>>).
+* `__attribute__((annotate("noperspective")))` — alias of
+  `annotate("aclspv_noperspective")`
+  (see <<aclspv_noperspective,aclspv_noperspective>>).
 * `__attribute__((reqd_work_group_size(x, y, z)))` — alias of
   `annotate("aclspv_wrkgroup_size(x, y, z)")`
   (see <<aclspv_wrkgroup_size,aclspv_wrkgroup_size>>).
@@ -578,6 +581,46 @@ you cannot specify this with <<aclspv_bltin,aclspv_bltin>>
     <span style="color:#c58ba4">__attribute__</span><span style="color:#857780">((</span><span style="color:#7ba9c4">annotate</span><span style="color:#857780">(</span><span style="color:#8fbf91">"aclspv_storage_class(3)"</span><span style="color:#857780">)))</span>
     <span style="color:#d0aa68">i32</span><span style="color:#6fa6a8;font-style:italic">*</span><span style="color:#a99ba3;font-style:italic"> </span><span style="color:#d8ccd3;font-style:italic">out_value</span>
 <span style="color:#857780">)</span> <span style="color:#857780">{</span> <span style="color:#6fa6a8">*</span><span style="color:#d8ccd3">out_value</span> <span style="color:#6fa6a8">=</span> <span style="color:#6fa6a8">*</span><span style="color:#d8ccd3">in_mode</span><span style="color:#857780">;</span> <span style="color:#857780">}</span></pre>
+</div>
+++++
+
+==== aclspv_noperspective
+
+[quote]
+`aclspv_noperspective`
+
+* used on declaring arguments in entry point.
+* adds `NoPerspective` decoration to an `input(1)` or `output(3)` interface variable,
+  selecting linear interpolation instead of perspective-correct interpolation.
+* maps to `OpDecorate %var NoPerspective`.
+* has no effect on arguments with any other storage class.
+* must not be combined with <<aclspv_flat,aclspv_flat>> on the same variable;
+  the two decorations are mutually exclusive in SPIR-V.
+
+[NOTE]
+====
+`__attribute__((annotate("noperspective")))` is accepted only when built with
+`-DACLSPV_ATTR_ALIASES=1`. Without it the alias is ignored; only
+`annotate("aclspv_noperspective")` is recognised.
+====
+
+++++
+<div class="listingblock" style="background-color:#1c171b;color:#d8ccd3;padding:0.8em 1em;overflow-x:auto;border-radius:4px">
+<pre style="font-family:'Source Code Pro','DejaVu Sans Mono','Courier New',monospace;font-size:14px;line-height:1.3;margin:0;background:transparent;color:inherit"><span style="color:#d0aa68;font-weight:bold">typedef</span> <span style="color:#d0aa68;font-weight:bold">float</span> <span style="color:#d0aa68">f32</span>;
+
+<span style="color:#7ba9c4;font-weight:bold">__attribute__</span>((<span style="color:#7ba9c4;font-weight:bold">annotate</span>(<span style="color:#8fbf91">"aclspv_execmode0(7)"</span>)))            <span style="color:#a99ba3;font-style:italic">/** OriginUpperLeft */</span>
+<span style="color:#7ba9c4;font-weight:bold">__attribute__</span>((<span style="color:#7ba9c4;font-weight:bold">annotate</span>(<span style="color:#8fbf91">"aclspv_execmodel(4)"</span>)))            <span style="color:#a99ba3;font-style:italic">/** Fragment */</span>
+<span style="color:#d0aa68;font-weight:bold">void</span> <span style="color:#7ba9c4;font-weight:bold">fragment_entry</span>(
+    <span style="color:#a99ba3;font-style:italic">/** screen-space coordinate input */</span>
+    <span style="color:#7ba9c4;font-weight:bold">__attribute__</span>((<span style="color:#7ba9c4;font-weight:bold">annotate</span>(<span style="color:#8fbf91">"aclspv_location(0)"</span>)))
+    <span style="color:#7ba9c4;font-weight:bold">__attribute__</span>((<span style="color:#7ba9c4;font-weight:bold">annotate</span>(<span style="color:#8fbf91">"aclspv_storage_class(1)"</span>)))
+    <span style="color:#7ba9c4;font-weight:bold">__attribute__</span>((<span style="color:#7ba9c4;font-weight:bold">annotate</span>(<span style="color:#8fbf91">"aclspv_noperspective"</span>)))
+    <span style="color:#d0aa68">f32</span>* <span style="color:#a99ba3;font-style:italic">in_uv</span>,
+
+    <span style="color:#7ba9c4;font-weight:bold">__attribute__</span>((<span style="color:#7ba9c4;font-weight:bold">annotate</span>(<span style="color:#8fbf91">"aclspv_location(0)"</span>)))
+    <span style="color:#7ba9c4;font-weight:bold">__attribute__</span>((<span style="color:#7ba9c4;font-weight:bold">annotate</span>(<span style="color:#8fbf91">"aclspv_storage_class(3)"</span>)))
+    <span style="color:#d0aa68">f32</span>* <span style="color:#a99ba3;font-style:italic">out_uv</span>
+) { <span style="color:#6fa6a8">*</span><span style="color:#a99ba3;font-style:italic">out_uv</span> <span style="color:#6fa6a8">=</span> <span style="color:#6fa6a8">*</span><span style="color:#a99ba3;font-style:italic">in_uv</span>; }</pre>
 </div>
 ++++
 

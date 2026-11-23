@@ -31,7 +31,7 @@ static enum CXChildVisitResult	s_attr_noperspective(
 	unless(strstr(TEXT.data, "aclspv_noperspective")) {
 #if __ACLSPV_ATTR_ALIASES
 		/** `annotate("flat")` */
-		if(!strcmp(TEXT.data, "flat")) {
+		if(!strcmp(TEXT.data, "noperspective")) {
 			*((aclspv_wrd_t* ae2f_restrict)wr) = 1;
 			clang_disposeString(TEXT);
 			return CXChildVisit_Break;
