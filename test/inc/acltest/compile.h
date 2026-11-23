@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <ae2f/bll.h>
+#include <ae2f/cc/branches/naive.h>
 
 /**
  * @fn		aclspv_compile

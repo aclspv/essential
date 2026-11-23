@@ -1,7 +1,7 @@
 #ifndef	aclmem_h
 #define aclmem_h
 
-#include <aclspv.h>
+#include <acldef.h>
 
 /** 
  * when zero it succeed. 

@@ -7,6 +7,9 @@ typedef unsigned int	aclspv_uiter_t;
 
 #include <aclspv.h>
 #include <ae2f/c90/stdint/shorten.h>
+#include <ae2f/cc/inline.h>
+#include <ae2f/cc/expect/naive.h>
+#include <ae2f/Keys.h>
 
 #if	__ACLSPV_SCLR_F16
 #define	ACLSPV_ID_F16_OR_Z	ACLSPV_ID_F16

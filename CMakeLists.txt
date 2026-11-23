@@ -252,7 +252,7 @@ target_link_libraries(aclspv-essential
 target_link_libraries(aclspv-common
 	INTERFACE	${Clang_FOUND}
 	INTERFACE	ae2f::Core
-	INTERFACE	ae2f::Sys
+	INTERFACE	ae2f::Pat
 	INTERFACE	$<BUILD_INTERFACE:SPIRV-Headers::SPIRV-Headers>
 	)
 
@@ -339,6 +339,7 @@ aclspv_predef_switch(aclspv-common-essential	INTERFACE "ACLSPV_ATTR_ALIASES" 0)
 aclspv_predef_switch(aclspv-common-essential	INTERFACE "ACLSPV_SYMBOL" 0)
 aclspv_predef_switch(aclspv-common-essential	INTERFACE "ACLSPV_ATOMIC_ID" 0)
 aclspv_predef_switch(aclspv-common-essential	INTERFACE "ACLSPV_OPACC_IDX_MAX" 64)
+aclspv_predef_switch(aclspv-common-essential	INTERFACE "ACLSPV_NO_MALLOC" 1)
 aclspv_predef_switch(aclspv-aclmem	PUBLIC		"ACLMEMCPY" 0)
 aclspv_predef_switch(aclspv-aclmem	PUBLIC		"ACLMEMZERO" 0)
 aclspv_predef_switch(aclspv-aclexpr	PRIVATE		"ACLSPV_MATH_LITERAL"	1)
@@ -348,6 +349,10 @@ aclspv_predef_switch(aclspv-aclexpr	PRIVATE		"ACLSPV_MATH_NR_RSQRTF_MAGIC"	0x5f3
 aclspv_predef_switch(aclspv-aclexpr	PRIVATE		"ACLSPV_MATH_NR_IT"		2)
 aclspv_predef_switch(aclspv-aclcur	PRIVATE		"ACLSPV_MAX_OPRND"		"0x100")
 aclspv_predef_switch(aclspv-aclexpr	PRIVATE		"ACLSPV_MAX_OPRND"		"${ACLSPV_MAX_OPRND}")
+
+if(ON)
+	target_link_libraries(aclspv-essential-public PRIVATE ae2f::Sys)
+endif()
 
 # C++ shader variants (SPIR-V 1.3 / 1.4, GLSL450) are independent of
 # ae2f_CXX; register them with the same SPIR-V plumbing.

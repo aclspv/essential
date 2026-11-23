@@ -13,6 +13,7 @@
 
 #include <.acltest/ocl.h>
 #include <.acltest/source.h>
+#include <ae2f/cc/inline.h>
 
 static char s_src0[
 	sizeof(SRC0_0)

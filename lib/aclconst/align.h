@@ -2,6 +2,7 @@
 #define aclconst_align_h
 
 #include "./specsize.h"
+#include <acldef.h>
 
 aclconst_specsz	aclconst_align_from_size(
 		aclconst_specsz	c,

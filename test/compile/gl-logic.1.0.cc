@@ -5,6 +5,9 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <ae2f/cc/branches/naive.h>
+#include <ae2f/Keys.h>
+
 #include <acltest/onefile.h>
 
 #if	0

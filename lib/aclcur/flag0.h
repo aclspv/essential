@@ -1,7 +1,7 @@
 #ifndef	aclcur_flag0_h
 #define aclcur_flag0_h
 
-#include <aclspv.h>
+#include <acldef.h>
 
 enum ACLCUR_FLAG0_ {
 	/** has cursor assigned */

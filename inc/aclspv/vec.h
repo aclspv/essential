@@ -5,9 +5,10 @@
 #include "./ctx/common.h"
 #include "./wrd.h"
 
-#include <.ae2f/pat/vec.h>
 #include <stddef.h>
 
+#if	0
+#include <.ae2f/pat/vec.h>
 #define	aclspv_vec(T) struct			\
 {						\
 	h_aclspv_ctx_t m_ctx;			\
@@ -15,6 +16,7 @@
 	T*	ae2f_restrict m_vec;		\
 	size_t m_sz; aclspv_wrd_t m_nel;	\
 }
+#endif
 
 typedef struct {
 	/** should be used */

@@ -12,7 +12,7 @@
 #ifndef aclsym_fn_h
 #define aclsym_fn_h
 
-#include <aclspv.h>
+#include <acldef.h>
 #include <aclty/common.h>
 
 /** per-function bits. stored in aclsym_fn_t::m_flag0; an entry-point

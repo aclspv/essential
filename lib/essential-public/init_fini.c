@@ -73,19 +73,21 @@ ACLSPV_ABI_LINK void aclspv_fini_ctx(
 }
 
 #include <aclemit/root.h>
-#include <ae2f/Sys/pgalloc.h>
 #include <util/log.h>
+
+#if	__ACLSPV_NO_MALLOC
+#include <ae2f/Sys/pgalloc.h>
+#endif
 
 static void* s_malloc(aclspv_wrd_t c_sz,
 		aclspv_wrd_t* ae2f_restrict r_sz_real,
 		void* ae2f_restrict *	r_mem,
 		ae2f_unused void*	h_usr) {
-#ifdef	_ae2fsys_pgalloc_algnup
+#if	__ACLSPV_NO_MALLOC
+#	ifdef	_ae2fsys_pgalloc_algnup
 
 	void*	R;
 	ae2fsys_pgsz_t	szreal;
-
-	/** dbg_puts("[aclspv::malloc]"); */
 
 	_ae2fsys_pgalloc_algnup(
 			L, void*, R, 0, szreal
@@ -108,14 +110,25 @@ static void* s_malloc(aclspv_wrd_t c_sz,
 
 	*r_sz_real = (aclspv_wrd_t)szreal;
 	return (*r_mem = R);
+#	else
+#	error	"no implementation"
+#	endif
+#else
+	return *(r_mem) = malloc(*r_sz_real = c_sz);
 #endif
 }
 static void s_free(void* fini_mem, aclspv_wrd_t c_sz, ae2f_unused void* h_usr) {
-#ifdef	_ae2fsys_pgfree
+#if	__ACLSPV_NO_MALLOC
+#	ifdef	_ae2fsys_pgfree
 	ae2f_unused enum AE2FSYS_PGALLOC_ e;
 
 	/** dbg_puts("[aclspv::free]"); */
 	if(fini_mem) _ae2fsys_pgfree(L, void*, e, fini_mem, c_sz);
+#	else
+#	error	"no implementation"
+#	endif
+#else
+	free(fini_mem);
 #endif
 }
 

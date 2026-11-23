@@ -8,6 +8,8 @@
 #include <acltest/onefile.h>
 #include <acltest/compile.h>
 
+#include <ae2f/Keys.h>
+
 #if 1
 int main(void);
 int main(void) {
