@@ -54,6 +54,7 @@ ae2f_ccpure static enum ACLCUR_LBL_DFS_ s_reachable_uc(
 
 	switch(s_get_buf(p->m_ctx)[h_child->m_d.m_lbl.m_nop - 1].m_class) {
 		case ACLCUR_JC:
+		case ACLCUR_SW:
 			return ACLCUR_LBL_DFS_CONTINUE;
 
 		default:
@@ -108,6 +109,42 @@ aclspv_bool_t aclcur_lbl_in_cycle(
 			if(p_tail->m_d.m_jc.m_continue)
 				succ[i++] = p_tail->m_d.m_jc.m_continue;
 			break;
+
+		case ACLCUR_SW: {
+			aclspv_wrd_t idx = p_tail->m_d.m_sw.m_cases_head;
+
+			if(p_tail->m_d.m_sw.m_merge
+					&& aclcur_lbl_is_reachable(
+						p_tail->m_d.m_sw.m_merge
+						, c_lbl
+						, h_ctx))
+				return 1;
+
+			if(p_tail->m_d.m_sw.m_default
+					&& aclcur_lbl_is_reachable(
+						p_tail->m_d.m_sw.m_default
+						, c_lbl
+						, h_ctx))
+				return 1;
+
+			while(idx) {
+				h_aclcur_t p_case = aclcur_get_node_idx(idx, h_ctx);
+
+				if(!p_case || p_case->m_class != ACLCUR_SW_CASE)
+					break;
+
+				if(p_case->m_d.m_sw_case.m_lbl
+						&& aclcur_lbl_is_reachable(
+							p_case->m_d.m_sw_case.m_lbl
+							, c_lbl
+							, h_ctx))
+					return 1;
+
+				idx = p_case->m_d.m_sw_case.m_nxt;
+			}
+
+			return 0;
+		}
 
 		default:
 			return 0;

@@ -25,7 +25,8 @@ enum ACLTEST_SPV_OP_ {
 	ACLTEST_SPV_OP_SELECTION_MERGE		= 247,
 	ACLTEST_SPV_OP_LABEL			= 248,
 	ACLTEST_SPV_OP_BRANCH			= 249,
-	ACLTEST_SPV_OP_BRANCH_CONDITIONAL	= 250
+	ACLTEST_SPV_OP_BRANCH_CONDITIONAL	= 250,
+	ACLTEST_SPV_OP_SWITCH			= 251
 };
 
 typedef struct {
@@ -33,6 +34,7 @@ typedef struct {
 	unsigned	m_num_lbl;
 	unsigned	m_num_br;
 	unsigned	m_num_brc;
+	unsigned	m_num_switch;
 	unsigned	m_num_selmerge;
 	unsigned	m_num_loopmerge;
 	unsigned	m_num_phi;
@@ -159,6 +161,7 @@ static int acltest_spirv_scan(
 	r->m_num_lbl		= 0;
 	r->m_num_br		= 0;
 	r->m_num_brc		= 0;
+	r->m_num_switch		= 0;
 	r->m_num_selmerge	= 0;
 	r->m_num_loopmerge	= 0;
 	r->m_num_phi		= 0;
@@ -268,6 +271,21 @@ static int acltest_spirv_scan(
 						|| !s_acltest_spirv_has_lbl(rd, c, rd[i + 2])
 						|| !s_acltest_spirv_has_lbl(rd, c, rd[i + 3]))
 					r->m_targets_ok = 0;
+				break;
+
+			case ACLTEST_SPV_OP_SWITCH:
+				/** [selector][default][literal,label]...
+				 * this scanner assumes one-word literals (a 32-bit or
+				 * narrower selector); the compile tests use int. */
+				++r->m_num_switch;
+				if(wc < 3 || !s_acltest_spirv_has_lbl(rd, c, rd[i + 2]))
+					r->m_targets_ok = 0;
+				else {
+					unsigned k;
+					for(k = 3; k + 1 < wc; k += 2)
+						if(!s_acltest_spirv_has_lbl(rd, c, rd[i + k + 1]))
+							r->m_targets_ok = 0;
+				}
 				break;
 
 			case ACLTEST_SPV_OP_SELECTION_MERGE:

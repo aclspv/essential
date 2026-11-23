@@ -29,7 +29,16 @@ enum ACLCUR_ {
 	/** result-less two-operand instruction (SpvOpStore): [op|3][o0][o1].
 	 * no Result Type, no Result. emitted unconditionally — a store has
 	 * side effects, so it is never dropped as unreferenced. */
-	ACLCUR_ST
+	ACLCUR_ST,
+
+	/** SpvOpSwitch: the terminator of a switch header block. carries the
+	 * selector, the default target, the selection merge and the list of
+	 * (literal, target) case entries. */
+	ACLCUR_SW,
+
+	/** case entry of an ACLCUR_SW node: literal value and target label.
+	 * appendix after its SW node, never emitted. */
+	ACLCUR_SW_CASE
 };
 
 /** `aclcur_t` is forward-declared in the public context header. */

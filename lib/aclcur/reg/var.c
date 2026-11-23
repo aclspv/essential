@@ -230,6 +230,34 @@ static aclspv_bool_t	s_phi_emit_ready(
 				}
 				break;
 
+			case ACLCUR_SW: {
+				aclspv_id_t p_blk = s_phi_block_lbl(i, h_ctx);
+				aclspv_wrd_t idx;
+
+				/** selection merge is metadata, not a branch edge. */
+				if(q->m_d.m_sw.m_default == c_lbl) {
+					if(!s_phi_pred_add(p_blk, pds, ACLCUR_EMIT_PHI_MAX_PRED, &npd))
+						return 0;
+				}
+
+				idx = q->m_d.m_sw.m_cases_head;
+				while(idx) {
+					h_aclcur_t p_case = aclcur_get_node_idx(idx, h_ctx);
+
+					if(!p_case || p_case->m_class != ACLCUR_SW_CASE)
+						break;
+
+					if(p_case->m_d.m_sw_case.m_lbl == c_lbl) {
+						if(!s_phi_pred_add(p_blk, pds, ACLCUR_EMIT_PHI_MAX_PRED, &npd))
+							return 0;
+						break;
+					}
+
+					idx = p_case->m_d.m_sw_case.m_nxt;
+				}
+				break;
+			}
+
 			default:
 				break;
 		}

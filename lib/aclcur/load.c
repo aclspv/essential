@@ -60,12 +60,14 @@ static aclspv_bool_t	s_reg_ever_stored(
 	return 0;
 }
 
-static aclspv_id_t	s_ssa_entry_i(
+static aclspv_id_t	s_ssa_entry_r(
 		aclspv_id_t c_reg,
 		aclspv_id_t c_lbl,
 		aclspv_id_t c_root,
 		h_aclspv_ctx_t h_ctx,
-		aclspv_wrd_t c_depth
+		aclspv_wrd_t c_depth,
+		aclspv_id_t* ae2f_restrict r_vis,
+		aclspv_wrd_t* ae2f_restrict rw_nvis
 		);
 
 /** head of the loop-header authoritative chain serving c_reg (0: none). */
@@ -101,6 +103,30 @@ static aclspv_id_t	s_ssa_block_lbl(aclspv_wrd_t idx, h_aclspv_ctx_t h_ctx) {
 	return 0;
 }
 
+/** add one predecessor to the deduplicated list.
+ * 0 return: the list is full. */
+static aclspv_bool_t	s_ssa_pred_add(
+		aclspv_id_t		c_p,
+		aclspv_id_t* ae2f_restrict	r_pds,
+		aclspv_wrd_t		c_max,
+		aclspv_wrd_t* ae2f_restrict	rw_n
+		) {
+	aclspv_wrd_t j;
+
+	if(!c_p)
+		return 1;
+
+	for(j = 0; j < *rw_n; ++j)
+		if(r_pds[j] == c_p)
+			return 1;
+
+	if(*rw_n >= c_max)
+		return 0;
+
+	r_pds[(*rw_n)++] = c_p;
+	return 1;
+}
+
 /** immediate predecessors of c_lbl, deduplicated, in cursor order.
  * 0 return: none, or the predecessor buffer overflowed (the caller then
  * treats the block as an interface root and falls back to memory). */
@@ -115,37 +141,55 @@ static aclspv_wrd_t	s_ssa_preds(
 
 	for(i = 0; i < h_ctx->m_num_cursor; ++i) {
 		h_aclcur_t q = &s_get_buf(h_ctx)[i];
-		aclspv_bool_t hit = 0;
 
 		switch(q->m_class) {
 			case ACLCUR_J:
-				hit = (q->m_d.m_j.m_lbl == c_lbl);
+				if(q->m_d.m_j.m_lbl != c_lbl)
+					break;
+				if(!s_ssa_pred_add(s_ssa_block_lbl(i, h_ctx), r_pds, c_max, &n))
+					return 0;
 				break;
+
 			case ACLCUR_JC:
-				hit = (q->m_d.m_jc.m_lbl_true == c_lbl
-						|| q->m_d.m_jc.m_lbl_false == c_lbl);
+				if(q->m_d.m_jc.m_lbl_true == c_lbl
+						|| q->m_d.m_jc.m_lbl_false == c_lbl) {
+					if(!s_ssa_pred_add(s_ssa_block_lbl(i, h_ctx), r_pds, c_max, &n))
+						return 0;
+				}
 				break;
+
+			case ACLCUR_SW: {
+				aclspv_id_t p_blk = s_ssa_block_lbl(i, h_ctx);
+				aclspv_wrd_t idx;
+
+				/** the merge operand of the switch header is structural
+				 * metadata, not a branch: only the default (when it is the
+				 * merge itself) makes the header a real predecessor. */
+				if(q->m_d.m_sw.m_default == c_lbl) {
+					if(!s_ssa_pred_add(p_blk, r_pds, c_max, &n))
+						return 0;
+				}
+
+				idx = q->m_d.m_sw.m_cases_head;
+				while(idx) {
+					h_aclcur_t p_case = aclcur_get_node_idx(idx, h_ctx);
+
+					if(!p_case || p_case->m_class != ACLCUR_SW_CASE)
+						break;
+
+					if(p_case->m_d.m_sw_case.m_lbl == c_lbl) {
+						if(!s_ssa_pred_add(p_blk, r_pds, c_max, &n))
+							return 0;
+						break;
+					}
+
+					idx = p_case->m_d.m_sw_case.m_nxt;
+				}
+				break;
+			}
+
 			default:
 				break;
-		}
-
-		if(!hit)
-			continue;
-
-		{
-			aclspv_id_t p = s_ssa_block_lbl(i, h_ctx);
-			aclspv_wrd_t j;
-
-			if(!p)
-				continue;
-			for(j = 0; j < n; ++j)
-				if(r_pds[j] == p)
-					break;
-			if(j == n) {
-				if(n >= c_max)
-					return 0;
-				r_pds[n++] = p;
-			}
 		}
 	}
 
@@ -212,13 +256,21 @@ aclspv_bool_t aclcur_ssa_lbl_live(aclcur_lblid_t c_lbl, h_aclspv_ctx_t h_ctx) {
 }
 
 /** value of c_reg on entry to c_lbl: a single SSA result id, or
- * ACLCUR_SSA_NONE when only a memory load can serve it. */
-static aclspv_id_t	s_ssa_entry_i(
+ * ACLCUR_SSA_NONE when only a memory load can serve it.
+ *
+ * r_vis carries the blocks already being resolved on this chain: a block
+ * reachable from itself has no value yet (the loop-header chains cover the
+ * well-formed case), and recursing into it would not terminate. a switch
+ * inside a loop adds such a cycle through a non-header block, which the
+ * old root-only test missed. */
+static aclspv_id_t	s_ssa_entry_r(
 		aclspv_id_t c_reg,
 		aclspv_id_t c_lbl,
 		aclspv_id_t c_root,
 		h_aclspv_ctx_t h_ctx,
-		aclspv_wrd_t c_depth
+		aclspv_wrd_t c_depth,
+		aclspv_id_t* ae2f_restrict r_vis,
+		aclspv_wrd_t* ae2f_restrict rw_nvis
 		) {
 	aclspv_id_t pds[ACLCUR_SSA_MAX_PRED];
 	aclspv_id_t vals[ACLCUR_SSA_MAX_PRED];
@@ -227,6 +279,15 @@ static aclspv_id_t	s_ssa_entry_i(
 	aclspv_wrd_t np;
 	aclspv_wrd_t nv = 0;
 	aclspv_wrd_t i;
+
+	for(i = 0; i < *rw_nvis; ++i)
+		if(r_vis[i] == c_lbl)
+			return ACLCUR_SSA_NONE;
+
+	if(*rw_nvis >= ACLCUR_SSA_MAX_PRED)
+		return ACLCUR_SSA_NONE;
+
+	r_vis[(*rw_nvis)++] = c_lbl;
 
 	/** recursion re-entering the block whose entry is being resolved is a
 	 * loop back edge: the carried value is constant around the loop (a
@@ -286,7 +347,7 @@ static aclspv_id_t	s_ssa_entry_i(
 						f_v0 = p_st ? p_st->m_val : 0;
 					}
 					if(!f_v0)
-						f_v0 = s_ssa_entry_i(c_reg, f_p0, f_p0, h_ctx, 0);
+						f_v0 = s_ssa_entry_r(c_reg, f_p0, f_p0, h_ctx, 0, r_vis, rw_nvis);
 
 					if(f_v0 && f_v0 != ACLCUR_SSA_NONE) {
 						f_vals[0]	= f_v0;
@@ -335,7 +396,7 @@ static aclspv_id_t	s_ssa_entry_i(
 
 		/** no store inside the predecessor: its entry value flows out. */
 		if(!e)
-			e = s_ssa_entry_i(c_reg, pds[i], c_root, h_ctx, c_depth + 1);
+			e = s_ssa_entry_r(c_reg, pds[i], c_root, h_ctx, c_depth + 1, r_vis, rw_nvis);
 
 		if(e == ACLCUR_SSA_NONE)
 			continue;
@@ -447,6 +508,20 @@ static aclspv_id_t	s_ssa_entry_i(
 
 		return head;
 	}
+}
+
+/** fresh resolution root: one visited set per query. */
+static aclspv_id_t	s_ssa_entry_i(
+		aclspv_id_t c_reg,
+		aclspv_id_t c_lbl,
+		aclspv_id_t c_root,
+		h_aclspv_ctx_t h_ctx,
+		aclspv_wrd_t c_depth
+		) {
+	aclspv_id_t vis[ACLCUR_SSA_MAX_PRED];
+	aclspv_wrd_t nvis = 0;
+
+	return s_ssa_entry_r(c_reg, c_lbl, c_root, h_ctx, c_depth, vis, &nvis);
 }
 
 /** head of the loop-header authoritative chain that serves c_reg (the

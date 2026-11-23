@@ -157,6 +157,24 @@ static aclspv_wrd_t s_fndjmp_count(
 				if(p_edge->m_d.m_jc.m_continue == c_lbl) ++c_num_ref;
 				break;
 
+			case ACLCUR_SW: {
+				aclspv_wrd_t idx = p_edge->m_d.m_sw.m_cases_head;
+
+				if(p_edge->m_d.m_sw.m_default == c_lbl) ++c_num_ref;
+				if(p_edge->m_d.m_sw.m_merge == c_lbl) ++c_num_ref;
+
+				while(idx) {
+					h_aclcur_t p_case = aclcur_get_node_idx(idx, h_ctx);
+
+					if(!p_case || p_case->m_class != ACLCUR_SW_CASE)
+						break;
+					if(p_case->m_d.m_sw_case.m_lbl == c_lbl)
+						++c_num_ref;
+					idx = p_case->m_d.m_sw_case.m_nxt;
+				}
+				break;
+			}
+
 			default:
 				break;
 		}

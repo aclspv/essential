@@ -5,6 +5,7 @@
 
 #include <.aclspv/body/if.h>
 #include <.aclspv/body/while.h>
+#include <.aclspv/body/switch.h>
 #include <.aclspv/body/vardecl.h>
 #include <.aclspv/util/mkname.h>
 
@@ -46,7 +47,7 @@ static enum CXChildVisitResult s_stmtexpr_compound(CXCursor c_cur, ae2f_unused C
 	return CXChildVisit_Break;
 }
 
-aclspv_id_t aclemit_body_stmtexpr(CXCursor c_stmtexpr, h_aclspv_ctx_t h_ctx) {
+aclspv_id_t aclemit_body_stmtexpr(CXCursor c_stmtexpr, aclty_id_t* wr_ty, h_aclspv_ctx_t h_ctx) {
 	CXCursor		COMPOUND;
 	CXCursor		NULLCUR = clang_getNullCursor();
 	aclspv_bool_t		c_fnret;
@@ -89,6 +90,7 @@ aclspv_id_t aclemit_body_stmtexpr(CXCursor c_stmtexpr, h_aclspv_ctx_t h_ctx) {
 
 	DAT.m_ctx = h_ctx;
 	DAT.m_vid = 0;
+	DAT.m_ty  = 0;
 
 	aclutil_visitfromroot(COMPOUND, aclemit_body, &DAT);
 
@@ -114,6 +116,17 @@ aclspv_id_t aclemit_body_stmtexpr(CXCursor c_stmtexpr, h_aclspv_ctx_t h_ctx) {
 		return 0;
 	}
 
+	/** the type is a property of the value the body actually carved, not of
+	 * the expression cursor: an implicit cast or a promoted operand would
+	 * make the two differ. */
+	ae2f_ifezerr(DAT.m_ty) {
+		err_puts("[aclemit::body::stmtexpr] statement expression has no type");
+		h_ctx->m_err = ACLSPV_COMPILE_UNHANDLED_BODY_STMTEXPR;
+		return 0;
+	}
+
+	if(wr_ty) *wr_ty = DAT.m_ty;
+
 	return DAT.m_vid;
 }
 
@@ -130,7 +143,8 @@ enum CXChildVisitResult aclemit_body(CXCursor h_cur, ae2f_unused CXCursor h_pare
 
 	/** the block opened by this statement, when it needs its own. */
 	aclspv_id_t BRANCH		= 0;
-	DAT->m_vid = 0;
+	DAT->m_vid	= 0;
+	DAT->m_ty	= 0;
 	ae2f_expected_but_else(KIND)
 		jmpfail(ACLSPV_COMPILE_MET_INVAL_BODY_NOKIND);
 
@@ -283,9 +297,9 @@ enum CXChildVisitResult aclemit_body(CXCursor h_cur, ae2f_unused CXCursor h_pare
 		case CXCursor_StmtExpr:
 #if 1
 			{
-				ae2f_ifezerr(aclexpr_eval(
+				ae2f_ifezerr(aclspv_get_expr2(
 							&DAT->m_vid
-							, 0
+							, &DAT->m_ty
 							, h_cur
 							, 0
 							, CTX))
@@ -301,6 +315,10 @@ enum CXChildVisitResult aclemit_body(CXCursor h_cur, ae2f_unused CXCursor h_pare
 
 		case CXCursor_WhileStmt:
 			_aclemit_body_while(WHILE, h_cur, *DAT);
+			ctxcheck(CTX) else goto LBL_DONE;
+
+		case CXCursor_SwitchStmt:
+			_aclemit_body_switch(SW, h_cur, *DAT);
 			ctxcheck(CTX) else goto LBL_DONE;
 
 		case CXCursor_BreakStmt:
@@ -339,7 +357,6 @@ enum CXChildVisitResult aclemit_body(CXCursor h_cur, ae2f_unused CXCursor h_pare
 		case CXCursor_DoStmt:
 		case CXCursor_ForStmt:
 
-		case CXCursor_SwitchStmt:
 		case CXCursor_CaseStmt:
 		case CXCursor_AsmStmt: case CXCursor_MSAsmStmt:
 

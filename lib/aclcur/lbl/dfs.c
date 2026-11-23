@@ -143,6 +143,56 @@ TAILJMP:
 
 						break;
 					}
+
+					case ACLCUR_SW: {
+						/** every case target plus the default and the
+						 * selection merge is a successor: each is one
+						 * edge for the reference accounting. */
+						const aclspv_wrd_t idx_head = p_cur_tail->m_d.m_sw.m_cases_head;
+						aclspv_wrd_t idx = idx_head;
+						aclspv_wrd_t c_case = 0;
+						aclspv_wrd_t k;
+
+						while(idx && c_case < p_cur_tail->m_d.m_sw.m_num_case) {
+							h_aclcur_t p_case = aclcur_get_node_idx(idx, h_ctx);
+
+							if(!p_case || p_case->m_class != ACLCUR_SW_CASE)
+								break;
+
+							idx = p_case->m_d.m_sw_case.m_nxt;
+							++c_case;
+						}
+
+						ae2f_ifnezerr_strict(s_aclmem_cgrow2(
+									&h_ctx->m_cur_lbl_dfs
+									, c_num_stack += c_case + 2u
+									, sizeof(s_visit_t)
+									, ACLSPV_COMPILE_ALLOC_FAILED))
+							return ACLCUR_LBL_DFS_IN;
+
+						s_get_stack(h_ctx)[c_num_stack - 1]
+							= ((aclspv_wrd2_t)p_cur_tail->m_d.m_sw.m_default) | (elm << 32u);
+
+						s_get_stack(h_ctx)[c_num_stack - 2]
+							= ((aclspv_wrd2_t)p_cur_tail->m_d.m_sw.m_merge) | (elm << 32u);
+
+						idx = idx_head;
+						k = 3;
+						while(idx && k <= c_case + 2u) {
+							h_aclcur_t p_case = aclcur_get_node_idx(idx, h_ctx);
+
+							if(!p_case || p_case->m_class != ACLCUR_SW_CASE)
+								break;
+
+							s_get_stack(h_ctx)[c_num_stack - k]
+								= ((aclspv_wrd2_t)p_case->m_d.m_sw_case.m_lbl) | (elm << 32u);
+
+							idx = p_case->m_d.m_sw_case.m_nxt;
+							++k;
+						}
+
+						break;
+					}
 				}
 
 				c_code = ACLCUR_LBL_DFS_IN;

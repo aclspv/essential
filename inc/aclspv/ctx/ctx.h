@@ -200,13 +200,14 @@ struct a_aclspv_ctx {
 	 * @brief	GNU statement expression (`({ ... })`) emitter.
 	 *
 	 * set by aclemit while a function body is being emitted: it carves the
-	 * statement list of c_stmtexpr into the current control-flow context and
-	 * returns the value id of the block's last expression, or 0 on failure.
+	 * statement list of c_stmtexpr into the current control-flow context.
+	 * it returns the value id of the block's last expression (0 on failure)
+	 * and stores that value's type id through rw_ty.
 	 *
 	 * null outside body emission, where a statement expression would mean
 	 * the expression is being evaluated as a constant and cannot be carved.
 	 * */
-	aclspv_id_t		(*m_stmtexpr)(CXCursor c_stmtexpr, struct a_aclspv_ctx* h_ctx);
+	aclspv_id_t		(*m_stmtexpr)(CXCursor c_stmtexpr, aclspv_id_t* rw_ty, struct a_aclspv_ctx* h_ctx);
 	aclspv_wrd_t		m_ctx_sz;
 	void*			m_ctx_base;
 	aclspv_usrcfg_t		m_usrcfg;

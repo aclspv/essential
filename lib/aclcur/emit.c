@@ -4,6 +4,7 @@
 #include "./phi.h"
 #include "./j/emit.h"
 #include "./jc/emit.h"
+#include "./sw/emit.h"
 #include "./ret/emit.h"
 #include "./op/emit.h"
 #include "./opX/emit.h"
@@ -27,6 +28,8 @@ aclspv_compile_t aclcur_emit(h_aclspv_ctx_t h_ctx) {
 			case ACLCUR_RESERVED:
 				/** phis are emitted through their owning LOAD node. */
 			case ACLCUR_PHI:
+			/** switch case entries are data of their SW node. */
+			case ACLCUR_SW_CASE:
 				continue;
 
 			case ACLCUR_LBL:
@@ -109,6 +112,7 @@ aclspv_compile_t aclcur_emit(h_aclspv_ctx_t h_ctx) {
 				}
 			case ACLCUR_J:   h_ctx->m_err = EMIT_aclcur_jmp(p, h_ctx); break;
 			case ACLCUR_JC:  h_ctx->m_err = EMIT_aclcur_jc(p, h_ctx); break;
+			case ACLCUR_SW:  h_ctx->m_err = EMIT_aclcur_sw(p, h_ctx); break;
 			case ACLCUR_RET: h_ctx->m_err = EMIT_aclcur_ret(p, h_ctx); break;
 			case ACLCUR_OP1: h_ctx->m_err = EMIT_aclcur_op1(p, h_ctx); break;
 			case ACLCUR_OP2: h_ctx->m_err = EMIT_aclcur_op2(p, h_ctx); break;

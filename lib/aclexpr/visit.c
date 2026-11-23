@@ -7,7 +7,6 @@
 
 #include <aclctx/id.h>
 #include <aclctx/err.h>
-#include <aclty/by_cursor.h>
 
 #include "./carve.h"
 
@@ -317,7 +316,7 @@ enum CXChildVisitResult aclexpr_visit(
 				return CXChildVisit_Break;
 			}
 
-			IDVAL = CTX->m_stmtexpr(h_cur, CTX);
+			IDVAL = CTX->m_stmtexpr(h_cur, &TYID, CTX);
 
 			ae2f_ifnezerr(CTX->m_err)
 				return CXChildVisit_Break;
@@ -329,13 +328,13 @@ enum CXChildVisitResult aclexpr_visit(
 				return CXChildVisit_Break;
 			}
 
-			TYID = aclty_mk_by_cursor_default(
-					h_cur
-					, clang_getCursorType(h_cur)
-					, CTX);
-
-			ae2f_ifezerr(TYID)
+			/** the type came from the carved value, not from the cursor. */
+			ae2f_ifezerr(TYID) {
+				dbg_puts("[visit] statement expression yielded no type");
+				unless(CTX->m_err)
+					CTX->m_err = ACLSPV_COMPILE_UNHANDLED_VISIT;
 				return CXChildVisit_Break;
+			}
 
 			/** the block's value is a runtime operand. constant folding of
 			 * a statement expression's tail is not attempted: the tail may

@@ -33,9 +33,6 @@ enum ACLEXPR_RET_ aclspv_get_expr2(
 	DATA.m_num_cmdcounter	= 1;			/* count for operand */
 	DATA.m_id_branch	= 0;			/* bool1 merge label */
 
-	ae2f_expected_but_else(CTX->m_body.m_bootscale.m_p)
-		return ACLEXPR_RET_FAILURE;
-
 	ae2f_expected_but_else(init_scale(&CTX->m_body.m_bootscale
 				, aclutil_count_to_sz(ACLEXPR_OPBINCFG_END) + sizeof(aclspv_wrd_t)
 				+ sizeof(aclexpr_opbincfg_extra)
@@ -56,7 +53,13 @@ enum ACLEXPR_RET_ aclspv_get_expr2(
 	INIT_EXTRA->m_type_original		= 0;
 	INIT_EXTRA->m_literal.m_api_uintmax	= 0;
 
-	((umax* ae2f_restrict)CTX->m_body.m_cmdcountstck.m_p)[0] = 0;
+	ae2f_ifnezerr(s_aclmem_cgrow2(
+				&CTX->m_body.m_cmdcountstck
+				, 1, sizeof(aclspv_wrd_t)
+				, ACLSPV_COMPILE_ALLOC_FAILED_EXPR))
+		return ACLEXPR_RET_FAILURE;
+
+	((aclspv_wrd_t* ae2f_restrict)CTX->m_body.m_cmdcountstck.m_p)[0] = 0;
 
 	dbg_prefix(a);
 	dbg_call(fprintf, (stderr

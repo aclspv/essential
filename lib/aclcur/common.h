@@ -8,6 +8,7 @@
 #include "./lbl.h"
 #include "./j.h"
 #include "./jc.h"
+#include "./sw.h"
 #include "./reg.h"
 #include "./class.h"
 #include "./load.h"
@@ -22,6 +23,8 @@ struct aclcur {
 		aclcur_lbl_t	m_lbl;
 		aclcur_j_t	m_j;
 		aclcur_jc_t	m_jc;
+		aclcur_sw_t	m_sw;
+		aclcur_sw_case_t m_sw_case;
 		aclcur_reg_t	m_reg;
 		aclcur_load_t	m_load;
 		aclcur_store_t	m_store;
