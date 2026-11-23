@@ -61,18 +61,33 @@ struct a_aclspv_ctx {
 		 * [*]		general-purpose true temporary vector
 		 * */
 		x_aclspv_vec	m_v0;
-
-
-		/**
-		 * [emit::body] boot scale
-		 * */
-		x_aclspv_vec	m_v1;
-
-		/**
-		 * [emit::body] command counter stack
-		 * */
-		x_aclspv_vec	m_v2;
 	}	m_tmp;
+
+	/**
+	 * @brief	expression evaluation scratch.
+	 *
+	 * an expression evaluator owns one boot scale (see util/scale.h) and one
+	 * command-counter stack. a statement expression evaluates statements
+	 * while an expression is still being evaluated, so the two evaluators
+	 * must not share this scratch: the outer pair is parked on the `_stck`
+	 * vectors and the inner evaluator gets a fresh pair of its own. each
+	 * stack carries its own count so it can be disposed in LIFO order.
+	 * */
+	struct {
+		/** [emit::body] boot scale */
+		x_aclspv_vec	m_bootscale;
+
+		/** [emit::body] command counter stack */
+		x_aclspv_vec	m_cmdcountstck;
+
+		/** parked boot scales of the suspended (outer) evaluators */
+		x_aclspv_vec	m_bootscale_stck;
+		aclspv_wrd_t		m_num_bootscale_stck;
+
+		/** parked command-counter stacks of the suspended evaluators */
+		x_aclspv_vec	m_cmdcountstck_stck;
+		aclspv_wrd_t		m_num_cmdcountstck_stck;
+	}	m_body;
 
 	aclspv_compile_t	m_err;
 
@@ -180,6 +195,18 @@ struct a_aclspv_ctx {
 
 	CXCursorVisitor		m_work_nxt;
 	CXClientData		m_work_data;
+
+	/**
+	 * @brief	GNU statement expression (`({ ... })`) emitter.
+	 *
+	 * set by aclemit while a function body is being emitted: it carves the
+	 * statement list of c_stmtexpr into the current control-flow context and
+	 * returns the value id of the block's last expression, or 0 on failure.
+	 *
+	 * null outside body emission, where a statement expression would mean
+	 * the expression is being evaluated as a constant and cannot be carved.
+	 * */
+	aclspv_id_t		(*m_stmtexpr)(CXCursor c_stmtexpr, struct a_aclspv_ctx* h_ctx);
 	aclspv_wrd_t		m_ctx_sz;
 	void*			m_ctx_base;
 	aclspv_usrcfg_t		m_usrcfg;

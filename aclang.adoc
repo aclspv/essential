@@ -899,6 +899,35 @@ ____
 </div>
 ++++
 
+== Statement expression
+
+[quote]
+____
+GNU statement expression `({ statement; ...; expression; })` is an ordinary expression. +
+Its statements are carved into the current block, and the value of the last expression is the value of the block.
+____
+
+* the block is emitted where the expression appears, so its side effects keep source order.
+* declarations inside the block are function-scoped variables, like any other declaration of the enclosing function.
+* control flow in the block (`if`, `while`, ...) is carved as usual; the value expression comes after it, in the merge block.
+* statement expressions may nest: each nested block evaluates with its own expression scratch, restored in LIFO order.
+* the block's value is a runtime operand. It is not constant-folded, even when its last expression is a literal.
+* a block whose last statement is not an expression is rejected with `ACLSPV_COMPILE_UNHANDLED_BODY_STMTEXPR`.
+
+++++
+<div class="listingblock" style="background-color:#1c171b;color:#d8ccd3;padding:0.8em 1em;overflow-x:auto;border-radius:4px">
+<pre style="font-family:'Source Code Pro','DejaVu Sans Mono','Courier New',monospace;font-size:14px;line-height:1.3;margin:0;background:transparent;color:inherit"><span style="color:#c47791;font-weight:bold">typedef</span> <span style="color:#d0aa68">int</span> <span style="color:#d0aa68;font-weight:bold">i32</span><span style="color:#857780">;</span>
+
+<span style="color:#d0aa68">void</span> <span style="color:#7ba9c4;font-weight:bold">t</span><span style="color:#857780">(</span><span style="color:#d0aa68;font-weight:bold">i32</span><span style="color:#6fa6a8;font-style:italic">*</span><span style="color:#a99ba3;font-style:italic"> </span><span style="color:#d8ccd3;font-style:italic">in</span><span style="color:#857780">,</span> <span style="color:#d0aa68;font-weight:bold">i32</span><span style="color:#6fa6a8;font-style:italic">*</span><span style="color:#a99ba3;font-style:italic"> </span><span style="color:#d8ccd3;font-style:italic">out</span><span style="color:#857780">)</span> <span style="color:#857780">{</span>
+    <span style="color:#a99ba3;font-style:italic">/** a block-local declaration and a value */</span>
+    <span style="color:#d0aa68;font-weight:bold">i32</span> <span style="color:#d8ccd3">n</span> <span style="color:#6fa6a8">=</span> <span style="color:#857780">({</span> <span style="color:#d0aa68;font-weight:bold">i32</span> <span style="color:#d8ccd3">t</span> <span style="color:#6fa6a8">=</span> <span style="color:#6fa6a8">*</span><span style="color:#d8ccd3">in</span><span style="color:#857780">;</span> <span style="color:#d8ccd3">t</span> <span style="color:#6fa6a8">+</span> <span style="color:#d99462">1</span><span style="color:#857780">;</span> <span style="color:#857780">});</span>
+
+    <span style="color:#a99ba3;font-style:italic">/** control flow inside the block */</span>
+    <span style="color:#6fa6a8">*</span><span style="color:#d8ccd3">out</span> <span style="color:#6fa6a8">=</span> <span style="color:#857780">({</span> <span style="color:#d0aa68;font-weight:bold">i32</span> <span style="color:#d8ccd3">r</span> <span style="color:#6fa6a8">=</span> <span style="color:#6fa6a8">*</span><span style="color:#d8ccd3">in</span><span style="color:#857780">;</span> <span style="color:#c47791;font-weight:bold">if</span> <span style="color:#857780">(</span><span style="color:#d8ccd3">r</span> <span style="color:#6fa6a8">&lt;</span> <span style="color:#d99462">0</span><span style="color:#857780">)</span> <span style="color:#857780">{</span> <span style="color:#d8ccd3">r</span> <span style="color:#6fa6a8">=</span> <span style="color:#d99462">0</span> <span style="color:#6fa6a8">-</span> <span style="color:#d8ccd3">r</span><span style="color:#857780">;</span> <span style="color:#857780">}</span> <span style="color:#d8ccd3">r</span><span style="color:#857780">;</span> <span style="color:#857780">});</span>
+<span style="color:#857780">}</span></pre>
+</div>
+++++
+
 == Restriction
 
 [quote]

@@ -8,8 +8,11 @@ enum ACLTEST_SPV_OP_ {
 	ACLTEST_SPV_OP_EXT_INST			= 12,
 	ACLTEST_SPV_OP_TYPE_STRUCT		= 30,
 	ACLTEST_SPV_OP_VARIABLE			= 59,
+	ACLTEST_SPV_OP_STORE			= 62,
 	ACLTEST_SPV_OP_DECORATE			= 71,
 	ACLTEST_SPV_OP_VECTOR_SHUFFLE		= 79,
+	ACLTEST_SPV_OP_I_ADD			= 128,
+	ACLTEST_SPV_OP_I_MUL			= 132,
 	ACLTEST_SPV_OP_LOGICAL_NOT		= 168,
 	ACLTEST_SPV_OP_SELECT			= 169,
 	ACLTEST_SPV_OP_I_EQUAL			= 170,
@@ -45,6 +48,9 @@ typedef struct {
 	unsigned	m_num_bnot;
 	unsigned	m_num_ieq;
 	unsigned	m_num_feq;
+	unsigned	m_num_store;
+	unsigned	m_num_iadd;
+	unsigned	m_num_imul;
 
 	/** every merge / branch target names a defined OpLabel. */
 	int		m_targets_ok;
@@ -168,6 +174,9 @@ static int acltest_spirv_scan(
 	r->m_num_bnot		= 0;
 	r->m_num_ieq		= 0;
 	r->m_num_feq		= 0;
+	r->m_num_store		= 0;
+	r->m_num_iadd		= 0;
+	r->m_num_imul		= 0;
 	r->m_targets_ok		= 1;
 
 	for(i = 5; i < c; ) {
@@ -218,6 +227,18 @@ static int acltest_spirv_scan(
 
 			case ACLTEST_SPV_OP_NOT:
 				++r->m_num_bnot;
+				break;
+
+			case ACLTEST_SPV_OP_STORE:
+				++r->m_num_store;
+				break;
+
+			case ACLTEST_SPV_OP_I_ADD:
+				++r->m_num_iadd;
+				break;
+
+			case ACLTEST_SPV_OP_I_MUL:
+				++r->m_num_imul;
 				break;
 
 			case ACLTEST_SPV_OP_EXT_INST:

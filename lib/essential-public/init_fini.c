@@ -5,6 +5,19 @@
 #include <ae2f/cc/arg_sarr.h>
 #include <aclctx/err.h>
 
+/** dispose a parked-scratch stack: every element still on it owns a buffer. */
+static void s_fini_vecstck(x_aclspv_vec* ae2f_restrict stck, aclspv_wrd_t* ae2f_restrict num) {
+	x_aclspv_vec* ae2f_restrict base = (x_aclspv_vec* ae2f_restrict)stck->m_p;
+
+	while(*num) {
+		(void)--*num;
+		aclmem_fini(&base[*num]);
+	}
+
+	aclmem_fini(stck);
+	*num = 0;
+}
+
 static void s_fini_vectors(h_aclspv_ctx_t d) {
 	aclmem_fini(&d->m_constant_cache);
 	aclmem_fini(&d->m_type_uniques);
@@ -18,8 +31,11 @@ static void s_fini_vectors(h_aclspv_ctx_t d) {
 	aclmem_fini(&d->m_fnlist.m_fn_name);
 
 	aclmem_fini(&d->m_tmp.m_v0);
-	aclmem_fini(&d->m_tmp.m_v1);
-	aclmem_fini(&d->m_tmp.m_v2);
+	aclmem_fini(&d->m_body.m_bootscale);
+	aclmem_fini(&d->m_body.m_cmdcountstck);
+
+	s_fini_vecstck(&d->m_body.m_bootscale_stck, &d->m_body.m_num_bootscale_stck);
+	s_fini_vecstck(&d->m_body.m_cmdcountstck_stck, &d->m_body.m_num_cmdcountstck_stck);
 
 	aclmem_fini(&d->m_section.m_capability);
 	aclmem_fini(&d->m_section.m_decorate);
@@ -181,8 +197,12 @@ static ae2f_inline_f aclspv_compile_t s_init_vectors(h_aclspv_ctx_t i_ctx) {
 	aclmem_init(&i_ctx->m_section.m_name_symbol	, i_ctx);
 
 	aclmem_init(&i_ctx->m_tmp.m_v0			, i_ctx);
-	aclmem_init(&i_ctx->m_tmp.m_v1			, i_ctx);
-	aclmem_init(&i_ctx->m_tmp.m_v2			, i_ctx);
+	aclmem_init(&i_ctx->m_body.m_bootscale			, i_ctx);
+	aclmem_init(&i_ctx->m_body.m_cmdcountstck			, i_ctx);
+	aclmem_init(&i_ctx->m_body.m_bootscale_stck		, i_ctx);
+	aclmem_init(&i_ctx->m_body.m_cmdcountstck_stck		, i_ctx);
+	i_ctx->m_body.m_num_bootscale_stck		= 0;
+	i_ctx->m_body.m_num_cmdcountstck_stck		= 0;
 
 	return i_ctx->m_err;
 }

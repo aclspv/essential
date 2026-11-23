@@ -109,7 +109,7 @@ ae2f_inline_f static aclexpr_visit_lbl_t aclexpr_visit_opn_call(
 		aclspv_wrd_t* ae2f_restrict	BUF;
 
 		SCALE = mk_scale_from_vec(
-				&ctx->m_tmp.m_v1
+				&ctx->m_body.m_bootscale
 				, (aclspv_wrd_t)(
 					aclutil_count_to_sz(ACLEXPR_OPBINCFG_END + c_num)
 					+ (sizeof(aclexpr_opbincfg_extra) * c_num)
@@ -117,7 +117,7 @@ ae2f_inline_f static aclexpr_visit_lbl_t aclexpr_visit_opn_call(
 				);
 		ae2f_ifezerr(SCALE) return c_lbl_fail;
 
-		BUF = get_buf_from_scale2(aclspv_wrd_t, &ctx->m_tmp.m_v1, *SCALE);
+		BUF = get_buf_from_scale2(aclspv_wrd_t, &ctx->m_body.m_bootscale, *SCALE);
 		ae2f_ifezerr(BUF) return c_lbl_fail;
 
 		BUF[ACLEXPR_OPBINCFG_NUMOPRND]		= c_num;
@@ -134,7 +134,7 @@ ae2f_inline_f static aclexpr_visit_lbl_t aclexpr_visit_opn_call(
 		/** the scale is pushed by mk_scale_from_vec; the matching command
 		 * counter is what OP_RECURSE would have pushed for an operator. */
 		ae2f_ifnezerr_strict(s_aclmem_cgrow2(
-					&ctx->m_tmp.m_v2
+					&ctx->m_body.m_cmdcountstck
 					, rdwr_data->m_num_cmdcounter + 1
 					, sizeof(aclexpr_cmdcounterstckelm)
 					, ACLSPV_COMPILE_ALLOC_FAILED_EXPR))
@@ -142,7 +142,7 @@ ae2f_inline_f static aclexpr_visit_lbl_t aclexpr_visit_opn_call(
 
 		(void)++rdwr_data->m_num_cmdcounter;
 		((aclexpr_cmdcounterstckelm* ae2f_restrict)
-		 ctx->m_tmp.m_v2.m_p)
+		 ctx->m_body.m_cmdcountstck.m_p)
 			[rdwr_data->m_num_cmdcounter - 1].m_count_oprnd = 0;
 	}
 

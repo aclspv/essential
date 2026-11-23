@@ -21,6 +21,10 @@ enum CXChildVisitResult	aclemit_fndecl_bodycfg(
 	h_ctx->m_work_nxt = aclemit_body;
 	h_ctx->m_work_data = &entp_body;
 
+	/** statement expressions are carved on demand from inside expression
+	 * evaluation, where the body visitor cannot be reached directly. */
+	h_ctx->m_stmtexpr = aclemit_body_stmtexpr;
+
 	clang_visitChildren(
 			h_cur
 			, s_aclattr_main
@@ -90,6 +94,10 @@ enum CXChildVisitResult	aclemit_fndecl_bodycfg(
 
 
 	h_ctx->m_num_cursor = 0;
+
+	/** the body is out: a later expression evaluation is not allowed to
+	 * carve statements into the finished function. */
+	h_ctx->m_stmtexpr	= 0;
 
 	h_ctx->m_work_data	= h_ctx;
 	h_ctx->m_work_nxt	= aclemit_root;

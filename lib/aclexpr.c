@@ -33,18 +33,18 @@ enum ACLEXPR_RET_ aclspv_get_expr2(
 	DATA.m_num_cmdcounter	= 1;			/* count for operand */
 	DATA.m_id_branch	= 0;			/* bool1 merge label */
 
-	ae2f_expected_but_else(CTX->m_tmp.m_v1.m_p)
+	ae2f_expected_but_else(CTX->m_body.m_bootscale.m_p)
 		return ACLEXPR_RET_FAILURE;
 
-	ae2f_expected_but_else(init_scale(&CTX->m_tmp.m_v1
+	ae2f_expected_but_else(init_scale(&CTX->m_body.m_bootscale
 				, aclutil_count_to_sz(ACLEXPR_OPBINCFG_END) + sizeof(aclspv_wrd_t)
 				+ sizeof(aclexpr_opbincfg_extra)
 				))
 		return ACLEXPR_RET_FAILURE;
 
-	SCALE_BOOT = get_buf_from_scale2(aclspv_wrd_t, &CTX->m_tmp.m_v1, *get_last_scale_from_vec(&CTX->m_tmp.m_v1));
+	SCALE_BOOT = get_buf_from_scale2(aclspv_wrd_t, &CTX->m_body.m_bootscale, *get_last_scale_from_vec(&CTX->m_body.m_bootscale));
 	ae2fpat_assertassume(SCALE_BOOT);
-	ae2fpat_assertassume(!get_last_scale_from_vec(&CTX->m_tmp.m_v1)->m_id);
+	ae2fpat_assertassume(!get_last_scale_from_vec(&CTX->m_body.m_bootscale)->m_id);
 
 	SCALE_BOOT[ACLEXPR_OPBINCFG_NUMOPRND]		= 1;
 	SCALE_BOOT[ACLEXPR_OPBINCFG_RESTYID]		= 0;
@@ -56,7 +56,7 @@ enum ACLEXPR_RET_ aclspv_get_expr2(
 	INIT_EXTRA->m_type_original		= 0;
 	INIT_EXTRA->m_literal.m_api_uintmax	= 0;
 
-	((umax* ae2f_restrict)CTX->m_tmp.m_v2.m_p)[0] = 0;
+	((umax* ae2f_restrict)CTX->m_body.m_cmdcountstck.m_p)[0] = 0;
 
 	dbg_prefix(a);
 	dbg_call(fprintf, (stderr
@@ -105,15 +105,15 @@ enum ACLEXPR_RET_ aclexpr_eval_btcast(
 	DATA.m_num_cmdcounter	= 1;				/* count for operand */
 	DATA.m_id_branch	= 0;				/* bool1 merge label */
 
-	ae2f_expected_but_else(init_scale(&CTX->m_tmp.m_v1
+	ae2f_expected_but_else(init_scale(&CTX->m_body.m_bootscale
 				, aclutil_count_to_sz(ACLEXPR_OPBINCFG_END) + sizeof(aclspv_wrd_t)
 				+ sizeof(aclexpr_opbincfg_extra)
 				))
 		return ACLEXPR_RET_FAILURE;
 
-	SCALE_BOOT = get_buf_from_scale2(aclspv_wrd_t, &CTX->m_tmp.m_v1, *get_last_scale_from_vec(&CTX->m_tmp.m_v1));
+	SCALE_BOOT = get_buf_from_scale2(aclspv_wrd_t, &CTX->m_body.m_bootscale, *get_last_scale_from_vec(&CTX->m_body.m_bootscale));
 	ae2fpat_assertassume_strict(!!SCALE_BOOT);
-	ae2fpat_assertassume_strict(!get_last_scale_from_vec(&CTX->m_tmp.m_v1)->m_id);
+	ae2fpat_assertassume_strict(!get_last_scale_from_vec(&CTX->m_body.m_bootscale)->m_id);
 
 	aclmemzero(SCALE_BOOT, sizeof(aclspv_wrd_t) * (ACLEXPR_OPBINCFG_END + 1) + sizeof(aclexpr_opbincfg_extra));
 
@@ -125,11 +125,11 @@ enum ACLEXPR_RET_ aclexpr_eval_btcast(
 #undef	INIT_EXTRA
 
 	ae2f_ifnezerr(s_aclmem_cgrow2(
-				&CTX->m_tmp.m_v2
+				&CTX->m_body.m_cmdcountstck
 				, 1, sizeof(aclspv_wrd_t)
 				, ACLSPV_COMPILE_ALLOC_FAILED_EXPR))
 		return ACLEXPR_RET_FAILURE;
-	((aclspv_wrd_t* ae2f_restrict)CTX->m_tmp.m_v2.m_p)[0] = 0;
+	((aclspv_wrd_t* ae2f_restrict)CTX->m_body.m_cmdcountstck.m_p)[0] = 0;
 
 	dbg_prefix(a);
 	dbg_call(fprintf
@@ -180,15 +180,15 @@ enum ACLEXPR_RET_ aclexpr_eval(
 	DATA.m_num_cmdcounter	= 1;				/* count for operand */
 	DATA.m_id_branch	= 0;				/* bool1 merge label */
 
-	ae2f_ifezerr(init_scale(&CTX->m_tmp.m_v1
+	ae2f_ifezerr(init_scale(&CTX->m_body.m_bootscale
 				, aclutil_count_to_sz(ACLEXPR_OPBINCFG_END) + sizeof(aclspv_wrd_t)
 				+ sizeof(aclexpr_opbincfg_extra)
 				))
 		return ACLEXPR_RET_FAILURE;
 
-	SCALE_BOOT = get_buf_from_scale2(aclspv_wrd_t, &CTX->m_tmp.m_v1, *get_last_scale_from_vec(&CTX->m_tmp.m_v1));
+	SCALE_BOOT = get_buf_from_scale2(aclspv_wrd_t, &CTX->m_body.m_bootscale, *get_last_scale_from_vec(&CTX->m_body.m_bootscale));
 	ae2fpat_assertassume_strict(!!SCALE_BOOT);
-	ae2fpat_assertassume_strict(!get_last_scale_from_vec(&CTX->m_tmp.m_v1)->m_id);
+	ae2fpat_assertassume_strict(!get_last_scale_from_vec(&CTX->m_body.m_bootscale)->m_id);
 
 	aclmemzero(SCALE_BOOT, sizeof(aclspv_wrd_t) * (ACLEXPR_OPBINCFG_END + 1) + sizeof(aclexpr_opbincfg_extra));
 
@@ -201,12 +201,12 @@ enum ACLEXPR_RET_ aclexpr_eval(
 #undef	INIT_EXTRA
 
 	ae2f_ifnezerr(s_aclmem_cgrow2(
-				&CTX->m_tmp.m_v2
+				&CTX->m_body.m_cmdcountstck
 				, 1, sizeof(aclspv_wrd_t)
 				, ACLSPV_COMPILE_ALLOC_FAILED_EXPR))
 		return ACLEXPR_RET_FAILURE;
 
-	((aclspv_wrd_t* ae2f_restrict)CTX->m_tmp.m_v2.m_p)[0] = 0;
+	((aclspv_wrd_t* ae2f_restrict)CTX->m_body.m_cmdcountstck.m_p)[0] = 0;
 
 	dbg_prefix(a);
 	dbg_call(fprintf
@@ -220,6 +220,11 @@ enum ACLEXPR_RET_ aclexpr_eval(
 	ae2f_ifnezerr(CTX->m_err) return ACLEXPR_RET_FAILURE;
 
 	unless(c_type_req) {
+		/** no cast was asked for, but the caller still owns the value:
+		 * report the id the expression carved instead of leaving it
+		 * untouched. a statement expression's value is collected this way. */
+		*ret_id = DATA.m_id_ret;
+
 		return 
 			(DATA.m_literal_flag & ACLTRL_LTRL) ? ACLEXPR_RET_SUCCESS_LITERAL : 
 			(DATA.m_literal_flag & ACLTRL_CONST) ? ACLEXPR_RET_SUCCESS_CONSTANT :

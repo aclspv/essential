@@ -81,4 +81,56 @@ void aclmemzero(void* ae2f_restrict wr, aclspv_wrd_t c);
 /** when zeroed, this is fine. */
 #define		aclmem_fini(init)	aclmem_init(init, 0)
 
+/**
+ * @brief	park `rw_cur` on `rw_stck` and detach it.
+ *
+ * the caller keeps using `rw_cur` as a fresh, empty vector; the parked copy
+ * (its buffer included) is restored by aclmem_vecstck_pop(). this is how a
+ * nested expression evaluator gets its own scratch without destroying the
+ * caller's.
+ *
+ * returns 0 on success, non-zero on allocation failure.
+ * */
+ae2f_inline_f static aclspv_bool_t aclmem_vecstck_push(
+		x_aclspv_vec* ae2f_restrict const	rw_cur,
+		x_aclspv_vec* ae2f_restrict const	rw_stck,
+		aclspv_wrd_t* ae2f_restrict const	rw_num
+		) {
+	x_aclspv_vec* ae2f_restrict base;
+	h_aclspv_ctx_t const ctx = rw_cur->m_ctx;
+
+	ae2f_ifnezerr_strict(s_aclmem_cgrow2(
+				rw_stck
+				, *rw_num + 1
+				, sizeof(x_aclspv_vec)
+				, ACLSPV_COMPILE_ALLOC_FAILED_VEC))
+		return 1;
+
+	base = (x_aclspv_vec* ae2f_restrict)rw_stck->m_p;
+	base[*rw_num] = *rw_cur;
+	(void)++*rw_num;
+
+	/** detach without freeing: the parked copy owns the buffer. */
+	aclmem_init(rw_cur, ctx);
+
+	return 0;
+}
+
+/** restore the pair parked by aclmem_vecstck_push(), disposing the nested
+ * vector that used `rw_cur` in the meantime. a pop on an empty stack is a
+ * no-op. */
+ae2f_inline_f static void aclmem_vecstck_pop(
+		x_aclspv_vec* ae2f_restrict const	rw_cur,
+		x_aclspv_vec* ae2f_restrict const	rw_stck,
+		aclspv_wrd_t* ae2f_restrict const	rw_num
+		) {
+	ae2f_ifezerr(*rw_num)
+		return;
+
+	aclmem_fini(rw_cur);
+
+	(void)--*rw_num;
+	*rw_cur = ((x_aclspv_vec* ae2f_restrict)rw_stck->m_p)[*rw_num];
+}
+
 #endif

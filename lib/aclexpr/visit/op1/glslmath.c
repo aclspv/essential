@@ -79,13 +79,13 @@ aclexpr_visit_lbl_t aclexpr_visit_op1_glsl_math(
 		return c_lbl_fail;
 
 	NEW_SCALE = mk_scale_from_vec(
-			&rdwr_data->m_ctx->m_tmp.m_v1
+			&rdwr_data->m_ctx->m_body.m_bootscale
 			, aclutil_count_to_sz(ACLEXPR_OPBINCFG_END + 1)
 			+ sizeof(aclexpr_opbincfg_extra)
 			);
 	ae2f_ifezerr(NEW_SCALE) return c_lbl_fail;
 
-	VEC = get_buf_from_scale2(aclspv_wrd_t, &rdwr_data->m_ctx->m_tmp.m_v1, *NEW_SCALE);
+	VEC = get_buf_from_scale2(aclspv_wrd_t, &rdwr_data->m_ctx->m_body.m_bootscale, *NEW_SCALE);
 	ae2f_ifezerr(VEC) return c_lbl_fail;
 
 	/** the builtin's signature fixes the expected operand type; 0 means
@@ -99,7 +99,7 @@ aclexpr_visit_lbl_t aclexpr_visit_op1_glsl_math(
 	 * counter is what OP_RECURSE would have pushed for a normal operator.
 	 * without it the operand count belongs to the outer scale. */
 	ae2f_ifnezerr_strict(s_aclmem_cgrow2(
-				&rdwr_data->m_ctx->m_tmp.m_v2
+				&rdwr_data->m_ctx->m_body.m_cmdcountstck
 				, rdwr_data->m_num_cmdcounter + 1
 				, sizeof(aclexpr_cmdcounterstckelm)
 				, ACLSPV_COMPILE_ALLOC_FAILED_EXPR))
@@ -107,7 +107,7 @@ aclexpr_visit_lbl_t aclexpr_visit_op1_glsl_math(
 
 	(void)++rdwr_data->m_num_cmdcounter;
 	((aclexpr_cmdcounterstckelm* ae2f_restrict)
-	 rdwr_data->m_ctx->m_tmp.m_v2.m_p)
+	 rdwr_data->m_ctx->m_body.m_cmdcountstck.m_p)
 		[rdwr_data->m_num_cmdcounter - 1].m_count_oprnd = 0;
 
 	ARG = clang_Cursor_getArgument(c_cur, 0);

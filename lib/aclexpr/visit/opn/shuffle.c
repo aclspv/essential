@@ -76,13 +76,13 @@ aclexpr_visit_lbl_t aclexpr_visit_opn_shuffle(
 		return c_lbl_fail;
 
 	NEW_SCALE = mk_scale_from_vec(
-			&CTX->m_tmp.m_v1
+			&CTX->m_body.m_bootscale
 			, aclutil_count_to_sz(ACLEXPR_OPBINCFG_END + 2)
 			+ (sizeof(aclexpr_opbincfg_extra) * 3)
 			);
 	ae2f_ifezerr(NEW_SCALE) return c_lbl_fail;
 
-	VEC = get_buf_from_scale2(aclspv_wrd_t, &CTX->m_tmp.m_v1, *NEW_SCALE);
+	VEC = get_buf_from_scale2(aclspv_wrd_t, &CTX->m_body.m_bootscale, *NEW_SCALE);
 	ae2f_ifezerr(VEC) return c_lbl_fail;
 
 	VEC[ACLEXPR_OPBINCFG_NUMOPRND]	= 2;
@@ -98,7 +98,7 @@ aclexpr_visit_lbl_t aclexpr_visit_opn_shuffle(
 	/** the scale is pushed by mk_scale_from_vec; the matching command
 	 * counter is what OP_RECURSE would have pushed for a normal operator. */
 	ae2f_ifnezerr_strict(s_aclmem_cgrow2(
-				&CTX->m_tmp.m_v2
+				&CTX->m_body.m_cmdcountstck
 				, rdwr_data->m_num_cmdcounter + 1
 				, sizeof(aclexpr_cmdcounterstckelm)
 				, ACLSPV_COMPILE_ALLOC_FAILED_EXPR))
@@ -106,7 +106,7 @@ aclexpr_visit_lbl_t aclexpr_visit_opn_shuffle(
 
 	(void)++rdwr_data->m_num_cmdcounter;
 	((aclexpr_cmdcounterstckelm* ae2f_restrict)
-	 CTX->m_tmp.m_v2.m_p)
+	 CTX->m_body.m_cmdcountstck.m_p)
 		[rdwr_data->m_num_cmdcounter - 1].m_count_oprnd = 0;
 
 	/** operand 0. a Break may be a normal stop after the operand carved. */

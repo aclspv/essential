@@ -7,6 +7,7 @@
 
 #include <aclctx/id.h>
 #include <aclctx/err.h>
+#include <aclty/by_cursor.h>
 
 #include "./carve.h"
 
@@ -65,6 +66,7 @@ enum OP_ {
 	OP_RECURSE,
 	OP_RECURSE_NOTHIN,
 	OP1_NEG_SUCCESS,
+	OP_STMTEXPR,
 	OP_ENTRY_POINT
 };
 
@@ -82,8 +84,8 @@ enum CXChildVisitResult aclexpr_visit(
 #define	NUM_CMDCOUNTERSTCK	BASE->m_num_cmdcounter
 #define	LITERAL			BASE->m_ret_literal
 
-#define	CMDSTCK_SCALE	CTX->m_tmp.m_v1
-#define	CMDCOUNTERSTCK	CTX->m_tmp.m_v2
+#define	CMDSTCK_SCALE	CTX->m_body.m_bootscale
+#define	CMDCOUNTERSTCK	CTX->m_body.m_cmdcountstck
 
 	ae2f_unused typedef char s_ASSRT_ELMSIZE[
 		sizeof(aclexprstck) == sizeof(aclexpr_cmdcounterstckelm) && sizeof(aclexpr_cmdcounterstckelm) == sizeof(u32_least)
@@ -286,11 +288,64 @@ enum CXChildVisitResult aclexpr_visit(
 
 		cgcsdef(OP_ENTRY_POINT):
 		{
+			/** a statement expression is a value leaf: its statements are
+			 * carved as a block and the block's last value becomes the
+			 * operand. it must not recurse, or its statements would be
+			 * parsed as operands of the enclosing operator. */
+			if((aclspv_cxcurkind_t)h_cur.kind == CXCursor_StmtExpr) {
+				cgjmp(cgcase(OP_STMTEXPR));
+			}
+
 			cgjmp(
 					aclexpr_beforevisit(h_cur, rdwr_data, GETLASTEL_CMDCOUNTERSTCK(a).m_count_oprnd)
 					? cgcase(OP_FAIL)
 					: cgcase(OP1_GLSL_MATH)
 			     );
+		}
+
+		cgcsdef(OP_STMTEXPR):
+		{
+			aclexpr_opbincfg_extra* ae2f_restrict EXTRA
+				= &LST_EXTRA[GETLASTEL_CMDCOUNTERSTCK(a).m_count_oprnd];
+			aclspv_id_t	IDVAL;
+			aclty_id_t	TYID;
+
+			unless(CTX->m_stmtexpr) {
+				err_puts("[visit] statement expression outside body emission");
+				unless(CTX->m_err)
+					CTX->m_err = ACLSPV_COMPILE_UNHANDLED_VISIT;
+				return CXChildVisit_Break;
+			}
+
+			IDVAL = CTX->m_stmtexpr(h_cur, CTX);
+
+			ae2f_ifnezerr(CTX->m_err)
+				return CXChildVisit_Break;
+
+			ae2f_ifezerr(IDVAL) {
+				dbg_puts("[visit] statement expression yielded no value");
+				unless(CTX->m_err)
+					CTX->m_err = ACLSPV_COMPILE_UNHANDLED_VISIT;
+				return CXChildVisit_Break;
+			}
+
+			TYID = aclty_mk_by_cursor_default(
+					h_cur
+					, clang_getCursorType(h_cur)
+					, CTX);
+
+			ae2f_ifezerr(TYID)
+				return CXChildVisit_Break;
+
+			/** the block's value is a runtime operand. constant folding of
+			 * a statement expression's tail is not attempted: the tail may
+			 * have been observed through control flow. */
+			EXTRA->m_mask_literal	= 0;
+			EXTRA->m_type_original	= TYID;
+
+			ID_REQ = IDVAL;
+
+			cgjmp(cgcase(OP0_));
 		}
 
 		cgcsdef(OP1_GLSL_MATH):

@@ -10,6 +10,9 @@
 
 #include <aclspv.h>
 #include <aclval.h>
+#include <aclmem.h>
+
+#include <util/visitfromroot.h>
 
 #include <ae2f/Keys.h>
 #include <ae2f/cgoto.h>
@@ -35,6 +38,83 @@ static aclspv_id_t s_body_lbl_find(CXCursor c_cur, h_aclspv_ctx_t h_ctx) {
 		return p->m_class == ACLCUR_LBL ? p->m_id : p->m_d.m_j.m_lbl;
 	}
 	return 0;
+}
+
+/** the single CompoundStmt a statement expression wraps. */
+static enum CXChildVisitResult s_stmtexpr_compound(CXCursor c_cur, ae2f_unused CXCursor c_par, CXClientData rdwr_dst) {
+	*((CXCursor* ae2f_restrict)rdwr_dst) = c_cur;
+	return CXChildVisit_Break;
+}
+
+aclspv_id_t aclemit_body_stmtexpr(CXCursor c_stmtexpr, h_aclspv_ctx_t h_ctx) {
+	CXCursor		COMPOUND;
+	CXCursor		NULLCUR = clang_getNullCursor();
+	aclspv_bool_t		c_fnret;
+	aclemit_body_t		DAT;
+
+	ae2f_ifezerr(h_ctx)		return 0;
+
+	COMPOUND = NULLCUR;
+	clang_visitChildren(c_stmtexpr, s_stmtexpr_compound, &COMPOUND);
+
+	/** the block is the statement expression's value-carrying child. */
+	ae2f_ifnezerr(clang_Cursor_isNull(COMPOUND)
+			|| COMPOUND.kind != CXCursor_CompoundStmt) {
+		err_puts("[aclemit::body::stmtexpr] statement expression has no block");
+		h_ctx->m_err = ACLSPV_COMPILE_UNHANDLED_BODY_CURKINDER;
+		return 0;
+	}
+
+	/** park the enclosing expression evaluator's scratch: the statements of
+	 * this block evaluate expressions of their own and must not clobber it.
+	 * the fresh pair is disposed and the parked pair restored on the way
+	 * out, in LIFO order, which is what makes nesting work. */
+	ae2f_ifnezerr(
+			aclmem_vecstck_push(&h_ctx->m_body.m_bootscale
+				, &h_ctx->m_body.m_bootscale_stck
+				, &h_ctx->m_body.m_num_bootscale_stck)
+			|| aclmem_vecstck_push(&h_ctx->m_body.m_cmdcountstck
+				, &h_ctx->m_body.m_cmdcountstck_stck
+				, &h_ctx->m_body.m_num_cmdcountstck_stck)) {
+		/** undo a half-done push; pop on the empty stack is a no-op. */
+		aclmem_vecstck_pop(&h_ctx->m_body.m_bootscale
+				, &h_ctx->m_body.m_bootscale_stck
+				, &h_ctx->m_body.m_num_bootscale_stck);
+		return 0;
+	}
+
+	/** a statement expression is a value-producing expression: it must not
+	 * change whether the enclosing statement returns. */
+	c_fnret = aclcur_get_fnret(h_ctx);
+
+	DAT.m_ctx = h_ctx;
+	DAT.m_vid = 0;
+
+	aclutil_visitfromroot(COMPOUND, aclemit_body, &DAT);
+
+	aclcur_set_fnret(c_fnret, h_ctx);
+
+	aclmem_vecstck_pop(&h_ctx->m_body.m_cmdcountstck
+			, &h_ctx->m_body.m_cmdcountstck_stck
+			, &h_ctx->m_body.m_num_cmdcountstck_stck);
+	aclmem_vecstck_pop(&h_ctx->m_body.m_bootscale
+			, &h_ctx->m_body.m_bootscale_stck
+			, &h_ctx->m_body.m_num_bootscale_stck);
+
+	if(h_ctx->m_err) {
+		return 0;
+	}
+
+	/** a well-formed statement expression ends in an expression; the body
+	 * emitter leaves its value here. a non-expression tail (only producible
+	 * by an invalid source) yields no value. */
+	ae2f_ifezerr(DAT.m_vid) {
+		err_puts("[aclemit::body::stmtexpr] statement expression has no value");
+		h_ctx->m_err = ACLSPV_COMPILE_UNHANDLED_BODY_STMTEXPR;
+		return 0;
+	}
+
+	return DAT.m_vid;
 }
 
 enum CXChildVisitResult aclemit_body(CXCursor h_cur, ae2f_unused CXCursor h_parent, CXClientData rdwr_data) {
@@ -198,6 +278,8 @@ enum CXChildVisitResult aclemit_body(CXCursor h_cur, ae2f_unused CXCursor h_pare
 		case CXCursor_CStyleCastExpr:
 		case CXCursor_ConditionalOperator:
 		case CXCursor_DeclRefExpr:
+		case CXCursor_IntegerLiteral:
+		case CXCursor_FloatingLiteral:
 		case CXCursor_StmtExpr:
 #if 1
 			{
