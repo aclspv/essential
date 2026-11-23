@@ -26,7 +26,7 @@ ae2f_ccconst static ae2f_inline_f enum ACLSPV_ID_ s_aclval_ty(
 	const enum ACLSPV_ID_ MAP[ACLVAL_TY_MAX][ACLVAL_NBYTE_MAX] = {
 		{ ACLSPV_ID_I8, ACLSPV_ID_I16, ACLSPV_ID_I32, ACLSPV_ID_I64 },
 		{ ACLSPV_ID_U8, ACLSPV_ID_U16, ACLSPV_ID_U32, ACLSPV_ID_U64 },
-		{ 0, ACLSPV_ID_F16_OR_Z, ACLSPV_ID_F32, ACLSPV_ID_F64 }
+		{ ACLSPV_ID_F8_OR_Z, ACLSPV_ID_F16_OR_Z, ACLSPV_ID_F32, ACLSPV_ID_F64 }
 	};
 
 	return MAP[c_ty][c_nby];
@@ -109,6 +109,22 @@ aclspv_vid_t aclval_cfg_f16_bits(
 #if	__ACLSPV_SCLR_BF16
 /** `c_bits` is a bfloat16 bit pattern, not a host float value. */
 aclspv_vid_t aclval_cfg_bf16_bits(
+		const aclspv_wrd_t c_bits,
+		h_aclspv_ctx_t h_ctx
+		);
+#endif
+
+#if	__ACLSPV_SCLR_F8_E4M3
+/** `c_bits` is an FP8 E4M3 bit pattern, not a host float value. */
+aclspv_vid_t aclval_cfg_f8_e4m3_bits(
+		const aclspv_wrd_t c_bits,
+		h_aclspv_ctx_t h_ctx
+		);
+#endif
+
+#if	__ACLSPV_SCLR_F8_E5M2
+/** `c_bits` is an FP8 E5M2 bit pattern, not a host float value. */
+aclspv_vid_t aclval_cfg_f8_e5m2_bits(
 		const aclspv_wrd_t c_bits,
 		h_aclspv_ctx_t h_ctx
 		);

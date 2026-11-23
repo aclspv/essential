@@ -1,10 +1,11 @@
 #include "../by_cursor.h"
-#include "../by_type.h"
 #include "../struct/mbr.h"
 #include "../struct.h"
 #include "../fn.h"
 #include "../ptr.h"
 #include "../arr.h"
+
+#include "./simd.h"
 
 #include <aclty.h>
 #include <aclval/spec.h>
@@ -61,7 +62,7 @@ static aclspv_id_t s_helper2(
 	const CXType	TYPE = clang_getCanonicalType((c_ty));
 
 	{
-		const aclspv_id_t D = aclutil_mk_cxtp_by_type2(TYPE, h_ctx);
+		const aclspv_id_t D = s_simd(TYPE, c_cursor, h_ctx);
 		if(D) return D;
 	}
 
@@ -135,7 +136,7 @@ static aclspv_id_t s_helper2(
 
 		case CXType_Pointer:
 			{
-				const CXType ELM	= clang_getPointeeType(TYPE);
+				const CXType ELM	= clang_getPointeeType(c_ty);
 				const aclspv_id_t ELMID	= aclty_mk_by_cursor(c_cursor, ELM, h_ctx, rd_info);
 				enum SpvStorageClass_	SCLASS = SpvStorageClassMax;
 
@@ -150,7 +151,7 @@ static aclspv_id_t s_helper2(
 		case CXType_IncompleteArray:
 			{
 				aclspv_wrd_t	SPECID = 0xFFFFFFFF;
-				const CXType ELM		= clang_getArrayElementType(TYPE);
+				const CXType ELM		= clang_getArrayElementType(c_ty);
 				const aclspv_id_t	ELMID = aclty_mk_by_cursor(c_cursor, ELM, h_ctx, rd_info);
 
 				clang_visitChildren(TYPEDEF, s_attr_specid, &SPECID);
@@ -196,7 +197,7 @@ static aclspv_id_t s_helper2(
 
 		case CXType_ConstantArray:	/** array */
 			{
-				const CXType ELM		= clang_getArrayElementType(TYPE);
+				const CXType ELM		= clang_getArrayElementType(c_ty);
 				register const aclspv_swrd2_t _ELMCOUNT	= clang_getNumElements(TYPE);
 				register const aclspv_wrd_t ELMCOUNT	= 
 					ae2f_bll_sel_bool_naive1(
@@ -262,5 +263,20 @@ aclspv_id_t aclty_mk_by_cursor(
 	const aclspv_id_t R0	= s_helper2(c_cursor, c_type, h_ctx, rd_info);
 	const aclspv_id_t R1	= R0 ? R0 : s_helper2(clang_getCanonicalCursor(c_cursor), c_type, h_ctx, rd_info);
 	const aclspv_id_t R	= R1 ? R1 : s_helper2(clang_getTypeDeclaration(c_type), c_type, h_ctx, rd_info);
-	return R;
+
+	if(R)
+		return R;
+
+	/** a typedef cursor (`clang_getTypeDeclaration` on a typedef name) does
+	 * not name the underlying record, so a compound type spelled through a
+	 * typedef (e.g. `pair_t*`) would lose its record here. fall back to the
+	 * canonical spelling's declaration, which is the real Struct/Union decl. */
+	{
+		const CXType CANON = clang_getCanonicalType(c_type);
+
+		if((aclspv_cxtykind_t)CANON.kind != (aclspv_cxtykind_t)c_type.kind)
+			return s_helper2(clang_getTypeDeclaration(CANON), c_type, h_ctx, rd_info);
+	}
+
+	return 0;
 }

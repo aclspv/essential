@@ -60,9 +60,11 @@ static aclexpr_visit_lbl_t aclexpr_visit_op1_not(
 
 	/** the declared result type is int for `!int`, int4 for `!int4`, and
 	 * int4 for `!float4`; the carve uses its shape to pick the lane. */
-	TY = aclutil_mk_cxtp_by_type2(
-			clang_getCanonicalType(clang_getCursorType(c_cur))
-			, h_ctx);
+	TY = aclty_mk_by_cursor_default(
+			c_cur
+			, clang_getCursorType(c_cur),
+			h_ctx
+			);
 	ae2f_ifezerr(TY) return c_lbl_fail;
 
 	return s_visit_op1_push(
@@ -91,9 +93,10 @@ static aclexpr_visit_lbl_t aclexpr_visit_op1_bitnot(
 
 	/** integer promotion already happened: the cursor's type is the
 	 * promoted type the result must take. */
-	TY = aclutil_mk_cxtp_by_type2(
-			clang_getCanonicalType(clang_getCursorType(c_cur))
-			, h_ctx);
+	TY = aclty_mk_by_cursor_default2(
+			c_cur
+			, h_ctx
+			);
 	ae2f_ifezerr(TY) return c_lbl_fail;
 
 	return s_visit_op1_push(

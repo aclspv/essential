@@ -330,8 +330,10 @@ message(STATUS "[aclspv_essential_predef]")
 
 
 aclspv_predef_switch(aclspv-common		INTERFACE "ACLSPV_SHARED"		0)
-aclspv_predef_switch(aclspv-common		INTERFACE "ACLSPV_SCLR_F16"		0)
-aclspv_predef_switch(aclspv-common		INTERFACE "ACLSPV_SCLR_BF16"		0)
+aclspv_predef_switch(aclspv-common		INTERFACE "ACLSPV_SCLR_F8_E4M3"		1)
+aclspv_predef_switch(aclspv-common		INTERFACE "ACLSPV_SCLR_F8_E5M2"		1)
+aclspv_predef_switch(aclspv-common		INTERFACE "ACLSPV_SCLR_F16"		1)
+aclspv_predef_switch(aclspv-common		INTERFACE "ACLSPV_SCLR_BF16"		1)
 aclspv_predef_switch(aclspv-common-essential 	INTERFACE "ACLSPV_OpCapabilityKernel" "0")
 aclspv_predef_switch(aclspv-common-essential	INTERFACE "ACLSPV_OpCapabilityShader" "1")
 aclspv_predef_switch(aclspv-common-essential	INTERFACE "ACLSPV_CHECK_EXTRA" 1)
@@ -340,6 +342,7 @@ aclspv_predef_switch(aclspv-common-essential	INTERFACE "ACLSPV_SYMBOL" 0)
 aclspv_predef_switch(aclspv-common-essential	INTERFACE "ACLSPV_ATOMIC_ID" 0)
 aclspv_predef_switch(aclspv-common-essential	INTERFACE "ACLSPV_OPACC_IDX_MAX" 64)
 aclspv_predef_switch(aclspv-common-essential	INTERFACE "ACLSPV_NO_MALLOC" 1)
+aclspv_predef_switch(aclspv-aclty	PUBLIC		"ACLSPV_TYPE_FLOAT_ALIAS" 1)
 aclspv_predef_switch(aclspv-aclmem	PUBLIC		"ACLMEMCPY" 0)
 aclspv_predef_switch(aclspv-aclmem	PUBLIC		"ACLMEMZERO" 0)
 aclspv_predef_switch(aclspv-aclexpr	PRIVATE		"ACLSPV_MATH_LITERAL"	1)
@@ -365,6 +368,10 @@ endif()
 
 if(ACLSPV_SCLR_BF16)
 	aclspv_CoreTestTentVerbose(aclspv-essential-test ./test/comp-bf16/)
+endif()
+
+if(ACLSPV_SCLR_F8_E4M3 AND ACLSPV_SCLR_F8_E5M2)
+	aclspv_CoreTestTentVerbose(aclspv-essential-test ./test/comp-fp8/)
 endif()
 
 message(STATUS ""

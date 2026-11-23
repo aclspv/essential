@@ -7,6 +7,7 @@
 #define aclutil_extension_h
 
 #include <aclspv.h>
+#include <acldef.h>
 
 /** 0 when failed */
 ae2f_inline_f static aclspv_bool_t aclutil_add_extension_by_flag(

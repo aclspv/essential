@@ -35,9 +35,9 @@ static aclexpr_visit_lbl_t aclexpr_visit_op2_comma(
 	if(clang_getCursorBinaryOperatorKind(c_cur) != CXBinaryOperator_Comma)
 		return c_lbl_pass;
 
-	TY = aclutil_mk_cxtp_by_type2(
-			clang_getCanonicalType(clang_getCursorType(c_cur))
-			, h_ctx);
+	TY = aclty_mk_by_cursor_default2(
+			c_cur, h_ctx
+			);
 	ae2f_ifezerr(TY) return c_lbl_fail;
 
 	NEW_SCALE = mk_scale_from_vec(

@@ -8,7 +8,6 @@
 #include "./aclty/ptr.h"
 #include "./aclty/struct.h"
 #include "./aclty/fn.h"
-#include "./aclty/by_type.h"
 #include "./aclty/by_cursor.h"
 #include "./aclty/simd.h"
 

@@ -13,7 +13,7 @@
  * to the bf16 encoding, not the IEEE binary16 one.
  * */
 static const char s_src_bf16_literal[] =
-"typedef __bf16 bf16;\n"
+"typedef __attribute__((annotate(\"__bf16\"))) __float128 bf16;\n"
 "__attribute__((annotate(\"aclspv_execmodel(5)\")))\n"
 "__attribute__((annotate(\"aclspv_wrkgroup_size(1,1,1)\")))\n"
 "void t(\n"

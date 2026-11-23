@@ -13,13 +13,15 @@
 
 #include <acltrl/f16.h>
 #include <acltrl/bf16.h>
+#include <acltrl/f8.h>
 
 #include <aclctx/id.h>
 #include <aclctx/err.h>
 
 #include <aclutil/emitx.h>
 
-/** decode a 16-bit float literal (stored in the low half of `m_u64`). */
+/** decode a narrow float literal (16/8-bit, stored in the low bits of
+ * `m_u64`) into a host float. */
 static float s_literal_flt16_to_f32(
 		const aclty_id_t	c_ty,
 		const acltrl_t		c_literal
@@ -37,12 +39,20 @@ static float s_literal_flt16_to_f32(
 		case ACLSPV_ID_BF16:
 			return acltrl_bf16_to_f32(BITS);
 #endif
+#if	__ACLSPV_SCLR_F8_E4M3
+		case ACLSPV_ID_F8_E4M3:
+			return acltrl_f8_e4m3_to_f32(BITS & 0xFFu);
+#endif
+#if	__ACLSPV_SCLR_F8_E5M2
+		case ACLSPV_ID_F8_E5M2:
+			return acltrl_f8_e5m2_to_f32(BITS & 0xFFu);
+#endif
 		default:
 			return c_literal.m_flt;
 	}
 }
 
-/** encode a host float as the 16-bit float encoding of `c_ty`. */
+/** encode a host float as the narrow (16/8-bit) float encoding of `c_ty`. */
 static aclspv_wrd2_t s_literal_flt16_from_f32(
 		const aclty_id_t	c_ty,
 		const float		c_val
@@ -57,6 +67,14 @@ static aclspv_wrd2_t s_literal_flt16_from_f32(
 #if	__ACLSPV_SCLR_BF16
 		case ACLSPV_ID_BF16:
 			return (aclspv_wrd2_t)acltrl_f32_to_bf16(c_val);
+#endif
+#if	__ACLSPV_SCLR_F8_E4M3
+		case ACLSPV_ID_F8_E4M3:
+			return (aclspv_wrd2_t)acltrl_f32_to_f8_e4m3(c_val);
+#endif
+#if	__ACLSPV_SCLR_F8_E5M2
+		case ACLSPV_ID_F8_E5M2:
+			return (aclspv_wrd2_t)acltrl_f32_to_f8_e5m2(c_val);
 #endif
 		default:
 			return 0;
@@ -373,6 +391,9 @@ enum ACLEXPR_RET_ aclexpr_arithmetic_cast_literal(
 				RESULT.m_api_intmax = (imax)c_old_literal.m_flt;
 				break;
 			case 16:
+#if	__ACLSPV_SCLR_F8_E4M3 || __ACLSPV_SCLR_F8_E5M2
+			case 8:
+#endif
 				{
 					const float FLT = s_literal_flt16_to_f32(
 							c_old_type
@@ -409,6 +430,9 @@ enum ACLEXPR_RET_ aclexpr_arithmetic_cast_literal(
 				break;
 
 			case 16:
+#if	__ACLSPV_SCLR_F8_E4M3 || __ACLSPV_SCLR_F8_E5M2
+			case 8:
+#endif
 				RESULT.m_u64 = s_literal_flt16_from_f32(
 						c_new_type
 						, (float)c_old_literal.m_api_intmax);
@@ -427,36 +451,27 @@ enum ACLEXPR_RET_ aclexpr_arithmetic_cast_literal(
 
 	else if(aclty_is_sclr_flt(c_old_type) && aclty_is_sclr_flt(c_new_type) && c_old_type != c_new_type) {
 		const unsigned	OLD_WIDTH = (unsigned)aclty_get_sclr_width(c_old_type);
+		/** decode the source into a host float once; `s_literal_flt16_to_f32`
+		 * passes a 32-bit value through unchanged. */
+		const float	OLD_F32 = (OLD_WIDTH == 64)
+			? (float)c_old_literal.m_dbl
+			: s_literal_flt16_to_f32(c_old_type, c_old_literal);
 
 		dbg_puts("two are float");
 		switch(aclty_get_sclr_width(c_new_type)) {
 			case 64:
-				RESULT.m_dbl = (OLD_WIDTH == 16)
-					? (double)s_literal_flt16_to_f32(
-							c_old_type
-							, c_old_literal)
-					: (double)c_old_literal.m_flt;
+				RESULT.m_dbl = (double)OLD_F32;
 				break;
 
 			case 32:
-				if(OLD_WIDTH == 64)
-					RESULT.m_flt = (float)c_old_literal.m_dbl;
-				else if(OLD_WIDTH == 16)
-					RESULT.m_flt = s_literal_flt16_to_f32(
-							c_old_type
-							, c_old_literal);
-				else
-					RESULT.m_flt = c_old_literal.m_flt;
+				RESULT.m_flt = OLD_F32;
 				break;
 
 			case 16:
-				RESULT.m_u64 = s_literal_flt16_from_f32(
-						c_new_type
-						, (OLD_WIDTH == 64)
-						? (float)c_old_literal.m_dbl
-						: (OLD_WIDTH == 16)
-						? s_literal_flt16_to_f32(c_old_type, c_old_literal)
-						: c_old_literal.m_flt);
+#if	__ACLSPV_SCLR_F8_E4M3 || __ACLSPV_SCLR_F8_E5M2
+			case 8:
+#endif
+				RESULT.m_u64 = s_literal_flt16_from_f32(c_new_type, OLD_F32);
 				break;
 
 			default:
@@ -479,6 +494,13 @@ enum ACLEXPR_RET_ aclexpr_arithmetic_cast_literal(
 			case 32:
 				RESULT.m_api_int = !!(i32_least)c_old_literal.m_flt;
 				break;
+#if	__ACLSPV_SCLR_F8_E4M3 || __ACLSPV_SCLR_F8_E5M2
+			case 8:
+				RESULT.m_api_int = !!(i32_least)s_literal_flt16_to_f32(
+						c_old_type
+						, c_old_literal);
+				break;
+#endif
 			default:
 				return ACLEXPR_RET_NOT_THE_CASE;
 		}
@@ -540,6 +562,26 @@ enum ACLEXPR_RET_ aclexpr_arithmetic_cast_literal(
 
 		*r_newid = ID_RET;
 		return ACLEXPR_RET_SUCCESS_LITERAL;
+
+#if	__ACLSPV_SCLR_F8_E4M3
+		case ACLSPV_ID_F8_E4M3:
+		ae2f_expected_but_else(ID_RET = aclval_cfg_f8_e4m3_bits(
+					(aclspv_wrd_t)(RESULT.m_u64 & 0xFFu)
+					, h_ctx)) return ACLEXPR_RET_FAILURE;
+
+		*r_newid = ID_RET;
+		return ACLEXPR_RET_SUCCESS_LITERAL;
+#endif
+
+#if	__ACLSPV_SCLR_F8_E5M2
+		case ACLSPV_ID_F8_E5M2:
+		ae2f_expected_but_else(ID_RET = aclval_cfg_f8_e5m2_bits(
+					(aclspv_wrd_t)(RESULT.m_u64 & 0xFFu)
+					, h_ctx)) return ACLEXPR_RET_FAILURE;
+
+		*r_newid = ID_RET;
+		return ACLEXPR_RET_SUCCESS_LITERAL;
+#endif
 
 #if	__ACLSPV_SCLR_F16
 		case ACLSPV_ID_F16:

@@ -12,7 +12,7 @@ typedef aclspv_id_t aclty_mk_by_cursor_t(
 typedef aclty_layout_interface_t aclty_mk_by_cursor_info_t;
 
 /* Returns the type id of type */
-aclspv_id_t aclty_mk_by_cursor(
+aclty_id_t aclty_mk_by_cursor(
 		const CXCursor		c_cursor,
 		const CXType		c_type,
 		const h_aclspv_ctx_t	h_ctx,
@@ -27,11 +27,17 @@ aclspv_id_t aclty_mk_by_cursor(
  * the cursor carries the annotations (aclspv_storage_class, aclspv_layout,
  * ...), which the clang type does not; pass the DECLARED type, not a
  * canonicalised one, or the typedef holding them is already gone. */
-aclspv_id_t aclty_mk_by_cursor_default(
+aclty_id_t aclty_mk_by_cursor_default(
 		const CXCursor		c_cursor,
 		const CXType		c_type,
 		const h_aclspv_ctx_t	h_ctx
 		); 
 
+ae2f_inline_f static aclty_id_t aclty_mk_by_cursor_default2(
+		const CXCursor		c_cur,
+		const h_aclspv_ctx_t	h_ctx
+		) {
+	return aclty_mk_by_cursor_default(c_cur, clang_getCursorType(c_cur), h_ctx);
+}
 
 #endif

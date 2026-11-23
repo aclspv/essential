@@ -149,6 +149,32 @@ aclspv_id_t	aclval_cfg_bf16_bits(
 }
 #endif
 
+#if	__ACLSPV_SCLR_F8_E4M3
+aclspv_id_t	aclval_cfg_f8_e4m3_bits(
+		const aclspv_wrd_t c_bits,
+		h_aclspv_ctx_t h_ctx
+		) {
+	return aclval_cfg_by_enum(
+			(aclspv_wrd2_t)(c_bits & 0xFFu)
+			, h_ctx
+			, ACLSPV_ID_F8_E4M3
+			);
+}
+#endif
+
+#if	__ACLSPV_SCLR_F8_E5M2
+aclspv_id_t	aclval_cfg_f8_e5m2_bits(
+		const aclspv_wrd_t c_bits,
+		h_aclspv_ctx_t h_ctx
+		) {
+	return aclval_cfg_by_enum(
+			(aclspv_wrd2_t)(c_bits & 0xFFu)
+			, h_ctx
+			, ACLSPV_ID_F8_E5M2
+			);
+}
+#endif
+
 aclspv_id_t	aclval_cfg_f32(const float c_val, h_aclspv_ctx_t h_ctx)
 {
 	union {

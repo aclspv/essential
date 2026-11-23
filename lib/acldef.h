@@ -19,6 +19,14 @@ typedef unsigned int	aclspv_uiter_t;
 #define	ACLSPV_ID_F16_OR_Z	0
 #endif
 
+#if	__ACLSPV_SCLR_F8_E4M3
+#define	ACLSPV_ID_F8_OR_Z	ACLSPV_ID_F8_E4M3
+#elif	__ACLSPV_SCLR_F8_E5M2
+#define	ACLSPV_ID_F8_OR_Z	ACLSPV_ID_F8_E5M2
+#else
+#define	ACLSPV_ID_F8_OR_Z	0
+#endif
+
 /**
  * @typedef	aclspv_opcode_t
  * @brief	integer as operation code

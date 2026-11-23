@@ -60,8 +60,8 @@ aclexpr_visit_lbl_t aclexpr_visit_opn_shuffle(
 	unless(aclexpr_shuffle_detect(c_cur))
 		return c_lbl_pass;
 
-	TY = aclutil_mk_cxtp_by_type2(
-			clang_getCanonicalType(clang_getCursorType(c_cur))
+	TY = aclty_mk_by_cursor_default2(
+			c_cur
 			, CTX);
 	ae2f_ifezerr(TY) return c_lbl_fail;
 

@@ -8,13 +8,13 @@
 
 /** bfloat16 as a value type.
  *
- * `__bf16` maps to CXType_BFloat16. the type layer must emit a 16-bit
- * OpTypeFloat with the BFloat16KHR floating-point encoding, declare the
- * BFloat16TypeKHR capability and the SPV_KHR_bfloat16 extension, and lower
- * the float -> bf16 conversion to OpFConvert.
+ * bf16 is spelled as `__float128` carrying an `annotate("__bf16")`. the type
+ * layer must emit a 16-bit OpTypeFloat with the BFloat16KHR floating-point
+ * encoding, declare the BFloat16TypeKHR capability and the SPV_KHR_bfloat16
+ * extension, and lower the float -> bf16 conversion to OpFConvert.
  * */
 static const char s_src_bf16_type[] =
-"typedef __bf16 bf16;\n"
+"typedef __attribute__((annotate(\"__bf16\"))) __float128  bf16;\n"
 "typedef float f32;\n"
 "__attribute__((annotate(\"aclspv_execmodel(5)\")))\n"
 "__attribute__((annotate(\"aclspv_wrkgroup_size(1,1,1)\")))\n"
