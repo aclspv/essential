@@ -13,10 +13,13 @@ enum CXChildVisitResult	aclemit_fndecl_bodycfg(
 		aclspv_bool_t* ae2f_restrict	wr_is_const,
 		aclspv_bool_t* ae2f_restrict	wr_is_pure
 		) {
-	h_ctx->m_count.m_fnimpl = 0;
+	aclemit_body_t entp_body;
+	entp_body.m_ctx = h_ctx;
+	entp_body.m_vid = 0;
 
-	h_ctx->m_work_nxt = aclemit_entp_body;
-	h_ctx->m_work_data = h_ctx;
+	h_ctx->m_count.m_fnimpl = 0;
+	h_ctx->m_work_nxt = aclemit_body;
+	h_ctx->m_work_data = &entp_body;
 
 	clang_visitChildren(
 			h_cur

@@ -335,7 +335,7 @@ aclspv_bool_t aclsym_fn_needs_import(CXCursor c_fn, h_aclspv_ctx_t h_ctx) {
 				& aclsym_fn_flag0(ACLSYM_FN_FLAG0_DEFINED)))
 		return 0;
 
-	ae2fcc_tail_f return aclsym_body_needs_import(c_fn, h_ctx);
+	{ ae2fcc_tail_f return aclsym_body_needs_import(c_fn, h_ctx); }
 }
 
 struct s_body_import {
@@ -448,5 +448,5 @@ aclspv_bool_t aclsym_fn_ready(CXCursor c_fn, h_aclspv_ctx_t h_ctx) {
 
 	/** the same predicate as aclsym_body_ready, asked from the function
 	 * cursor: every callee must already have an id in the module. */
-	ae2fcc_tail_f return aclsym_body_ready(c_fn, h_ctx);
+	{ ae2fcc_tail_f return aclsym_body_ready(c_fn, h_ctx); }
 }

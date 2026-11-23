@@ -17,6 +17,8 @@
 #include <ae2f/pat/macrofunc.h>
 #include <ae2f/pat/dbg.h>
 
+#include <aclemit/body.h>
+
 
 /** @brief whether the declaration's own type is an array.
  *
@@ -58,15 +60,15 @@ static enum CXChildVisitResult	s_vardecl_init_detect(CXCursor h_cur, CXCursor h_
 
 
 /** @brief it produces error on ctx. */
-ae2f_MAC((L, )) aclemit_body_vardecl(CXCursor h_cur, h_aclspv_ctx_t h_ctx) { ae2fpat_assertassume(h_ctx); {
-	h_aclspv_ctx_t	L$$CTX = h_ctx;
+ae2f_MAC((L, )) aclemit_body_vardecl(const CXCursor h_cur, aclemit_body_t& rdwr_body) {
+	h_aclspv_ctx_t	L$$CTX = (rdwr_body).m_ctx;
 	acltrl_t	L$$LITERAL;
 	aclspv_id_t		L$$TYPEID = 0;
 	aclspv_id_t		L$$TYPE_PTR = 0;
 	aclspv_id_t		L$$REG = 0;
 	aclspv_id_t		L$$INIT = 0;
-
 	const CXType	L$$TYPE = clang_getCanonicalType(clang_getCursorType(h_cur));
+	(rdwr_body).m_vid = 0;
 
 	L$$LITERAL.m_api_uintmax = 0;
 
@@ -176,7 +178,7 @@ ae2f_MAC((L, )) aclemit_body_vardecl(CXCursor h_cur, h_aclspv_ctx_t h_ctx) { ae2
 			else {
 				CXCursor	L$$VAR_INIT = clang_Cursor_getVarDeclInitializer(h_cur);
 				ae2f_ifnezerr(clang_Cursor_isNull(L$$VAR_INIT)) {
-					h_ctx->m_err = ACLSPV_COMPILE_UNHANDLED_BODY_VARDECL;
+					(rdwr_body).m_ctx->m_err = ACLSPV_COMPILE_UNHANDLED_BODY_VARDECL;
 					goto L$$LBL_END;
 				}
 				else {
@@ -193,7 +195,7 @@ ae2f_MAC((L, )) aclemit_body_vardecl(CXCursor h_cur, h_aclspv_ctx_t h_ctx) { ae2
 								, L$$TYPEID
 								, L$$VAR_INIT
 								, &L$$LITERAL
-								, h_ctx)) {
+								, (rdwr_body).m_ctx)) {
 						L$$CTX->m_err = ACLSPV_COMPILE_MET_INVAL_BODY_VARDECL_GET_EXPR;
 						goto L$$LBL_END;
 					}
@@ -248,7 +250,7 @@ ae2f_MAC((L, )) aclemit_body_vardecl(CXCursor h_cur, h_aclspv_ctx_t h_ctx) { ae2
 						, L$$TYPEID
 						, L$$VAR_INIT
 						, &L$$LITERAL
-						, h_ctx))
+						, (rdwr_body).m_ctx))
 			{
 				case ACLEXPR_RET_NOT_THE_CASE:
 					L$$CTX->m_err = ACLSPV_COMPILE_NOIMPL;
@@ -275,8 +277,8 @@ ae2f_MAC((L, )) aclemit_body_vardecl(CXCursor h_cur, h_aclspv_ctx_t h_ctx) { ae2
 			goto L$$LBL_END;
 		}
 	}
-
-} L$$LBL_END: (void)0; }
+L$$LBL_END: (void)0;
+}
 
 
 #endif

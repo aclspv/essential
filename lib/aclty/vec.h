@@ -4,10 +4,12 @@
 #include "./common.h"
 #include <ae2f/cc/fnpretty.h>
 
-ae2f_ccpure struct aclutil_cxtp_veccfg_t {
+struct aclutil_cxtp_veccfg_t {
 	aclspv_id_t	m_ty_elm;
 	aclspv_wrd_t	m_num;
-}	 aclty_get_veccfg(
+};
+
+ae2f_ccpure struct aclutil_cxtp_veccfg_t  aclty_get_veccfg(
 		const aclspv_id_t	c_ty_vec,
 		const h_aclspv_ctx_t	h_ctx
 		);

@@ -37,8 +37,9 @@ static aclspv_id_t s_body_lbl_find(CXCursor c_cur, h_aclspv_ctx_t h_ctx) {
 	return 0;
 }
 
-enum CXChildVisitResult aclemit_entp_body(CXCursor h_cur, ae2f_unused CXCursor h_parent, CXClientData rdwr_data) {
-#define	CTX		((h_aclspv_ctx_t) rdwr_data)
+enum CXChildVisitResult aclemit_body(CXCursor h_cur, ae2f_unused CXCursor h_parent, CXClientData rdwr_data) {
+	register aclemit_body_t* ae2f_restrict const DAT = rdwr_data;
+	register const h_aclspv_ctx_t	CTX = DAT->m_ctx;
 #define	jmpfail(c_why)		{ _aclctx_err(CTX, (c_why)); goto LBL_BREAK; }
 #define	jmpfail_msg(rd_why)	{ err_puts(rd_why); goto LBL_FAIL; }
 #define	ctxcheck(h)	ae2f_ifnezerr(h->m_err) { err_puts("ctx check failed.\n"); goto LBL_FAIL; }
@@ -49,7 +50,7 @@ enum CXChildVisitResult aclemit_entp_body(CXCursor h_cur, ae2f_unused CXCursor h
 
 	/** the block opened by this statement, when it needs its own. */
 	aclspv_id_t BRANCH		= 0;
-
+	DAT->m_vid = 0;
 	ae2f_expected_but_else(KIND)
 		jmpfail(ACLSPV_COMPILE_MET_INVAL_BODY_NOKIND);
 
@@ -65,7 +66,7 @@ enum CXChildVisitResult aclemit_entp_body(CXCursor h_cur, ae2f_unused CXCursor h
 			_aclemit_body_vardecl(
 					VDCL
 					, h_cur
-					, CTX
+					, *DAT
 					);
 			ctxcheck(CTX) else goto LBL_DONE;
 
@@ -156,7 +157,7 @@ enum CXChildVisitResult aclemit_entp_body(CXCursor h_cur, ae2f_unused CXCursor h
 
 				LBL_ID = s_body_lbl_find(LBL_STMT, CTX);
 				if(!LBL_ID) {
-					LBL_ID = CTX->m_id++;
+					LBL_ID = aclctx_newid(CTX);
 
 					JID = aclcur_cfg_jmp(LBL_ID, CTX);
 					ae2f_ifezerr(JID)
@@ -173,7 +174,7 @@ enum CXChildVisitResult aclemit_entp_body(CXCursor h_cur, ae2f_unused CXCursor h
 				}
 
 				/** just for branch */
-				BRANCH = CTX->m_id++;
+				BRANCH = aclctx_newid(CTX);
 				ae2f_expected_but_else(aclcur_cfg_lbl(BRANCH, CTX))
 					jmpfail_msg("aclcur_cfg_lbl\n");
 				ae2f_ifnezerr(clang_Cursor_isNull(aclcur_set_cxcursor(BRANCH, h_cur, CTX)))
@@ -200,9 +201,8 @@ enum CXChildVisitResult aclemit_entp_body(CXCursor h_cur, ae2f_unused CXCursor h
 		case CXCursor_StmtExpr:
 #if 1
 			{
-				aclspv_id_t	DUMMY = 0;
 				ae2f_ifezerr(aclexpr_eval(
-							&DUMMY
+							&DAT->m_vid
 							, 0
 							, h_cur
 							, 0
@@ -214,11 +214,11 @@ enum CXChildVisitResult aclemit_entp_body(CXCursor h_cur, ae2f_unused CXCursor h
 			ctxcheck(CTX) else goto LBL_DONE;
 #endif
 		case CXCursor_IfStmt: 
-			_aclemit_body_if(IF, h_cur, CTX);
+			_aclemit_body_if(IF, h_cur, *DAT);
 			ctxcheck(CTX) else goto LBL_DONE;
 
 		case CXCursor_WhileStmt:
-			_aclemit_body_while(WHILE, h_cur, CTX);
+			_aclemit_body_while(WHILE, h_cur, *DAT);
 			ctxcheck(CTX) else goto LBL_DONE;
 
 		case CXCursor_BreakStmt:
