@@ -15,10 +15,10 @@ ae2f_MAC() aclctx_err_log(
 		) {
 	ae2f_ifnezerr((h)->m_err) {
 		if(sizeof(__FILE__) > sizeof(__ACLSPV_ROOT_PATH)) {
-			err_call(fprintf, (stderr, "[errlog] %s:%d\t%u\n"
+			err_call(fprintf, (stderr, "[errlog] %lx\t:: %s:%d\t\n"
+						, (unsigned long)(h)->m_err
 						, ((const char*)__FILE__ + sizeof(__ACLSPV_ROOT_PATH))
 						, (int)__LINE__
-						, (unsigned)(h)->m_err
 					  ));
 		}
 	}
