@@ -19,6 +19,200 @@ ____
 
 with unsigned is also possible.
 
+[[narrow-float]]
+== Narrow float types
+
+[quote]
+____
+`f16`, `bf16` and the two `fp8` encodings are scalar value types. +
+Each one is a C type the type layer recognises and lowers to an `OpTypeFloat` with the width and floating-point encoding SPIR-V asks for. +
+The family shares one rule: the type is a carrier. What an operation may emit depends on the encoding, not on the C spelling. +
+Precision, range and the corner cases are the ones of the encoding; nothing is silently widened.
+____
+
+[cols="1,2,2,3",options="header"]
+|===
+| family | C spelling | SPIR-V type | declared by the type layer
+| f16 | `_Float16` | `OpTypeFloat 16` | `Float16` capability
+| bf16 | `__float128` + `annotate("__bf16")` | `OpTypeFloat 16 BFloat16KHR` | `BFloat16TypeKHR` capability, `SPV_KHR_bfloat16` extension
+| fp8 E4M3 | `__float128` + `annotate("__fp8_e4m3")` | `OpTypeFloat 8 Float8E4M3EXT` | `Float8EXT` capability, `SPV_EXT_float8` extension
+| fp8 E5M2 | `__float128` + `annotate("__fp8_e5m2")` | `OpTypeFloat 8 Float8E5M2EXT` | `Float8EXT` capability, `SPV_EXT_float8` extension
+|===
+
+`bf16` and `fp8` have no C keyword. They are carried by `__float128` and named by an annotation on the typedef: the type layer reads the first annotation containing `__bf16` / `__fp8_e4m3` / `__fp8_e5m2` and replaces the width and the encoding of the carrier with it. A type without such an annotation stays an unsupported 128-bit float.
+
+* the annotation spelling also accepts `__nv_bfloat16`, and `__f8_e4m3`, `__nv_fp8_e4m3`, `__f8_e5m2`, `__nv_fp8_e5m2`.
+* the capability and the extension are added on first use of the type, so a module that never names an `fp8` type never declares `SPV_EXT_float8`.
+* the encoding lives in the type: an `OpFConvert` between two fp8 encodings is one instruction, and an fp8 value never decays to `f32` on its own.
+
+++++
+<div class="listingblock" style="background-color:#1c171b;color:#d8ccd3;padding:0.8em 1em;overflow-x:auto;border-radius:4px">
+<pre style="font-family:'Source Code Pro','DejaVu Sans Mono','Courier New',monospace;font-size:14px;line-height:1.3;margin:0;background:transparent;color:inherit"><span style="color:#d0aa68;font-weight:bold">typedef</span> _Float16 <span style="color:#d0aa68">f16;</span>
+<span style="color:#d0aa68;font-weight:bold">typedef</span> <span style="color:#7ba9c4;font-weight:bold">__attribute__</span>((<span style="color:#7ba9c4;font-weight:bold">annotate</span>(<span style="color:#8fbf91">"__bf16"</span>))) __float128 <span style="color:#d0aa68">bf16;</span>
+<span style="color:#d0aa68;font-weight:bold">typedef</span> <span style="color:#7ba9c4;font-weight:bold">__attribute__</span>((<span style="color:#7ba9c4;font-weight:bold">annotate</span>(<span style="color:#8fbf91">"__fp8_e4m3"</span>))) __float128 <span style="color:#d0aa68">f8_e4m3;</span>
+<span style="color:#d0aa68;font-weight:bold">typedef</span> <span style="color:#7ba9c4;font-weight:bold">__attribute__</span>((<span style="color:#7ba9c4;font-weight:bold">annotate</span>(<span style="color:#8fbf91">"__fp8_e5m2"</span>))) __float128 <span style="color:#d0aa68">f8_e5m2;</span>
+
+<span style="color:#d0aa68;font-weight:bold">void</span> <span style="color:#7ba9c4;font-weight:bold">shrink(</span><span style="color:#d0aa68;font-weight:bold">float</span>* <span style="color:#a99ba3;font-style:italic">in,</span> <span style="color:#d0aa68">f8_e4m3*</span> <span style="color:#a99ba3;font-style:italic">o4,</span> <span style="color:#d0aa68">f8_e5m2*</span> <span style="color:#a99ba3;font-style:italic">o5,</span> <span style="color:#d0aa68">f16*</span> <span style="color:#a99ba3;font-style:italic">oh,</span> <span style="color:#d0aa68">bf16*</span> <span style="color:#a99ba3;font-style:italic">ob)</span> {
+        <span style="color:#6fa6a8">*</span><span style="color:#a99ba3;font-style:italic">o4 </span><span style="color:#6fa6a8">= </span>(<span style="color:#d0aa68">f8_e4m3)</span>(<span style="color:#6fa6a8">*</span><span style="color:#a99ba3;font-style:italic">in)</span>;
+        <span style="color:#6fa6a8">*</span><span style="color:#a99ba3;font-style:italic">o5 </span><span style="color:#6fa6a8">= </span>(<span style="color:#d0aa68">f8_e5m2)</span>(<span style="color:#6fa6a8">*</span><span style="color:#a99ba3;font-style:italic">in)</span>;
+        <span style="color:#6fa6a8">*</span><span style="color:#a99ba3;font-style:italic">oh </span><span style="color:#6fa6a8">= </span>(<span style="color:#d0aa68">f16)</span>(<span style="color:#6fa6a8">*</span><span style="color:#a99ba3;font-style:italic">in)</span>;
+        <span style="color:#6fa6a8">*</span><span style="color:#a99ba3;font-style:italic">ob </span><span style="color:#6fa6a8">= </span>(<span style="color:#d0aa68">bf16)</span>(<span style="color:#6fa6a8">*</span><span style="color:#a99ba3;font-style:italic">in)</span>;
+}</pre>
+</div>
+++++
+
+=== conversions
+
+Every conversion is an ordinary SPIR-V conversion on the narrow type; the family is not staged through `f32`.
+
+[cols="1,2",options="header"]
+|===
+| from -> to | emitted
+| float -> float (any width / encoding) | `OpFConvert`; in a constant context `OpSpecConstantOp` `FConvert`
+| integer -> float | `OpConvertSToF`
+| float -> integer | `OpConvertFToS`
+| float -> `bool` | `OpFOrdNotEqual` against zero
+| `bool` -> integer / float | `OpSelect`
+| same type | nothing, the value is reused
+|===
+
+* the fp8 encodings take `OpFConvert`, `OpConvertSToF` and `OpConvertFToS` like any other float.
+* an fp8 type has no comparison instruction: a comparison on it is rejected, and a boolean context (`if (v)`, a float -> `bool` conversion) has no lowering.
+* C's usual arithmetic conversions still decide the operation's type: an `f16` operand combined with a `float` operand promotes the operation to `f32`, and the assignment converts back with `OpFConvert`. Two operands of the same narrow type stay on that type (`OpFAdd %half`, not a widened add).
+* a conversion in a constant context is folded on the host and emitted as an `OpConstant` of the destination type, never as a conversion instruction.
+
+++++
+<div class="listingblock" style="background-color:#1c171b;color:#d8ccd3;padding:0.8em 1em;overflow-x:auto;border-radius:4px">
+<pre style="font-family:'Source Code Pro','DejaVu Sans Mono','Courier New',monospace;font-size:14px;line-height:1.3;margin:0;background:transparent;color:inherit"><span style="color:#d0aa68;font-weight:bold">typedef</span> <span style="color:#7ba9c4;font-weight:bold">__attribute__</span>((<span style="color:#7ba9c4;font-weight:bold">annotate</span>(<span style="color:#8fbf91">"__fp8_e4m3"</span>))) __float128 <span style="color:#d0aa68">f8_e4m3;</span>
+
+<span style="color:#7ba9c4;font-weight:bold">__attribute__</span>((<span style="color:#7ba9c4;font-weight:bold">annotate</span>(<span style="color:#8fbf91">"aclspv_execmodel(5)"</span>)))
+<span style="color:#7ba9c4;font-weight:bold">__attribute__</span>((<span style="color:#7ba9c4;font-weight:bold">annotate</span>(<span style="color:#8fbf91">"aclspv_wrkgroup_size(1,1,1)"</span>)))
+<span style="color:#d0aa68;font-weight:bold">void</span> <span style="color:#7ba9c4;font-weight:bold">t(</span>
+    <span style="color:#7ba9c4;font-weight:bold">__attribute__</span>((<span style="color:#7ba9c4;font-weight:bold">annotate</span>(<span style="color:#8fbf91">"aclspv_storage_class(1)"</span>))) <span style="color:#d0aa68;font-weight:bold">float</span>* <span style="color:#a99ba3;font-style:italic">in,</span>
+    <span style="color:#7ba9c4;font-weight:bold">__attribute__</span>((<span style="color:#7ba9c4;font-weight:bold">annotate</span>(<span style="color:#8fbf91">"aclspv_storage_class(3)"</span>))) <span style="color:#d0aa68">f8_e4m3*</span> <span style="color:#a99ba3;font-style:italic">out</span>
+) {
+    <span style="color:#6fa6a8">*</span><span style="color:#a99ba3;font-style:italic">out </span><span style="color:#6fa6a8">= </span>(<span style="color:#d0aa68">f8_e4m3)</span>(<span style="color:#6fa6a8">*</span><span style="color:#a99ba3;font-style:italic">in)</span>;
+}</pre>
+</div>
+++++
+
+=== literals
+
+A cast of a literal to a narrow float is folded on the host: the value is encoded with the bits of the destination, and the module gets an `OpConstant` of that type. No `OpFConvert` is emitted for it.
+
+[cols="1,1,1,1,1",options="header"]
+|===
+| value | f16 | bf16 | fp8 E4M3 | fp8 E5M2
+| 0.5 | 0x3800 | 0x3F00 | 0x30 | 0x38
+| 1.0 | 0x3C00 | 0x3F80 | 0x38 | 0x3C
+| 3.0 | 0x4200 | 0x4040 | 0x44 | 0x42
+| largest finite | 0x7BFF | 0x7F7F | 0x7E (448) | 0x7B (57344)
+| infinity | 0x7C00 | 0x7F80 | none, 0x7F is NaN | 0x7C
+|===
+
+* **f16** is IEEE binary16. Rounding is truncation toward zero, so `65535` still lands on `65504` (`0x7BFF`) and `65536` becomes an infinity (`0x7C00`).
+* **bf16** is the truncated high half of the binary32 image of the value. It has the exponent range and the rounding of `f32`, 8 bits of mantissa, and no overflow for a finite `f32` input.
+* **fp8 E4M3** has no infinity. The largest finite value is 448 (`0x7E`); the all-ones pattern (`0x7F`) is NaN. Out-of-range values saturate to 448, `f32` subnormals and anything below the smallest E4M3 subnormal flush to a signed zero, infinities and NaNs become `0x7F`. Rounding is truncation.
+* **fp8 E5M2** is IEEE-754 with a 5-bit exponent and a 2-bit mantissa: it has infinities and NaNs, and it does not saturate. Rounding is truncation toward zero (`60000` lands on `57344`), and a value that truncates past the top of the range becomes an infinity (`0x7C`).
+
+++++
+<div class="listingblock" style="background-color:#1c171b;color:#d8ccd3;padding:0.8em 1em;overflow-x:auto;border-radius:4px">
+<pre style="font-family:'Source Code Pro','DejaVu Sans Mono','Courier New',monospace;font-size:14px;line-height:1.3;margin:0;background:transparent;color:inherit"><span style="color:#d0aa68;font-weight:bold">typedef</span> <span style="color:#7ba9c4;font-weight:bold">__attribute__</span>((<span style="color:#7ba9c4;font-weight:bold">annotate</span>(<span style="color:#8fbf91">"__fp8_e4m3"</span>))) __float128 <span style="color:#d0aa68">f8_e4m3;</span>
+<span style="color:#d0aa68;font-weight:bold">typedef</span> <span style="color:#7ba9c4;font-weight:bold">__attribute__</span>((<span style="color:#7ba9c4;font-weight:bold">annotate</span>(<span style="color:#8fbf91">"__fp8_e5m2"</span>))) __float128 <span style="color:#d0aa68">f8_e5m2;</span>
+
+<span style="color:#d0aa68;font-weight:bold">void</span> <span style="color:#7ba9c4;font-weight:bold">literals(</span><span style="color:#d0aa68">f8_e4m3*</span> <span style="color:#a99ba3;font-style:italic">o4,</span> <span style="color:#d0aa68">f8_e5m2*</span> <span style="color:#a99ba3;font-style:italic">o5)</span> {
+        <span style="color:#6fa6a8">*</span><span style="color:#a99ba3;font-style:italic">o4 </span><span style="color:#6fa6a8">= </span>(<span style="color:#d0aa68">f8_e4m3)</span><span style="color:#d99462">0.5f</span>;
+        <span style="color:#6fa6a8">*</span><span style="color:#a99ba3;font-style:italic">o4 </span><span style="color:#6fa6a8">= </span>(<span style="color:#d0aa68">f8_e4m3)</span><span style="color:#d99462">3</span>;
+        <span style="color:#6fa6a8">*</span><span style="color:#a99ba3;font-style:italic">o5 </span><span style="color:#6fa6a8">= </span>(<span style="color:#d0aa68">f8_e5m2)</span><span style="color:#d99462">1.0f</span>;
+        <span style="color:#6fa6a8">*</span><span style="color:#a99ba3;font-style:italic">o5 </span><span style="color:#6fa6a8">= </span>(<span style="color:#d0aa68">f8_e5m2)</span><span style="color:#d99462">0.5f</span>;
+}</pre>
+</div>
+++++
+
+=== arithmetic and comparison
+
+[cols="2,1,1,1",options="header"]
+|===
+| operation | f16 | bf16 | fp8 (both encodings)
+| `+` `-` `*` `/` `%` | native `OpFAdd` / `OpFSub` / `OpFMul` / `OpFDiv` / `OpFMod` on the narrow type | native through `SPV_EXT_bfloat16_arithmetic` | rejected
+| unary `-` | native, `OpFSub` from zero | native, same | rejected
+| `<` `<=` `>` `>=` `==` `!=` | native `OpFOrdLessThan` and friends | native through `SPV_EXT_bfloat16_arithmetic` | rejected
+|===
+
+* `SPV_EXT_float8` defines no arithmetic and no comparison at all, so an fp8 operation is a hard compile error (`ACLSPV_COMPILE_UNHANDLED_CARVE`). It is rejected instead of being silently widened to `f32`, which would change the precision the type was chosen for.
+* bf16 arithmetic and comparison are native when `ACLSPV_BF16_ARITHMETIC` is on (default). The library then declares `SPV_EXT_bfloat16_arithmetic` and `BFloat16ArithmeticEXT` on first use. With the switch off, bf16 arithmetic and comparison are rejected exactly like fp8.
+* f16 arithmetic needs only the `Float16` capability the type layer already added.
+
+++++
+<div class="listingblock" style="background-color:#1c171b;color:#d8ccd3;padding:0.8em 1em;overflow-x:auto;border-radius:4px">
+<pre style="font-family:'Source Code Pro','DejaVu Sans Mono','Courier New',monospace;font-size:14px;line-height:1.3;margin:0;background:transparent;color:inherit"><span style="color:#d0aa68;font-weight:bold">typedef</span> _Float16 <span style="color:#d0aa68">f16;</span>
+
+<span style="color:#d0aa68;font-weight:bold">void</span> <span style="color:#7ba9c4;font-weight:bold">half_ops(</span><span style="color:#d0aa68">f16*</span> <span style="color:#a99ba3;font-style:italic">a,</span> <span style="color:#d0aa68">f16*</span> <span style="color:#a99ba3;font-style:italic">b,</span> <span style="color:#d0aa68">f16*</span> <span style="color:#a99ba3;font-style:italic">out)</span> {
+        <span style="color:#6fa6a8">*</span><span style="color:#a99ba3;font-style:italic">out </span><span style="color:#6fa6a8">= *</span><span style="color:#a99ba3;font-style:italic">a </span><span style="color:#6fa6a8">+ *</span><span style="color:#a99ba3;font-style:italic">b;</span>
+        <span style="color:#6fa6a8">*</span><span style="color:#a99ba3;font-style:italic">out </span><span style="color:#6fa6a8">= </span><span style="color:#7ba9c4;font-weight:bold">__builtin_sinf16(</span><span style="color:#6fa6a8">*</span><span style="color:#a99ba3;font-style:italic">a)</span>;
+        <span style="color:#6fa6a8">*</span><span style="color:#a99ba3;font-style:italic">out </span><span style="color:#6fa6a8">= *</span><span style="color:#a99ba3;font-style:italic">a </span><span style="color:#6fa6a8">* </span><span style="color:#d99462">2.0f</span>;
+}</pre>
+</div>
+++++
+
+++++
+<div class="listingblock" style="background-color:#1c171b;color:#d8ccd3;padding:0.8em 1em;overflow-x:auto;border-radius:4px">
+<pre style="font-family:'Source Code Pro','DejaVu Sans Mono','Courier New',monospace;font-size:14px;line-height:1.3;margin:0;background:transparent;color:inherit"><span style="color:#d0aa68;font-weight:bold">typedef</span> <span style="color:#7ba9c4;font-weight:bold">__attribute__</span>((<span style="color:#7ba9c4;font-weight:bold">annotate</span>(<span style="color:#8fbf91">"__bf16"</span>))) __float128 <span style="color:#d0aa68">bf16;</span>
+
+<span style="color:#d0aa68;font-weight:bold">void</span> <span style="color:#7ba9c4;font-weight:bold">bf16_ops(</span><span style="color:#d0aa68">bf16*</span> <span style="color:#a99ba3;font-style:italic">a,</span> <span style="color:#d0aa68">bf16*</span> <span style="color:#a99ba3;font-style:italic">b,</span> <span style="color:#d0aa68">bf16*</span> <span style="color:#a99ba3;font-style:italic">out)</span> {
+        <span style="color:#6fa6a8">*</span><span style="color:#a99ba3;font-style:italic">out </span><span style="color:#6fa6a8">= *</span><span style="color:#a99ba3;font-style:italic">a </span><span style="color:#6fa6a8">+ *</span><span style="color:#a99ba3;font-style:italic">b;</span>
+        <span style="color:#6fa6a8">*</span><span style="color:#a99ba3;font-style:italic">out </span><span style="color:#6fa6a8">= *</span><span style="color:#a99ba3;font-style:italic">a </span><span style="color:#6fa6a8">* *</span><span style="color:#a99ba3;font-style:italic">b;</span>
+}</pre>
+</div>
+++++
+
+the same operation on fp8 does not compile:
+
+++++
+<div class="listingblock" style="background-color:#1c171b;color:#d8ccd3;padding:0.8em 1em;overflow-x:auto;border-radius:4px">
+<pre style="font-family:'Source Code Pro','DejaVu Sans Mono','Courier New',monospace;font-size:14px;line-height:1.3;margin:0;background:transparent;color:inherit"><span style="color:#d0aa68;font-weight:bold">typedef</span> <span style="color:#7ba9c4;font-weight:bold">__attribute__</span>((<span style="color:#7ba9c4;font-weight:bold">annotate</span>(<span style="color:#8fbf91">"__fp8_e4m3"</span>))) __float128 <span style="color:#d0aa68">f8_e4m3;</span>
+
+<span style="color:#d0aa68;font-weight:bold">void</span> <span style="color:#7ba9c4;font-weight:bold">fp8_add(</span><span style="color:#d0aa68">f8_e4m3*</span> <span style="color:#a99ba3;font-style:italic">a,</span> <span style="color:#d0aa68">f8_e4m3*</span> <span style="color:#a99ba3;font-style:italic">b,</span> <span style="color:#d0aa68">f8_e4m3*</span> <span style="color:#a99ba3;font-style:italic">out)</span> {
+        <span style="color:#6fa6a8">*</span><span style="color:#a99ba3;font-style:italic">out </span><span style="color:#6fa6a8">= *</span><span style="color:#a99ba3;font-style:italic">a </span><span style="color:#6fa6a8">+ *</span><span style="color:#a99ba3;font-style:italic">b;</span>
+}</pre>
+</div>
+++++
+
+=== builtin math
+
+* <<__builtin_sinf16,__builtin_sinf16>>, <<__builtin_cosf16,__builtin_cosf16>> and <<__builtin_tanf16,__builtin_tanf16>> emit `GLSL.std.450` `Sin` / `Cos` / `Tan` (13 / 14 / 15) with a 16-bit operand and result.
+* a literal operand is folded on the host into a binary16 `OpConstant`, because an extension instruction is not a legal `OpSpecConstantOp`. This is gated by `ACLSPV_MATH_LITERAL` (default on).
+* `bf16` has no `GLSL.std.450` lowering: a literal operand folds, a runtime operand is rejected with `ACLSPV_COMPILE_UNHANDLED_CARVE`.
+* fp8 has no math builtin and no `GLSL.std.450` lowering.
+* the `__builtin_elementwise_*` family is 32-bit (`f32`) by specification, see <<__builtin_elementwise_sin,__builtin_elementwise_sin>>; a narrow operand is converted to `f32` for the call.
+
+=== shapes and limits
+
+* f16 is the only member with a full vector form: `ext_vector_type` over `_Float16` emits `OpTypeVector` of half and elementwise arithmetic on it.
+* bf16 and fp8 are scalar types here; a vector of them is not a supported shape.
+* a block-scope object can be declared only for f16 (`const f16 h = 1.0f;`). A `bf16` or `fp8` variable declaration is rejected with `ACLSPV_COMPILE_MET_INVAL_TYPE_NOT_KNOWN`; use parameters, pointees, function results and cast expressions instead.
+* a function may return a bf16 or fp8 value.
+* storage class annotations and the entry point rules are the ordinary ones, see <<attributes,Attributes>>.
+
+=== configuration
+
+The family is compiled in, and can be compiled out, per type. Each switch is a CMake cache variable (for example `cmake -S. -Bbuild -DACLSPV_SCLR_F8_E5M2=0`).
+
+[cols="2,1,3",options="header"]
+|===
+| switch | default | effect
+| `ACLSPV_SCLR_F16` | 1 | the f16 id and `OpTypeFloat 16`
+| `ACLSPV_SCLR_BF16` | 1 | the bf16 id and its encoded type
+| `ACLSPV_BF16_ARITHMETIC` | 1 | native bf16 arithmetic and comparison through `SPV_EXT_bfloat16_arithmetic`; when 0 they are rejected
+| `ACLSPV_SCLR_F8_E4M3` | 1 | the E4M3 id and `OpTypeFloat 8 Float8E4M3EXT`
+| `ACLSPV_SCLR_F8_E5M2` | 1 | the E5M2 id and `OpTypeFloat 8 Float8E5M2EXT`
+| `ACLSPV_TYPE_FLOAT_ALIAS` | 1 | the annotation spellings for bf16 and fp8; when 0, `__float128` stays unsupported
+| `ACLSPV_MATH_LITERAL` | 1 | host folding of the math builtins' literal operands
+|===
+
+* each test directory (`test/comp-f16`, `test/comp-bf16`, `test/comp-fp8`) is only registered when the types it exercises are enabled.
+* when a width has to be named without an encoding, 8 bits fall back to E4M3 and 16 bits to f16 (`ACLSPV_ID_F8_OR_Z`, `ACLSPV_ID_F16_OR_Z`).
+
 == Attributes
 
 [quote]
@@ -942,3 +1136,5 @@ Some statements / extensions may not be planned to be supported for now.
 * global variables
 * pointer to struct on input | output buffer
 * recursion, direct or mutual: the call graph must be acyclic. a cycle is reported as `ACLSPV_COMPILE_RECURSIVE_CALL` instead of emitted, because SPIR-V has no recursive `OpFunctionCall`.
+* `bf16` and `fp8` block-scope variables: those types exist as parameters, pointees, function results and expression values, see <<narrow-float,narrow float types>>.
+* arithmetic, comparison and math on `fp8`: the encodings define no such instructions, see <<narrow-float,narrow float types>>.
