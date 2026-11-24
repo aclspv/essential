@@ -15,13 +15,6 @@
 #include <ae2f/cc/switchctl.h>
 #include <ae2f/pat/dbg.h>
 
-#if	__ACLSPV_SCLR_BF16
-/** capability and extension of SPV_INTEL_bfloat16_arithmetic. the bundled
- * SPIR-V headers predate the extension, so name them here. */
-#define	ACLSPV_CAP_BFLOAT16_ARITHMETIC_INTEL	((enum SpvCapability_)6226)
-#define	ACLSPV_EXT_BFLOAT16_ARITHMETIC		"SPV_INTEL_bfloat16_arithmetic"
-#endif
-
 enum S_ARITHMETIC_ {
 	S_ARITHMETIC_ADD	= ACLEXPR_OP2_ADD,
 	S_ARITHMETIC_ADDX	= ACLEXPR_OP2_ADDASS,
@@ -63,9 +56,14 @@ ae2f_inline_f static ae2f_ccpure aclspv_opcode_t s_op_to_spv(
 {
 	aclspv_id_t	ID = aclty_get_simd_sclr(c_id, h_ctx);
 
-	/** SPV_EXT_float8 defines no arithmetic instructions for f8 at all;
-	 * the caller turns a 0 return into a hard compile error. bf16 is native
-	 * through SPV_INTEL_bfloat16_arithmetic, f16 through Float16. */
+	/** SPV_EXT_float8 defines no arithmetic at all, and SPV_KHR_bfloat16
+	 * defines none unless __ACLSPV_BF16_ARITHMETIC enables
+	 * SPV_EXT_bfloat16_arithmetic. the caller turns a 0 return into a hard
+	 * compile error. */
+#if	__ACLSPV_SCLR_BF16 && !__ACLSPV_BF16_ARITHMETIC
+	if(ID == ACLSPV_ID_BF16)
+		return 0;
+#endif
 #if	__ACLSPV_SCLR_F8_E4M3
 	if(ID == ACLSPV_ID_F8_E4M3)
 		return 0;
@@ -380,14 +378,16 @@ aclspv_bool_t aclexpr_carve2_arithmetic_do(
 		}
 	}
 
-#if	__ACLSPV_SCLR_BF16
-	/** bf16 arithmetic is native through SPV_INTEL_bfloat16_arithmetic. */
+#if	__ACLSPV_SCLR_BF16 && __ACLSPV_BF16_ARITHMETIC
+	/** bf16 arithmetic is native through SPV_EXT_bfloat16_arithmetic. */
 	if(aclty_get_simd_sclr(
 				rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_RESTYID], h_ctx)
 			== ACLSPV_ID_BF16) {
-		ae2f_ifezerr(aclutil_add_extension_by_flag(h_ctx, ACLSPV_EXT_BFLOAT16_ARITHMETIC))
+		ae2f_ifezerr(aclutil_add_extension_by_flag(
+					h_ctx, "SPV_EXT_bfloat16_arithmetic"))
 			return 1;
-		ae2f_ifezerr(aclutil_add_capability_by_flag(h_ctx, ACLSPV_CAP_BFLOAT16_ARITHMETIC_INTEL))
+		ae2f_ifezerr(aclutil_add_capability_by_flag(
+					h_ctx, SpvCapabilityBFloat16ArithmeticEXT))
 			return 1;
 	}
 #endif
@@ -397,8 +397,8 @@ aclspv_bool_t aclexpr_carve2_arithmetic_do(
 				, (ACLEXPR_OPBINCFG_OPCODE[rdwr_lst_scale_buf])
 				, h_ctx
 				)) {
-		/** no SPIR-V arithmetic for this scalar (e.g. fp8): a hard error,
-		 * not a silently dropped operation. */
+		/** no SPIR-V arithmetic for this scalar (bf16 without the EXT, fp8):
+		 * a hard error, not a silently dropped operation. */
 		err_puts(("[carve2::arithmetic] no SPIR-V arithmetic for this type"));
 		h_ctx->m_err = ACLSPV_COMPILE_UNHANDLED_CARVE;
 		return 1;

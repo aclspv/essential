@@ -8,6 +8,7 @@ option(aclspv_llvm_from_source	"it build llvm from source when set to true witho
 option(aclspv_essential_shared	"build aclspv::assential as shared object" ON)
 option(aclspv_example		"build examples" OFF)
 option(aclspv_example_vk	"build vulkan examples" OFF)
+option(aclspv_spv_head_from_source "it clones spirv-header without trying to find spir-v headers" ON)
 
 # Set this source directory as the tree root for project.
 set(ae2f_ProjRoot ${CMAKE_CURRENT_SOURCE_DIR} CACHE STRING "Tree root for project")
@@ -25,6 +26,11 @@ if(NOT EXISTS ${ae2f_CoreScript_Wh})
 	execute_process(
 		COMMAND git clone ${ae2f_host}/ae2f/CoreScript
 		${ae2f_CoreScript_Wh} --depth 1
+		)
+else()
+	execute_process(
+		WORKING_DIRECTORY ${ae2f_host}/ae2f/CoreScript
+		COMMAND git pull
 		)
 endif()
 
@@ -122,7 +128,12 @@ ae2f_CoreLibFetchX(ae2f Sys	main)
 ae2f_CoreLibFetchX(ae2f num	master)
 
 ae2fpreproctent_rel(port89 ${ae2f_port89_Wh} "ae2f/port89")
-ae2f_CoreLibFetchX_DNS(KhronosGroup KhronosGroup SPIRV-Headers main https://github.com/)
+
+if(aclspv_spv_head_from_source)
+	ae2f_CoreLibFetch_DNS(KhronosGroup KhronosGroup SPIRV-Headers main https://github.com/)
+else()
+	ae2f_CoreLibFetchX_DNS(KhronosGroup KhronosGroup SPIRV-Headers main https://github.com/)
+endif()
 
 find_path(
 	spirv_inc NAMES spirv/unified1/spirv.h	REQUIRED 
@@ -334,6 +345,7 @@ aclspv_predef_switch(aclspv-common		INTERFACE "ACLSPV_SCLR_F8_E4M3"		1)
 aclspv_predef_switch(aclspv-common		INTERFACE "ACLSPV_SCLR_F8_E5M2"		1)
 aclspv_predef_switch(aclspv-common		INTERFACE "ACLSPV_SCLR_F16"		1)
 aclspv_predef_switch(aclspv-common		INTERFACE "ACLSPV_SCLR_BF16"		1)
+aclspv_predef_switch(aclspv-common		INTERFACE "ACLSPV_BF16_ARITHMETIC"	1)
 aclspv_predef_switch(aclspv-common-essential 	INTERFACE "ACLSPV_OpCapabilityKernel" "0")
 aclspv_predef_switch(aclspv-common-essential	INTERFACE "ACLSPV_OpCapabilityShader" "1")
 aclspv_predef_switch(aclspv-common-essential	INTERFACE "ACLSPV_CHECK_EXTRA" 1)

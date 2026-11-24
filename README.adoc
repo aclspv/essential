@@ -43,6 +43,7 @@ cmake --build build
 * cmake >= 3.10
 * c compiler which compiles iso c90 or later which supports compile definition (`-D`)
 * libclang >= 17
+* BFloat16ArithmeticEXT from spir-v headers
 
 == license
 

@@ -16,13 +16,6 @@
 #include <ae2f/cc/switchctl.h>
 #include <ae2f/pat/dbg.h>
 
-#if	__ACLSPV_SCLR_BF16
-/** capability and extension of SPV_INTEL_bfloat16_arithmetic. the bundled
- * SPIR-V headers predate the extension, so name them here. */
-#define	ACLSPV_CAP_BFLOAT16_ARITHMETIC_INTEL	((enum SpvCapability_)6226)
-#define	ACLSPV_EXT_BFLOAT16_ARITHMETIC		"SPV_INTEL_bfloat16_arithmetic"
-#endif
-
 static aclspv_wrd_t s_decide_cast(aclspv_id_t c_id0, aclspv_id_t c_id1, const h_aclspv_ctx_t h_ctx) {
 	aclspv_id_t cls0, cls1;
 
@@ -78,8 +71,13 @@ ae2f_inline_f static ae2f_ccpure aclspv_opcode_t s_cmp_to_spv(
 {
 	aclspv_id_t ID = aclty_get_simd_sclr(c_id, h_ctx);
 
-	/** SPV_EXT_float8 defines no comparison instructions for f8. bf16 is
-	 * native through SPV_INTEL_bfloat16_arithmetic, f16 through Float16. */
+	/** SPV_EXT_float8 defines no comparison at all, and SPV_KHR_bfloat16
+	 * defines none unless __ACLSPV_BF16_ARITHMETIC enables
+	 * SPV_EXT_bfloat16_arithmetic. */
+#if	__ACLSPV_SCLR_BF16 && !__ACLSPV_BF16_ARITHMETIC
+	if(ID == ACLSPV_ID_BF16)
+		return 0;
+#endif
 #if	__ACLSPV_SCLR_F8_E4M3
 	if(ID == ACLSPV_ID_F8_E4M3)
 		return 0;
@@ -231,16 +229,16 @@ aclspv_bool_t aclexpr_carve2_cmp(
 	 * operands being literal/constant foldable. */
 	rdwr_prv_extra->m_mask_literal = ACLTRL_MASK_RT;
 
-#if	__ACLSPV_SCLR_BF16
-	/** bf16 comparisons are native through SPV_INTEL_bfloat16_arithmetic. */
+#if	__ACLSPV_SCLR_BF16 && __ACLSPV_BF16_ARITHMETIC
+	/** bf16 comparisons are native through SPV_EXT_bfloat16_arithmetic. */
 	if(aclty_get_simd_sclr(
 				rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_RESTYID]
 				, CTX(rdwr_data)) == ACLSPV_ID_BF16) {
 		ae2f_ifezerr(aclutil_add_extension_by_flag(
-					CTX(rdwr_data), ACLSPV_EXT_BFLOAT16_ARITHMETIC))
+					CTX(rdwr_data), "SPV_EXT_bfloat16_arithmetic"))
 			return ACLEXPR_CARVE_NO;
 		ae2f_ifezerr(aclutil_add_capability_by_flag(
-					CTX(rdwr_data), ACLSPV_CAP_BFLOAT16_ARITHMETIC_INTEL))
+					CTX(rdwr_data), SpvCapabilityBFloat16ArithmeticEXT))
 			return ACLEXPR_CARVE_NO;
 	}
 #endif
@@ -250,7 +248,8 @@ aclspv_bool_t aclexpr_carve2_cmp(
 				, (ACLEXPR_OPBINCFG_OPCODE[rdwr_lst_scale_buf])
 				, CTX(rdwr_data)
 				)) {
-		/** no SPIR-V comparison for this scalar (e.g. fp8): hard error. */
+		/** no SPIR-V comparison for this scalar (bf16 without the EXT, fp8):
+		 * hard error. */
 		err_puts("[carve2::cmp] no SPIR-V comparison for this type");
 		CTX(rdwr_data)->m_err = ACLSPV_COMPILE_UNHANDLED_CARVE;
 		return ACLEXPR_CARVE_NO;
