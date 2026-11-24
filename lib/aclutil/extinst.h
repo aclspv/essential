@@ -2,6 +2,7 @@
 #define	aclutil_extinst_h
 
 #include <aclspv.h>
+#include <aclctx/err.h>
 
 /** id of the `c_name` OpExtInstImport, adding it on first use; 0 when
  * failed.
@@ -22,7 +23,7 @@ ae2f_inline_f static aclspv_extinst_t aclutil_add_extinst_by_flag(
 
 	ae2f_ifnezerr(h_ctx->m_usrcfg.m_flag0
 			& ACLSPV_CTX_FLAG0_EXPLICIT_EXTINST_IMPORT) {
-		h_ctx->m_err = ACLSPV_COMPILE_NOIMPL_EXTINST;
+		_aclctx_err(h_ctx, ACLSPV_COMPILE_NOIMPL_EXTINST);
 		return 0;
 	}
 

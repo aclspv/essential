@@ -2,6 +2,7 @@
 #define aclemit_body_while_cc
 
 #include <aclutil/emitx.h>
+#include <aclctx/err.h>
 #include <util/visitfromroot.h>
 
 #include <ae2f/cc.h>
@@ -59,7 +60,7 @@ ae2f_MAC((L, )) aclemit_body_while(CXCursor h_cur, aclemit_body_t& rdwr_body) { 
 		dbg_call((void), fprintf(stderr, "LACKCOMPONENTS: %u %u\n"
 					, L$$GETKINDER.m_num_grepped
 					, (((~L$$GETKINDER.m_num_grepped) >> 1) & 1)));
-		(rdwr_body).m_ctx->m_err = ACLSPV_COMPILE_WHILE_LACK_COMPONENTS;
+		_aclctx_err((rdwr_body).m_ctx, ACLSPV_COMPILE_WHILE_LACK_COMPONENTS);
 		break;
 	}
 
@@ -75,12 +76,12 @@ ae2f_MAC((L, )) aclemit_body_while(CXCursor h_cur, aclemit_body_t& rdwr_body) { 
 		
 
 		ae2f_ifezerr(aclcur_cfg_jmp(L$$LOOPCHECK, (rdwr_body).m_ctx)) {
-			(rdwr_body).m_ctx->m_err = ACLSPV_COMPILE_ALLOC_FAILED;
+			_aclctx_err((rdwr_body).m_ctx, ACLSPV_COMPILE_ALLOC_FAILED);
 			break;
 		}
 
 		ae2f_ifezerr(aclcur_cfg_lbl(L$$LOOPCHECK, (rdwr_body).m_ctx)) {
-			(rdwr_body).m_ctx->m_err = ACLSPV_COMPILE_ALLOC_FAILED;
+			_aclctx_err((rdwr_body).m_ctx, ACLSPV_COMPILE_ALLOC_FAILED);
 			break;
 		}
 
@@ -90,7 +91,7 @@ ae2f_MAC((L, )) aclemit_body_while(CXCursor h_cur, aclemit_body_t& rdwr_body) { 
 		 * loopness is detected from the loop JC (carved before the body
 		 * is visited), whose continue target proves a cycle. */
 		ae2f_ifezerr(aclcur_cfg_lbl_loop(L$$LOOPCHECK, (rdwr_body).m_ctx)) {
-			(rdwr_body).m_ctx->m_err = ACLSPV_COMPILE_ALLOC_FAILED;
+			_aclctx_err((rdwr_body).m_ctx, ACLSPV_COMPILE_ALLOC_FAILED);
 			break;
 		}
 
@@ -140,7 +141,7 @@ ae2f_MAC((L, )) aclemit_body_while(CXCursor h_cur, aclemit_body_t& rdwr_body) { 
 					, L$$LOOPCONTINUE
 					, L$$LOOPCTL
 					, (rdwr_body).m_ctx)) {
-			(rdwr_body).m_ctx->m_err = ACLSPV_COMPILE_ALLOC_FAILED;
+			_aclctx_err((rdwr_body).m_ctx, ACLSPV_COMPILE_ALLOC_FAILED);
 			break;
 		}
 
@@ -186,16 +187,16 @@ ae2f_MAC((L, )) aclemit_body_while(CXCursor h_cur, aclemit_body_t& rdwr_body) { 
 		}
 
 		ae2f_ifezerr(aclcur_cfg_lbl(L$$LOOPCONTINUE, (rdwr_body).m_ctx)) {
-			(rdwr_body).m_ctx->m_err = ACLSPV_COMPILE_ALLOC_FAILED;
+			_aclctx_err((rdwr_body).m_ctx, ACLSPV_COMPILE_ALLOC_FAILED);
 			break;
 		}
 		ae2f_ifezerr(aclcur_cfg_jmp(L$$LOOPCHECK, (rdwr_body).m_ctx)) {
-			(rdwr_body).m_ctx->m_err = ACLSPV_COMPILE_ALLOC_FAILED;
+			_aclctx_err((rdwr_body).m_ctx, ACLSPV_COMPILE_ALLOC_FAILED);
 			break;
 		}
 
 		ae2f_ifezerr(aclcur_cfg_lbl(L$$LOOPEND, (rdwr_body).m_ctx)) {
-			(rdwr_body).m_ctx->m_err = ACLSPV_COMPILE_ALLOC_FAILED;
+			_aclctx_err((rdwr_body).m_ctx, ACLSPV_COMPILE_ALLOC_FAILED);
 			break;
 		}
 
@@ -232,12 +233,7 @@ ae2f_MAC((L, )) aclemit_body_while(CXCursor h_cur, aclemit_body_t& rdwr_body) { 
 
 	ae2f_unreachable();
 	L$$ERR:
-		(rdwr_body).m_ctx->m_err = ae2f_bll_sel_bool_naive1(
-				aclspv_compile_t
-				, (rdwr_body).m_ctx->m_err
-				, (rdwr_body).m_ctx->m_err
-				, ACLSPV_COMPILE_UNHANDLED_WHILE
-				);
+		_aclctx_err((rdwr_body).m_ctx, ACLSPV_COMPILE_UNHANDLED_WHILE);
 
 	/**
 	 * while(c) { ... }

@@ -1,6 +1,7 @@
 /** @file expr.c */
 
 #include <aclexpr.h>
+#include <aclctx/err.h>
 #include <aclexpr/op.h>
 #include <aclcur/common.h>
 
@@ -68,7 +69,7 @@ enum ACLEXPR_RET_ aclspv_get_expr2(
 		);
 
 	(void)aclutil_visitfromroot(c_cur, aclexpr_visit, &DATA);
-	ae2f_ifnezerr(CTX->m_err) return ACLEXPR_RET_FAILURE;
+	aclctx_err_check(CTX) return ACLEXPR_RET_FAILURE;
 
 	if(wr_literal_opt)
 		*wr_literal_opt = INIT_EXTRA->m_literal;
@@ -143,7 +144,7 @@ enum ACLEXPR_RET_ aclexpr_eval_btcast(
 		);
 
 	(void)aclutil_visitfromroot(c_cur, aclexpr_visit, &DATA);
-	ae2f_ifnezerr(CTX->m_err) return ACLEXPR_RET_FAILURE;
+	aclctx_err_check(CTX) return ACLEXPR_RET_FAILURE;
 
 	unless(c_type_req) {
 		return 
@@ -220,7 +221,7 @@ enum ACLEXPR_RET_ aclexpr_eval(
 		);
 
 	(void)aclutil_visitfromroot(c_cur, aclexpr_visit, &DATA);
-	ae2f_ifnezerr(CTX->m_err) return ACLEXPR_RET_FAILURE;
+	aclctx_err_check(CTX) return ACLEXPR_RET_FAILURE;
 
 	unless(c_type_req) {
 		/** no cast was asked for, but the caller still owns the value:

@@ -14,6 +14,7 @@
 #define	aclexpr_visit_opn_initlist_h
 
 #include "../../op.h"
+#include <aclctx/err.h>
 #include "../api.h"
 
 #include <aclcur/opX.h>
@@ -67,7 +68,7 @@ ae2f_inline_f static aclexpr_visit_lbl_t aclexpr_visit_opn_initlist(
 				, h_ctx
 				)) {
 		err_puts("[visit::opn::initlist] failed to make the result type");
-		h_ctx->m_err = ACLSPV_COMPILE_CXTP_ZERO;
+		_aclctx_err(h_ctx, ACLSPV_COMPILE_CXTP_ZERO);
 		return c_lbl_fail;
 	}
 

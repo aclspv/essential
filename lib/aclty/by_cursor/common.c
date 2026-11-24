@@ -168,7 +168,7 @@ static aclspv_id_t s_helper2(
 								SPECID, 1, h_ctx);
 
 					ae2f_expected_but_else(SPECID_WRD) {
-						h_ctx->m_err = ACLSPV_COMPILE_CXTP_ZERO;
+						_aclctx_err(h_ctx, ACLSPV_COMPILE_CXTP_ZERO);
 						return 0; /** not found */
 					}
 
@@ -222,7 +222,7 @@ static aclspv_id_t s_helper2(
 								SPECID, ELMCOUNT, h_ctx);
 
 					ae2f_ifezerr(SPECID_WRD) {
-						h_ctx->m_err = ACLSPV_COMPILE_CXTP_ZERO;
+						_aclctx_err(h_ctx, ACLSPV_COMPILE_CXTP_ZERO);
 						return 0; /** not found */
 					}
 

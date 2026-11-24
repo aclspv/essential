@@ -1,5 +1,6 @@
 
 #include "./dcr.h"
+#include <aclctx/err.h>
 #include "../dcr.h"
 #include "../implutil.h"
 #include "../dcr/util.h"
@@ -13,12 +14,12 @@ aclty_t* aclty_cfg_fn_dcr(
 	aclty_t*	r = 0;
 
 	ae2fpat_assertassumeunless(rdwr_fn) {
-		h_ctx->m_err = ACLSPV_COMPILE_CXTP_ZERO;
+		_aclctx_err(h_ctx, ACLSPV_COMPILE_CXTP_ZERO);
 		return 0;
 	}
 
 	ae2fpat_assertassumeunless(rdwr_fn->m_class == ACLTY_FN) {
-		h_ctx->m_err = ACLSPV_COMPILE_CXTP_TYINVL_STRUCT_DCR;
+		_aclctx_err(h_ctx, ACLSPV_COMPILE_CXTP_TYINVL_STRUCT_DCR);
 		return 0;
 	}
 

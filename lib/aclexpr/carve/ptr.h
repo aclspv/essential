@@ -2,6 +2,7 @@
 #define	aclexpr_carve_ptr_h
 
 #include <aclspv.h>
+#include <aclctx/err.h>
 
 #include <aclty.h>
 #include <aclval.h>
@@ -499,7 +500,7 @@ ae2f_inline_f static aclspv_bool_t aclexpr_ptr_require(
 		return 1;
 
 	err_puts("[aclexpr] a pointer operand is required here");
-	h_ctx->m_err = ACLSPV_COMPILE_NOT_A_POINTER;
+	_aclctx_err(h_ctx, ACLSPV_COMPILE_NOT_A_POINTER);
 	return 0;
 }
 
@@ -535,7 +536,7 @@ ae2f_inline_f static aclspv_bool_t aclexpr_ptr_arith_fatal(
 
 	err_puts("[aclexpr] pointer arithmetic is not available in the "
 			"logical addressing model");
-	h_ctx->m_err = ACLSPV_COMPILE_POINTER_ARITHMETIC;
+	_aclctx_err(h_ctx, ACLSPV_COMPILE_POINTER_ARITHMETIC);
 	return 1;
 }
 

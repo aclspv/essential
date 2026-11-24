@@ -1143,7 +1143,7 @@ enum CXChildVisitResult aclemit_fndecl_entp_arg(
 #define CTX		DAT->m_ctx
 
 	ae2f_ifezerr(CTX)		return CXChildVisit_Break;
-	ae2f_ifnezerr(CTX->m_err)	return CXChildVisit_Break;
+	aclctx_err_check(CTX)	return CXChildVisit_Break;
 
 	ae2f_ifnezerr_strict(h_cur.kind != CXCursor_ParmDecl) {
 		return CXChildVisit_Continue;
@@ -1208,7 +1208,7 @@ enum CXChildVisitResult aclemit_fndecl_entp_arg(
 	ae2f_ifnezerr(RET) {
 		/** a source-level rejection, not an invariant: report it. */
 		if(!DAT->m_ctx->m_err)
-			DAT->m_ctx->m_err = RET;
+			_aclctx_err(DAT->m_ctx, RET);
 
 		return CXChildVisit_Break;
 	}

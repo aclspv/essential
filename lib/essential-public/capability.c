@@ -1,4 +1,5 @@
 #include <aclspv.h>
+#include <aclctx/err.h>
 #include <ae2f/cc.h>
 #include <aclutil/emitx.h>
 
@@ -56,7 +57,7 @@ ACLSPV_ABI_LINK aclspv_bool_t aclspv_add_capability_from_ctx(
 	aclspv_wrd_t	LR[2];
 
 	ae2f_ifezerr(h_ctx)		return 0;
-	ae2f_ifnezerr(h_ctx->m_err)	return 0;
+	aclctx_err_check(h_ctx) return 0;
 	ae2f_ifezerr(c_cap)		return 0;
 
 #define	LEFT		LR[1]
@@ -78,7 +79,7 @@ ACLSPV_ABI_LINK aclspv_bool_t aclspv_add_capability_from_ctx(
 				, h_ctx->m_count.m_capability
 				, SpvOpCapability
 				, KEY)) {
-		h_ctx->m_err = ACLSPV_COMPILE_ALLOC_FAILED_CAPABILITY;
+		_aclctx_err(h_ctx, ACLSPV_COMPILE_ALLOC_FAILED_CAPABILITY);
 		return 0;
 	}
 

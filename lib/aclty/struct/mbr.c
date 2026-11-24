@@ -1,4 +1,5 @@
 #include "../implutil.h"
+#include <aclctx/err.h>
 
 #include "../dcr.h"
 #include "../dcr/util.h"
@@ -45,7 +46,7 @@ ae2f_ccpure aclty_t* aclty_get_struct_mbr(
 
 	/** UNLIKELY */
 	ae2f_ifnezerr_strict(1) {
-		h_ctx->m_err = ACLSPV_COMPILE_CXTP_STRUCT_MBR_NUM_IS_LYING;
+		_aclctx_err(h_ctx, ACLSPV_COMPILE_CXTP_STRUCT_MBR_NUM_IS_LYING);
 		return 0;
 	} else {
 		ae2f_unreachable();
@@ -57,12 +58,12 @@ aclty_t* aclty_struct_add_mbr(aclty_t* ae2f_restrict rdwr_struct, aclspv_id_t c_
 	const aclspv_wrd_t	pad = (aclspv_wrd_t)(rdwr_struct - __get_type_uniques(h_ctx));
 
 	ae2fpat_assertassumeunless(rdwr_struct) {
-		h_ctx->m_err = ACLSPV_COMPILE_CXTP_ZERO;
+		_aclctx_err(h_ctx, ACLSPV_COMPILE_CXTP_ZERO);
 		return 0;
 	}
 
 	ae2fpat_assertassumeunless(rdwr_struct->m_class == ACLTY_STRUCT) {
-		h_ctx->m_err = ACLSPV_COMPILE_CXTP_TYINVL_STRUCT_DCR;
+		_aclctx_err(h_ctx, ACLSPV_COMPILE_CXTP_TYINVL_STRUCT_DCR);
 		return 0;
 	}
 
@@ -101,7 +102,7 @@ aclty_t* aclty_struct_add_mbr(aclty_t* ae2f_restrict rdwr_struct, aclspv_id_t c_
 		err_call((void), fprintf(stderr, "struct member num is lying: %u %u\n"
 					, r2->m_info.m_struct_mbr.m_idx + 1
 					, r->m_info.m_struct_mbr.m_idx));
-		h_ctx->m_err = ACLSPV_COMPILE_CXTP_STRUCT_MBR_NUM_IS_LYING;
+		_aclctx_err(h_ctx, ACLSPV_COMPILE_CXTP_STRUCT_MBR_NUM_IS_LYING);
 		return 0;
 	}
 
@@ -114,12 +115,12 @@ aclty_t* aclty_cfg_struct_mdcr(aclty_t* ae2f_restrict rdwr_mbr, SpvDecoration c_
 	aclspv_wrd_t pad = (aclspv_wrd_t)(rdwr_mbr - __get_type_uniques(h_ctx));
 
 	ae2fpat_assertassumeunless(rdwr_mbr) {
-		h_ctx->m_err = ACLSPV_COMPILE_CXTP_ZERO;
+		_aclctx_err(h_ctx, ACLSPV_COMPILE_CXTP_ZERO);
 		return 0;
 	}
 
 	ae2fpat_assertassumeunless(rdwr_mbr->m_class == ACLTY_STRUCT_MBR) {
-		h_ctx->m_err = ACLSPV_COMPILE_CXTP_TYINVL_STRUCT_DCR;
+		_aclctx_err(h_ctx, ACLSPV_COMPILE_CXTP_TYINVL_STRUCT_DCR);
 		return 0;
 	}
 

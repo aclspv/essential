@@ -1,4 +1,5 @@
 #include "./imports.h"
+#include <aclctx/err.h>
 #include "./sym.h"
 
 #include <aclsym/fn.h>
@@ -27,15 +28,15 @@ static aclspv_compile_t s_declare(
 	ae2f_ifezerr(id_fn_ty = aclty_mk_fn1(
 				c_fn
 				, clang_getCursorType(c_fn)
-				, h_ctx))
-		return h_ctx->m_err = (
-				h_ctx->m_err
-				? h_ctx->m_err
-				: ACLSPV_COMPILE_UNHANDLED
-				);
+				, h_ctx)) {
+		_aclctx_err(h_ctx, ACLSPV_COMPILE_UNHANDLED);
+		return h_ctx->m_err;
+	}
 
-	ae2f_ifezerr(p_fn_ty = aclty_find(id_fn_ty, h_ctx))
-		return h_ctx->m_err = ACLSPV_COMPILE_UNHANDLED;
+	ae2f_ifezerr(p_fn_ty = aclty_find(id_fn_ty, h_ctx)) {
+		_aclctx_err(h_ctx, ACLSPV_COMPILE_UNHANDLED);
+		return h_ctx->m_err;
+	}
 
 	/** linkage between modules: the capability is what makes the
 	 * LinkageAttributes decoration legal. */
@@ -69,8 +70,10 @@ static aclspv_compile_t s_declare(
 			, id_fn_ty
 			);
 
-	ae2f_ifezerr(c)
-		return h_ctx->m_err = ACLSPV_COMPILE_ALLOC_FAILED;
+	ae2f_ifezerr(c) {
+		_aclctx_err(h_ctx, ACLSPV_COMPILE_ALLOC_FAILED);
+		return h_ctx->m_err;
+	}
 
 	c = emit_opcode(
 			h_wrds
@@ -79,8 +82,10 @@ static aclspv_compile_t s_declare(
 			, 0
 			);
 
-	ae2f_ifezerr(c)
-		return h_ctx->m_err = ACLSPV_COMPILE_ALLOC_FAILED;
+	ae2f_ifezerr(c) {
+		_aclctx_err(h_ctx, ACLSPV_COMPILE_ALLOC_FAILED);
+		return h_ctx->m_err;
+	}
 
 	*wr_count = c;
 
@@ -90,8 +95,10 @@ static aclspv_compile_t s_declare(
 				, h_ctx->m_count.m_decorate
 				, p_sym->m_id
 				, aclsym_fn_name(p_sym, h_ctx)
-				, (aclspv_wrd_t)SpvLinkageTypeImport))
-		return h_ctx->m_err = ACLSPV_COMPILE_ALLOC_FAILED;
+				, (aclspv_wrd_t)SpvLinkageTypeImport)) {
+		_aclctx_err(h_ctx, ACLSPV_COMPILE_ALLOC_FAILED);
+		return h_ctx->m_err;
+	}
 
 	h_ctx->m_count.m_decorate = c;
 
@@ -159,7 +166,7 @@ aclspv_compile_t aclemit_fndecl_imports(
 	struct s_import_ctx cf;
 
 	ae2f_ifezerr(h_ctx)		return ACLSPV_COMPILE_PRM_INVAL_NIL;
-	ae2f_ifnezerr(h_ctx->m_err)	return h_ctx->m_err;
+	aclctx_err_check(h_ctx)	return h_ctx->m_err;
 
 	ae2f_ifezerr(h_wrds)		return ACLSPV_COMPILE_PRM_INVAL_NIL;
 	ae2f_ifezerr(wr_count)		return ACLSPV_COMPILE_PRM_INVAL_NIL;

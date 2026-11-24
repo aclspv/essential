@@ -1,4 +1,5 @@
 #include "./initlist.h"
+#include <aclctx/err.h>
 
 #include <aclexpr/carve/util.h>
 #include <aclexpr/op.h>
@@ -91,9 +92,7 @@ aclspv_bool_t aclexpr_carve_opn_initlist(
 			err_call((void), fprintf(stderr
 						, "[carve::opn::initlist] unsupported aggregate class (%u)\n"
 						, (unsigned)P_TY->m_class));
-			CTX(rdwr_data)->m_err = CTX(rdwr_data)->m_err
-				? CTX(rdwr_data)->m_err
-				: ACLSPV_COMPILE_UNHANDLED_CARVE;
+			_aclctx_err(CTX(rdwr_data), ACLSPV_COMPILE_UNHANDLED_CARVE);
 			return ACLEXPR_CARVE_NO;
 
 		case ACLTY_STRUCT:

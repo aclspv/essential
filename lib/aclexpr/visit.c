@@ -107,7 +107,7 @@ enum CXChildVisitResult aclexpr_visit(
 					, (unsigned)LST_SCALE->m_id
 				    ));
 
-	ae2f_ifnezerr(CTX->m_err) {
+	aclctx_err_check(CTX) {
 		err_prefix();
 		err_call(fprintf, (stderr, "[visit] error %u\n"
 						, (unsigned)CTX->m_err
@@ -117,12 +117,12 @@ enum CXChildVisitResult aclexpr_visit(
 
 	
 	ae2f_ifezerr(NUM_CMDCOUNTERSTCK) {
-		CTX->m_err = ACLSPV_COMPILE_TOO_BIG_EXPRVISIT;
+		_aclctx_err(CTX, ACLSPV_COMPILE_TOO_BIG_EXPRVISIT);
 		return CXChildVisit_Break;
 	}
 
 	ae2f_expected_but_else(LST_SCALE_BUF) {
-		CTX->m_err = ACLSPV_COMPILE_ALLOC_FAILED_EXPR;
+		_aclctx_err(CTX, ACLSPV_COMPILE_ALLOC_FAILED_EXPR);
 		return CXChildVisit_Break;
 	}
 
@@ -311,28 +311,25 @@ enum CXChildVisitResult aclexpr_visit(
 
 			unless(CTX->m_stmtexpr) {
 				err_puts("[visit] statement expression outside body emission");
-				unless(CTX->m_err)
-					CTX->m_err = ACLSPV_COMPILE_UNHANDLED_VISIT;
+				_aclctx_err(CTX, ACLSPV_COMPILE_UNHANDLED_VISIT);
 				return CXChildVisit_Break;
 			}
 
 			IDVAL = CTX->m_stmtexpr(h_cur, &TYID, CTX);
 
-			ae2f_ifnezerr(CTX->m_err)
+			aclctx_err_check(CTX)
 				return CXChildVisit_Break;
 
 			ae2f_ifezerr(IDVAL) {
 				dbg_puts("[visit] statement expression yielded no value");
-				unless(CTX->m_err)
-					CTX->m_err = ACLSPV_COMPILE_UNHANDLED_VISIT;
+				_aclctx_err(CTX, ACLSPV_COMPILE_UNHANDLED_VISIT);
 				return CXChildVisit_Break;
 			}
 
 			/** the type came from the carved value, not from the cursor. */
 			ae2f_ifezerr(TYID) {
 				dbg_puts("[visit] statement expression yielded no type");
-				unless(CTX->m_err)
-					CTX->m_err = ACLSPV_COMPILE_UNHANDLED_VISIT;
+				_aclctx_err(CTX, ACLSPV_COMPILE_UNHANDLED_VISIT);
 				return CXChildVisit_Break;
 			}
 
@@ -642,10 +639,9 @@ enum CXChildVisitResult aclexpr_visit(
 				clang_disposeString(SPELL);
 				clang_disposeString(KINDSPELL);
 
-				/** a user-facing reject, not an internal invariant:
-				 * _aclctx_err() asserts, so set the error directly. */
-				unless(CTX->m_err)
-					CTX->m_err = ACLSPV_COMPILE_UNHANDLED_VISIT;
+				/** a user-facing reject of a construct this emitter
+				 * does not model. */
+				_aclctx_err(CTX, ACLSPV_COMPILE_UNHANDLED_VISIT);
 
 				return CXChildVisit_Break;
 			}

@@ -7,6 +7,7 @@
 #define	aclexpr_visit_cast_numeric_h
 
 #include "../../op.h"
+#include <aclctx/err.h>
 #include "../api.h"
 
 #include <util/scale.h>
@@ -69,7 +70,7 @@ ae2f_inline_f static aclexpr_visit_lbl_t aclexpr_visit_op1_arithmetic_cast(
 						, h_ctx
 						)) {
 				err_puts("[s_cast_numeric] failed aclutil_mk_cxtp_by_cursor");
-				h_ctx->m_err = ACLSPV_COMPILE_ARITHMETIC_CAST_TYPE_IS_UNDEFINED_NEW;
+				_aclctx_err(h_ctx, ACLSPV_COMPILE_ARITHMETIC_CAST_TYPE_IS_UNDEFINED_NEW);
 				return c_lbl_fail;
 			}
 
@@ -81,7 +82,7 @@ ae2f_inline_f static aclexpr_visit_lbl_t aclexpr_visit_op1_arithmetic_cast(
 							, "[s_cast_numeric::aclty_is_simd] %u\n"
 							, (unsigned)VEC[ACLEXPR_OPBINCFG_RESTYID]));
 
-				h_ctx->m_err = ACLSPV_COMPILE_ARITHMETIC_CAST_TYPE_IS_UNDEFINED_NEW;
+				_aclctx_err(h_ctx, ACLSPV_COMPILE_ARITHMETIC_CAST_TYPE_IS_UNDEFINED_NEW);
 				return c_lbl_fail;
 			}
 	}

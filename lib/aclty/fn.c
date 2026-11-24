@@ -1,4 +1,5 @@
 #include "./fn.h"
+#include <aclctx/err.h>
 #include "./fn/arg.h"
 #include "./fn/build.h"
 
@@ -87,7 +88,7 @@ aclspv_id_t aclty_mk_fn1(
 				);
 
 		ae2f_expected_but_else(ARG_ID)	{
-			h_ctx->m_err = ACLSPV_COMPILE_CXTP_ZERO;
+			_aclctx_err(h_ctx, ACLSPV_COMPILE_CXTP_ZERO);
 			return 0;
 		}
 

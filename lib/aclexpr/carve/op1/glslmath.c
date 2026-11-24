@@ -1,4 +1,5 @@
 #include "./glslmath.h"
+#include <aclctx/err.h>
 
 #include <aclexpr/carve/util.h>
 
@@ -63,7 +64,7 @@ static aclspv_bool_t s_carve1_glsl_math(
 	if(EXPECTED) {
 		/** the builtin's signature fixes the operand type. */
 		if(aclexpr_carve_cast_to_ty(EXPECTED, &X, &rdwr_lst_extra[0], CTX)) {
-			CTX->m_err = ACLSPV_COMPILE_UNHANDLED_CARVE;
+			_aclctx_err(CTX, ACLSPV_COMPILE_UNHANDLED_CARVE);
 			return ACLEXPR_CARVE_NO;
 		}
 
@@ -83,7 +84,7 @@ static aclspv_bool_t s_carve1_glsl_math(
 			if(!DEF
 					|| aclexpr_carve_cast_to_ty(
 						DEF, &X, &rdwr_lst_extra[0], CTX)) {
-				CTX->m_err = ACLSPV_COMPILE_UNHANDLED_CARVE;
+				_aclctx_err(CTX, ACLSPV_COMPILE_UNHANDLED_CARVE);
 				return ACLEXPR_CARVE_NO;
 			}
 
@@ -95,7 +96,7 @@ static aclspv_bool_t s_carve1_glsl_math(
 
 	if(!SCLR || !aclty_is_sclr_flt(SCLR)) {
 		/** not a simd float: user-facing reject, not a silent pass. */
-		CTX->m_err = ACLSPV_COMPILE_UNHANDLED_CARVE;
+		_aclctx_err(CTX, ACLSPV_COMPILE_UNHANDLED_CARVE);
 		return ACLEXPR_CARVE_NO;
 	}
 
@@ -103,7 +104,7 @@ static aclspv_bool_t s_carve1_glsl_math(
 	WIDTH = (aclspv_wrd_t)aclty_get_sclr_width(SCLR);
 
 	if(WIDTH != 16 && WIDTH != 32) {
-		CTX->m_err = ACLSPV_COMPILE_UNHANDLED_CARVE;
+		_aclctx_err(CTX, ACLSPV_COMPILE_UNHANDLED_CARVE);
 		return ACLEXPR_CARVE_NO;
 	}
 
@@ -172,7 +173,7 @@ static aclspv_bool_t s_carve1_glsl_math(
 	 * GLSL.std.450 arithmetic for it. literal operands were folded above;
 	 * a runtime bf16 operand cannot be lowered. */
 	if(SCLR == ACLSPV_ID_BF16) {
-		CTX->m_err = ACLSPV_COMPILE_UNHANDLED_CARVE;
+		_aclctx_err(CTX, ACLSPV_COMPILE_UNHANDLED_CARVE);
 		return ACLEXPR_CARVE_NO;
 	}
 #endif

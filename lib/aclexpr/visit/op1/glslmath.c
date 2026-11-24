@@ -1,4 +1,5 @@
 #include "./glslmath.h"
+#include <aclctx/err.h>
 
 #include <aclexpr.h>
 #include <aclexpr/op.h>
@@ -119,7 +120,7 @@ aclexpr_visit_lbl_t aclexpr_visit_op1_glsl_math(
 
 	/** the argument traversal can report Break as a normal stop after the
 	 * operand was carved; only a context error is fatal here. */
-	if(rdwr_data->m_ctx->m_err)
+	aclctx_err_check(rdwr_data->m_ctx)
 		return c_lbl_fail;
 
 	return c_lbl_success;

@@ -118,7 +118,7 @@ aclspv_id_t aclty_mk_vec(
 		)
 {
 	aclty_t            TAR;
-	ae2f_ifnezerr(h_ctx->m_err)	return 0;
+	aclctx_err_check(h_ctx)	return 0;
 	ae2f_ifezerr(c_num_arr)		return 0;
 
 	aclmemzero(&TAR, sizeof(TAR));

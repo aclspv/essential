@@ -2,6 +2,7 @@
 #define aclutil_mkname_c
 
 #include <.aclspv/util/u32_to_hex8.h>
+#include <aclctx/err.h>
 
 #include <ae2f/cgoto.h>
 #include <ae2f/pat/dbg.h>
@@ -21,7 +22,7 @@ ae2f_MAC((L, )) aclutil_mkname_dbg(const aclspv_id_t c_id, const char* const c_n
 		const aclspv_wrd_t L$$POS = (cr_ctx).m_count.m_name;
 
 		ae2f_ifezerr((size_t)L$$STRLEN == L$$STRLEN_ORIG) {
-			(cr_ctx).m_err = ACLSPV_COMPILE_TOO_BIG;
+			_aclctx_err(&(cr_ctx), ACLSPV_COMPILE_TOO_BIG);
 			goto L$$LBL_DONE;
 		}
 
@@ -69,7 +70,7 @@ ae2f_MAC((L, )) aclutil_mkname_dbg(const aclspv_id_t c_id, const char* const c_n
 
 		ae2f_unreachable();
 		L$$LBL_FAIL:
-			(cr_ctx).m_err = ACLSPV_COMPILE_ALLOC_FAILED;
+			_aclctx_err(&(cr_ctx), ACLSPV_COMPILE_ALLOC_FAILED);
 
 	}
 

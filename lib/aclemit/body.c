@@ -63,7 +63,7 @@ aclspv_id_t aclemit_body_stmtexpr(CXCursor c_stmtexpr, aclty_id_t* wr_ty, h_acls
 	ae2f_ifnezerr(clang_Cursor_isNull(COMPOUND)
 			|| COMPOUND.kind != CXCursor_CompoundStmt) {
 		err_puts("[aclemit::body::stmtexpr] statement expression has no block");
-		h_ctx->m_err = ACLSPV_COMPILE_UNHANDLED_BODY_CURKINDER;
+		_aclctx_err(h_ctx, ACLSPV_COMPILE_UNHANDLED_BODY_CURKINDER);
 		return 0;
 	}
 
@@ -104,7 +104,7 @@ aclspv_id_t aclemit_body_stmtexpr(CXCursor c_stmtexpr, aclty_id_t* wr_ty, h_acls
 			, &h_ctx->m_body.m_bootscale_stck
 			, &h_ctx->m_body.m_num_bootscale_stck);
 
-	if(h_ctx->m_err) {
+	aclctx_err_check(h_ctx) {
 		return 0;
 	}
 
@@ -113,7 +113,7 @@ aclspv_id_t aclemit_body_stmtexpr(CXCursor c_stmtexpr, aclty_id_t* wr_ty, h_acls
 	 * by an invalid source) yields no value. */
 	ae2f_ifezerr(DAT.m_vid) {
 		err_puts("[aclemit::body::stmtexpr] statement expression has no value");
-		h_ctx->m_err = ACLSPV_COMPILE_UNHANDLED_BODY_STMTEXPR;
+		_aclctx_err(h_ctx, ACLSPV_COMPILE_UNHANDLED_BODY_STMTEXPR);
 		return 0;
 	}
 
@@ -122,7 +122,7 @@ aclspv_id_t aclemit_body_stmtexpr(CXCursor c_stmtexpr, aclty_id_t* wr_ty, h_acls
 	 * make the two differ. */
 	ae2f_ifezerr(DAT.m_ty) {
 		err_puts("[aclemit::body::stmtexpr] statement expression has no type");
-		h_ctx->m_err = ACLSPV_COMPILE_UNHANDLED_BODY_STMTEXPR;
+		_aclctx_err(h_ctx, ACLSPV_COMPILE_UNHANDLED_BODY_STMTEXPR);
 		return 0;
 	}
 
@@ -136,7 +136,7 @@ enum CXChildVisitResult aclemit_body(CXCursor h_cur, ae2f_unused CXCursor h_pare
 	register const h_aclspv_ctx_t	CTX = DAT->m_ctx;
 #define	jmpfail(c_why)		{ _aclctx_err(CTX, (c_why)); goto LBL_BREAK; }
 #define	jmpfail_msg(rd_why)	{ err_puts(rd_why); goto LBL_FAIL; }
-#define	ctxcheck(h)	ae2f_ifnezerr(h->m_err) { err_puts("ctx check failed.\n"); goto LBL_FAIL; }
+#define	ctxcheck(h)	aclctx_err_check(h) { err_puts("ctx check failed.\n"); goto LBL_FAIL; }
 
 	const enum CXCursorKind KIND	= (h_cur).kind;
 	const CXString KINDSPELL	= clang_getCursorKindSpelling(KIND);
@@ -149,7 +149,7 @@ enum CXChildVisitResult aclemit_body(CXCursor h_cur, ae2f_unused CXCursor h_pare
 	ae2f_expected_but_else(KIND)
 		jmpfail(ACLSPV_COMPILE_MET_INVAL_BODY_NOKIND);
 
-	ae2f_ifnezerr(CTX->m_err) {
+	aclctx_err_check(CTX) {
 		goto LBL_BREAK;
 	}
 

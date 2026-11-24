@@ -1,4 +1,5 @@
 #include "./shift.h"
+#include <aclctx/err.h>
 
 #include <aclty.h>
 
@@ -78,7 +79,7 @@ aclspv_bool_t aclexpr_carve2_shift(
 		err_call((void), fprintf(stderr, "[carve2::shift] opcode: %u %u\n"
 					, (unsigned)rdwr_lst_extra[0].m_type_original
 					, (unsigned)rdwr_lst_extra[1].m_type_original));
-		rdwr_data->m_ctx->m_err = ACLSPV_COMPILE_UNHANDLED_CARVE;
+		_aclctx_err(rdwr_data->m_ctx, ACLSPV_COMPILE_UNHANDLED_CARVE);
 		return ACLEXPR_CARVE_NO;
 	}
 

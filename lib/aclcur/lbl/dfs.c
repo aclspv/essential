@@ -1,4 +1,5 @@
 #include "./dfs.h"
+#include <aclctx/err.h>
 #include "../lbl.h"
 #include "../util.h"
 
@@ -72,7 +73,7 @@ TAILJMP:
 		switch(fn(p_cur, p_par, rdwr_client)) {
 			default:
 				err_puts("invalid code on function");
-				h_ctx->m_err = ACLSPV_COMPILE_UNHANDLED;
+				_aclctx_err(h_ctx, ACLSPV_COMPILE_UNHANDLED);
 				return c_code;
 
 			case ACLCUR_LBL_DFS_BREAK:

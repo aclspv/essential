@@ -2,6 +2,7 @@
 #define	aclexpr_carve_lvalue_h
 
 #include <aclspv.h>
+#include <aclctx/err.h>
 
 #include <aclexpr.h>
 #include <aclexpr/op.h>
@@ -71,7 +72,7 @@ ae2f_inline_f static aclspv_bool_t aclexpr_lvalue_storeback(
 					, c_val
 					, h_ctx)) {
 			err_puts(c_tag);
-			h_ctx->m_err = ACLSPV_COMPILE_UNHANDLED_CARVE;
+			_aclctx_err(h_ctx, ACLSPV_COMPILE_UNHANDLED_CARVE);
 			return 0;
 		}
 
@@ -99,7 +100,7 @@ ae2f_inline_f static aclspv_bool_t aclexpr_lvalue_storeback(
 					, rdwr_lst_extra->m_extra.m_vecelm.m_idx
 					, h_ctx)) {
 			err_puts(c_tag);
-			h_ctx->m_err = ACLSPV_COMPILE_UNHANDLED_CARVE;
+			_aclctx_err(h_ctx, ACLSPV_COMPILE_UNHANDLED_CARVE);
 			return 0;
 		}
 
@@ -108,7 +109,7 @@ ae2f_inline_f static aclspv_bool_t aclexpr_lvalue_storeback(
 					, NEW_VEC
 					, h_ctx)) {
 			err_puts(c_tag);
-			h_ctx->m_err = ACLSPV_COMPILE_UNHANDLED_CARVE;
+			_aclctx_err(h_ctx, ACLSPV_COMPILE_UNHANDLED_CARVE);
 			return 0;
 		}
 
@@ -125,13 +126,13 @@ ae2f_inline_f static aclspv_bool_t aclexpr_lvalue_storeback(
 
 	unless(REG) {
 		err_puts(c_tag);
-		h_ctx->m_err = ACLSPV_COMPILE_UNHANDLED_CARVE;
+		_aclctx_err(h_ctx, ACLSPV_COMPILE_UNHANDLED_CARVE);
 		return 0;
 	}
 
 	unless(aclcur_store_reg(REG, c_val, h_ctx)) {
 		err_puts(c_tag);
-		h_ctx->m_err = ACLSPV_COMPILE_UNHANDLED_CARVE;
+		_aclctx_err(h_ctx, ACLSPV_COMPILE_UNHANDLED_CARVE);
 		return 0;
 	}
 

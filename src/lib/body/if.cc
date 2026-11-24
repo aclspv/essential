@@ -2,6 +2,7 @@
 #define aclemit_body_if_cc
 
 #include <aclattr/ifpart.h>
+#include <aclctx/err.h>
 #include <aclattr/branchratio.h>
 
 #include <aclexpr.h>
@@ -103,7 +104,7 @@ ae2f_MAC((L, )) aclemit_body_if(CXCursor h_cur, aclemit_body_t& rdwr_body) {
 	}
 
 	ae2f_expected_but_else(L$$IDVAL) {
-		(rdwr_body).m_ctx->m_err = ACLSPV_COMPILE_IF_COND_INVAL;
+		_aclctx_err((rdwr_body).m_ctx, ACLSPV_COMPILE_IF_COND_INVAL);
 		goto L$$LBL_END;
 	}
 

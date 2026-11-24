@@ -201,7 +201,7 @@ enum CXChildVisitResult aclemit_fndecl_norm(
 
 		ret = aclemit_fndecl_bodycfg(h_cur, h_ctx, &c_is_const, &c_is_pure);
 
-		if(ctx->m_err)
+		aclctx_err_check(ctx)
 			return ret;
 
 		/** the body is the truth: the analysed answer replaces the declared

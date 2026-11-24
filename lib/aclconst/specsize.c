@@ -1,5 +1,6 @@
 
 #include "./specsize.h"
+#include <aclctx/err.h>
 #include <aclval.h>
 #include <aclty/sclr.h>
 
@@ -15,7 +16,7 @@ aclspv_bool_t aclconst_is_specsz_same(aclconst_specsz c_x, aclconst_specsz c_y, 
 	{
 		aclspv_id_t	szty = aclty_get_sclr_uint(h_ctx->m_usrcfg.m_byte_size_type << 3);
 		ae2f_ifezerr(aclty_mk_default(szty, h_ctx)) {
-			h_ctx->m_err = ACLSPV_COMPILE_ALLOC_FAILED_ID;
+			_aclctx_err(h_ctx, ACLSPV_COMPILE_ALLOC_FAILED_ID);
 			return 0;
 		}
 
@@ -26,7 +27,7 @@ aclspv_bool_t aclconst_is_specsz_same(aclconst_specsz c_x, aclconst_specsz c_y, 
 				c_y.m_lit.m_max, h_ctx, (enum ACLSPV_ID_)szty);
 
 		ae2f_ifnezerr_strict(!c_x.m_id && !c_y.m_id) {
-			h_ctx->m_err = ACLSPV_COMPILE_ALLOC_FAILED_ID;
+			_aclctx_err(h_ctx, ACLSPV_COMPILE_ALLOC_FAILED_ID);
 			return 0;
 		}
 

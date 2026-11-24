@@ -1,4 +1,5 @@
 #include "./arithmetic.h"
+#include <aclctx/err.h>
 
 #include <aclexpr/carve/util.h>
 #include <aclexpr/carve/ptr.h>
@@ -400,7 +401,7 @@ aclspv_bool_t aclexpr_carve2_arithmetic_do(
 		/** no SPIR-V arithmetic for this scalar (bf16 without the EXT, fp8):
 		 * a hard error, not a silently dropped operation. */
 		err_puts(("[carve2::arithmetic] no SPIR-V arithmetic for this type"));
-		h_ctx->m_err = ACLSPV_COMPILE_UNHANDLED_CARVE;
+		_aclctx_err(h_ctx, ACLSPV_COMPILE_UNHANDLED_CARVE);
 		return 1;
 	} else {
 		dbg_prefix(a);

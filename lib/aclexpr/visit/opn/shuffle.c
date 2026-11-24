@@ -1,4 +1,5 @@
 #include "./shuffle.h"
+#include <aclctx/err.h>
 
 #include <aclexpr.h>
 #include <aclexpr/op.h>
@@ -111,12 +112,12 @@ aclexpr_visit_lbl_t aclexpr_visit_opn_shuffle(
 
 	/** operand 0. a Break may be a normal stop after the operand carved. */
 	(void)aclutil_visitfromroot(CH[0], aclexpr_visit, rdwr_data);
-	if(CTX->m_err)
+	aclctx_err_check(CTX)
 		return c_lbl_fail;
 
 	/** operand 1 completes the scale and carves it. */
 	(void)aclutil_visitfromroot(CH[1], aclexpr_visit, rdwr_data);
-	if(CTX->m_err)
+	aclctx_err_check(CTX)
 		return c_lbl_fail;
 
 	return c_lbl_success;

@@ -2,6 +2,7 @@
 #define aclmem_h
 
 #include <acldef.h>
+#include <aclctx/err.h>
 
 /** 
  * when zero it succeed. 
@@ -32,7 +33,7 @@ ae2f_inline_f static aclspv_bool_t	s_aclmem_cgrow2(
 			c_elmc * c_elml < c_elmc || 
 			c_elmc * c_elml < c_elml || 
 			aclmem_cgrow(h, c_elmc * c_elml)) {
-		h->m_ctx->m_err = (aclspv_compile_t)c_err_in_case;
+		_aclctx_err(h->m_ctx, (aclspv_compile_t)c_err_in_case);
 		return 1;
 	}
 
@@ -50,7 +51,7 @@ ae2f_inline_f static aclspv_bool_t	s_aclmem_calloc2(
 			c_elmc * c_elml < c_elmc ||
 			c_elmc * c_elml < c_elml ||
 			aclmem_calloc(h, c_elmc * c_elml)) {
-		h->m_ctx->m_err = (aclspv_compile_t)c_err_in_case;
+		_aclctx_err(h->m_ctx, (aclspv_compile_t)c_err_in_case);
 		return 1;
 	}
 

@@ -69,6 +69,8 @@ ACLSPV_ABI_LINK void aclspv_fini_ctx(
 	if(!E && d_ctx->m_err) E = d_ctx->m_err;
 
 	aclmemzero(d_ctx, sizeof(x_aclspv_ctx));
+	/** fini is not a failure site: the code is carried over for the caller
+	 * to read, so it bypasses the trace. */
 	d_ctx->m_err = E;
 }
 
@@ -255,8 +257,10 @@ ACLSPV_ABI_LINK aclspv_compile_t aclspv_init_ctx(
 	 * type ids, and 0 is not a valid id. */
 	i_ctx->m_ctx_slave->m_id = ACLSPV_ID_END;
 
-	ae2f_ifezerr(s_init_vectors(i_ctx->m_ctx_slave))
-		return i_ctx->m_err = i_ctx->m_ctx_slave->m_err;
+	ae2f_ifezerr(s_init_vectors(i_ctx->m_ctx_slave)) {
+		_aclctx_err(i_ctx, i_ctx->m_ctx_slave->m_err);
+		return i_ctx->m_err;
+	}
 
 	return i_ctx->m_err;
 }
@@ -270,6 +274,8 @@ ACLSPV_ABI_LINK ae2f_retnew1(aclspv_ctx_free) x_aclspv_ctx* aclspv_ctx_make(cons
 	{
 		x_aclspv_ctx* const ctx = s_ctx_malloc(&usrcfg);
 		ae2f_ifezerr(ctx) return 0;
+		/** the init result is the first thing this context ever records;
+		 * nothing can be traced yet, so it is stored directly. */
 		ctx->m_err = aclspv_init_ctx(ctx, &usrcfg);
 		return ctx;
 	}

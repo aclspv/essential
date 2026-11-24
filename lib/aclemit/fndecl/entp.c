@@ -36,12 +36,12 @@ enum CXChildVisitResult aclemit_fndecl_entp(
 	DATA.m_idx_entp_buf_count = ctx->m_count.m_entp;
 
 	if(NPARAMS < 0) {
-		ctx->m_err = ACLSPV_COMPILE_MET_INVAL_ENTP_ARGS;
+		_aclctx_err(ctx, ACLSPV_COMPILE_MET_INVAL_ENTP_ARGS);
 		return CXChildVisit_Break;
 	}
 
 	entp = aclemit_fndecl_entp_cfg(h_parent, ctx);
-	ae2f_ifnezerr(ctx->m_err)
+	aclctx_err_check(ctx)
 		return CXChildVisit_Break;
 
 	clang_visitChildren(h_parent, aclemit_fndecl_entp_arg, &DATA);
@@ -51,7 +51,7 @@ enum CXChildVisitResult aclemit_fndecl_entp(
 		return CXChildVisit_Break;
 	}
 
-	ae2f_ifnezerr(ctx->m_err)
+	aclctx_err_check(ctx)
 		return CXChildVisit_Break;
 
 	{
@@ -64,7 +64,7 @@ enum CXChildVisitResult aclemit_fndecl_entp(
 				);
 
 		ae2f_ifezerr(id_void_func) {
-			ctx->m_err = ACLSPV_COMPILE_ALLOC_FAILED_ID;
+			_aclctx_err(ctx, ACLSPV_COMPILE_ALLOC_FAILED_ID);
 			return CXChildVisit_Break;
 		}
 

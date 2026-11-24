@@ -2,6 +2,7 @@
 #define aclemit_body_vardecl_c
 
 #include <util/log.h>
+#include <aclctx/err.h>
 
 #include <aclattr/specid.h>
 #include <aclattr/btcast.h>
@@ -93,7 +94,7 @@ ae2f_MAC((L, )) aclemit_body_vardecl(const CXCursor h_cur, aclemit_body_t& rdwr_
 					, (const char*)L$$NAME.data
 					);
 			);
-		L$$CTX->m_err = ACLSPV_COMPILE_MET_INVAL_TYPE_NOT_KNOWN;
+		_aclctx_err(L$$CTX, ACLSPV_COMPILE_MET_INVAL_TYPE_NOT_KNOWN);
 		clang_disposeString(L$$NAME);
 		goto L$$LBL_END;
 	}
@@ -112,7 +113,7 @@ ae2f_MAC((L, )) aclemit_body_vardecl(const CXCursor h_cur, aclemit_body_t& rdwr_
 	}
 
 	ae2f_ifezerr(L$$REG) {
-		L$$CTX->m_err = ACLSPV_COMPILE_MET_INVAL;
+		_aclctx_err(L$$CTX, ACLSPV_COMPILE_MET_INVAL);
 		goto L$$LBL_END;
 	}
 
@@ -169,7 +170,7 @@ ae2f_MAC((L, )) aclemit_body_vardecl(const CXCursor h_cur, aclemit_body_t& rdwr_
 				}
 
 				ae2f_ifezerr(aclcur_store_reg(L$$REG, L$$INIT, L$$CTX)) {
-					L$$CTX->m_err = ACLSPV_COMPILE_MET_INVAL;
+					_aclctx_err(L$$CTX, ACLSPV_COMPILE_MET_INVAL);
 					goto L$$LBL_END;
 				}
 
@@ -178,7 +179,7 @@ ae2f_MAC((L, )) aclemit_body_vardecl(const CXCursor h_cur, aclemit_body_t& rdwr_
 			else {
 				CXCursor	L$$VAR_INIT = clang_Cursor_getVarDeclInitializer(h_cur);
 				ae2f_ifnezerr(clang_Cursor_isNull(L$$VAR_INIT)) {
-					(rdwr_body).m_ctx->m_err = ACLSPV_COMPILE_UNHANDLED_BODY_VARDECL;
+					_aclctx_err((rdwr_body).m_ctx, ACLSPV_COMPILE_UNHANDLED_BODY_VARDECL);
 					goto L$$LBL_END;
 				}
 				else {
@@ -196,7 +197,7 @@ ae2f_MAC((L, )) aclemit_body_vardecl(const CXCursor h_cur, aclemit_body_t& rdwr_
 								, L$$VAR_INIT
 								, &L$$LITERAL
 								, (rdwr_body).m_ctx)) {
-						L$$CTX->m_err = ACLSPV_COMPILE_MET_INVAL_BODY_VARDECL_GET_EXPR;
+						_aclctx_err(L$$CTX, ACLSPV_COMPILE_MET_INVAL_BODY_VARDECL_GET_EXPR);
 						goto L$$LBL_END;
 					}
 
@@ -204,12 +205,12 @@ ae2f_MAC((L, )) aclemit_body_vardecl(const CXCursor h_cur, aclemit_body_t& rdwr_
 								, L$$LITERAL.m_api_uintmax
 								, L$$CTX
 								, (enum ACLSPV_ID_) L$$TYPEID).m_val) {
-						L$$CTX->m_err = ACLSPV_COMPILE_MET_INVAL;
+						_aclctx_err(L$$CTX, ACLSPV_COMPILE_MET_INVAL);
 						goto L$$LBL_END;
 					}
 
 					ae2f_ifezerr(aclcur_store_reg(L$$REG, L$$INIT, L$$CTX)) {
-						L$$CTX->m_err = ACLSPV_COMPILE_MET_INVAL;
+						_aclctx_err(L$$CTX, ACLSPV_COMPILE_MET_INVAL);
 						goto L$$LBL_END;
 					}
 
@@ -230,7 +231,7 @@ ae2f_MAC((L, )) aclemit_body_vardecl(const CXCursor h_cur, aclemit_body_t& rdwr_
 
 			ae2f_ifnezerr(L$$HAS_INIT) {
 				err_puts("[aclemit::body::vardecl] initializer exists but is invisible to clang_Cursor_getVarDeclInitializer (compound-literal init?) — not supported");
-				L$$CTX->m_err = ACLSPV_COMPILE_UNHANDLED_BODY_VARDECL;
+				_aclctx_err(L$$CTX, ACLSPV_COMPILE_UNHANDLED_BODY_VARDECL);
 			}
 			goto L$$LBL_END;
 		}
@@ -253,13 +254,13 @@ ae2f_MAC((L, )) aclemit_body_vardecl(const CXCursor h_cur, aclemit_body_t& rdwr_
 						, (rdwr_body).m_ctx))
 			{
 				case ACLEXPR_RET_NOT_THE_CASE:
-					L$$CTX->m_err = ACLSPV_COMPILE_NOIMPL;
+					_aclctx_err(L$$CTX, ACLSPV_COMPILE_NOIMPL);
 					break;
 
 				default:
 				case ACLEXPR_RET_FAILURE:
 					unless(L$$CTX->m_err)
-						L$$CTX->m_err = ACLSPV_COMPILE_MET_INVAL_BODY_VARDECL_GET_EXPR;
+						_aclctx_err(L$$CTX, ACLSPV_COMPILE_MET_INVAL_BODY_VARDECL_GET_EXPR);
 					break;
 
 				case ACLEXPR_RET_SUCCESS_LITERAL:
@@ -273,7 +274,7 @@ ae2f_MAC((L, )) aclemit_body_vardecl(const CXCursor h_cur, aclemit_body_t& rdwr_
 			goto L$$LBL_END;
 
 		ae2f_ifezerr(aclcur_store_reg(L$$REG, L$$INIT, L$$CTX)) {
-			L$$CTX->m_err = ACLSPV_COMPILE_MET_INVAL;
+			_aclctx_err(L$$CTX, ACLSPV_COMPILE_MET_INVAL);
 			goto L$$LBL_END;
 		}
 	}

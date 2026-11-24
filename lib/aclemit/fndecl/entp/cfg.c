@@ -147,7 +147,7 @@ static enum CXChildVisitResult s_execmode(CXCursor c, ae2f_unused CXCursor u0, C
 	ae2f_ifnezerr(needs_id && p->m_ctx->m_usrcfg.m_ver_spv < aclspv_ver_spv(1, 2)) {
 		/** a capability diagnostic, not an invariant: report it and stop. */
 		if(!p->m_ctx->m_err)
-			p->m_ctx->m_err = ACLSPV_COMPILE_NOIMPL_V_WRKGROUP_SIZE;
+			_aclctx_err(p->m_ctx, ACLSPV_COMPILE_NOIMPL_V_WRKGROUP_SIZE);
 		err_puts("execution mode id is for spirv 1.2");
 		goto ERR;
 	}
@@ -161,7 +161,7 @@ static enum CXChildVisitResult s_execmode(CXCursor c, ae2f_unused CXCursor u0, C
 				ae2f_ifezerr(nd.m_val) goto ERR;
 				if(nd.m_val) {								
 					ae2f_ifezerr_strict(aclty_is_sclr_int((aclty_default_t) nd.m_ty)) {
-						p->m_ctx->m_err = ACLSPV_COMPILE_WORKGROUP_SIZE_NO_INT;
+						_aclctx_err(p->m_ctx, ACLSPV_COMPILE_WORKGROUP_SIZE_NO_INT);
 						goto ERR;
 					}
 					buf[3 + i]	= nd.m_val;		
@@ -202,7 +202,7 @@ END:
 
 ERR:
 	if(!p->m_ctx->m_err)
-		p->m_ctx->m_err = ACLSPV_COMPILE_UNHANDLED;
+		_aclctx_err(p->m_ctx, ACLSPV_COMPILE_UNHANDLED);
 	clang_disposeString(attr);
 	return CXChildVisit_Break;
 }
@@ -217,7 +217,7 @@ aclsym_entp_t aclemit_fndecl_entp_cfg(CXCursor h_parent, h_aclspv_ctx_t CTX) {
 
 	aclmemzero(&THIS_ENTRY_POINT, sizeof(THIS_ENTRY_POINT));
 
-	ae2f_ifnezerr(CTX->m_err) return THIS_ENTRY_POINT;
+	aclctx_err_check(CTX) return THIS_ENTRY_POINT;
 
 	clang_visitChildren(h_parent, s_attr_execmodel, &EXEC_MODEL);
 
@@ -237,7 +237,7 @@ aclsym_entp_t aclemit_fndecl_entp_cfg(CXCursor h_parent, h_aclspv_ctx_t CTX) {
 			ae2f_ifezerr(nd.m_val) goto LBL_ABRT;						\
 			if(nd.m_val) {								\
 				ae2f_ifezerr_strict(aclty_is_sclr_int(nd.m_ty)) {	\
-					CTX->m_err = ACLSPV_COMPILE_WORKGROUP_SIZE_NO_INT;	\
+					_aclctx_err(CTX, ACLSPV_COMPILE_WORKGROUP_SIZE_NO_INT);	\
 					goto LBL_ABRT;						\
 				}								\
 				XYZ.m_##K_idx	= nd.m_val;					\
@@ -255,7 +255,7 @@ aclsym_entp_t aclemit_fndecl_entp_cfg(CXCursor h_parent, h_aclspv_ctx_t CTX) {
 
 		if(XYZ.m_flag_specid) {
 			ae2f_ifnezerr(CTX->m_usrcfg.m_ver_spv < aclspv_ver_spv(1, 2)) {
-				CTX->m_err = ACLSPV_COMPILE_NOIMPL_V_WRKGROUP_SIZE;
+				_aclctx_err(CTX, ACLSPV_COMPILE_NOIMPL_V_WRKGROUP_SIZE);
 				err_puts("workgroup size id is for spirv 1.2");
 				goto LBL_ABRT;
 			}
@@ -276,7 +276,7 @@ aclsym_entp_t aclemit_fndecl_entp_cfg(CXCursor h_parent, h_aclspv_ctx_t CTX) {
 		ex.m_flag_localsize = 0;
 		clang_visitChildren(h_parent, s_execmode, &ex);
 		c_localsize = ex.m_flag_localsize;
-		ae2f_ifnezerr(CTX->m_err)
+		aclctx_err_check(CTX)
 			goto LBL_ABRT;
 	}
 
@@ -329,8 +329,6 @@ aclsym_entp_t aclemit_fndecl_entp_cfg(CXCursor h_parent, h_aclspv_ctx_t CTX) {
 					, SpvExecutionModeLocalSize
 					, XYZ.m_0, XYZ.m_1, XYZ.m_2
 					)) goto LBL_ABRT;
-
-	CTX->m_err = ACLSPV_COMPILE_OK;
 
 LBL_ABRT:
 	clang_disposeString(NAME);

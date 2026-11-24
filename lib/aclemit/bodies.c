@@ -1,4 +1,5 @@
 #include "./bodies.h"
+#include <aclctx/err.h>
 
 #include "./fndecl/imports.h"
 #include "./fndecl/norm.h"
@@ -102,7 +103,7 @@ static aclspv_compile_t s_emit(struct s_pending* c_it, h_aclspv_ctx_t h_ctx) {
 	h_ctx->m_num_cursor	= 0;
 
 	ae2f_ifezerr(aclcur_cfg_root(ACLSPV_ID_VOID, h_ctx)) {
-		h_ctx->m_err = ACLSPV_COMPILE_ALLOC_FAILED;
+		_aclctx_err(h_ctx, ACLSPV_COMPILE_ALLOC_FAILED);
 		return h_ctx->m_err;
 	}
 
@@ -204,7 +205,7 @@ ae2f_inline_f static aclspv_compile_t s_run(
 
 	clang_visitChildren(c_root, s_collect_visit, &col);
 
-	if(h_ctx->m_err) {
+	aclctx_err_check(h_ctx) {
 		aclmem_fini(&buf);
 		return h_ctx->m_err;
 	}
@@ -246,7 +247,7 @@ ae2f_inline_f static aclspv_compile_t s_run(
 			unless(items[i].m_done) {
 				/** a call cycle (recursion) or a callee that never got
 				 * a body: nothing in the target can express it. */
-				h_ctx->m_err = ACLSPV_COMPILE_RECURSIVE_CALL;
+				_aclctx_err(h_ctx, ACLSPV_COMPILE_RECURSIVE_CALL);
 				break;
 			}
 		}
@@ -259,14 +260,14 @@ ae2f_inline_f static aclspv_compile_t s_run(
 
 aclspv_compile_t aclemit_compile_bodies(h_aclspv_ctx_t h_ctx, CXCursor c_root) {
 	ae2f_ifezerr(h_ctx)		return ACLSPV_COMPILE_PRM_INVAL_NIL;
-	ae2f_ifnezerr(h_ctx->m_err)	return h_ctx->m_err;
+	aclctx_err_check(h_ctx)	return h_ctx->m_err;
 
 	return s_run(h_ctx, c_root, 0);
 }
 
 aclspv_compile_t aclemit_build_bodies(h_aclspv_ctx_t h_ctx, CXCursor c_root) {
 	ae2f_ifezerr(h_ctx)		return ACLSPV_COMPILE_PRM_INVAL_NIL;
-	ae2f_ifnezerr(h_ctx->m_err)	return h_ctx->m_err;
+	aclctx_err_check(h_ctx)	return h_ctx->m_err;
 
 	return s_run(h_ctx, c_root, 1);
 }

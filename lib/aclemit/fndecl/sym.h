@@ -2,6 +2,7 @@
 #define	aclemit_fndecl_sym_h
 
 #include <aclspv.h>
+#include <aclctx/err.h>
 #include <aclsym/fn.h>
 
 #include <string.h>
@@ -34,11 +35,10 @@ static aclspv_compile_t aclemit_fndecl_sym_name(
 
 	c_len = (aclspv_wrd_t)strlen(c_name);
 
-	ae2f_ifezerr(aclspv_cfg_symbol(c_name, c_len, c_sym->m_id, h_ctx))
-		return h_ctx->m_err = (
-				h_ctx->m_err
-				? h_ctx->m_err
-				: ACLSPV_COMPILE_ALLOC_FAILED);
+	ae2f_ifezerr(aclspv_cfg_symbol(c_name, c_len, c_sym->m_id, h_ctx)) {
+		_aclctx_err(h_ctx, ACLSPV_COMPILE_ALLOC_FAILED);
+		return h_ctx->m_err;
+	}
 
 	return h_ctx->m_err;
 }

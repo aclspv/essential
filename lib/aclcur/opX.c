@@ -1,4 +1,5 @@
 #include "./op.h"
+#include <aclctx/err.h>
 #include "./load/get.h"
 #include "./util.h"
 #include "./common.h"
@@ -176,7 +177,7 @@ static aclspv_id_t s_cfg_opx(
 					"operand node missing on aclcur opx.\n"
 					"it should be handled on aclemit.\n"
 					);
-			h_ctx->m_err = ACLSPV_COMPILE_UNHANDLED;
+			_aclctx_err(h_ctx, ACLSPV_COMPILE_UNHANDLED);
 			return 0;
 		}
 #else

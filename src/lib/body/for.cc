@@ -2,6 +2,7 @@
 #define aclemit_body_for_cc
 
 #include <aclutil/emitx.h>
+#include <aclctx/err.h>
 #include <util/visitfromroot.h>
 
 #include <ae2f/cc.h>
@@ -37,7 +38,7 @@ ae2f_MAC((L, )) aclemit_body_for(CXCursor h_cur, aclemit_body_t& rdwr_body) { do
 	(rdwr_body).m_vid = 0;
 
 	unless(aclattr_forpart(h_cur, &L$$PART)) {
-		(rdwr_body).m_ctx->m_err = ACLSPV_COMPILE_FOR_LACK_COMPONENTS;
+		_aclctx_err((rdwr_body).m_ctx, ACLSPV_COMPILE_FOR_LACK_COMPONENTS);
 		break;
 	}
 
@@ -69,19 +70,19 @@ ae2f_MAC((L, )) aclemit_body_for(CXCursor h_cur, aclemit_body_t& rdwr_body) { do
 		}
 
 		ae2f_ifezerr(aclcur_cfg_jmp(L$$LOOPCHECK, (rdwr_body).m_ctx)) {
-			(rdwr_body).m_ctx->m_err = ACLSPV_COMPILE_ALLOC_FAILED;
+			_aclctx_err((rdwr_body).m_ctx, ACLSPV_COMPILE_ALLOC_FAILED);
 			break;
 		}
 
 		ae2f_ifezerr(aclcur_cfg_lbl(L$$LOOPCHECK, (rdwr_body).m_ctx)) {
-			(rdwr_body).m_ctx->m_err = ACLSPV_COMPILE_ALLOC_FAILED;
+			_aclctx_err((rdwr_body).m_ctx, ACLSPV_COMPILE_ALLOC_FAILED);
 			break;
 		}
 
 		/** same reason as the while header: the back edge is not carved
 		 * when the header's loads resolve. */
 		ae2f_ifezerr(aclcur_cfg_lbl_loop(L$$LOOPCHECK, (rdwr_body).m_ctx)) {
-			(rdwr_body).m_ctx->m_err = ACLSPV_COMPILE_ALLOC_FAILED;
+			_aclctx_err((rdwr_body).m_ctx, ACLSPV_COMPILE_ALLOC_FAILED);
 			break;
 		}
 
@@ -135,7 +136,7 @@ ae2f_MAC((L, )) aclemit_body_for(CXCursor h_cur, aclemit_body_t& rdwr_body) { do
 					, L$$LOOPCONTINUE
 					, L$$LOOPCTL
 					, (rdwr_body).m_ctx)) {
-			(rdwr_body).m_ctx->m_err = ACLSPV_COMPILE_ALLOC_FAILED;
+			_aclctx_err((rdwr_body).m_ctx, ACLSPV_COMPILE_ALLOC_FAILED);
 			break;
 		}
 
@@ -175,7 +176,7 @@ ae2f_MAC((L, )) aclemit_body_for(CXCursor h_cur, aclemit_body_t& rdwr_body) { do
 		}
 
 		ae2f_ifezerr(aclcur_cfg_lbl(L$$LOOPCONTINUE, (rdwr_body).m_ctx)) {
-			(rdwr_body).m_ctx->m_err = ACLSPV_COMPILE_ALLOC_FAILED;
+			_aclctx_err((rdwr_body).m_ctx, ACLSPV_COMPILE_ALLOC_FAILED);
 			break;
 		}
 
@@ -211,12 +212,12 @@ ae2f_MAC((L, )) aclemit_body_for(CXCursor h_cur, aclemit_body_t& rdwr_body) { do
 		aclcur_set_fnret(0, (rdwr_body).m_ctx);
 
 		ae2f_ifezerr(aclcur_cfg_jmp(L$$LOOPCHECK, (rdwr_body).m_ctx)) {
-			(rdwr_body).m_ctx->m_err = ACLSPV_COMPILE_ALLOC_FAILED;
+			_aclctx_err((rdwr_body).m_ctx, ACLSPV_COMPILE_ALLOC_FAILED);
 			break;
 		}
 
 		ae2f_ifezerr(aclcur_cfg_lbl(L$$LOOPEND, (rdwr_body).m_ctx)) {
-			(rdwr_body).m_ctx->m_err = ACLSPV_COMPILE_ALLOC_FAILED;
+			_aclctx_err((rdwr_body).m_ctx, ACLSPV_COMPILE_ALLOC_FAILED);
 			break;
 		}
 
@@ -253,12 +254,7 @@ ae2f_MAC((L, )) aclemit_body_for(CXCursor h_cur, aclemit_body_t& rdwr_body) { do
 
 	ae2f_unreachable();
 	L$$ERR:
-		(rdwr_body).m_ctx->m_err = ae2f_bll_sel_bool_naive1(
-				aclspv_compile_t
-				, (rdwr_body).m_ctx->m_err
-				, (rdwr_body).m_ctx->m_err
-				, ACLSPV_COMPILE_UNHANDLED_FOR
-				);
+		_aclctx_err((rdwr_body).m_ctx, ACLSPV_COMPILE_UNHANDLED_FOR);
 
 	/**
 	 * for(init; cond; inc) { ... }

@@ -1,4 +1,5 @@
 #include "./dcr.h"
+#include <aclctx/err.h>
 #include "./implutil.h"
 
 #include <ae2f/pat/dbg.h>
@@ -9,7 +10,7 @@ ae2f_ccpure aclty_t* aclty_get_dcr(
 		h_aclspv_ctx_t h_ctx
 		) {
 	ae2fpat_assertassumeunless(rd_dcr) {
-		h_ctx->m_err = ACLSPV_COMPILE_CXTP_ZERO;
+		_aclctx_err(h_ctx, ACLSPV_COMPILE_CXTP_ZERO);
 		return 0;
 	}
 

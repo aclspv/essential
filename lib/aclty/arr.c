@@ -212,12 +212,12 @@ aclty_t* aclty_cfg_arr_dcr(
 	aclspv_wrd_t c_idx_arr;
 
 	ae2f_ifezerr(rdwr_arr) {
-		h_ctx->m_err = ACLSPV_COMPILE_CXTP_ZERO;
+		_aclctx_err(h_ctx, ACLSPV_COMPILE_CXTP_ZERO);
 		return 0;
 	}
 
 	ae2f_ifnezerr_strict(rdwr_arr->m_class != ACLTY_ARR) {
-		h_ctx->m_err = ACLSPV_COMPILE_CXTP_TYINVL_ARR_DCR;
+		_aclctx_err(h_ctx, ACLSPV_COMPILE_CXTP_TYINVL_ARR_DCR);
 		return 0;
 	}
 

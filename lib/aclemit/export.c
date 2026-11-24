@@ -1,4 +1,5 @@
 #include "./export.h"
+#include <aclctx/err.h>
 
 #include <aclsym/fn.h>
 
@@ -59,7 +60,7 @@ static enum CXChildVisitResult s_visit(
 				, p_sym->m_id
 				, aclsym_fn_name(p_sym, ctx)
 				, (aclspv_wrd_t)SpvLinkageTypeExport)) {
-		ctx->m_err = ACLSPV_COMPILE_ALLOC_FAILED;
+		_aclctx_err(ctx, ACLSPV_COMPILE_ALLOC_FAILED);
 		return CXChildVisit_Break;
 	}
 
@@ -70,7 +71,7 @@ static enum CXChildVisitResult s_visit(
 
 aclspv_compile_t aclemit_export(h_aclspv_ctx_t h_ctx, CXCursor c_root) {
 	ae2f_ifezerr(h_ctx)		return ACLSPV_COMPILE_PRM_INVAL_NIL;
-	ae2f_ifnezerr(h_ctx->m_err)	return h_ctx->m_err;
+	aclctx_err_check(h_ctx)	return h_ctx->m_err;
 
 	clang_visitChildren(c_root, s_visit, h_ctx);
 

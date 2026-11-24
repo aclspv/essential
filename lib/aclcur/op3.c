@@ -1,4 +1,5 @@
 #include "./op.h"
+#include <aclctx/err.h>
 #include "./load/get.h"
 #include "./util.h"
 
@@ -36,7 +37,7 @@ aclspv_id_t aclcur_cfg_op3(
 		err_puts(
 				"operand node missing on aclcur op3.\n"
 				);
-		h_ctx->m_err = ACLSPV_COMPILE_UNHANDLED;
+		_aclctx_err(h_ctx, ACLSPV_COMPILE_UNHANDLED);
 		return 0;
 	}
 
@@ -44,7 +45,7 @@ aclspv_id_t aclcur_cfg_op3(
 		err_puts(
 				"operand node missing on aclcur op3.\n"
 				);
-		h_ctx->m_err = ACLSPV_COMPILE_UNHANDLED;
+		_aclctx_err(h_ctx, ACLSPV_COMPILE_UNHANDLED);
 		return 0;
 	}
 
@@ -52,7 +53,7 @@ aclspv_id_t aclcur_cfg_op3(
 		err_puts(
 				"operand node missing on aclcur op3.\n"
 				);
-		h_ctx->m_err = ACLSPV_COMPILE_UNHANDLED;
+		_aclctx_err(h_ctx, ACLSPV_COMPILE_UNHANDLED);
 		return 0;
 	}
 #else

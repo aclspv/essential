@@ -1,4 +1,5 @@
 #include "./load.h"
+#include <aclctx/err.h>
 #include "./util.h"
 
 #include "./lbl.h"
@@ -845,7 +846,7 @@ static aclspv_id_t	s_load_without_phi(
 				) {
 				err_puts("[aclcur::load] a variable is read before it "
 						"is assigned, and no value reaches this branch");
-				h_ctx->m_err = ACLSPV_COMPILE_UNASSIGNED_VALUE;
+				_aclctx_err(h_ctx, ACLSPV_COMPILE_UNASSIGNED_VALUE);
 				return 0;
 			}
 		}

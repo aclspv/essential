@@ -1,4 +1,5 @@
 #include "./call.h"
+#include <aclctx/err.h>
 
 #include <aclsym/fn.h>
 
@@ -94,7 +95,7 @@ static void s_clobber_reachable(h_aclspv_ctx_t h_ctx) {
 		p->m_flag0 |= aclcur_flag0_reg(ACLCUR_FLAG0_REG_CHANGED);
 
 		ae2f_ifezerr(c_val = aclcur_load_reg(c_reg, h_ctx, 0)) {
-			h_ctx->m_err = ACLSPV_COMPILE_UNHANDLED;
+			_aclctx_err(h_ctx, ACLSPV_COMPILE_UNHANDLED);
 			return;
 		}
 
@@ -102,7 +103,7 @@ static void s_clobber_reachable(h_aclspv_ctx_t h_ctx) {
 		 * created, so nothing refers to the load here: a read does, and the
 		 * emitter drops it otherwise. */
 		ae2f_ifezerr(aclcur_store_reg_implicit(c_reg, c_val, h_ctx)) {
-			h_ctx->m_err = ACLSPV_COMPILE_UNHANDLED;
+			_aclctx_err(h_ctx, ACLSPV_COMPILE_UNHANDLED);
 			return;
 		}
 	}

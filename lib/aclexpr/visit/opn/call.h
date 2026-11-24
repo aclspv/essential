@@ -2,6 +2,7 @@
 #define	aclexpr_visit_opn_call_h
 
 #include <util/scale.h>
+#include <aclctx/err.h>
 
 #include <aclexpr.h>
 #include <aclexpr/visit/api.h>
@@ -154,7 +155,7 @@ ae2f_inline_f static aclexpr_visit_lbl_t aclexpr_visit_opn_call(
 
 		(void)aclutil_visitfromroot(ARG, aclexpr_visit, rdwr_data);
 
-		if(ctx->m_err)
+		aclctx_err_check(ctx)
 			return c_lbl_fail;
 	}
 

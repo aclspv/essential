@@ -1,4 +1,5 @@
 #include "./root.h"
+#include <aclctx/err.h>
 #include "./fndecl/norm.h"
 #include "./fndecl/entp.h"
 
@@ -33,7 +34,7 @@ ae2f_extern enum CXChildVisitResult aclemit_root(
 	CTX->m_num_cursor = 0;
 
 	ae2f_ifezerr(aclcur_cfg_root(ACLSPV_ID_VOID, CTX)) {
-		CTX->m_err = ACLSPV_COMPILE_ALLOC_FAILED;
+		_aclctx_err(CTX, ACLSPV_COMPILE_ALLOC_FAILED);
 		return CXChildVisit_Break;
 	}
 

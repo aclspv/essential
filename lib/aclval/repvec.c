@@ -3,6 +3,7 @@
  * */
 
 #include <aclval.h>
+#include <aclctx/err.h>
 #include <aclty.h>
 #include <aclcur/opX.h>
 #include <aclutil/wrdemit.h>
@@ -82,7 +83,7 @@ aclval_cfg_vec_broadcast_t	aclval_cfg_vec_broadcast(
 		if(c_literal & (ACLTRL_CONST | ACLTRL_LTRL)) {
 			/** all-constant path: emit directly into m_types. */
 			ae2f_ifezerr(*P_VWRD = aclutil_emit_wrd(P_VEC, *P_VWRD + 2 + VEC_COUNT, 0)) {
-				h_ctx->m_err = ACLSPV_COMPILE_ALLOC_FAILED_VEC;
+				_aclctx_err(h_ctx, ACLSPV_COMPILE_ALLOC_FAILED_VEC);
 				return s_mkret(0, 0);
 			}
 
@@ -120,7 +121,7 @@ aclval_cfg_vec_broadcast_t	aclval_cfg_vec_broadcast(
 					, h_ctx
 					);
 			ae2f_ifezerr(OPC) {
-				h_ctx->m_err = ACLSPV_COMPILE_ALLOC_FAILED;
+				_aclctx_err(h_ctx, ACLSPV_COMPILE_ALLOC_FAILED);
 				return s_mkret(0, 0);
 			}
 			C->m_repvec = OPC;

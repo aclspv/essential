@@ -2,6 +2,7 @@
 #define aclemit_body_switch_cc
 
 #include <aclattr/getkinder.h>
+#include <aclctx/err.h>
 
 #include <aclexpr.h>
 #include <aclcur/common.h>
@@ -385,12 +386,12 @@ ae2f_MAC((L, )) aclemit_body_switch(CXCursor h_cur, aclemit_body_t& rdwr_body) {
 	clang_visitChildren(h_cur, s_aclattr_getkinder_visit, &L$$KINDER);
 
 	ae2f_ifnezerr_strict(L$$KINDER.m_num_grepped != 2) {
-		(rdwr_body).m_ctx->m_err = ACLSPV_COMPILE_SWITCH_LACK_COMPONENTS;
+		_aclctx_err((rdwr_body).m_ctx, ACLSPV_COMPILE_SWITCH_LACK_COMPONENTS);
 		goto L$$LBL_END;
 	}
 
 	ae2f_ifnezerr_strict(clang_getCursorKind(L$$CUR[1]) != CXCursor_CompoundStmt) {
-		(rdwr_body).m_ctx->m_err = ACLSPV_COMPILE_SWITCH_LACK_COMPONENTS;
+		_aclctx_err((rdwr_body).m_ctx, ACLSPV_COMPILE_SWITCH_LACK_COMPONENTS);
 		goto L$$LBL_END;
 	}
 
@@ -398,7 +399,7 @@ ae2f_MAC((L, )) aclemit_body_switch(CXCursor h_cur, aclemit_body_t& rdwr_body) {
 	L$$SELLEN = ae2f_static_cast(aclspv_swrd2_t, clang_Type_getSizeOf(L$$SELTYPE));
 
 	ae2f_ifnezerr_strict(L$$SELLEN <= 0 || L$$SELLEN > 8) {
-		(rdwr_body).m_ctx->m_err = ACLSPV_COMPILE_SWITCH_SELECTOR_INVAL;
+		_aclctx_err((rdwr_body).m_ctx, ACLSPV_COMPILE_SWITCH_SELECTOR_INVAL);
 		goto L$$LBL_END;
 	}
 
@@ -413,12 +414,12 @@ ae2f_MAC((L, )) aclemit_body_switch(CXCursor h_cur, aclemit_body_t& rdwr_body) {
 				, (rdwr_body).m_ctx))
 	{
 		default:
-			(rdwr_body).m_ctx->m_err = ACLSPV_COMPILE_SWITCH_SELECTOR_INVAL;
+			_aclctx_err((rdwr_body).m_ctx, ACLSPV_COMPILE_SWITCH_SELECTOR_INVAL);
 			goto L$$LBL_END;
 
 		case ACLEXPR_RET_NOT_THE_CASE:
 		case ACLEXPR_RET_FAILURE:
-			(rdwr_body).m_ctx->m_err = ACLSPV_COMPILE_SWITCH_SELECTOR_INVAL;
+			_aclctx_err((rdwr_body).m_ctx, ACLSPV_COMPILE_SWITCH_SELECTOR_INVAL);
 			goto L$$LBL_END;
 
 		case ACLEXPR_RET_SUCCESS:
@@ -430,7 +431,7 @@ ae2f_MAC((L, )) aclemit_body_switch(CXCursor h_cur, aclemit_body_t& rdwr_body) {
 				ae2f_ifnezerr_strict(
 						L$$SELTY < ACLSPV_ID_BOOL
 						|| L$$SELTY > ACLSPV_ID_I64) {
-					(rdwr_body).m_ctx->m_err = ACLSPV_COMPILE_SWITCH_SELECTOR_INVAL;
+					_aclctx_err((rdwr_body).m_ctx, ACLSPV_COMPILE_SWITCH_SELECTOR_INVAL);
 					goto L$$LBL_END;
 				}
 
@@ -458,7 +459,7 @@ ae2f_MAC((L, )) aclemit_body_switch(CXCursor h_cur, aclemit_body_t& rdwr_body) {
 			, &L$$COL);
 
 	if(L$$COL.m_err) {
-		(rdwr_body).m_ctx->m_err = ACLSPV_COMPILE_SWITCH_CASE_INVAL;
+		_aclctx_err((rdwr_body).m_ctx, ACLSPV_COMPILE_SWITCH_CASE_INVAL);
 		goto L$$LBL_END;
 	}
 
@@ -482,7 +483,7 @@ ae2f_MAC((L, )) aclemit_body_switch(CXCursor h_cur, aclemit_body_t& rdwr_body) {
 			, (rdwr_body).m_ctx);
 
 	ae2f_ifnezerr_strict(!L$$SW) {
-		(rdwr_body).m_ctx->m_err = ACLSPV_COMPILE_UNHANDLED_SWITCH;
+		_aclctx_err((rdwr_body).m_ctx, ACLSPV_COMPILE_UNHANDLED_SWITCH);
 		goto L$$LBL_END;
 	}
 
@@ -516,7 +517,7 @@ ae2f_MAC((L, )) aclemit_body_switch(CXCursor h_cur, aclemit_body_t& rdwr_body) {
 	aclcur_set_break_loop(L$$BRK_PAR, (rdwr_body).m_ctx);
 
 	if(L$$EMIT.m_err) {
-		(rdwr_body).m_ctx->m_err = ACLSPV_COMPILE_UNHANDLED_SWITCH;
+		_aclctx_err((rdwr_body).m_ctx, ACLSPV_COMPILE_UNHANDLED_SWITCH);
 		goto L$$LBL_END;
 	}
 
@@ -524,7 +525,7 @@ ae2f_MAC((L, )) aclemit_body_switch(CXCursor h_cur, aclemit_body_t& rdwr_body) {
 		goto L$$LBL_END;
 
 	ae2f_ifezerr(aclcur_cfg_lbl(L$$MERGE, (rdwr_body).m_ctx)) {
-		(rdwr_body).m_ctx->m_err = ACLSPV_COMPILE_UNHANDLED_SWITCH;
+		_aclctx_err((rdwr_body).m_ctx, ACLSPV_COMPILE_UNHANDLED_SWITCH);
 		goto L$$LBL_END;
 	}
 

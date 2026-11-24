@@ -1,4 +1,5 @@
 #include "./arg.h"
+#include <aclctx/err.h>
 #include "../implutil.h"
 
 aclty_t* aclty_get_fn_arg(
@@ -22,7 +23,7 @@ aclty_t* aclty_get_fn_arg(
 
 	/** UNLIKELY */
 	ae2f_ifnezerr_strict(1) {
-		h_ctx->m_err = ACLSPV_COMPILE_CXTP_FN_ARGS_NUM_IS_LYING;
+		_aclctx_err(h_ctx, ACLSPV_COMPILE_CXTP_FN_ARGS_NUM_IS_LYING);
 		return 0;
 	} else {
 		ae2f_unreachable();

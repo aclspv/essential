@@ -1,4 +1,5 @@
 #include "./std430.h"
+#include <aclctx/err.h>
 #include "./std140.h"
 
 #include "../by_cursor.h"
@@ -13,7 +14,7 @@ aclspv_id_t aclty_mk_by_cursor_default(
 		) {
 	aclty_layout_t layout = aclattr_get_layout(c_cursor, c_type, h_ctx);
 
-	ae2f_ifnezerr(h_ctx->m_err)
+	aclctx_err_check(h_ctx)
 		return 0;
 
 	if(layout == ACLSPV_LAYOUT_MAX)

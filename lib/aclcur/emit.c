@@ -1,4 +1,5 @@
 #include "./emit.h"
+#include <aclctx/err.h>
 #include "./util.h"
 #include "./flag0.h"
 #include "./phi.h"
@@ -17,7 +18,7 @@ aclspv_compile_t aclcur_emit(h_aclspv_ctx_t h_ctx) {
 	/** assumable. it should be internal. */
 	ae2f_assume(h_ctx);
 
-	ae2f_ifnezerr(h_ctx->m_err)
+	aclctx_err_check(h_ctx)
 		return h_ctx->m_err;
 
 	for(i = 0; i < h_ctx->m_num_cursor; ++i) {
@@ -36,7 +37,7 @@ aclspv_compile_t aclcur_emit(h_aclspv_ctx_t h_ctx) {
 				{
 					const aclspv_wrd_t c_blk = p->m_d.m_lbl.m_nop;
 
-					ae2f_ifnezerr(h_ctx->m_err = EMIT_aclcur_lbl(p, h_ctx))
+					aclctx_err_check2(h_ctx, EMIT_aclcur_lbl(p, h_ctx))
 						return h_ctx->m_err;
 
 					/** the label was powered off for lack of incoming
@@ -55,9 +56,9 @@ aclspv_compile_t aclcur_emit(h_aclspv_ctx_t h_ctx) {
 							if(p_mid->m_class == ACLCUR_REG
 									&& p_mid->m_num_ref
 									&& p_mid->m_d.m_reg.m_in.m_emit_reg) {
-								ae2f_ifnezerr(h_ctx->m_err 
-										= p_mid->m_d.m_reg.m_in.m_emit_reg(p_mid->m_id, h_ctx)
-									     ) return h_ctx->m_err;
+
+								aclctx_err_check2(h_ctx, p_mid->m_d.m_reg.m_in.m_emit_reg(p_mid->m_id, h_ctx))
+									return h_ctx->m_err;
 							}
 						}
 
@@ -100,7 +101,7 @@ aclspv_compile_t aclcur_emit(h_aclspv_ctx_t h_ctx) {
 							if(k != ne)
 								continue;
 
-							ae2f_ifnezerr(h_ctx->m_err = aclcur_phi_emit(head, h_ctx))
+							aclctx_err_check2(h_ctx, aclcur_phi_emit(head, h_ctx))
 								return h_ctx->m_err;
 
 							if(ne < 64)
@@ -110,15 +111,15 @@ aclspv_compile_t aclcur_emit(h_aclspv_ctx_t h_ctx) {
 
 					break;
 				}
-			case ACLCUR_J:   h_ctx->m_err = EMIT_aclcur_jmp(p, h_ctx); break;
-			case ACLCUR_JC:  h_ctx->m_err = EMIT_aclcur_jc(p, h_ctx); break;
-			case ACLCUR_SW:  h_ctx->m_err = EMIT_aclcur_sw(p, h_ctx); break;
-			case ACLCUR_RET: h_ctx->m_err = EMIT_aclcur_ret(p, h_ctx); break;
-			case ACLCUR_OP1: h_ctx->m_err = EMIT_aclcur_op1(p, h_ctx); break;
-			case ACLCUR_OP2: h_ctx->m_err = EMIT_aclcur_op2(p, h_ctx); break;
-			case ACLCUR_OP3: h_ctx->m_err = EMIT_aclcur_op3(p, h_ctx); break;
-			case ACLCUR_ST:  h_ctx->m_err = EMIT_aclcur_st(p, h_ctx); break;
-			case ACLCUR_OPX: h_ctx->m_err = EMIT_aclcur_opx(p, h_ctx); break;
+			case ACLCUR_J:   _aclctx_err(h_ctx, EMIT_aclcur_jmp(p, h_ctx)); break;
+			case ACLCUR_JC:  _aclctx_err(h_ctx, EMIT_aclcur_jc(p, h_ctx)); break;
+			case ACLCUR_SW:  _aclctx_err(h_ctx, EMIT_aclcur_sw(p, h_ctx)); break;
+			case ACLCUR_RET: _aclctx_err(h_ctx, EMIT_aclcur_ret(p, h_ctx)); break;
+			case ACLCUR_OP1: _aclctx_err(h_ctx, EMIT_aclcur_op1(p, h_ctx)); break;
+			case ACLCUR_OP2: _aclctx_err(h_ctx, EMIT_aclcur_op2(p, h_ctx)); break;
+			case ACLCUR_OP3: _aclctx_err(h_ctx, EMIT_aclcur_op3(p, h_ctx)); break;
+			case ACLCUR_ST:  _aclctx_err(h_ctx, EMIT_aclcur_st(p, h_ctx)); break;
+			case ACLCUR_OPX: _aclctx_err(h_ctx, EMIT_aclcur_opx(p, h_ctx)); break;
 					 /** operand links own no emission. */
 
 			case ACLCUR_OPX_MBR: continue;
@@ -128,7 +129,7 @@ aclspv_compile_t aclcur_emit(h_aclspv_ctx_t h_ctx) {
 					     unless(p->m_d.m_reg.m_in.m_emit_reg)
 						     continue;
 
-					     ae2f_ifnezerr(h_ctx->m_err = p->m_d.m_reg.m_in.m_emit_reg(p->m_id, h_ctx))
+					     aclctx_err_check2(h_ctx, p->m_d.m_reg.m_in.m_emit_reg(p->m_id, h_ctx))
 						     return h_ctx->m_err;
 					     break;
 
@@ -145,21 +146,27 @@ aclspv_compile_t aclcur_emit(h_aclspv_ctx_t h_ctx) {
 										  ACLCUR_FLAG0_LOAD_EXPLICIT)))
 							  continue;
 
-						  ae2f_ifezerr(p_reg)
-							  return h_ctx->m_err = ACLSPV_COMPILE_UNHANDLED;
+						  ae2f_ifezerr(p_reg) {
+							  _aclctx_err(h_ctx, ACLSPV_COMPILE_UNHANDLED);
+							  return h_ctx->m_err;
+						  }
 
-						  ae2f_ifnezerr_strict(p_reg->m_class != ACLCUR_REG)
-							  return h_ctx->m_err = ACLSPV_COMPILE_UNHANDLED;
+						  ae2f_ifnezerr_strict(p_reg->m_class != ACLCUR_REG) {
+							  _aclctx_err(h_ctx, ACLSPV_COMPILE_UNHANDLED);
+							  return h_ctx->m_err;
+						  }
 
 						  /** explicit (volatile) load dispatches to its own hook. */
 						  hook = (p->m_flag0 & aclcur_flag0_load(ACLCUR_FLAG0_LOAD_EXPLICIT))
 							  ? p_reg->m_d.m_reg.m_in.m_emit_load_explicit
 							  : p_reg->m_d.m_reg.m_in.m_emit_load;
 
-						  unless(hook)
-							  return h_ctx->m_err = ACLSPV_COMPILE_UNHANDLED;
+						  ae2f_ifezerr(hook) {
+							  _aclctx_err(h_ctx, ACLSPV_COMPILE_UNHANDLED);
+							  return h_ctx->m_err;
+						  }
 
-						  ae2f_ifnezerr(h_ctx->m_err = hook(p->m_id, h_ctx))
+						  aclctx_err_check2(h_ctx, hook(p->m_id, h_ctx))
 							  return h_ctx->m_err;
 
 						  break;
@@ -169,21 +176,27 @@ aclspv_compile_t aclcur_emit(h_aclspv_ctx_t h_ctx) {
 						   h_aclcur_t p_reg = aclcur_get_node(p->m_d.m_store.m_reg, h_ctx);
 						   aclcur_reg_emit_t* hook;
 
-						   ae2f_ifezerr(p_reg)
-							   return h_ctx->m_err = ACLSPV_COMPILE_UNHANDLED;
+						   ae2f_ifezerr(p_reg) {
+							   _aclctx_err(h_ctx, ACLSPV_COMPILE_UNHANDLED);
+							   return h_ctx->m_err;
+						   }
 
-						   ae2f_ifnezerr_strict(p_reg->m_class != ACLCUR_REG)
-							   return h_ctx->m_err = ACLSPV_COMPILE_UNHANDLED;
+						   ae2f_ifnezerr_strict(p_reg->m_class != ACLCUR_REG) {
+							   _aclctx_err(h_ctx, ACLSPV_COMPILE_UNHANDLED);
+							   return h_ctx->m_err;
+						   }
 
 						   /** explicit (volatile) store dispatches to its own hook. */
 						   hook = (p->m_flag0 & aclcur_flag0_store(ACLCUR_FLAG0_STORE_EXPLICIT))
 							   ? p_reg->m_d.m_reg.m_in.m_emit_store_explicit
 							   : p_reg->m_d.m_reg.m_in.m_emit_store;
 
-						   unless(hook)
-							   return h_ctx->m_err = ACLSPV_COMPILE_UNHANDLED;
+						   ae2f_ifezerr(hook) {
+							   _aclctx_err(h_ctx, ACLSPV_COMPILE_UNHANDLED);
+							   return h_ctx->m_err;
+						   }
 
-						   ae2f_ifnezerr(h_ctx->m_err = hook(p->m_id, h_ctx))
+						   aclctx_err_check2(h_ctx, hook(p->m_id, h_ctx))
 							   return h_ctx->m_err;
 						   break;
 					   }
@@ -193,7 +206,7 @@ aclspv_compile_t aclcur_emit(h_aclspv_ctx_t h_ctx) {
 		}
 
 #if	__ACLSPV_CHECK_EXTRA
-		ae2f_ifnezerr(h_ctx->m_err) {
+		aclctx_err_check(h_ctx) {
 			err_puts("h_ctx->m_err was not 0\n");
 			fixme_puts("seeing this means you forgot to make short-circuit.\n");
 			return h_ctx->m_err;
@@ -211,14 +224,15 @@ aclspv_compile_t aclcur_emit(h_aclspv_ctx_t h_ctx) {
 
 			ae2f_ifezerr(strbuf) {
 				clang_disposeString(str);
-				return h_ctx->m_err = ACLSPV_COMPILE_ALLOC_FAILED_CURSOR;
+				_aclctx_err(h_ctx, ACLSPV_COMPILE_ALLOC_FAILED_CURSOR);
+				return h_ctx->m_err;
 			}
 
 			_aclutil_mkname_dbg(L, p->m_id, strbuf, (*h_ctx), (h_ctx->m_section.m_name));
 			clang_disposeString(str);
 		}
 
-		ae2f_ifnezerr(h_ctx->m_err)
+		aclctx_err_check(h_ctx)
 			return h_ctx->m_err;
 	}
 

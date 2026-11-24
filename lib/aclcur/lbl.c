@@ -1,4 +1,5 @@
 #include "./lbl.h"
+#include <aclctx/err.h>
 #include "./util.h"
 #include "./reg.h"
 
@@ -27,7 +28,7 @@ ae2f_ccpure struct aclcur* aclcur_get_lbl_last1(h_aclspv_ctx_t h_ctx) {
 		aclspv_wrd_t i_new = i + p->m_d.m_lbl.m_nop;
 
 		ae2f_ifnezerr_strict(i_new <= i) {
-			h_ctx->m_err = ACLSPV_COMPILE_TOO_BIG_CUR_LBL;
+			_aclctx_err(h_ctx, ACLSPV_COMPILE_TOO_BIG_CUR_LBL);
 			return 0;
 		}
 

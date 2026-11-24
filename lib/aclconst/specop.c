@@ -1,4 +1,5 @@
 #include "./specop.h"
+#include <aclctx/err.h>
 #include <aclmem.h>
 #include <ae2f/cc/assume.h>
 #include <aclutil/emitx.h>
@@ -16,7 +17,7 @@ static aclspv_id_t s_app(
 				, h_ctx->m_count.m_types + c_num_wrd - 1
 				, 0
 				)) {
-		h_ctx->m_err = ACLSPV_COMPILE_ALLOC_FAILED;
+		_aclctx_err(h_ctx, ACLSPV_COMPILE_ALLOC_FAILED);
 		return 0;
 	}
 

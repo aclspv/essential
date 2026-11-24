@@ -2,6 +2,7 @@
 #define	aclexpr_visit_op1_memberread_h
 
 #include "../../op.h"
+#include <aclctx/err.h>
 #include "../api.h"
 
 #include <util/scale.h>
@@ -86,7 +87,7 @@ ae2f_inline_f static aclexpr_visit_lbl_t aclexpr_visit_op1_memberread(
 
 	ae2f_ifezerr(TY_M = aclty_mk_by_cursor_default(FD, TY_C, h_ctx)) {
 		err_puts("[visit::op1::memberread] failed to make the member type");
-		h_ctx->m_err = ACLSPV_COMPILE_CXTP_ZERO;
+		_aclctx_err(h_ctx, ACLSPV_COMPILE_CXTP_ZERO);
 		return c_lbl_fail;
 	}
 

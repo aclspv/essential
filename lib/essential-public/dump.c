@@ -1,4 +1,5 @@
 #include <aclspv.h>
+#include <aclctx/err.h>
 #include <aclmem.h>
 #include <aclutil/wrdemit.h>
 
@@ -32,7 +33,7 @@ ACLSPV_ABI_LINK aclspv_compile_t aclspv_dump_ctx_output1(
 
 	ae2f_ifezerr(h_ctx)		return ACLSPV_COMPILE_PRM_INVAL_NIL;
 	ae2f_ifezerr(rdwr_count_ret)	return ACLSPV_COMPILE_PRM_INVAL_NIL;
-	ae2f_ifnezerr(h_ctx->m_err)	return h_ctx->m_err;
+	aclctx_err_check(h_ctx) return h_ctx->m_err;
 
 	NUM_RET = s_dump_num_wrd(h_ctx);
 
@@ -182,7 +183,7 @@ ACLSPV_ABI_LINK aclspv_compile_t aclspv_dump_ctx_output(
 	if(r_count)		*r_count = 0;
 
 	ae2f_ifezerr(h_ctx)		return ACLSPV_COMPILE_PRM_INVAL_NIL;
-	ae2f_ifnezerr(h_ctx->m_err)	return h_ctx->m_err;
+	aclctx_err_check(h_ctx) return h_ctx->m_err;
 
 	NUM_RET = s_dump_num_wrd(h_ctx);
 

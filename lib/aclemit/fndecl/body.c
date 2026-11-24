@@ -1,4 +1,5 @@
 #include "./body.h"
+#include <aclctx/err.h>
 #include <aclutil/emitx.h>
 #include <aclemit/body.h>
 #include <aclemit/root.h>
@@ -30,21 +31,21 @@ enum CXChildVisitResult	aclemit_fndecl_bodycfg(
 			, s_aclattr_main
 			, h_ctx);
 
-	ae2f_ifnezerr(h_ctx->m_err) {
+	aclctx_err_check(h_ctx) {
 		return CXChildVisit_Break;
 	}
 
 	/** post-carve, pre-emit: complete the loop-header phi chains with
 	 * the final-graph back-edge carries (the back edge is not part of
 	 * the graph while the header's reads resolve). */
-	ae2f_ifnezerr(h_ctx->m_err = aclcur_ssa_loop_carry_fill(h_ctx))
+	aclctx_err_check2(h_ctx, aclcur_ssa_loop_carry_fill(h_ctx))
 		return CXChildVisit_Break;
 
 	/** the cursor graph is final here: carve is done and aclcur_emit has
 	 * not mutated the reference counts yet. capture the function-level
 	 * purity now, because the arena is reset at FunctionEnd below, so this
 	 * is the only point where the whole function is inspectable. */
-	ae2f_ifnezerr(h_ctx->m_err = aclcur_fn_cfg_pure(h_ctx))
+	aclctx_err_check2(h_ctx, aclcur_fn_cfg_pure(h_ctx))
 		return CXChildVisit_Break;
 
 	if(wr_is_const)	*wr_is_const	= aclcur_fn_is_const(h_ctx);
@@ -52,7 +53,7 @@ enum CXChildVisitResult	aclemit_fndecl_bodycfg(
 
 	/** flush the cursor graph into m_fnimpl: labels, branches, ops, and
 	 * register storage (OpVariable) via the register interfaces. */
-	ae2f_ifnezerr(h_ctx->m_err = aclcur_emit(h_ctx))
+	aclctx_err_check2(h_ctx, aclcur_emit(h_ctx))
 		return CXChildVisit_Break;
 
 	if(h_ctx->m_count.m_fnimpl) {
@@ -87,7 +88,7 @@ enum CXChildVisitResult	aclemit_fndecl_bodycfg(
 					, h_ctx->m_count.m_fndef
 					, c_op, 0
 					)) {
-			h_ctx->m_err = ACLSPV_COMPILE_ALLOC_FAILED;
+			_aclctx_err(h_ctx, ACLSPV_COMPILE_ALLOC_FAILED);
 			return CXChildVisit_Break;
 		}
 	}
@@ -97,7 +98,7 @@ enum CXChildVisitResult	aclemit_fndecl_bodycfg(
 				, h_ctx->m_count.m_fndef
 				, SpvOpFunctionEnd, 0
 				)) {
-		h_ctx->m_err = ACLSPV_COMPILE_ALLOC_FAILED;
+		_aclctx_err(h_ctx, ACLSPV_COMPILE_ALLOC_FAILED);
 		return CXChildVisit_Break;
 	}
 

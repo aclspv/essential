@@ -1,4 +1,5 @@
 #include "./dcr.h"
+#include <aclctx/err.h>
 #include "../dcr.h"
 #include "../dcr/util.h"
 
@@ -17,12 +18,12 @@ aclty_t* aclty_cfg_struct_dcr(aclty_t* ae2f_restrict rdwr_struct, SpvDecoration 
 	aclty_t*	r = 0;
 
 	ae2fpat_assertassumeunless(rdwr_struct) {
-		h_ctx->m_err = ACLSPV_COMPILE_CXTP_ZERO;
+		_aclctx_err(h_ctx, ACLSPV_COMPILE_CXTP_ZERO);
 		return 0;
 	}
 
 	ae2fpat_assertassumeunless(rdwr_struct->m_class == ACLTY_STRUCT) {
-		h_ctx->m_err = ACLSPV_COMPILE_CXTP_TYINVL_STRUCT_DCR;
+		_aclctx_err(h_ctx, ACLSPV_COMPILE_CXTP_TYINVL_STRUCT_DCR);
 		return 0;
 	}
 

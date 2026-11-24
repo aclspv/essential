@@ -1,4 +1,5 @@
 #include "./fn.h"
+#include <aclctx/err.h>
 
 #include <aclattr/execmodel.h>
 #include <aclattr/pure.h>
@@ -199,20 +200,20 @@ static aclspv_compile_t s_add(CXCursor c_fn, h_aclspv_ctx_t h_ctx) {
 
 	c_ty = s_type(c_fn, h_ctx);
 
-	if(!c_ty)
-		return h_ctx->m_err = (
-				h_ctx->m_err
-				? h_ctx->m_err
-				: ACLSPV_COMPILE_UNHANDLED
-				);
+	if(!c_ty) {
+		_aclctx_err(h_ctx, ACLSPV_COMPILE_UNHANDLED);
+		return h_ctx->m_err;
+	}
 
 	p_sym = s_find_spelling(c_fn, h_ctx);
 
 	if(p_sym) {
 		/** one name, one declared function type. the aclty arena interns
 		 * types, so comparing the ids compares the signatures. */
-		if(p_sym->m_type_id != c_ty)
-			return h_ctx->m_err = ACLSPV_COMPILE_MET_INVAL_FN_REDECL;
+		if(p_sym->m_type_id != c_ty) {
+			_aclctx_err(h_ctx, ACLSPV_COMPILE_MET_INVAL_FN_REDECL);
+			return h_ctx->m_err;
+		}
 
 		/** a definition supersedes a prototype: its mark is the handle the
 		 * build phase will resolve the body through. */
@@ -297,7 +298,7 @@ aclspv_compile_t aclsym_fn_gather(h_aclspv_ctx_t h_ctx, CXCursor c_root) {
 	h_aclspv_ctx_t cache;
 
 	ae2f_ifezerr(h_ctx)		return ACLSPV_COMPILE_PRM_INVAL_NIL;
-	ae2f_ifnezerr(h_ctx->m_err)	return h_ctx->m_err;
+	aclctx_err_check(h_ctx)	return h_ctx->m_err;
 
 	cache = s_cache(h_ctx);
 
@@ -305,7 +306,7 @@ aclspv_compile_t aclsym_fn_gather(h_aclspv_ctx_t h_ctx, CXCursor c_root) {
 
 	/** a failure inside the scratch context is the compile's failure. */
 	if(cache->m_err && !h_ctx->m_err)
-		h_ctx->m_err = cache->m_err;
+		_aclctx_err(h_ctx, cache->m_err);
 
 	return h_ctx->m_err;
 }

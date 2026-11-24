@@ -58,7 +58,7 @@ ae2f_MAC((L, )) aclconst_specsize_op3_sel(
 		L$$arr[5] = (c_cnd).m_id;
 
 		ae2f_ifnezerr_strict((L$$C_bool = aclconst_specop(&L$$arr[0], 6u, (h_ctx))) == 0) {
-			(h_ctx)->m_err = ACLSPV_COMPILE_ALLOC_FAILED;
+			_aclctx_err((h_ctx), ACLSPV_COMPILE_ALLOC_FAILED);
 			(r).m_id	= 0u;
 			(r).m_lit.m_wrd	= 0u;
 			break;
@@ -73,7 +73,7 @@ ae2f_MAC((L, )) aclconst_specsize_op3_sel(
 		L$$arr[6] = L$$F;
 
 		ae2f_ifnezerr_strict(((r).m_id = aclconst_specop(&L$$arr[0], 7u, (h_ctx))) == 0) {
-			(h_ctx)->m_err = ACLSPV_COMPILE_ALLOC_FAILED;
+			_aclctx_err((h_ctx), ACLSPV_COMPILE_ALLOC_FAILED);
 			(r).m_id	= 0u;
 			(r).m_lit.m_wrd	= 0u;
 			break;
@@ -123,7 +123,7 @@ ae2f_MAC((L, )) aclconst_specsize_op2_bool(
 				break;
 
 			ae2f_ifezerr((L$$X).m_id && L$$Y.m_id && L$$v0 && L$$v1)
-			{ (h_ctx)->m_err = ACLSPV_COMPILE_ALLOC_FAILED; break; }
+			{ _aclctx_err((h_ctx), ACLSPV_COMPILE_ALLOC_FAILED); break; }
 
 			L$$arr[0] = aclspv_opcode_to_wrd(SpvOpSpecConstantOp, 5);
 			L$$arr[1] = ACLSPV_ID_BOOL;
@@ -133,7 +133,7 @@ ae2f_MAC((L, )) aclconst_specsize_op2_bool(
 			L$$arr[5] = (L$$Y).m_id;
 
 			ae2f_ifezerr(L$$id = aclconst_specop(&L$$arr[0], 6, h_ctx)) {
-				(h_ctx)->m_err = ACLSPV_COMPILE_ALLOC_FAILED;
+				_aclctx_err((h_ctx), ACLSPV_COMPILE_ALLOC_FAILED);
 				(r).m_id	= 0;
 				(r).m_lit.m_wrd	= 0;
 				break;
@@ -148,7 +148,7 @@ ae2f_MAC((L, )) aclconst_specsize_op2_bool(
 			L$$arr[6] = L$$v0;
 
 			ae2f_ifezerr((r).m_id = aclconst_specop(&L$$arr[0], 7, h_ctx)) {
-				(h_ctx)->m_err = ACLSPV_COMPILE_ALLOC_FAILED;
+				_aclctx_err((h_ctx), ACLSPV_COMPILE_ALLOC_FAILED);
 				(r).m_id	= 0;
 				(r).m_lit.m_wrd	= 0;
 				break;
@@ -158,7 +158,7 @@ ae2f_MAC((L, )) aclconst_specsize_op2_bool(
 			fn_op_lit(r, c_x, c_y);
 		}
 	} else {
-		(h_ctx)->m_err = ACLSPV_COMPILE_ALLOC_FAILED;
+		_aclctx_err((h_ctx), ACLSPV_COMPILE_ALLOC_FAILED);
 		(r).m_id	= 0;
 		(r).m_lit.m_wrd	= 0;
 	}
@@ -199,7 +199,7 @@ ae2f_MAC((L, )) aclconst_specsize_op2(
 					);
 
 			ae2f_ifezerr((L$$X).m_id && L$$Y.m_id)
-			{ (h_ctx)->m_err = ACLSPV_COMPILE_ALLOC_FAILED; break; }
+			{ _aclctx_err((h_ctx), ACLSPV_COMPILE_ALLOC_FAILED); break; }
 
 			L$$arr[0] = aclspv_opcode_to_wrd(SpvOpSpecConstantOp, 5);
 			L$$arr[1] = L$$size_ty;
@@ -209,7 +209,7 @@ ae2f_MAC((L, )) aclconst_specsize_op2(
 			L$$arr[5] = (L$$Y).m_id;
 
 			ae2f_ifezerr((r).m_id = aclconst_specop(&L$$arr[0], 6, h_ctx)) {
-				(h_ctx)->m_err = ACLSPV_COMPILE_ALLOC_FAILED;
+				_aclctx_err((h_ctx), ACLSPV_COMPILE_ALLOC_FAILED);
 				(r).m_id	= 0;
 				(r).m_lit.m_wrd	= 0;
 				break;
@@ -253,7 +253,7 @@ ae2f_MAC((L, )) aclconst_specsize_op1(
 					);
 
 			ae2f_ifezerr((L$$X).m_id)
-			{ (h_ctx)->m_err = ACLSPV_COMPILE_ALLOC_FAILED; break; }
+			{ _aclctx_err((h_ctx), ACLSPV_COMPILE_ALLOC_FAILED); break; }
 
 			L$$arr[0] = aclspv_opcode_to_wrd(SpvOpSpecConstantOp, 4);
 			L$$arr[1] = L$$size_ty;
@@ -262,7 +262,7 @@ ae2f_MAC((L, )) aclconst_specsize_op1(
 			L$$arr[4] = (L$$X).m_id;
 
 			ae2f_ifezerr((r).m_id = aclconst_specop(&L$$arr[0], 5, h_ctx)) {
-				(h_ctx)->m_err = ACLSPV_COMPILE_ALLOC_FAILED;
+				_aclctx_err((h_ctx), ACLSPV_COMPILE_ALLOC_FAILED);
 				(r).m_id	= 0;
 				(r).m_lit.m_wrd	= 0;
 				break;

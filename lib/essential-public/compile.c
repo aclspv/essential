@@ -112,7 +112,7 @@ static void s_diagnostics(h_aclspv_ctx_t h_ctx, CXTranslationUnit h_tu) {
 				break;
 			case CXDiagnostic_Error:
 				if(h_ctx->m_usrcfg.m_flag0 & ACLSPV_CTX_FLAG0_KILL_ON_DIAGNOSTICS)
-					h_ctx->m_err = ACLSPV_COMPILE_DIAG_ERR;
+					_aclctx_err(h_ctx, ACLSPV_COMPILE_DIAG_ERR);
 				dbg_puts("_ERR");
 				break;
 
@@ -125,7 +125,7 @@ static void s_diagnostics(h_aclspv_ctx_t h_ctx, CXTranslationUnit h_tu) {
 
 			case CXDiagnostic_Fatal:
 				if(h_ctx->m_usrcfg.m_flag0 & ACLSPV_CTX_FLAG0_KILL_ON_DIAGNOSTICS)
-					h_ctx->m_err = ACLSPV_COMPILE_DIAG_FTAL;
+					_aclctx_err(h_ctx, ACLSPV_COMPILE_DIAG_FTAL);
 				dbg_puts("FTAL");
 				break;
 			default:
@@ -141,7 +141,7 @@ ACLSPV_ABI_LINK aclspv_compile_t aclspv_ctx_compile(
 		CXCursor	c_cur_root
 		) {
 	ae2f_ifezerr(h_ctx)		return ACLSPV_COMPILE_PRM_INVAL_NIL;
-	ae2f_ifnezerr(h_ctx->m_err)	return h_ctx->m_err;
+	aclctx_err_check(h_ctx)	return h_ctx->m_err;
 
 	/** the phases are one shot: compile once, then build once. */
 	if(h_ctx->m_phase >= ACLSPV_CTX_PHASE_COMPILE)
@@ -153,7 +153,7 @@ ACLSPV_ABI_LINK aclspv_compile_t aclspv_ctx_compile(
 	/** pass 1: declarations before bodies. every file-scope function of
 	 * the main file is cached with its function type and checked for a
 	 * conflicting redeclaration. */
-	ae2f_ifnezerr(h_ctx->m_err = aclsym_fn_gather(h_ctx, c_cur_root))
+	aclctx_err_check2(h_ctx, aclsym_fn_gather(h_ctx, c_cur_root))
 		return h_ctx->m_err;
 
 	h_ctx->m_phase = ACLSPV_CTX_PHASE_COMPILE;
@@ -180,7 +180,7 @@ ACLSPV_ABI_LINK aclspv_compile_t aclspv_ctx_compile1(
 
 	s_diagnostics(h_ctx, h_tu);
 
-	if(h_ctx->m_err)
+	aclctx_err_check(h_ctx)
 		return h_ctx->m_err;
 
 	return aclspv_ctx_compile(
@@ -194,7 +194,7 @@ ACLSPV_ABI_LINK aclspv_compile_t aclspv_ctx_build(
 		CXCursor	c_cur_root
 		) {
 	ae2f_ifezerr(h_ctx)		return ACLSPV_COMPILE_PRM_INVAL_NIL;
-	ae2f_ifnezerr(h_ctx->m_err)	return h_ctx->m_err;
+	aclctx_err_check(h_ctx)	return h_ctx->m_err;
 
 	if(h_ctx->m_phase >= ACLSPV_CTX_PHASE_BUILD)
 		return h_ctx->m_err;
@@ -232,7 +232,7 @@ ACLSPV_ABI_LINK aclspv_compile_t aclspv_ctx_build1(
 
 	s_diagnostics(h_ctx, h_tu);
 
-	if(h_ctx->m_err)
+	aclctx_err_check(h_ctx)
 		return h_ctx->m_err;
 
 	return aclspv_ctx_build(
@@ -256,7 +256,7 @@ ACLSPV_ABI_LINK aclspv_compile_t aclspv_ctx_build2(
 	ae2f_ifezerr(h_cxidx)		return ACLSPV_COMPILE_ERR_CXIDX;
 	ae2f_ifezerr(rdwr_unsaved)	return ACLSPV_COMPILE_PRM_INVAL_NIL;
 
-	ae2f_ifnezerr(h_ctx->m_err)	return h_ctx->m_err;
+	aclctx_err_check(h_ctx)	return h_ctx->m_err;
 
 	{
 		enum CXErrorCode CXERR = clang_parseTranslationUnit2(
@@ -270,10 +270,16 @@ ACLSPV_ABI_LINK aclspv_compile_t aclspv_ctx_build2(
 		if(rwr_cxerr_opt)	*rwr_cxerr_opt = CXERR;
 	}
 
-	ae2f_ifezerr(CXTU)		return h_ctx->m_err = ACLSPV_COMPILE_ERR_CXTU;
-	ae2f_ifeznrm(h_ctx->m_err)	h_ctx->m_err = aclspv_ctx_build1(h_ctx, CXTU);
-	clang_disposeTranslationUnit(CXTU);
+	ae2f_ifezerr(CXTU) {
+		_aclctx_err(h_ctx, ACLSPV_COMPILE_ERR_CXTU);
+		return h_ctx->m_err;
+	}
+	ae2f_ifeznrm(h_ctx->m_err) {
+		_aclctx_err(h_ctx, aclspv_ctx_build1(h_ctx, CXTU));
+		_aclctx_err_log(h_ctx);
+	}
 
+	clang_disposeTranslationUnit(CXTU);
 	return h_ctx->m_err;
 }
 
@@ -292,9 +298,10 @@ ACLSPV_ABI_LINK aclspv_compile_t aclspv_ctx_build3(
 		const CXIndex CXIDX		= clang_createIndex(0, 0);
 		ae2f_ifezerr(CXIDX)		{
 			clang_disposeIndex(CXIDX);
-			return h_ctx->m_err = ACLSPV_COMPILE_ERR_CXIDX;
+			_aclctx_err(h_ctx, ACLSPV_COMPILE_ERR_CXIDX);
+			return h_ctx->m_err;
 		}
-		h_ctx->m_err = aclspv_ctx_build2(h_ctx, rdwr_unsaved, c_unsaved_count, rd_argv_opt, c_argc, rwr_cxerr_opt, CXIDX);
+		_aclctx_err(h_ctx, aclspv_ctx_build2(h_ctx, rdwr_unsaved, c_unsaved_count, rd_argv_opt, c_argc, rwr_cxerr_opt, CXIDX));
 		clang_disposeIndex(CXIDX);
 	}
 
