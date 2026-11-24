@@ -6,21 +6,38 @@
 #include <ae2f/pat/macrofunc.h>
 
 #include <util/log.h>
+#include <ae2f/cc/unless.h>
+#include <ae2f/cc/branches/naive.h>
+
+/** prints an error when h->m_err has error */
+ae2f_MAC() aclctx_err_log(
+		const h_aclspv_ctx_t h
+		) {
+	ae2f_ifnezerr((h)->m_err) {
+		if(sizeof(__FILE__) > sizeof(__ACLSPV_ROOT_PATH)) {
+			err_call(fprintf, (stderr, "[errlog] %s:%d\t%u\n"
+						, ((const char*)__FILE__ + sizeof(__ACLSPV_ROOT_PATH))
+						, (int)__LINE__
+						, (unsigned)(h)->m_err
+					  ));
+		}
+	}
+}
+
+#if	!_ae2f_MACRO_GENERATED
+#define	_aclctx_err_log	aclctx_err_log
+#endif
 
 ae2f_MAC() aclctx_err(
 		const h_aclspv_ctx_t h
 		, const aclspv_compile_t c
 		) {
-	unless((h)->m_err) {
+	ae2fcc_unless((h)->m_err) {
 		(h)->m_err = (c);
 	}
 
-	err_prefix(());
-	err_call(fprintf, (stderr, "err %u\n"
-				, ae2f_static_cast(unsigned, ((h)->m_err))
-			));
-
-	assert(0);
+	_aclctx_err_log(h);
+	/** it had assert(0); before, now it does not have one. */
 }
 
 #endif

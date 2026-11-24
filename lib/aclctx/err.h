@@ -6,4 +6,7 @@
 
 #include <.aclspv/ctx/err.h>
 
+/** error state check */
+#define	aclctx_err_check(h)	_aclctx_err_log(h); ae2f_ifnezerr((h)->m_err)
+
 #endif
