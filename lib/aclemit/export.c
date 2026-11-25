@@ -34,6 +34,11 @@ static enum CXChildVisitResult s_visit(
 	unless(p_sym)
 		return CXChildVisit_Continue;
 
+	/** an internal-linkage definition has no ABI name to export: it lives
+	 * in the static cache and stays inside this module. */
+	if(p_sym->m_flag0 & aclsym_fn_flag0(ACLSYM_FN_FLAG0_STATIC))
+		return CXChildVisit_Continue;
+
 	/** only an emitted definition has an OpFunction to decorate. */
 	if(!(p_sym->m_flag0 & (aclspv_wrd_t)(
 				aclsym_fn_flag0(ACLSYM_FN_FLAG0_DEFINED)

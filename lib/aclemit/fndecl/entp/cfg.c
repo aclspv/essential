@@ -16,6 +16,8 @@
 
 #include <aclutil/emitx.h>
 
+#include <string.h>
+
 
 typedef struct {
 	h_aclspv_ctx_t	m_ctx;
@@ -208,7 +210,7 @@ ERR:
 }
 
 aclsym_entp_t aclemit_fndecl_entp_cfg(CXCursor h_parent, h_aclspv_ctx_t CTX) {
-	const CXString NAME = clang_getCursorSpelling(h_parent);
+	CXString		NAME;
 	struct	aclattr_wrkgroup_prm	XYZ;
 	enum SpvExecutionModel_	EXEC_MODEL = SpvExecutionModelMax;
 	aclsym_entp_t		THIS_ENTRY_POINT;
@@ -216,6 +218,25 @@ aclsym_entp_t aclemit_fndecl_entp_cfg(CXCursor h_parent, h_aclspv_ctx_t CTX) {
 	aclspv_bool_t		c_localsize = 0;
 
 	aclmemzero(&THIS_ENTRY_POINT, sizeof(THIS_ENTRY_POINT));
+
+	/** the entry point name is the symbol name, like every other function:
+	 * C and `extern "C"` stay unmangled, C++ carries its Itanium name. */
+	(void)aclsym_cursor_name(h_parent, &NAME);
+
+	{
+		CXString SPELL = clang_getCursorSpelling(h_parent);
+		const char* c_spell = clang_getCString(SPELL);
+		const char* c_name = clang_getCString(NAME);
+
+		if(c_spell && c_name && strcmp(c_spell, c_name)) {
+			warn_prefix(i);
+			warn_call((void), fprintf(stderr
+						, "entry point `%s` is emitted as `%s`; use extern \"C\" for a stable name\n"
+						, c_spell, c_name));
+		}
+
+		clang_disposeString(SPELL);
+	}
 
 	aclctx_err_check(CTX) return THIS_ENTRY_POINT;
 

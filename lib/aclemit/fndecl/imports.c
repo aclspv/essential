@@ -155,6 +155,14 @@ static enum CXChildVisitResult s_visit(
 				| aclsym_fn_flag0(ACLSYM_FN_FLAG0_EMITTED)))
 		return CXChildVisit_Recurse;
 
+	/** an internal-linkage function has no external definition to import:
+	 * its body must exist in this translation unit. */
+	if(p_sym->m_flag0 & aclsym_fn_flag0(ACLSYM_FN_FLAG0_STATIC)) {
+		err_puts("a called static function has no body in this translation unit");
+		_aclctx_err(ctx, ACLSPV_COMPILE_UNHANDLED);
+		return CXChildVisit_Break;
+	}
+
 	ae2f_ifnezerr(s_declare(
 				p_sym
 				, c_callee

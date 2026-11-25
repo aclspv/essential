@@ -443,6 +443,70 @@ static int s_case_ready(void) {
 	return 0;
 }
 
+/** internal-linkage functions are cached apart from the normal symbols and
+ * keep a plain C name. */
+static int s_case_static(void) {
+	static const char src[] =
+		"static int hidden(int a) { return a + 1; }\n"
+		"int uses_hidden(int a) { return hidden(a); }\n"
+		"int visible(int a);\n";
+
+	x_aclspv_ctx		ctx;
+	aclspv_compile_t	ret;
+	struct CXUnsavedFile	files[1];
+	aclsym_fn_t*		hidden;
+	const char*		name;
+
+	files[0].Contents	= src;
+	files[0].Filename	= "main.c";
+	files[0].Length		= sizeof(src) - 1;
+
+	if(s_compile(files, 1, &ret, &ctx))
+		return 1;
+
+	if(ret != ACLSPV_COMPILE_OK) {
+		fprintf(stderr, "[aclsym] static-case compile failed: %d\n", (int)ret);
+		aclspv_fini_ctx(&ctx);
+		return 1;
+	}
+
+	if(!ctx.m_ctx_slave
+			|| ctx.m_ctx_slave->m_fnlist.m_num_fn != 2
+			|| ctx.m_ctx_slave->m_fnlist.m_num_fn_static != 1) {
+		fprintf(stderr, "[aclsym] static: %u normal, %u static\n"
+				, (unsigned)(ctx.m_ctx_slave
+					? ctx.m_ctx_slave->m_fnlist.m_num_fn : 0)
+				, (unsigned)(ctx.m_ctx_slave
+					? ctx.m_ctx_slave->m_fnlist.m_num_fn_static : 0));
+		aclspv_fini_ctx(&ctx);
+		return 1;
+	}
+
+	hidden = &((aclsym_fn_t*)ctx.m_ctx_slave->m_fnlist.m_fn_static.m_p)[0];
+	name = aclsym_fn_name(hidden, &ctx);
+
+	CHECK(hidden->m_flag0 & aclsym_fn_flag0(ACLSYM_FN_FLAG0_STATIC));
+	CHECK(hidden->m_flag0 & aclsym_fn_flag0(ACLSYM_FN_FLAG0_DEFINED));
+	CHECK(hidden->m_len_usr != 0);
+	CHECK(name && !strcmp(name, "hidden"));
+
+	/** static names live in their own arena: the normal name arena holds
+	 * only uses_hidden and visible (11 + 1 + 7 + 1 bytes). */
+	CHECK(ctx.m_ctx_slave->m_fnlist.m_num_fn_name == 20);
+	CHECK(ctx.m_ctx_slave->m_fnlist.m_num_fn_static_name != 0);
+
+	printf("[aclsym] static: count=%u name=%s\n"
+			, (unsigned)ctx.m_ctx_slave->m_fnlist.m_num_fn_static
+			, name ? name : "");
+
+	aclsym_fn_reset_static(&ctx);
+	CHECK(ctx.m_ctx_slave->m_fnlist.m_num_fn_static == 0);
+	CHECK(ctx.m_ctx_slave->m_fnlist.m_num_fn_static_name == 0);
+
+	aclspv_fini_ctx(&ctx);
+	return 0;
+}
+
 int main(void) {
 	if(s_case_ok())
 		return 1;
@@ -454,6 +518,9 @@ int main(void) {
 		return 1;
 
 	if(s_case_ready())
+		return 1;
+
+	if(s_case_static())
 		return 1;
 
 	return 0;

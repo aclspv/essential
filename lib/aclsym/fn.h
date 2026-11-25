@@ -36,6 +36,11 @@ enum ACLSYM_FN_FLAG0_ {
 	 * same two sources as CONST. */
 	ACLSYM_FN_FLAG0_PURE,
 
+	/** the declaration has internal linkage (C `static`, or a C++ function
+	 * whose language linkage makes it TU-local). it lives in the separate
+	 * static cache and is never imported or exported. */
+	ACLSYM_FN_FLAG0_STATIC,
+
 	ACLSYM_FN_FLAG0_MAX
 };
 
@@ -48,9 +53,15 @@ ae2f_inline_f ae2f_ccconst static aclspv_wrd_t aclsym_fn_flag0(
 
 /** one function symbol: the cache pass 1 builds before any body is parsed.
  *
- * the symbol is keyed by the FunctionDecl cursor (with a spelling fallback
- * for a cursor that clang hands out twice) and covers declarations and
+ * the symbol is keyed by the cursor (with a USR fallback for the static cache
+ * and a name fallback for the normal cache) and covers declarations and
  * definitions alike. a definition supersedes an earlier prototype.
+ *
+ * the name is the symbol name: clang_Cursor_getMangling(), or the spelling
+ * when clang has no mangling for it. this is what OpName and
+ * LinkageAttributes carry, so the display name and the symbol name are one
+ * string. C and `extern "C"` declarations come out unmangled; C++
+ * declarations carry their Itanium name.
  *
  * the signature is identified by m_type_id alone: the aclty arena interns
  * types, so two declarations of the same declared function type carry one
@@ -78,16 +89,26 @@ typedef struct {
 	 * when one supersedes a prototype. */
 	aclspv_wrd_t	m_mark;
 
-	/* @brief the declared name, as a slice of the cache context's
-	 * m_fnlist.m_fn_name. this — not the cursor — is the durable identity:
-	 * it is what the duplicate rule compares and what OpName /
-	 * LinkageAttributes will need. */
+	/* @brief the symbol name, as a slice of the cache context's
+	 * m_fnlist.m_fn_name. this is the mangled name (or spelling when
+	 * clang has no mangling): OpName and LinkageAttributes use it as-is. */
 	aclspv_wrd_t	m_idx_name;
 	aclspv_wrd_t	m_len_name;
+
+	/* @brief USR slice for a STATIC symbol: the lookup key for the static
+	 * cache. two static entities may share one mangled/display name; the
+	 * USR keeps them apart. zero for a normal symbol. */
+	aclspv_wrd_t	m_idx_usr;
+	aclspv_wrd_t	m_len_usr;
 
 	/* @brief enum ACLSYM_FN_FLAG0_ */
 	aclspv_wrd_t	m_flag0;
 } aclsym_fn_t;
+
+/** the symbol name for c_cur: clang_Cursor_getMangling() with the cursor
+ * spelling as the fallback when clang has no mangling. `wr_name` owns the
+ * result until disposed. */
+const char* aclsym_cursor_name(CXCursor c_cur, CXString* ae2f_restrict wr_name);
 
 /**
  * function symbols: the declaration cache pass 1 builds before any body is
@@ -105,11 +126,18 @@ typedef struct {
  * survives for the whole compile; aclsym_fn_find() looks through the same
  * redirection, so callers keep passing the real context.
  *
- * a name has exactly one declared function type: a redeclaration whose aclty
- * type value differs is rejected (ACLSPV_COMPILE_MET_INVAL_FN_REDECL). a
- * redeclaration with the same type merges onto the existing symbol, and a
- * definition supersedes an earlier prototype (its cursor becomes the
- * authoritative one).
+ * a normal name has exactly one declared function type: a redeclaration whose
+ * aclty type value differs is rejected
+ * (ACLSPV_COMPILE_MET_INVAL_FN_REDECL). a redeclaration with the same type
+ * merges onto the existing symbol, and a definition supersedes an earlier
+ * prototype (its cursor becomes the authoritative one).
+ *
+ * internal-linkage functions (`static`) are recorded in m_fnlist.m_fn_static
+ * instead. they are not importable or exportable, and their lookup key is the
+ * cursor USR, not the mangled name: distinct static entities may share a
+ * plain C name. their names/USRs live in m_fnlist.m_fn_static_name, a separate
+ * arena reset with the static cache when a compile pass starts (or when a
+ * build starts without a compiled half).
  *
  * entry points are left out entirely: an entry point is not a call target, so
  * it gets no symbol and its signature is never built. declarations from
@@ -118,13 +146,21 @@ typedef struct {
  * */
 aclspv_compile_t aclsym_fn_gather(h_aclspv_ctx_t h_ctx, CXCursor c_root);
 
+/** discard the static cache and its name arena. a fresh compile pass calls
+ * this before it starts gathering declarations: static symbols are TU-local
+ * scratch and must not accumulate across passes. a build keeps the cache when
+ * its compile half has already run, because bodies deferred to the build phase
+ * still resolve their static callees through it. */
+void aclsym_fn_reset_static(h_aclspv_ctx_t h_ctx);
+
 /**
- * the symbol for c_fn, matched by cursor first and by spelling as a fallback
- * (clang may hand out a distinct cursor for the same entity).
+ * the symbol for c_fn, matched by cursor first and by name as a fallback
+ * (clang may hand out a distinct cursor for the same entity). a static
+ * declaration is looked up in the static cache by USR.
  *
- * the returned pointer is owned by the slave context's m_fnlist.m_fn and is
- * invalidated by the next symbol append: use it before adding another
- * declaration.
+ * the returned pointer is owned by the slave context's m_fnlist.m_fn or
+ * m_fnlist.m_fn_static and is invalidated by the next symbol append: use it
+ * before adding another declaration.
  * */
 aclsym_fn_t* aclsym_fn_find(CXCursor c_fn, h_aclspv_ctx_t h_ctx);
 

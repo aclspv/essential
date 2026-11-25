@@ -28,7 +28,9 @@ static void s_fini_vectors(h_aclspv_ctx_t d) {
 
 	aclmem_fini(&d->m_fnlist.m_entp);
 	aclmem_fini(&d->m_fnlist.m_fn);
+	aclmem_fini(&d->m_fnlist.m_fn_static);
 	aclmem_fini(&d->m_fnlist.m_fn_name);
+	aclmem_fini(&d->m_fnlist.m_fn_static_name);
 
 	aclmem_fini(&d->m_tmp.m_v0);
 	aclmem_fini(&d->m_body.m_bootscale);
@@ -195,8 +197,10 @@ static ae2f_inline_f aclspv_compile_t s_init_vectors(h_aclspv_ctx_t i_ctx) {
 	aclmem_init(&i_ctx->m_cur_lbl_dfs_visit		, i_ctx);
 
 	aclmem_init(&i_ctx->m_fnlist.m_fn			, i_ctx);
+	aclmem_init(&i_ctx->m_fnlist.m_fn_static		, i_ctx);
 	aclmem_init(&i_ctx->m_fnlist.m_entp		, i_ctx);
 	aclmem_init(&i_ctx->m_fnlist.m_fn_name		, i_ctx);
+	aclmem_init(&i_ctx->m_fnlist.m_fn_static_name	, i_ctx);
 
 	aclmem_init(&i_ctx->m_section.m_capability	, i_ctx);
 	aclmem_init(&i_ctx->m_section.m_entp		, i_ctx);

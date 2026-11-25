@@ -137,14 +137,23 @@ struct a_aclspv_ctx {
 	struct {
 		aclspv_wrdcount_t
 			m_num_fn,
+			m_num_fn_static,
 			m_num_entp;
 
 		/**
 		 * @var		m_fn
-		 * @brief	normal functions
+		 * @brief	normal functions (external linkage)
 		 * @see		lib_build_fn_t
 		 * */
 		x_aclspv_vec	m_fn;
+
+		/**
+		 * @var		m_fn_static
+		 * @brief	internal-linkage functions (`static`). keyed by USR, not by
+		 *		name: two static entities may share one display name.
+		 * @see		aclsym_fn_t
+		 * */
+		x_aclspv_vec	m_fn_static;
 
 		/**
 		 * @var		m_entp
@@ -165,6 +174,18 @@ struct a_aclspv_ctx {
 
 		/** number of bytes in `m_fn_name`. */
 		aclspv_wrdcount_t	m_num_fn_name;
+
+		/**
+		 * @var		m_fn_static_name
+		 * @brief	flat byte storage for the names and USRs of `m_fn_static`.
+		 *		separate from m_fn_name so the static cache can shrink back to
+		 *		zero without touching the normal names.
+		 * @see		aclsym_fn_t
+		 * */
+		x_aclspv_vec	m_fn_static_name;
+
+		/** number of bytes in `m_fn_static_name`. */
+		aclspv_wrdcount_t	m_num_fn_static_name;
 	}			m_fnlist;
 
 	/**

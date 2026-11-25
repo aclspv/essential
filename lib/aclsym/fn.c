@@ -20,10 +20,28 @@ static x_aclspv_ctx* s_cache(h_aclspv_ctx_t h_ctx) {
 	return (h_ctx && h_ctx->m_ctx_slave) ? h_ctx->m_ctx_slave : h_ctx;
 }
 
-/** spelling of c_fn; `wr_spell` owns it until disposed. */
-static const char* s_spell(CXCursor c_fn, CXString* ae2f_restrict wr_spell) {
-	*wr_spell = clang_getCursorSpelling(c_fn);
-	return clang_getCString(*wr_spell);
+/** the symbol name of c_cur: mangled when clang has one, spelled
+ * otherwise. `wr_name` owns it until disposed. */
+const char* aclsym_cursor_name(CXCursor c_cur, CXString* ae2f_restrict wr_name) {
+	const char* c_name;
+
+	*wr_name = clang_Cursor_getMangling(c_cur);
+	c_name = clang_getCString(*wr_name);
+
+	if(c_name && *c_name)
+		return c_name;
+
+	/** no mangling for this entity: fall back to its source name. */
+	clang_disposeString(*wr_name);
+	*wr_name = clang_getCursorSpelling(c_cur);
+	return clang_getCString(*wr_name);
+}
+
+/** the name arena a symbol's slices belong to. */
+static const char* s_name_base(const aclsym_fn_t* c_sym, h_aclspv_ctx_t h_ctx) {
+	return (c_sym->m_flag0 & aclsym_fn_flag0(ACLSYM_FN_FLAG0_STATIC))
+		? h_ctx->m_fnlist.m_fn_static_name.m_p
+		: h_ctx->m_fnlist.m_fn_name.m_p;
 }
 
 /** the stored name of c_sym equals [c_name, c_name + c_len). */
@@ -38,7 +56,7 @@ static aclspv_bool_t s_name_eq(
 	if(!c_sym || !c_name || c_sym->m_len_name != c_len)
 		return 0;
 
-	p_base = h_ctx->m_fnlist.m_fn_name.m_p;
+	p_base = s_name_base(c_sym, h_ctx);
 
 	if(!p_base)
 		return 0;
@@ -50,48 +68,127 @@ static aclspv_bool_t s_name_eq(
 			);
 }
 
-/** append c_fn's spelling to the name arena; the symbol keeps the slice. */
-static aclspv_compile_t s_name_app(
-		CXCursor		c_fn,
-		aclspv_wrd_t* ae2f_restrict	wr_idx,
-		aclspv_wrd_t* ae2f_restrict	wr_len,
+/** the stored USR of c_sym equals [c_usr, c_usr + c_len). */
+static aclspv_bool_t s_usr_eq(
+		const aclsym_fn_t*	c_sym,
+		const char*		c_usr,
+		aclspv_wrd_t		c_len,
 		h_aclspv_ctx_t		h_ctx
 		) {
-	CXString		SPELL;
-	const char*		c_name = s_spell(c_fn, &SPELL);
-	size_t			c_len = c_name ? strlen(c_name) : 0;
+	const char* p_base;
+
+	if(!c_sym || !c_usr || c_sym->m_len_usr != c_len)
+		return 0;
+
+	p_base = s_name_base(c_sym, h_ctx);
+
+	if(!p_base)
+		return 0;
+
+	return (aclspv_bool_t)!memcmp(
+			p_base + c_sym->m_idx_usr
+			, c_usr
+			, (size_t)c_len
+			);
+}
+
+/** append a text slice to an arena; the symbol keeps the slice. */
+static aclspv_compile_t s_txt_app(
+		const char*		c_txt,
+		aclspv_wrd_t* ae2f_restrict	wr_idx,
+		aclspv_wrd_t* ae2f_restrict	wr_len,
+		x_aclspv_vec* ae2f_restrict	h_arena,
+		aclspv_wrdcount_t* ae2f_restrict	h_num,
+		h_aclspv_ctx_t		h_ctx
+		) {
+	size_t			c_len = c_txt ? strlen(c_txt) : 0;
 	const size_t		c_len_term = c_len + 1;	/** null included */
 	aclspv_compile_t	ret = ACLSPV_COMPILE_OK;
 
-	*wr_idx = h_ctx->m_fnlist.m_num_fn_name;
+	(void)h_ctx;
+
+	*wr_idx = *h_num;
 	*wr_len = (aclspv_wrd_t)c_len;
 
 	if(s_aclmem_cgrow2(
-				&h_ctx->m_fnlist.m_fn_name
-				, h_ctx->m_fnlist.m_num_fn_name
-					+ (aclspv_wrd_t)c_len_term
+				h_arena
+				, *h_num + (aclspv_wrd_t)c_len_term
 				, 1
 				, ACLSPV_COMPILE_ALLOC_FAILED_FUNCTION))
-		ret = h_ctx->m_err;
+		ret = h_arena->m_ctx->m_err;
 	else {
 		memcpy(
-				(char*)h_ctx->m_fnlist.m_fn_name.m_p
-					+ *wr_idx
-				, c_name ? c_name : ""
+				(char*)h_arena->m_p + *wr_idx
+				, c_txt ? c_txt : ""
 				, c_len_term
 				);
-		h_ctx->m_fnlist.m_num_fn_name += (aclspv_wrd_t)c_len_term;
+		*h_num += (aclspv_wrd_t)c_len_term;
 	}
-
-	clang_disposeString(SPELL);
 
 	return ret;
 }
 
-/** the symbol declared with c_fn's spelling. */
-static aclsym_fn_t* s_find_spelling(CXCursor c_fn, h_aclspv_ctx_t h_ctx) {
-	CXString		SPELL;
-	const char*		c_name = s_spell(c_fn, &SPELL);
+/** append c_fn's symbol name to `h_arena` and keep the slice. */
+static aclspv_compile_t s_name_app(
+		CXCursor		c_fn,
+		x_aclspv_vec* ae2f_restrict	h_arena,
+		aclspv_wrdcount_t* ae2f_restrict	h_num,
+		aclspv_wrd_t* ae2f_restrict	wr_idx,
+		aclspv_wrd_t* ae2f_restrict	wr_len,
+		h_aclspv_ctx_t		h_ctx
+		) {
+	CXString		NAME;
+	const char*		c_name = aclsym_cursor_name(c_fn, &NAME);
+	aclspv_compile_t	ret = s_txt_app(c_name, wr_idx, wr_len, h_arena, h_num, h_ctx);
+
+	clang_disposeString(NAME);
+	return ret;
+}
+
+/** append c_fn's USR to `h_arena` and keep the slice. */
+static aclspv_compile_t s_usr_app(
+		CXCursor		c_fn,
+		x_aclspv_vec* ae2f_restrict	h_arena,
+		aclspv_wrdcount_t* ae2f_restrict	h_num,
+		aclspv_wrd_t* ae2f_restrict	wr_idx,
+		aclspv_wrd_t* ae2f_restrict	wr_len,
+		h_aclspv_ctx_t		h_ctx
+		) {
+	CXString		USR;
+	const char*		c_usr;
+	aclspv_compile_t	ret;
+
+	USR = clang_getCursorUSR(c_fn);
+	c_usr = clang_getCString(USR);
+	ret = s_txt_app(c_usr, wr_idx, wr_len, h_arena, h_num, h_ctx);
+
+	clang_disposeString(USR);
+	return ret;
+}
+
+/** internal-linkage declarations live in their own cache. */
+static aclspv_bool_t s_is_static(CXCursor c_fn) {
+	return (aclspv_bool_t)(clang_getCursorLinkage(c_fn) == CXLinkage_Internal);
+}
+
+/** the cache the declaration belongs to. */
+static x_aclspv_vec* s_fnvec(h_aclspv_ctx_t h_ctx, aclspv_bool_t c_static) {
+	return c_static
+		? &h_ctx->m_fnlist.m_fn_static
+		: &h_ctx->m_fnlist.m_fn;
+}
+
+/** the number of entries in s_fnvec(). */
+static aclspv_wrdcount_t* s_fncount(h_aclspv_ctx_t h_ctx, aclspv_bool_t c_static) {
+	return c_static
+		? &h_ctx->m_fnlist.m_num_fn_static
+		: &h_ctx->m_fnlist.m_num_fn;
+}
+
+/** the normal symbol named c_fn's mangled name. */
+static aclsym_fn_t* s_find_normal(CXCursor c_fn, h_aclspv_ctx_t h_ctx) {
+	CXString		NAME;
+	const char*		c_name = aclsym_cursor_name(c_fn, &NAME);
 	aclspv_wrd_t		c_len = c_name ? (aclspv_wrd_t)strlen(c_name) : 0;
 	aclspv_wrdcount_t	i;
 	aclsym_fn_t* ae2f_restrict	r = 0;
@@ -106,8 +203,83 @@ static aclsym_fn_t* s_find_spelling(CXCursor c_fn, h_aclspv_ctx_t h_ctx) {
 		}
 	}
 
-	clang_disposeString(SPELL);
+	clang_disposeString(NAME);
 
+	return r;
+}
+
+/** the static symbol for c_fn: USR first, mark second, name last. */
+static aclsym_fn_t* s_find_static(CXCursor c_fn, h_aclspv_ctx_t h_ctx) {
+	CXString		USR;
+	CXString		NAME;
+	const char*		c_usr;
+	const char*		c_name;
+	aclspv_wrd_t		c_len_usr;
+	aclspv_wrd_t		c_len_name;
+	aclspv_wrd_t		c_mark;
+	aclspv_wrdcount_t	i;
+	aclsym_fn_t* ae2f_restrict	r = 0;
+	aclspv_bool_t		c_has_usr;
+
+	USR = clang_getCursorUSR(c_fn);
+	c_usr = clang_getCString(USR);
+	c_has_usr = (aclspv_bool_t)(c_usr && *c_usr);
+	c_len_usr = c_usr ? (aclspv_wrd_t)strlen(c_usr) : 0;
+	c_mark = (aclspv_wrd_t)clang_hashCursor(c_fn);
+
+	for(i = 0; c_has_usr && i < h_ctx->m_fnlist.m_num_fn_static; ++i) {
+		aclsym_fn_t* ae2f_restrict p
+			= &((aclsym_fn_t*)h_ctx->m_fnlist.m_fn_static.m_p)[i];
+
+		if(s_usr_eq(p, c_usr, c_len_usr, h_ctx)) {
+			r = p;
+			break;
+		}
+	}
+
+	clang_disposeString(USR);
+
+	if(r)
+		return r;
+
+	/** a non-empty USR that matched nothing is a distinct static entity,
+	 * even when another one shares its mangled/display name. keeping them
+	 * apart is the whole reason this cache is keyed by USR. */
+	if(c_has_usr)
+		return 0;
+
+	/** no USR at all: the cursor hash is still a useful shortcut for the
+	 * common declaration-to-definition lookup. */
+	for(i = 0; i < h_ctx->m_fnlist.m_num_fn_static; ++i) {
+		aclsym_fn_t* ae2f_restrict p
+			= &((aclsym_fn_t*)h_ctx->m_fnlist.m_fn_static.m_p)[i];
+
+		if(p->m_mark == c_mark)
+			return p;
+	}
+
+	NAME = clang_Cursor_getMangling(c_fn);
+	c_name = clang_getCString(NAME);
+
+	if(!c_name || !*c_name) {
+		clang_disposeString(NAME);
+		NAME = clang_getCursorSpelling(c_fn);
+		c_name = clang_getCString(NAME);
+	}
+
+	c_len_name = c_name ? (aclspv_wrd_t)strlen(c_name) : 0;
+
+	for(i = 0; i < h_ctx->m_fnlist.m_num_fn_static; ++i) {
+		aclsym_fn_t* ae2f_restrict p
+			= &((aclsym_fn_t*)h_ctx->m_fnlist.m_fn_static.m_p)[i];
+
+		if(s_name_eq(p, c_name, c_len_name, h_ctx)) {
+			r = p;
+			break;
+		}
+	}
+
+	clang_disposeString(NAME);
 	return r;
 }
 
@@ -136,19 +308,25 @@ ae2f_inline_f static aclty_subid_t s_type(CXCursor c_fn, h_aclspv_ctx_t h_ctx) {
 }
 
 aclsym_fn_t* aclsym_fn_find(CXCursor c_fn, h_aclspv_ctx_t h_ctx) {
-	CXString		SPELL;
+	CXString		NAME;
 	const char*		c_name;
 	aclspv_wrd_t		c_len;
 	aclspv_wrd_t		c_mark;
 	aclspv_wrdcount_t	i;
+	aclspv_bool_t		c_static;
 
 	ae2f_ifezerr(h_ctx)			return 0;
 
 	h_ctx = s_cache(h_ctx);
 
+	c_static = s_is_static(c_fn);
+
+	if(c_static)
+		return s_find_static(c_fn, h_ctx);
+
 	ae2f_ifezerr(h_ctx->m_fnlist.m_fn.m_p)	return 0;
 
-	c_name	= s_spell(c_fn, &SPELL);
+	c_name	= aclsym_cursor_name(c_fn, &NAME);
 	c_len	= c_name ? (aclspv_wrd_t)strlen(c_name) : 0;
 	c_mark	= (aclspv_wrd_t)clang_hashCursor(c_fn);
 
@@ -158,7 +336,7 @@ aclsym_fn_t* aclsym_fn_find(CXCursor c_fn, h_aclspv_ctx_t h_ctx) {
 			= &((aclsym_fn_t*)h_ctx->m_fnlist.m_fn.m_p)[i];
 
 		if(p->m_mark == c_mark && s_name_eq(p, c_name, c_len, h_ctx)) {
-			clang_disposeString(SPELL);
+			clang_disposeString(NAME);
 			return p;
 		}
 	}
@@ -166,8 +344,8 @@ aclsym_fn_t* aclsym_fn_find(CXCursor c_fn, h_aclspv_ctx_t h_ctx) {
 	/** clang hands out a distinct cursor for a prototype use vs the
 	 * definition: the name is the identity, the mark is only a shortcut. */
 	{
-		aclsym_fn_t* ae2f_restrict r = s_find_spelling(c_fn, h_ctx);
-		clang_disposeString(SPELL);
+		aclsym_fn_t* ae2f_restrict r = s_find_normal(c_fn, h_ctx);
+		clang_disposeString(NAME);
 		return r;
 	}
 }
@@ -180,11 +358,17 @@ aclsym_fn_t* aclsym_fn_find_id(aclspv_id_t c_id, h_aclspv_ctx_t h_ctx) {
 
 	h_ctx = s_cache(h_ctx);
 
-	ae2f_ifezerr(h_ctx->m_fnlist.m_fn.m_p)	return 0;
-
 	for(i = 0; i < h_ctx->m_fnlist.m_num_fn; ++i) {
 		aclsym_fn_t* ae2f_restrict p
 			= &((aclsym_fn_t*)h_ctx->m_fnlist.m_fn.m_p)[i];
+
+		if(p->m_id == c_id)
+			return p;
+	}
+
+	for(i = 0; i < h_ctx->m_fnlist.m_num_fn_static; ++i) {
+		aclsym_fn_t* ae2f_restrict p
+			= &((aclsym_fn_t*)h_ctx->m_fnlist.m_fn_static.m_p)[i];
 
 		if(p->m_id == c_id)
 			return p;
@@ -195,10 +379,24 @@ aclsym_fn_t* aclsym_fn_find_id(aclspv_id_t c_id, h_aclspv_ctx_t h_ctx) {
 
 static aclspv_compile_t s_add(CXCursor c_fn, h_aclspv_ctx_t h_ctx) {
 	aclsym_fn_t* ae2f_restrict	p_sym;
+	const aclspv_bool_t		c_static	= s_is_static(c_fn);
 	const aclspv_bool_t		is_def		= (aclspv_bool_t)clang_isCursorDefinition(c_fn);
 	const aclattr_pure_t		c_pure		= aclattr_get_pure(c_fn);
 	const aclspv_wrd_t		c_mark		= (aclspv_wrd_t)clang_hashCursor(c_fn);
 	aclty_subid_t			c_ty;
+	x_aclspv_vec* ae2f_restrict	p_list;
+	aclspv_wrdcount_t*		p_num;
+	x_aclspv_vec* ae2f_restrict	p_arena;
+	aclspv_wrdcount_t*		p_name_num;
+
+	p_list		= s_fnvec(h_ctx, c_static);
+	p_num		= s_fncount(h_ctx, c_static);
+	p_arena		= c_static
+		? &h_ctx->m_fnlist.m_fn_static_name
+		: &h_ctx->m_fnlist.m_fn_name;
+	p_name_num	= c_static
+		? &h_ctx->m_fnlist.m_num_fn_static_name
+		: &h_ctx->m_fnlist.m_num_fn_name;
 
 	c_ty = s_type(c_fn, h_ctx);
 
@@ -207,7 +405,9 @@ static aclspv_compile_t s_add(CXCursor c_fn, h_aclspv_ctx_t h_ctx) {
 		return h_ctx->m_err;
 	}
 
-	p_sym = s_find_spelling(c_fn, h_ctx);
+	p_sym = c_static
+		? s_find_static(c_fn, h_ctx)
+		: s_find_normal(c_fn, h_ctx);
 
 	if(p_sym) {
 		/** one name, one declared function type. the aclty arena interns
@@ -224,27 +424,44 @@ static aclspv_compile_t s_add(CXCursor c_fn, h_aclspv_ctx_t h_ctx) {
 			p_sym->m_mark	= c_mark;
 			p_sym->m_flag0	|= aclsym_fn_flag0(ACLSYM_FN_FLAG0_DEFINED);
 		}
+
+		if(c_static)
+			p_sym->m_flag0 |= aclsym_fn_flag0(ACLSYM_FN_FLAG0_STATIC);
 	}
 	else {
 		aclspv_wrd_t	c_idx_name;
 		aclspv_wrd_t	c_len_name;
+		aclspv_wrd_t	c_idx_usr = 0;
+		aclspv_wrd_t	c_len_usr = 0;
 
 		ae2f_ifnezerr(s_name_app(
 					c_fn
+					, p_arena
+					, p_name_num
 					, &c_idx_name
 					, &c_len_name
 					, h_ctx))
 			return h_ctx->m_err;
 
+		if(c_static) {
+			ae2f_ifnezerr(s_usr_app(
+						c_fn
+						, p_arena
+						, p_name_num
+						, &c_idx_usr
+						, &c_len_usr
+						, h_ctx))
+				return h_ctx->m_err;
+		}
+
 		ae2f_ifnezerr(s_aclmem_cgrow2(
-					&h_ctx->m_fnlist.m_fn
-					, h_ctx->m_fnlist.m_num_fn + 1
+					p_list
+					, *p_num + 1
 					, sizeof(aclsym_fn_t)
 					, ACLSPV_COMPILE_ALLOC_FAILED_FUNCTION))
 			return h_ctx->m_err;
 
-		p_sym = &((aclsym_fn_t*)h_ctx->m_fnlist.m_fn.m_p)
-			[h_ctx->m_fnlist.m_num_fn];
+		p_sym = &((aclsym_fn_t*)p_list->m_p)[*p_num];
 
 		aclmemzero(p_sym, sizeof(*p_sym));
 
@@ -252,11 +469,16 @@ static aclspv_compile_t s_add(CXCursor c_fn, h_aclspv_ctx_t h_ctx) {
 		p_sym->m_type_id	= c_ty;
 		p_sym->m_idx_name	= c_idx_name;
 		p_sym->m_len_name	= c_len_name;
+		p_sym->m_idx_usr	= c_idx_usr;
+		p_sym->m_len_usr	= c_len_usr;
 		p_sym->m_flag0		= is_def
 			? aclsym_fn_flag0(ACLSYM_FN_FLAG0_DEFINED)
 			: (aclspv_wrd_t)0;
 
-		++h_ctx->m_fnlist.m_num_fn;
+		if(c_static)
+			p_sym->m_flag0 |= aclsym_fn_flag0(ACLSYM_FN_FLAG0_STATIC);
+
+		++*p_num;
 	}
 
 	/** the declared promise only ever accumulates: it may sit on any of the
@@ -314,17 +536,42 @@ aclspv_compile_t aclsym_fn_gather(h_aclspv_ctx_t h_ctx, CXCursor c_root) {
 }
 
 const char* aclsym_fn_name(const aclsym_fn_t* c_sym, h_aclspv_ctx_t h_ctx) {
+	const char*	c_base;
+	aclspv_wrdcount_t c_num_name;
+
 	ae2f_ifezerr(c_sym)	return 0;
 
 	h_ctx = s_cache(h_ctx);
 
-	ae2f_ifezerr(h_ctx)			return 0;
-	ae2f_ifezerr(h_ctx->m_fnlist.m_fn_name.m_p)	return 0;
-	ae2f_ifnezerr_strict(c_sym->m_idx_name
-			>= h_ctx->m_fnlist.m_num_fn_name)
+	ae2f_ifezerr(h_ctx)	return 0;
+
+	if(c_sym->m_flag0 & aclsym_fn_flag0(ACLSYM_FN_FLAG0_STATIC)) {
+		c_base		= h_ctx->m_fnlist.m_fn_static_name.m_p;
+		c_num_name	= h_ctx->m_fnlist.m_num_fn_static_name;
+	}
+	else {
+		c_base		= h_ctx->m_fnlist.m_fn_name.m_p;
+		c_num_name	= h_ctx->m_fnlist.m_num_fn_name;
+	}
+
+	ae2f_ifezerr(c_base)			return 0;
+	ae2f_ifnezerr_strict(c_sym->m_idx_name >= c_num_name)
 		return 0;
 
-	return (const char*)h_ctx->m_fnlist.m_fn_name.m_p + c_sym->m_idx_name;
+	return c_base + c_sym->m_idx_name;
+}
+
+void aclsym_fn_reset_static(h_aclspv_ctx_t h_ctx) {
+	ae2f_ifezerr(h_ctx)		return;
+
+	h_ctx = s_cache(h_ctx);
+
+	ae2f_ifezerr(h_ctx)		return;
+
+	/** the vectors keep their buffers: only the used length goes back to
+	 * zero, so the next pass reuses the same storage. */
+	h_ctx->m_fnlist.m_num_fn_static		= 0;
+	h_ctx->m_fnlist.m_num_fn_static_name	= 0;
 }
 
 aclspv_bool_t aclsym_fn_needs_import(CXCursor c_fn, h_aclspv_ctx_t h_ctx) {

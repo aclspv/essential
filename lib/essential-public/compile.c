@@ -147,6 +147,10 @@ ACLSPV_ABI_LINK aclspv_compile_t aclspv_ctx_compile(
 	if(h_ctx->m_phase >= ACLSPV_CTX_PHASE_COMPILE)
 		return h_ctx->m_err;
 
+	/** a fresh compile pass gets a fresh static cache: internal-linkage
+	 * symbols are TU-local and must not accumulate across passes. */
+	aclsym_fn_reset_static(h_ctx);
+
 	ae2f_ifnezerr(s_setup(h_ctx))
 		return h_ctx->m_err;
 
@@ -198,6 +202,12 @@ ACLSPV_ABI_LINK aclspv_compile_t aclspv_ctx_build(
 
 	if(h_ctx->m_phase >= ACLSPV_CTX_PHASE_BUILD)
 		return h_ctx->m_err;
+
+	/** a build without a compile starts a fresh pipeline: clear the static
+	 * cache here. a build after a compile keeps it: bodies deferred to this
+	 * phase still resolve their static callees through it. */
+	if(h_ctx->m_phase == ACLSPV_CTX_PHASE_NONE)
+		aclsym_fn_reset_static(h_ctx);
 
 	/** a build without a compile: run the compile phase first. */
 	ae2f_ifnezerr(aclspv_ctx_compile(h_ctx, c_cur_root))
