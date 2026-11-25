@@ -66,7 +66,7 @@ struct a_aclspv_ctx {
 	/**
 	 * @brief	expression evaluation scratch.
 	 *
-	 * an expression evaluator owns one boot scale (see util/scale.h) and one
+	 * an expression evaluator owns one boot scale (see aclutil/scale.h) and one
 	 * command-counter stack. a statement expression evaluates statements
 	 * while an expression is still being evaluated, so the two evaluators
 	 * must not share this scratch: the outer pair is parked on the `_stck`
@@ -216,6 +216,26 @@ struct a_aclspv_ctx {
 
 	CXCursorVisitor		m_work_nxt;
 	CXClientData		m_work_data;
+
+	/** the implicit `this` pointer register of the method currently being
+	 * emitted; 0 in a free function. member reads/writes and method calls
+	 * use it when libclang hides the implicit base. */
+	aclspv_id_t		m_this;
+
+	/** destructor-scope stack (see aclutil/scale.h). each frame owns its
+	 * local objects in declaration order. */
+	x_aclspv_vec		m_dtor_scope;
+
+	/** state of the function body currently being inlined. */
+	struct {
+		aclspv_bool_t	m_active;
+		aclspv_id_t	m_lbl_end;
+		aclspv_id_t	m_reg_ret;
+		aclspv_id_t	m_ty_ret;
+		aclspv_wrd_t	m_dtor_base;
+		aclspv_bool_t	m_branched;
+		aclspv_wrd_t	m_depth;
+	} m_inline;
 
 	/**
 	 * @brief	GNU statement expression (`({ ... })`) emitter.

@@ -10,7 +10,7 @@
 
 #include <ae2f/pat/dbg.h>
 
-#include <util/scale.h>
+#include <aclutil/scale.h>
 #include <aclexpr/sideeffect.h>
 
 aclspv_bool_t aclexpr_beforevisit2_bool1(

@@ -134,6 +134,21 @@ static aclspv_id_t s_helper2(
 				return aclty_mk_fn(RETID, h_ctx);
 			}
 
+		case CXType_LValueReference:
+		case CXType_RValueReference:
+			{
+				/** a reference is modelled as a pointer to the referred
+				 * object. copy/move constructor parameters land here. */
+				const CXType REF = clang_getNonReferenceType(c_ty);
+				const aclspv_id_t ELMID = aclty_mk_by_cursor(
+						c_cursor, REF, h_ctx, rd_info);
+
+				ae2f_expected_but_else(ELMID)
+					return 0;
+
+				return aclty_mk_ptr(ELMID, SpvStorageClassFunction, h_ctx);
+			}
+
 		case CXType_Pointer:
 			{
 				const CXType ELM	= clang_getPointeeType(c_ty);

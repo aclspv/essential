@@ -8,7 +8,7 @@
 #include <aclexpr/sideeffect.h>
 #include <aclexpr/carve/util.h>
 
-#include <util/scale.h>
+#include <aclutil/scale.h>
 
 /** `c ? t : f` with at least one impure arm.
  *

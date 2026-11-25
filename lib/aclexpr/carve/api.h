@@ -2,7 +2,7 @@
 #define	aclexpr_carve_api_h
 
 #include <aclexpr/carve.h>
-#include <util/scale.h>
+#include <aclutil/scale.h>
 #include <util/cgoto.h>
 #include <ae2f/cc/arg_sarr.h>
 

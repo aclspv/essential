@@ -19,7 +19,7 @@
 
 #include <aclcur/opX.h>
 
-#include <util/scale.h>
+#include <aclutil/scale.h>
 #include <aclutil/wrdemit.h>
 
 #include <aclty.h>

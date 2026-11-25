@@ -19,13 +19,14 @@
 #include <ae2f/Keys.h>
 #include <ae2f/cgoto.h>
 
-#include <util/scale.h>
+#include <aclutil/scale.h>
 #include <.aclspv/util/u32_to_hex8.h>
 #include <acltrl.h>
 
 #include <aclctx/err.h>
 
 #include <aclemit/sync.h>
+#include <aclemit/dtor.h>
 
 #include <ae2f/cc/tail.h>
 
@@ -150,6 +151,8 @@ enum CXChildVisitResult aclemit_body(CXCursor h_cur, ae2f_unused CXCursor h_pare
 	aclspv_id_t BRANCH		= 0;
 	DAT->m_vid	= 0;
 	DAT->m_ty	= 0;
+
+
 	ae2f_expected_but_else(KIND)
 		jmpfail(ACLSPV_COMPILE_MET_INVAL_BODY_NOKIND);
 
@@ -170,6 +173,57 @@ enum CXChildVisitResult aclemit_body(CXCursor h_cur, ae2f_unused CXCursor h_pare
 			ctxcheck(CTX) else goto LBL_DONE;
 
 		case CXCursor_ReturnStmt:
+			/** an inlined body returns to its local end label, not out of
+			 * the caller's SPIR-V function. */
+			if(CTX->m_inline.m_active) {
+				if(CTX->m_inline.m_ty_ret != ACLSPV_ID_VOID) {
+					aclspv_id_t	RETVAL;
+					struct aclattr_getkinder KINDER;
+					CXCursor	CURSORCHILD;
+
+					KINDER.m_num_wanted = 1;
+					KINDER.m_num_grepped = 0;
+					KINDER.m_cursor = &CURSORCHILD;
+					KINDER.m_res = CXChildVisit_Continue;
+
+					clang_visitChildren(h_cur, s_aclattr_getkinder_visit, &KINDER);
+
+					ae2f_ifnezerr(clang_Cursor_isNull(CURSORCHILD))
+						jmpfail(ACLSPV_COMPILE_UNHANDLED_BODY_RET);
+
+					switch(aclexpr_eval(&RETVAL
+								, CTX->m_inline.m_ty_ret
+								, CURSORCHILD
+								, 0
+								, CTX)) {
+						default:
+						case ACLEXPR_RET_NOT_THE_CASE:
+						case ACLEXPR_RET_FAILURE:
+							jmpfail(ACLSPV_COMPILE_UNHANDLED_BODY_RET);
+
+						case ACLEXPR_RET_SUCCESS:
+						case ACLEXPR_RET_SUCCESS_CONSTANT:
+						case ACLEXPR_RET_SUCCESS_LITERAL:
+							break;
+					}
+
+					ae2f_ifezerr(aclcur_store_reg(
+								CTX->m_inline.m_reg_ret, RETVAL, CTX))
+						jmpfail(ACLSPV_COMPILE_UNHANDLED_BODY_RET);
+				}
+
+				if(!aclemit_dtor_flush_to(CTX, CTX->m_inline.m_dtor_base))
+					jmpfail(ACLSPV_COMPILE_UNHANDLED);
+
+				if(CTX->m_inline.m_lbl_end) {
+					if(aclcur_cfg_jmp(CTX->m_inline.m_lbl_end, CTX))
+						jmpfail(ACLSPV_COMPILE_UNHANDLED_BODY_LBL);
+				}
+
+				CTX->m_inline.m_branched = 1;
+				goto LBL_DONE;
+			}
+
 			aclcur_set_fnret(1, CTX);
 
 			if(aclcur_get_retty(CTX) != ACLSPV_ID_VOID) {
@@ -208,6 +262,10 @@ enum CXChildVisitResult aclemit_body(CXCursor h_cur, ae2f_unused CXCursor h_pare
 
 			} else ae2f_expected_but_else(aclcur_cfg_ret(0, CTX)) {
 				jmpfail_msg("aclcur_cfg_ret\n");
+			}
+
+			if(!aclemit_dtor_flush_all(CTX)) {
+				jmpfail(ACLSPV_COMPILE_UNHANDLED);
 			}
 
 			ae2f_ifezerr_strict(aclcur_cfg_lbl(CTX->m_id++, CTX)) {
@@ -286,7 +344,21 @@ enum CXChildVisitResult aclemit_body(CXCursor h_cur, ae2f_unused CXCursor h_pare
 			 * 	then it is just another block ready to be merged. 
 			 * */
 		case CXCursor_CompoundStmt:
-			goto LBL_RECURSE;
+			/** a block is a destructor scope. libclang gives the exit
+			 * point only through the child walk, so walk it here and
+			 * close the scope afterwards. */
+			if(!aclemit_dtor_push(CTX)) {
+				jmpfail(ACLSPV_COMPILE_UNHANDLED);
+			}
+
+			clang_visitChildren(h_cur, aclemit_body, DAT);
+
+			if(!aclemit_dtor_pop(CTX)) {
+				jmpfail(ACLSPV_COMPILE_UNHANDLED);
+			}
+
+			ctxcheck(CTX) else goto LBL_DONE;
+			goto LBL_DONE;
 
 		case CXCursor_BinaryOperator:
 		case CXCursor_CompoundAssignOperator:

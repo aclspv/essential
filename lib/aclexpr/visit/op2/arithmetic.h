@@ -6,7 +6,7 @@
 #ifndef	aclexpr_visit_basic_numeric_operation_h
 #define aclexpr_visit_basic_numeric_operation_h
 
-#include <util/scale.h>
+#include <aclutil/scale.h>
 #include <util/log.h>
 
 #include <aclexpr.h>

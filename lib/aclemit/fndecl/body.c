@@ -2,6 +2,7 @@
 #include <aclctx/err.h>
 #include <aclutil/emitx.h>
 #include <aclemit/body.h>
+#include <aclemit/dtor.h>
 #include <aclemit/root.h>
 #include <aclattr/main.h>
 #include <aclcur/common.h>
@@ -32,8 +33,12 @@ enum CXChildVisitResult	aclemit_fndecl_bodycfg(
 			, h_ctx);
 
 	aclctx_err_check(h_ctx) {
+		(void)aclemit_dtor_pop(h_ctx);
 		return CXChildVisit_Break;
 	}
+
+	(void)aclemit_dtor_pop(h_ctx);
+	aclemit_dtor_end(h_ctx);
 
 	/** post-carve, pre-emit: complete the loop-header phi chains with
 	 * the final-graph back-edge carries (the back edge is not part of

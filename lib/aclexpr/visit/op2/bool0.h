@@ -4,7 +4,7 @@
 #include <aclexpr/visit/api.h>
 #include <aclexpr/op.h>
 
-#include <util/scale.h>
+#include <aclutil/scale.h>
 #include <aclutil/wrdemit.h>
 
 #include <ae2f/cc/memset.h>

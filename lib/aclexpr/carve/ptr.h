@@ -325,10 +325,16 @@ ae2f_inline_f static aclspv_id_t aclexpr_member_base_ptr(
 
 	OB = aclexpr_opnd_first_child(c_mref);
 
-	if(!OB.m_has)
-		return 0;
+	/** libclang hides the implicit base of `x` inside a method body. the
+	 * method's `this` pointer is the base in that case. */
+	if(!OB.m_has) {
+		return h_ctx->m_this;
+	}
 
 	C = aclexpr_expr_unwrap(OB.m_c);
+
+	if(clang_getCursorKind(C) == CXCursor_CXXThisExpr)
+		return h_ctx->m_this;
 
 	/** `(*p).m` / `((*p)).m`: a deref base — resolve through its operand. */
 	if(clang_getCursorKind(C) == CXCursor_UnaryOperator

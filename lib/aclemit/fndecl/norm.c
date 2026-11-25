@@ -7,6 +7,7 @@
 #include <aclemit/fndecl/body.h>
 #include <aclemit/fndecl/sym.h>
 #include <aclemit/root.h>
+#include <aclemit/dtor.h>
 
 #include <aclcur/common.h>
 #include <aclcur/reg.h>
@@ -19,6 +20,7 @@
 #include <aclutil/emitx.h>
 #include <aclutil/capability.h>
 #include <aclutil/extension.h>
+#include <aclutil/fn.h>
 
 #include <ae2f/pat/dbg.h>
 
@@ -42,7 +44,16 @@ enum CXChildVisitResult aclemit_fndecl_norm(
 	aclspv_wrd_t			c_fnctrl;
 	aclspv_sz_t			c_fn_wrd;
 	const int			NARG = clang_Cursor_getNumArguments(h_parent);
+	const aclspv_bool_t		c_has_this = aclutil_fn_has_this(h_parent);
+	const int			NARG_TOTAL = NARG + (c_has_this ? 1 : 0);
 	int				i;
+
+	ctx->m_this = 0;
+
+	aclemit_dtor_begin(h_ctx);
+
+	if(!aclemit_dtor_push(h_ctx))
+		return CXChildVisit_Break;
 
 	p_sym = aclsym_fn_find(h_parent, ctx);
 
@@ -58,7 +69,7 @@ enum CXChildVisitResult aclemit_fndecl_norm(
 
 	/** the emitting context builds its own signature: the gather's id lives
 	 * in the slave context and is only a comparison key. */
-	ae2f_ifezerr(id_fn_ty = aclty_mk_fn1(
+	ae2f_ifezerr(id_fn_ty = aclty_mk_fn1_this(
 				h_parent
 				, clang_getCursorType(h_parent)
 				, ctx))
@@ -95,8 +106,10 @@ enum CXChildVisitResult aclemit_fndecl_norm(
 				, id_fn_ty))
 		return CXChildVisit_Break;
 
-	for(i = 0; i < NARG; ++i) {
-		const CXCursor		c_parm	= clang_Cursor_getArgument(h_parent, (unsigned)i);
+	for(i = 0; i < NARG_TOTAL; ++i) {
+		const int		c_idx_arg = c_has_this ? i - 1 : i;
+		CXCursor		c_parm	= clang_getNullCursor();
+		aclspv_bool_t		c_ref_param = 0;
 		aclty_t* ae2f_restrict	p_arg;
 		aclspv_id_t		id_parm;
 		aclspv_id_t		id_reg;
@@ -109,6 +122,16 @@ enum CXChildVisitResult aclemit_fndecl_norm(
 
 		ae2f_ifezerr(p_arg = aclty_get_fn_arg(p_root_ty, (aclspv_wrd_t)i, ctx))
 			return CXChildVisit_Break;
+
+		if(c_idx_arg >= 0) {
+			const CXType TY_PRM = clang_getArgType(
+					clang_getCursorType(h_parent), (unsigned)c_idx_arg);
+
+			c_parm = clang_Cursor_getArgument(h_parent, (unsigned)c_idx_arg);
+			c_ref_param = (aclspv_bool_t)(
+					TY_PRM.kind == CXType_LValueReference
+					|| TY_PRM.kind == CXType_RValueReference);
+		}
 
 		/** a pointer parameter into storage the function does not own
 		 * (StorageBuffer, Uniform, Workgroup, ...) travels as a pointer
@@ -165,6 +188,23 @@ enum CXChildVisitResult aclemit_fndecl_norm(
 		p_reg->m_flag0 |= aclcur_flag0(ACLCUR_FLAG0_VALUE)
 			| aclcur_flag0_reg(ACLCUR_FLAG0_REG_PARAM);
 
+		/** the implicit object pointer has no ParmDecl to bind: keep the
+		 * parameter value register as the method context. */
+		if(c_has_this && i == 0) {
+			/** the parameter value id is the node's identity after the
+			 * m_id patch above; the cursor arena is keyed on it. */
+			ctx->m_this = id_parm;
+			continue;
+		}
+
+		/** a reference is a pointer VALUE, not an object to allocate: bind
+		 * the value register straight to the ParmDecl so `o.x` resolves to
+		 * the pointer and no pointer-to-pointer OpVariable is emitted. */
+		if(c_ref_param) {
+			p_reg->m_cur = c_parm;
+			continue;
+		}
+
 		/** the variable the body refers to. every parameter gets one: an
 		 * assignment is then an ordinary store the graph already knows how
 		 * to handle (SSA definition, phi at a join, memory when the address
@@ -183,6 +223,15 @@ enum CXChildVisitResult aclemit_fndecl_norm(
 				return CXChildVisit_Break;
 
 			ae2f_ifezerr(aclcur_store_reg(id_var, id_parm, ctx))
+				return CXChildVisit_Break;
+
+			/** a by-value class parameter is a live object in this
+			 * function: it is destroyed at function exit like any local. */
+			if(!aclemit_dtor_reserve(
+						c_parm
+						, id_var
+						, p_arg->m_info.m_fn_arg.m_prm_id
+						, ctx))
 				return CXChildVisit_Break;
 		}
 	}

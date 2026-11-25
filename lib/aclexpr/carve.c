@@ -28,7 +28,7 @@
 #include <aclctx/err.h>
 
 #include <aclutil/wrdemit.h>
-#include <util/scale.h>
+#include <aclutil/scale.h>
 
 #include <ae2f/cgoto.h>
 #include <ae2f/pat/dbg.h>

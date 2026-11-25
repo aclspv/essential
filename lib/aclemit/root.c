@@ -8,6 +8,7 @@
 
 #include <ae2f/pat/dbg.h>
 #include <aclattr/execmodel.h>
+#include <aclutil/fn.h>
 
 ae2f_inline_f static aclspv_wrd_t s_is_kernel(const CXCursor h_fndecl) {
 	enum SpvExecutionModel_ MODEL = SpvExecutionModelMax;
@@ -23,7 +24,9 @@ ae2f_extern enum CXChildVisitResult aclemit_root(
 	ae2fpat_assertassume(h_ctx);
 
 	/** search */
-	unless(h_cur.kind == CXCursor_CompoundStmt && h_parent.kind == CXCursor_FunctionDecl)
+	unless(h_cur.kind == CXCursor_CompoundStmt
+			&& (h_parent.kind == CXCursor_FunctionDecl
+				|| aclutil_fn_is_method(h_parent)))
 		return CXChildVisit_Recurse;
 
 	/** which bodies go out, and when, is the scheduler's call: see
@@ -39,7 +42,8 @@ ae2f_extern enum CXChildVisitResult aclemit_root(
 	}
 
 	return (CTX->m_work_nxt
-			= s_is_kernel(h_parent)
+			= (h_parent.kind == CXCursor_FunctionDecl
+				&& s_is_kernel(h_parent))
 			? aclemit_fndecl_entp
 			: aclemit_fndecl_norm
 	       )(h_cur, h_parent, CTX->m_work_data);

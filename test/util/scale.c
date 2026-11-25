@@ -1,4 +1,4 @@
-#include "../../lib/util/scale.h"
+#include "../../lib/aclutil/scale.h"
 
 #include <stdio.h>
 #include <string.h>

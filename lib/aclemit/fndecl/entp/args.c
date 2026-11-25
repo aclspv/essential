@@ -5,7 +5,7 @@
 #include <ae2f/pat/dbg.h>
 #include <ae2f/cc/arg_sarr.h>
 
-#include <util/scale.h>
+#include <aclutil/scale.h>
 #include <aclutil/emitx.h>
 
 #include <aclty.h>

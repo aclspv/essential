@@ -1,0 +1,165 @@
+#ifndef	aclutil_fn_h
+#define	aclutil_fn_h
+
+#include <aclspv.h>
+#include <clang-c/Index.h>
+#include <string.h>
+
+/** a C++ method, constructor, or destructor: the declaration kinds that can
+ * carry an implicit `this`. */
+ae2f_inline_f static aclspv_bool_t aclutil_fn_is_method(CXCursor c_fn) {
+	switch((aclspv_cxcurkind_t)clang_getCursorKind(c_fn)) {
+		case CXCursor_CXXMethod:
+		case CXCursor_Constructor:
+		case CXCursor_Destructor:
+			return 1;
+		default:
+			return 0;
+	}
+}
+
+/** does c_fn take an implicit `this` argument?
+ *
+ * a static C++ method has the method cursor kind but no `this`; a
+ * constructor/destructor always has one. */
+ae2f_inline_f static aclspv_bool_t aclutil_fn_has_this(CXCursor c_fn) {
+	if(!aclutil_fn_is_method(c_fn))
+		return 0;
+
+	if(clang_getCursorKind(c_fn) == CXCursor_CXXMethod
+			&& clang_CXXMethod_isStatic(c_fn))
+		return 0;
+
+	return 1;
+}
+
+enum ACLUTIL_VARINIT_ {
+	ACLUTIL_VARINIT_NONE = 0,
+	ACLUTIL_VARINIT_CTOR,
+	ACLUTIL_VARINIT_VALUE
+};
+
+/** classify an initializer by its cursor kind only.
+ *
+ * libclang maps CXXConstructExpr to CallExpr, so the referenced
+ * constructor's copy/move predicates are the only extra information needed:
+ *
+ *   InitListExpr            -> value initialisation (`{}` / `= {}`)
+ *   CallExpr + copy/move    -> value initialisation (`= other`)
+ *   CallExpr + other ctor   -> constructor call (`{}` / default init)
+ *   anything else           -> ordinary value initialisation
+ *
+ * `S s;` with no user-provided constructor is the implicit default ctor
+ * CallExpr; the constructor call path then finds no symbol and does nothing.
+ * */
+ae2f_inline_f static enum ACLUTIL_VARINIT_ aclutil_varinit_kind(CXCursor c_init) {
+	CXCursor	CTOR;
+
+	switch((aclspv_cxcurkind_t)clang_getCursorKind(c_init)) {
+		case CXCursor_InitListExpr:
+			return ACLUTIL_VARINIT_VALUE;
+
+		case CXCursor_CallExpr:
+			CTOR = clang_getCursorReferenced(c_init);
+
+			if(clang_getCursorKind(CTOR) != CXCursor_Constructor)
+				return ACLUTIL_VARINIT_VALUE;
+
+			if(clang_CXXConstructor_isCopyConstructor(CTOR)
+					|| clang_CXXConstructor_isMoveConstructor(CTOR))
+				return ACLUTIL_VARINIT_VALUE;
+
+			return ACLUTIL_VARINIT_CTOR;
+
+		default:
+			return ACLUTIL_VARINIT_VALUE;
+	}
+}
+
+static enum CXChildVisitResult s_aclutil_has_compound(
+		CXCursor	c,
+		ae2f_unused CXCursor p,
+		CXClientData	rw
+		) {
+	(void)p;
+
+	if(clang_getCursorKind(c) == CXCursor_CompoundStmt) {
+		*((aclspv_bool_t*)rw) = 1;
+		return CXChildVisit_Break;
+	}
+
+	return CXChildVisit_Continue;
+}
+
+/** does the constructor have a body in this translation unit?
+ *
+ * an implicit or explicitly-defaulted constructor has no CompoundStmt. this
+ * frontend follows C for those: the declaration is left uninitialised. */
+ae2f_inline_f static aclspv_bool_t aclutil_ctor_has_body(CXCursor c_ctor) {
+	CXCursor		DEF = clang_getCursorDefinition(c_ctor);
+	aclspv_bool_t		FOUND = 0;
+
+	if(!clang_Cursor_isNull(DEF))
+		c_ctor = DEF;
+
+	clang_visitChildren(c_ctor, s_aclutil_has_compound, &FOUND);
+	return FOUND;
+}
+
+/** the `std::move` declaration itself. */
+ae2f_inline_f static aclspv_bool_t aclutil_fn_is_std_move_decl(CXCursor c_fn) {
+	CXCursor		PARENT;
+	CXString		SPELL, PNAME;
+	const char*		c_spell;
+	const char*		c_pname;
+	aclspv_bool_t		R = 0;
+
+	if(clang_getCursorKind(c_fn) != CXCursor_FunctionDecl)
+		return 0;
+
+	PARENT = clang_getCursorSemanticParent(c_fn);
+
+	if(clang_getCursorKind(PARENT) != CXCursor_Namespace)
+		return 0;
+
+	SPELL = clang_getCursorSpelling(c_fn);
+	PNAME = clang_getCursorSpelling(PARENT);
+	c_spell = clang_getCString(SPELL);
+	c_pname = clang_getCString(PNAME);
+
+	R = (aclspv_bool_t)(c_spell && c_pname
+			&& !strcmp(c_spell, "move")
+			&& !strcmp(c_pname, "std"));
+
+	clang_disposeString(SPELL);
+	clang_disposeString(PNAME);
+
+	return R;
+}
+
+/** `std::move(x)`: a transparent cast in this language model. */
+ae2f_inline_f static aclspv_bool_t aclutil_cursor_is_std_move(CXCursor c_cur) {
+	if(clang_getCursorKind(c_cur) != CXCursor_CallExpr)
+		return 0;
+
+	return aclutil_fn_is_std_move_decl(clang_getCursorReferenced(c_cur));
+}
+
+/** a copy/move constructor CallExpr is a value copy in this model, not a
+ * call to an emitted constructor body. */
+ae2f_inline_f static aclspv_bool_t aclutil_cursor_is_copy_move_ctor_call(CXCursor c_cur) {
+	CXCursor	CTOR;
+
+	if(clang_getCursorKind(c_cur) != CXCursor_CallExpr)
+		return 0;
+
+	CTOR = clang_getCursorReferenced(c_cur);
+
+	if(clang_getCursorKind(CTOR) != CXCursor_Constructor)
+		return 0;
+
+	return (aclspv_bool_t)(clang_CXXConstructor_isCopyConstructor(CTOR)
+			|| clang_CXXConstructor_isMoveConstructor(CTOR));
+}
+
+#endif

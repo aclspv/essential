@@ -12,6 +12,7 @@
 
 #include <aclmem.h>
 #include <aclutil/wrdemit.h>
+#include <aclutil/fn.h>
 #include <ae2f/cc/tail.h>
 
 #include <string.h>
@@ -51,8 +52,12 @@ static enum CXChildVisitResult s_collect_visit(
 	aclspv_wrd_t			c_n;
 
 	if(c_cur.kind != CXCursor_CompoundStmt
-			|| c_par.kind != CXCursor_FunctionDecl)
+			|| !(c_par.kind == CXCursor_FunctionDecl
+				|| aclutil_fn_is_method(c_par)))
 		return CXChildVisit_Recurse;
+
+	if(aclutil_fn_is_std_move_decl(c_par))
+		return CXChildVisit_Continue;
 
 	unless(clang_Location_isFromMainFile(clang_getCursorLocation(c_par)))
 		return CXChildVisit_Continue;

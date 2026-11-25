@@ -5,13 +5,15 @@
 #include <aclctx/err.h>
 #include "../api.h"
 
-#include <util/scale.h>
+#include <aclutil/scale.h>
 #include <aclutil/wrdemit.h>
 
 #include <aclty.h>
 #include <aclty/by_cursor.h>
 
 #include <aclmem.h>
+#include <aclcur/common.h>
+#include <aclexpr/carve/ptr.h>
 
 /** count of FieldDecl children of the target record up to (and including)
  * the referenced field: the member index inside the aclty member chain. */
@@ -45,6 +47,8 @@ ae2f_inline_f static aclexpr_visit_lbl_t aclexpr_visit_op1_memberread(
 		const h_aclspv_ctx_t			h_ctx, 
 		x_aclspv_vec* ae2f_restrict const	h_cmdscale,
 		aclexpr_opbincfg_extra* ae2f_restrict	rdwr_extra,
+		aclspv_wrd_t* ae2f_restrict		wr_num_cmd,
+		aclspv_id_t* ae2f_restrict		wr_id_ret,
 		aclexpr_visit_lbl_t			c_lbl_success,
 		aclexpr_visit_lbl_t			c_lbl_fail,
 		aclexpr_visit_lbl_t			c_lbl_pass,
@@ -63,6 +67,7 @@ ae2f_inline_f static aclexpr_visit_lbl_t aclexpr_visit_op1_memberread(
 	ae2fpat_assertunless(h_ctx) {
 		return c_lbl_fail;
 	}
+
 
 	unless(CXCursor_MemberRefExpr == c_cur.kind)
 		return c_lbl_pass;
@@ -124,6 +129,7 @@ ae2f_inline_f static aclexpr_visit_lbl_t aclexpr_visit_op1_memberread(
 	ae2f_expected_but_else(VEC)
 		return c_lbl_fail;
 
+
 	VEC[ACLEXPR_OPBINCFG_NUMOPRND]	= 1;
 	VEC[ACLEXPR_OPBINCFG_OPCODE]	= ACLEXPR_OP1_MEMBERREAD;
 	VEC[ACLEXPR_OPBINCFG_RESTYID]	= TY_M;
@@ -140,6 +146,35 @@ ae2f_inline_f static aclexpr_visit_lbl_t aclexpr_visit_op1_memberread(
 	 * (arrow `p->m` / deref `(*p).m` -> a ghost-rooted view) without
 	 * relying on extra[0].m_cursor, which the cascade rewrites. */
 	SCALE_EXTRA[1].m_cursor = c_cur;
+
+	/** implicit `x` inside a method: libclang exposes no base child. seed
+	 * the base operand with `this` and run the carve as if a leaf had
+	 * completed, instead of recursing into a non-existent child. */
+	if(!aclexpr_opnd_first_child(c_cur).m_has && h_ctx->m_this) {
+		h_aclcur_t p_this = aclcur_get_node(h_ctx->m_this, h_ctx);
+
+		ae2f_ifezerr(p_this)
+			return c_lbl_fail;
+
+		SCALE_EXTRA[0].m_type_original = p_this->m_ty;
+		*wr_id_ret = h_ctx->m_this;
+
+		/** the direct jump to OP0_ skips OP_RECURSE, which is what
+		 * normally pushes the child command counter. */
+		ae2f_ifnezerr_strict(s_aclmem_cgrow2(
+					&h_ctx->m_body.m_cmdcountstck
+					, *wr_num_cmd + 1
+					, sizeof(aclexpr_cmdcounterstckelm)
+					, ACLSPV_COMPILE_ALLOC_FAILED_EXPR))
+			return c_lbl_fail;
+
+		(void)++*wr_num_cmd;
+		((aclexpr_cmdcounterstckelm* ae2f_restrict)
+		 h_ctx->m_body.m_cmdcountstck.m_p)
+			[*wr_num_cmd - 1].m_count_oprnd = 0;
+
+		return c_lbl_collect;
+	}
 
 	return c_lbl_success;
 }

@@ -240,6 +240,28 @@ ____
 </div>
 ++++
 
+=== Inline and destructors
+
+[quote]
+____
+Call-site inlining is not enabled for ordinary calls yet. Destructor bodies are
+inlined only where the language model requires it, namely subobjects.
+____
+
+* a destructor of a whole local object is an ordinary function call
+  (`OpFunctionCall`).
+* a subobject (a struct member, an array element, or a member selected through a
+  pointer) cannot be passed as an `OpFunctionCall` pointer argument in SPIR-V
+  logical addressing. its destructor body must be inlined.
+* therefore, subobject destruction is only supported when the destructor is
+  inlinable. a member function defined inside its class body is implicitly
+  inline; an out-of-class definition must say `inline` or `always_inline`.
+  a non-inline destructor is still valid for a whole object, but struct members
+  and array elements whose destructor is not inlined are not usable in this
+  language model.
+* `noinline` is a hard rejection for a subobject destructor: the compiler cannot
+  form the required pointer argument and must not silently skip the destruction.
+
 === ExportAttributes
 
 [quote]
@@ -258,6 +280,9 @@ ____
 
 * a function is exported when it says so explicitly, or when the export-by-default policy is on and it is not `visibility("hidden")`. an explicit export wins over `hidden`.
 * an exported definition gets `OpDecorate %fn LinkageAttributes "<name>" Export`, and the first export adds the `Linkage` capability.
+* the symbol name is clang's mangled name (`clang_Cursor_getMangling`), with the source spelling as fallback. C declarations and `extern "C"` declarations therefore keep their plain name; C++ declarations carry their Itanium name. `OpName` and `LinkageAttributes` use that one string, so a module's display name and its symbol name never diverge.
+* entry points use the same naming rule in `OpEntryPoint`. a C++ entry point is therefore listed by its mangled name; declare it `extern "C"` when a stable source-level name is wanted, and the compiler emits a warning when the two differ.
+* internal-linkage functions (`static`) are kept in a separate cache and are never imported or exported. their lookup key is the cursor USR, not the display name: two static entities may share one plain C name.
 * only a definition with a body is exported: a declaration alone has nothing to export yet.
 * entry points are not exported. they are reached through `OpEntryPoint`, not through linkage.
 * `ACLSPV_CTX_FLAG0_EXPORT_BY_DEFAULT` turns the policy on: every defined function is exported unless it is `visibility("hidden")`. use it when this module is one part of a larger linked program.

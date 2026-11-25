@@ -134,6 +134,28 @@ aclexpr_visit_lbl_t aclexpr_visit_op0_val(
 				}
 			} assert(0); ae2f_unreachable();
 
+		case CXCursor_CXXThisExpr:
+			{
+				h_aclcur_t p_reg;
+
+				if(!h_ctx->m_this) {
+					err_puts("[visit::0::val] `this` outside a method");
+					return c_lbl_fail;
+				}
+
+				ae2f_ifezerr(p_reg = aclcur_get_node(h_ctx->m_this, h_ctx))
+					return c_lbl_fail;
+
+				*wr_type_fetched = p_reg->m_ty;
+				rdwr_extra->m_mask_literal = 0;
+
+				ae2f_ifezerr(*wr_newid = aclcur_load_reg(
+							h_ctx->m_this, h_ctx, rwr_literal))
+					return c_lbl_fail;
+
+				return c_lbl_success;
+			}
+
 		case CXCursor_DeclRefExpr:
 			if(rdwr_extra->m_state0 & ACLEXPR_OPCFGX_STATE0_VAL_NO_NEED) {
 				dbg_puts("[visit0::val value not needed]");

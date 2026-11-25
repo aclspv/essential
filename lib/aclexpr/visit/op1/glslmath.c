@@ -7,7 +7,7 @@
 #include <aclmem.h>
 #include <aclutil/wrdemit.h>
 
-#include <util/scale.h>
+#include <aclutil/scale.h>
 #include <util/visitfromroot.h>
 
 #include <string.h>

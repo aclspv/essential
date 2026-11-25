@@ -11,6 +11,7 @@
 #include <aclutil/capability.h>
 #include <aclutil/emitx.h>
 #include <aclutil/linkage.h>
+#include <aclutil/fn.h>
 
 #include <ae2f/pat/dbg.h>
 
@@ -139,7 +140,9 @@ static enum CXChildVisitResult s_visit(
 
 	c_callee = clang_getCursorReferenced(c_cur);
 
-	if(clang_Cursor_isNull(c_callee) || c_callee.kind != CXCursor_FunctionDecl)
+	if(clang_Cursor_isNull(c_callee)
+			|| (c_callee.kind != CXCursor_FunctionDecl
+				&& !aclutil_fn_is_method(c_callee)))
 		return CXChildVisit_Recurse;
 
 	p_sym = aclsym_fn_find(c_callee, ctx);

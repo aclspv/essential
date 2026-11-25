@@ -8,7 +8,7 @@
 #include <aclmem.h>
 #include <aclattr/getkinder.h>
 
-#include <util/scale.h>
+#include <aclutil/scale.h>
 #include <util/visitfromroot.h>
 
 /** true when `c_cur` is a `__builtin_shufflevector` surfaced as an

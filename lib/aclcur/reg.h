@@ -135,6 +135,11 @@ enum ACLCUR_FLAG0_REG_ {
 	 * */
 	ACLCUR_FLAG0_REG_PARAM,
 
+	/** a destructor is reserved for this object. cleared when the object is
+	 * moved from or passed by value, so the scope exit does not destroy it
+	 * again. */
+	ACLCUR_FLAG0_REG_DTOR,
+
 	ACLCUR_FLAG0_REG_MAX
 };
 

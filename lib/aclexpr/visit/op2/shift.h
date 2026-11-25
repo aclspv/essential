@@ -8,7 +8,7 @@
 #ifndef	aclexpr_visit_op2_shift_h
 #define	aclexpr_visit_op2_shift_h
 
-#include <util/scale.h>
+#include <aclutil/scale.h>
 #include <aclutil/emitx.h>
 #include <util/log.h>
 

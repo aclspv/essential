@@ -1,5 +1,5 @@
 #include "./neg.h"
-#include <util/scale.h>
+#include <aclutil/scale.h>
 #include <aclexpr/op.h>
 #include <aclty.h>
 

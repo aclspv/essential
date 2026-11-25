@@ -10,6 +10,9 @@
 #include <aclval.h>
 #include <aclexpr.h>
 #include <aclexpr/curreg.h>
+#include <aclexpr/ctor.h>
+#include <aclutil/fn.h>
+#include <aclemit/dtor.h>
 #include <aclcur/common.h>
 #include <aclcur/reg/var.h>
 
@@ -68,6 +71,7 @@ ae2f_MAC((L, )) aclemit_body_vardecl(const CXCursor h_cur, aclemit_body_t& rdwr_
 	aclspv_id_t		L$$TYPE_PTR = 0;
 	aclspv_id_t		L$$REG = 0;
 	aclspv_id_t		L$$INIT = 0;
+	aclspv_bool_t		L$$CONSTRUCTED = 0;
 	const CXType	L$$TYPE = clang_getCanonicalType(clang_getCursorType(h_cur));
 	(rdwr_body).m_vid = 0;
 
@@ -233,6 +237,18 @@ ae2f_MAC((L, )) aclemit_body_vardecl(const CXCursor h_cur, aclemit_body_t& rdwr_
 				err_puts("[aclemit::body::vardecl] initializer exists but is invisible to clang_Cursor_getVarDeclInitializer (compound-literal init?) — not supported");
 				_aclctx_err(L$$CTX, ACLSPV_COMPILE_UNHANDLED_BODY_VARDECL);
 			}
+			goto L$$LBL_END;
+		}
+
+		/** a C++ constructor initializes the object in place; it has no
+		 * value to store into the register afterwards. */
+		if(aclexpr_varinit(L$$VAR_INIT, L$$REG, L$$TYPEID, &L$$CONSTRUCTED, L$$CTX)) {
+			/** a real constructor call (including copy/move) produced a
+			 * live object; value copies and uninitialised declarations do not. */
+			if(L$$CONSTRUCTED)
+				(void)aclemit_dtor_reserve(
+						h_cur, L$$REG, L$$TYPEID, L$$CTX);
+
 			goto L$$LBL_END;
 		}
 

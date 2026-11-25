@@ -7,7 +7,7 @@
 #include <aclcur/opX.h>
 #include <aclattr/getkinder.h>
 
-#include <util/scale.h>
+#include <aclutil/scale.h>
 
 /** descend to the integer literal backing a shuffle component. */
 static enum CXChildVisitResult s_shuffle_findint(

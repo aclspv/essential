@@ -21,6 +21,7 @@ aclspv_bool_t aclexpr_carve1_memberread(
 	const aclspv_wrd_t IDX = (aclspv_wrd_t)rdwr_lst_extra[1].m_literal.m_u64;
 	const aclspv_id_t TY = rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_RESTYID];
 
+
 	/** ghost view lane (D6/D7): when the base is a pointer (`p->b`) or a
 	 * dereference (`(*p).b`), the member is an l-value of the storage the
 	 * pointer names. load it through a ghost-rooted MEMBER view rather than

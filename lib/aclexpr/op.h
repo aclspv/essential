@@ -207,7 +207,11 @@ enum ACLEXPR_OPCFGX_STATE0_ {
 	/** this ternary was lowered to the branch/phi lane because at least
 	 * one arm has a side effect. the condition extra's m_extra.m_cond
 	 * holds the temp register and labels. */
-	ACLEXPR_OPCFGX_STATE0_COND_BRANCH	= 0x20
+	ACLEXPR_OPCFGX_STATE0_COND_BRANCH	= 0x20,
+
+	/** this call scale carries a callee cursor in its extra[c_num] slot and
+	 * must be inlined rather than emitted as OpFunctionCall. */
+	ACLEXPR_OPCFGX_STATE0_INLINE_CALL	= 0x40
 };
 
 /**

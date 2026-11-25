@@ -1,4 +1,5 @@
 #include "./call.h"
+#include <aclemit/inline.h>
 #include <aclctx/err.h>
 
 #include <aclsym/fn.h>
@@ -255,6 +256,25 @@ aclspv_bool_t aclexpr_carve_opn_call(
 					break;
 			}
 		}
+	}
+
+	if(rdwr_lst_extra[c_num].m_state0
+			& (aclspv_wrd_t)ACLEXPR_OPCFGX_STATE0_INLINE_CALL) {
+		ae2f_ifnezerr(aclemit_inline_fn(
+					rdwr_lst_extra[c_num].m_cursor
+					, clang_getNullCursor()
+					, &os[1]
+					, c_num
+					, rdwr_prv_idval
+					, ctx))
+			return 1;
+
+		aclmemzero(r_ltrl, sizeof(*r_ltrl));
+
+		rdwr_prv_extra->m_type_original = c_ty_ret;
+		rdwr_prv_extra->m_mask_literal = 0;
+
+		return 0;
 	}
 
 	ae2f_ifnezerr(aclexpr_call_make(

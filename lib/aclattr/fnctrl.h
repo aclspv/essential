@@ -75,9 +75,28 @@ static enum CXChildVisitResult aclattr_fnctrl_visit(
 	return CXChildVisit_Continue;
 }
 
+
+ae2f_unused static aclspv_bool_t aclattr_is_noinline(CXCursor c_fn) {
+	struct aclattr_fnctrl r;
+
+	r.m_inline = 0;
+	r.m_noinline = 0;
+	clang_visitChildren(c_fn, aclattr_fnctrl_visit, &r);
+	return r.m_noinline;
+}
+
+ae2f_unused static aclspv_bool_t aclattr_is_always_inline(CXCursor c_fn) {
+	struct aclattr_fnctrl r;
+
+	r.m_inline = 0;
+	r.m_noinline = 0;
+	clang_visitChildren(c_fn, aclattr_fnctrl_visit, &r);
+	return (aclspv_bool_t)(r.m_inline && !r.m_noinline);
+}
+
 /** the OpFunction control mask for c_fn. `noinline` wins when both are
  * present: refusing to inline is the safer promise. */
-static aclspv_wrd_t aclattr_get_fnctrl(CXCursor c_fn) {
+ae2f_unused static aclspv_wrd_t aclattr_get_fnctrl(CXCursor c_fn) {
 	struct aclattr_fnctrl r;
 
 	r.m_inline	= 0;

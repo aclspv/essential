@@ -2,7 +2,7 @@
 
 #if	__ACLSPV_MATH_NR
 
-#include <util/scale.h>
+#include <aclutil/scale.h>
 #include <util/wrdemit.h>
 #include <aclexpr/op.h>
 

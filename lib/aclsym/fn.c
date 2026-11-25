@@ -7,6 +7,7 @@
 
 #include <aclemit/sync.h>
 #include <aclty.h>
+#include <aclutil/fn.h>
 
 #include <ae2f/pat/dbg.h>
 #include <ae2f/cc/tail.h>
@@ -300,7 +301,7 @@ static aclspv_bool_t s_is_entry(CXCursor c_fn) {
  * layer that understands them, and it interns by structure, so spelling
  * variants of the same signature still land on one id. */
 ae2f_inline_f static aclty_subid_t s_type(CXCursor c_fn, h_aclspv_ctx_t h_ctx) {
-	return (aclty_subid_t)aclty_mk_fn1(
+	return (aclty_subid_t)aclty_mk_fn1_this(
 			c_fn
 			, clang_getCursorType(c_fn)
 			, h_ctx
@@ -498,9 +499,29 @@ static enum CXChildVisitResult s_gather(
 		) {
 	h_aclspv_ctx_t ctx = rdwr_ctx;
 
-	/** declarations only: never descend into a body. */
-	if(c_cur.kind != CXCursor_FunctionDecl)
-		return CXChildVisit_Continue;
+	/** declarations only: never descend into a body. records and
+	 * namespaces are containers, so their methods are still declarations. */
+	switch((aclspv_cxcurkind_t)c_cur.kind) {
+		case CXCursor_FunctionDecl:
+			if(aclutil_fn_is_std_move_decl(c_cur))
+				return CXChildVisit_Continue;
+			break;
+
+		case CXCursor_CXXMethod:
+		case CXCursor_Constructor:
+		case CXCursor_Destructor:
+			break;
+
+		case CXCursor_Namespace:
+		case CXCursor_StructDecl:
+		case CXCursor_ClassDecl:
+		case CXCursor_UnionDecl:
+		case CXCursor_LinkageSpec:
+			return CXChildVisit_Recurse;
+
+		default:
+			return CXChildVisit_Continue;
+	}
 
 	unless(clang_Location_isFromMainFile(clang_getCursorLocation(c_cur)))
 		return CXChildVisit_Continue;
@@ -611,7 +632,9 @@ static enum CXChildVisitResult s_body_import_visit(
 
 	c_callee = clang_getCursorReferenced(c_cur);
 
-	if(clang_Cursor_isNull(c_callee) || c_callee.kind != CXCursor_FunctionDecl)
+	if(clang_Cursor_isNull(c_callee)
+			|| (c_callee.kind != CXCursor_FunctionDecl
+				&& !aclutil_fn_is_method(c_callee)))
 		return CXChildVisit_Recurse;
 
 	p_sym = aclsym_fn_find(c_callee, p->m_ctx);
@@ -662,7 +685,9 @@ static enum CXChildVisitResult s_body_ready_visit(
 
 	c_callee = clang_getCursorReferenced(c_cur);
 
-	if(clang_Cursor_isNull(c_callee) || c_callee.kind != CXCursor_FunctionDecl)
+	if(clang_Cursor_isNull(c_callee)
+			|| (c_callee.kind != CXCursor_FunctionDecl
+				&& !aclutil_fn_is_method(c_callee)))
 		return CXChildVisit_Recurse;
 
 	p_sym = aclsym_fn_find(c_callee, p->m_ctx);

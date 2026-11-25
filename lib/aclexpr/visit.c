@@ -1,6 +1,6 @@
 /** @file visit.c */
 
-#include <util/scale.h>
+#include <aclutil/scale.h>
 
 #include <aclmem.h>
 #include <aclexpr/op.h>
@@ -35,6 +35,8 @@
 #include "./beforevisit.h"
 
 #include <aclutil/emitx.h>
+#include <aclutil/fn.h>
+#include <aclexpr/util/unwrap.h>
 
 enum OP_ {
 	OP2_ARITHMETIC,
@@ -129,6 +131,60 @@ enum CXChildVisitResult aclexpr_visit(
 	LST_EXTRA = (void* ae2f_restrict)(&LST_SCALE_BUF[(ACLEXPR_OPBINCFG_END + LST_SCALE_BUF[0])]);
 	LST_EXTRA[GETLASTEL_CMDCOUNTERSTCK(a).m_count_oprnd].m_mask_literal = ACLTRL_MASK_LTRL;
 
+	/** a copy/move constructor with no user-provided body is a plain value
+	 * copy. a user-provided one is dispatched to the call lane below. */
+	if(aclutil_cursor_is_copy_move_ctor_call(h_cur)) {
+		CXCursor CTOR = clang_getCursorReferenced(h_cur);
+
+		unless(aclutil_ctor_has_body(CTOR)) {
+			CXCursor ARG = clang_Cursor_getArgument(h_cur, 0);
+
+			if(clang_Cursor_isNull(ARG))
+				return CXChildVisit_Break;
+
+			return aclutil_visitfromroot(ARG, aclexpr_visit, rdwr_data);
+		}
+	}
+
+	/** std::move is a transparent cast: evaluate its operand, but reserve
+	 * the moved-from object as no longer owning a destructor. */
+	if(aclutil_cursor_is_std_move(h_cur)) {
+		CXCursor ARG = clang_Cursor_getArgument(h_cur, 0);
+		CXCursor SRC = aclexpr_expr_unwrap(ARG);
+		enum CXChildVisitResult R;
+
+		/** evaluate first: member/subscript l-values materialise their view
+		 * registers during this walk. */
+		R = aclutil_visitfromroot(ARG, aclexpr_visit, rdwr_data);
+
+		switch((aclspv_cxcurkind_t)clang_getCursorKind(SRC)) {
+			default:
+				break;
+
+			case CXCursor_DeclRefExpr:
+			case CXCursor_MemberRefExpr:
+			case CXCursor_ArraySubscriptExpr:
+				{
+					aclspv_id_t REG = aclexpr_curreg_find(SRC, CTX);
+					h_aclcur_t p_reg;
+
+					if(!REG)
+						REG = aclexpr_curreg_find(
+								clang_getCursorReferenced(SRC), CTX);
+
+					p_reg = aclcur_get_node(REG, CTX);
+
+					if(p_reg)
+						p_reg->m_flag0 &=
+							(aclspv_wrd_t)~aclcur_flag0_reg(
+								ACLCUR_FLAG0_REG_DTOR);
+				}
+				break;
+		}
+
+		return R;
+	}
+
 	/** Recurse filter */
 	switch((uintmax_t)h_cur.kind) {
 		default:
@@ -164,7 +220,6 @@ enum CXChildVisitResult aclexpr_visit(
 		cgcsdef(OP_FAIL):
 		{
 			err_puts("[visit] OP_FAIL");
-			_aclctx_err(CTX, ACLSPV_COMPILE_UNHANDLED_VISIT);
 			return CXChildVisit_Break;
 		}
 
@@ -190,6 +245,12 @@ enum CXChildVisitResult aclexpr_visit(
 		cgcsdef(OP0_):
 		{
 			dbg_puts("[visit] OP0_");
+
+			/** a lane may create a child scale and return here directly
+			 * (implicit-this member read); re-sync to the last scale. */
+			LST_SCALE = get_last_scale_from_vec(&CMDSTCK_SCALE);
+			LST_SCALE_BUF = get_buf_from_scale2(aclspv_wrd_t, &CMDSTCK_SCALE, *LST_SCALE);
+			LST_EXTRA = (void* ae2f_restrict)(&LST_SCALE_BUF[(ACLEXPR_OPBINCFG_END + LST_SCALE_BUF[ACLEXPR_OPBINCFG_NUMOPRND])]);
 
 			if(LST_EXTRA[GETLASTEL_CMDCOUNTERSTCK(a).m_count_oprnd].m_mask_literal & (aclspv_wrd_t)ACLTRL_LTRL) {
 				*RET_LITERAL = LST_EXTRA[GETLASTEL_CMDCOUNTERSTCK(i).m_count_oprnd].m_literal; 
@@ -218,7 +279,6 @@ enum CXChildVisitResult aclexpr_visit(
 
 				ae2f_ifnezerr_strict(NUM_CMDCOUNTERSTCK < 2) {
 					err_puts("[visit] NUM_CMDCOUNTERSTCK is fishy");
-					_aclctx_err(CTX, ACLSPV_COMPILE_UNHANDLED_VISIT);
 					return CXChildVisit_Break;
 				}
 
@@ -235,7 +295,6 @@ enum CXChildVisitResult aclexpr_visit(
 					return CXChildVisit_Break;
 
 				ae2f_ifezerr(IDVAL_PRV) {
-					_aclctx_err(CTX, ACLSPV_COMPILE_UNHANDLED_VISIT);
 					return CXChildVisit_Break;
 				}
 
@@ -311,7 +370,6 @@ enum CXChildVisitResult aclexpr_visit(
 
 			unless(CTX->m_stmtexpr) {
 				err_puts("[visit] statement expression outside body emission");
-				_aclctx_err(CTX, ACLSPV_COMPILE_UNHANDLED_VISIT);
 				return CXChildVisit_Break;
 			}
 
@@ -322,14 +380,12 @@ enum CXChildVisitResult aclexpr_visit(
 
 			ae2f_ifezerr(IDVAL) {
 				dbg_puts("[visit] statement expression yielded no value");
-				_aclctx_err(CTX, ACLSPV_COMPILE_UNHANDLED_VISIT);
 				return CXChildVisit_Break;
 			}
 
 			/** the type came from the carved value, not from the cursor. */
 			ae2f_ifezerr(TYID) {
 				dbg_puts("[visit] statement expression yielded no type");
-				_aclctx_err(CTX, ACLSPV_COMPILE_UNHANDLED_VISIT);
 				return CXChildVisit_Break;
 			}
 
@@ -358,6 +414,7 @@ enum CXChildVisitResult aclexpr_visit(
 		{
 			cgjmp(aclexpr_visit_opn_call(
 						h_cur, rdwr_data
+						, &LST_EXTRA[GETLASTEL_CMDCOUNTERSTCK(a).m_count_oprnd]
 						, cgcase(OP_DONE)
 						, cgcase(OP0_)
 						, cgcase(OP_FAIL)
@@ -576,6 +633,8 @@ enum CXChildVisitResult aclexpr_visit(
 						h_cur, CTX
 						, &CMDSTCK_SCALE
 						, &LST_EXTRA[GETLASTEL_CMDCOUNTERSTCK(a).m_count_oprnd]
+						, &NUM_CMDCOUNTERSTCK
+						, &ID_REQ
 						, cgcase(OP_RECURSE)
 						, cgcase(OP_FAIL)
 						, cgcase(OP0_VAL)
@@ -632,7 +691,6 @@ enum CXChildVisitResult aclexpr_visit(
 			if(IS_OPERATOR) {
 				err_prefix(i);
 				err_call(fprintf, (stderr
-							, "[visit] unhandled operator spell(%s) kind(%s)\n"
 							, (const char*)SPELL.data
 							, (const char*)KINDSPELL.data));
 
@@ -641,7 +699,6 @@ enum CXChildVisitResult aclexpr_visit(
 
 				/** a user-facing reject of a construct this emitter
 				 * does not model. */
-				_aclctx_err(CTX, ACLSPV_COMPILE_UNHANDLED_VISIT);
 
 				return CXChildVisit_Break;
 			}

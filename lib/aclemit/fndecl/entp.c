@@ -2,6 +2,7 @@
 #include "./entp/args.h"
 #include "./entp/cfg.h"
 #include "./body.h"
+#include "./../dtor.h"
 
 #include <aclty.h>
 #include <aclval.h>
@@ -14,7 +15,7 @@
 
 #include <aclutil/emitx.h>
 #include <aclsym/entp.h>
-#include <util/scale.h>
+#include <aclutil/scale.h>
 #include <util/log.h>
 
 #include <ae2f/pat/dbg.h>
@@ -96,6 +97,11 @@ enum CXChildVisitResult aclemit_fndecl_entp(
 		aclspv_bool_t			c_is_pure = 0;
 		enum CXChildVisitResult		ret;
 		aclsym_entp_t* ae2f_restrict	p_entp;
+
+		aclemit_dtor_begin(h_ctx);
+
+		if(!aclemit_dtor_push(h_ctx))
+			return CXChildVisit_Break;
 
 		ret = aclemit_fndecl_bodycfg(
 				h_cur

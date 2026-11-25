@@ -7,7 +7,7 @@
 
 #include <ae2f/pat/dbg.h>
 
-#include <util/scale.h>
+#include <aclutil/scale.h>
 #include <util/log.h>
 #include <util/visitfromroot.h>
 
