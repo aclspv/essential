@@ -48,4 +48,3 @@ cmake --build build
 == license
 
 * link:LICENSE[this project]
-* link:LICENSE-llvm[llvm related programmes]
