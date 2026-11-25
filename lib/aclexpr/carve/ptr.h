@@ -174,8 +174,17 @@ ae2f_inline_f static aclspv_id_t aclexpr_sub_elm_ty(
 		const aclty_t* const ae2f_restrict P_M0
 			= p_nat ? aclty_find(p_nat->m_ty, h_ctx) : 0;
 
-		if(!P_M0)
+		ae2f_ifezerr(p_nat)
 			return 0;
+
+		/** member 0 is a BUILTIN scalar or vector: it has no type node, so
+		 * aclty_find answers null — but it IS the leaf, not a failure. this is
+		 * the `struct { T }` idiom around a `T*` (a Workgroup pointer argument
+		 * is one fixed element), so member 0's own type is the element and
+		 * there is no array step to descend. reporting 0 here rejected every
+		 * `w[i]` on such an argument. */
+		if(!P_M0)
+			return p_nat->m_ty;
 
 		if(P_M0->m_class == ACLTY_ARR) {
 			/** the wrapper's member 0 is the runtime/fixed array: the

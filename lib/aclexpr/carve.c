@@ -25,6 +25,7 @@
 #include "./carve/op2/comma.h"
 
 #include <aclexpr.h>
+#include <aclctx/err.h>
 
 #include <aclutil/wrdemit.h>
 #include <util/scale.h>
@@ -32,7 +33,8 @@
 #include <ae2f/cgoto.h>
 #include <ae2f/pat/dbg.h>
 
-aclspv_bool_t aclexpr_carve(
+/** the opcode dispatch. never called directly: see aclexpr_carve. */
+static aclspv_bool_t s_carve(
 		struct aclexpr_visit_data* const ae2f_restrict	rdwr_data,
 		aclspv_wrd_t* const ae2f_restrict rdwr_prv_idval,
 		aclexpr_opbincfg_extra* const ae2f_restrict rdwr_prv_extra
@@ -374,3 +376,25 @@ aclspv_bool_t aclexpr_carve(
 	ae2f_unreachable();
 }
 
+aclspv_bool_t aclexpr_carve(
+		struct aclexpr_visit_data* const ae2f_restrict	rdwr_data,
+		aclspv_wrd_t* const ae2f_restrict rdwr_prv_idval,
+		aclexpr_opbincfg_extra* const ae2f_restrict rdwr_prv_extra
+		) {
+	const aclspv_bool_t RET = s_carve(rdwr_data, rdwr_prv_idval, rdwr_prv_extra);
+
+	/** every lane returns through here, so a carve that failed is made
+	 * visible once, in one place.
+	 *
+	 * the lanes report their own reasons with err_puts, which compiles away
+	 * with NDEBUG (lib/util/log.h). without an error on the context the
+	 * caller's aclctx_err_check stayed silent, evaluation went on with
+	 * whatever value the operands happened to carry, and the module came out
+	 * missing the instruction — a wrong module instead of a diagnostic. the
+	 * dispatcher is also the only caller of a lane, so a NO here always means
+	 * "this expression cannot be emitted", never "try something else". */
+	if(RET && !CTX(rdwr_data)->m_err)
+		_aclctx_err(CTX(rdwr_data), ACLSPV_COMPILE_UNHANDLED_CARVE);
+
+	return RET;
+}

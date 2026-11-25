@@ -4,6 +4,8 @@
 #include <aclattr/execmodel.h>
 #include <aclattr/pure.h>
 #include <aclmem.h>
+
+#include <aclemit/sync.h>
 #include <aclty.h>
 
 #include <ae2f/pat/dbg.h>
@@ -356,6 +358,10 @@ static enum CXChildVisitResult s_body_import_visit(
 	if(c_cur.kind != CXCursor_CallExpr)
 		return CXChildVisit_Recurse;
 
+	/** a barrier is lowered in place: it is never imported. */
+	if(aclemit_sync_is_barrier(c_cur))
+		return CXChildVisit_Recurse;
+
 	c_callee = clang_getCursorReferenced(c_cur);
 
 	if(clang_Cursor_isNull(c_callee) || c_callee.kind != CXCursor_FunctionDecl)
@@ -401,6 +407,10 @@ static enum CXChildVisitResult s_body_ready_visit(
 	aclsym_fn_t* ae2f_restrict p_sym;
 
 	if(c_cur.kind != CXCursor_CallExpr)
+		return CXChildVisit_Recurse;
+
+	/** a barrier is lowered in place: it never needs a callee. */
+	if(aclemit_sync_is_barrier(c_cur))
 		return CXChildVisit_Recurse;
 
 	c_callee = clang_getCursorReferenced(c_cur);

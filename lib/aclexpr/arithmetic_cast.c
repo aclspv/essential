@@ -545,20 +545,22 @@ enum ACLEXPR_RET_ aclexpr_arithmetic_cast_literal(
 	switch(c_new_type) {
 		aclspv_id_t	ID_RET;
 
+		/** an integer literal's own SIGN is part of the constant's type:
+		 * `1` is `OpConstant %int`, while storing it into `unsigned`
+		 * storage needs `OpConstant %uint`. the value alone does not say
+		 * which, so the target enum id picks the type — and aclval's
+		 * per-type cache keeps `%int 1` and `%uint 1` two distinct ids.
+		 * (a signed-only construction made them the SAME id, so the
+		 * cast changed the claimed type but not the node, and the store
+		 * layer's exact-type check then rejected the store.) */
 		case ACLSPV_ID_U32:
 		case ACLSPV_ID_I32:
-		ae2f_expected_but_else(ID_RET = aclutil_mk_constant_val_id(
-					(aclspv_wrd_t)RESULT.m_api_uintmax
-					, h_ctx)) return ACLEXPR_RET_FAILURE;
-
-		*r_newid = ID_RET;
-		return ACLEXPR_RET_SUCCESS_LITERAL;
-
 		case ACLSPV_ID_U64:
 		case ACLSPV_ID_I64:
-		ae2f_expected_but_else(ID_RET = aclutil_mk_constant_val64_id(
+		ae2f_expected_but_else(ID_RET = aclval_cfg_by_enum(
 					RESULT.m_api_uintmax
-					, h_ctx)) return ACLEXPR_RET_FAILURE;
+					, h_ctx
+					, (enum ACLSPV_ID_) c_new_type)) return ACLEXPR_RET_FAILURE;
 
 		*r_newid = ID_RET;
 		return ACLEXPR_RET_SUCCESS_LITERAL;

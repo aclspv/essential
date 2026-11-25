@@ -116,6 +116,21 @@ int main(void) {
 		return EXIT_FAILURE;
 	}
 
+	/** three statements write memory — `w_scratch[0]`, `w_out[0]` and
+	 * `*out_v` — so three OpStores. this mattered: a workgroup pointer
+	 * argument is one `struct { T }` element, and a `w[i]` whose registered
+	 * member 0 is a BUILTIN type (no aclty node) used to be rejected by the
+	 * subscript carve and then dropped in silence, leaving the module with
+	 * the reads only. */
+	if(acltest_spirv_count_op(spirv, count, (unsigned)SpvOpStore) != 3) {
+		fprintf(stderr
+				, "[workgroup.1.0] stores: %u, expected 3 "
+				  "(w_scratch[0], w_out[0], *out_v)\n"
+				, acltest_spirv_count_op(spirv, count, (unsigned)SpvOpStore));
+		free(spirv);
+		return EXIT_FAILURE;
+	}
+
 	{
 		FILE* const fp = fopen(ACLTEST_OUT, "wb");
 

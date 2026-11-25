@@ -25,6 +25,10 @@
 
 #include <aclctx/err.h>
 
+#include <aclemit/sync.h>
+
+#include <ae2f/cc/tail.h>
+
 /** find the label id bound to a cursor: a defined label (LBL) or a forward-goto marker (J). */
 static aclspv_id_t s_body_lbl_find(CXCursor c_cur, h_aclspv_ctx_t h_ctx) {
 	aclspv_wrdcount_t i;
@@ -289,6 +293,20 @@ enum CXChildVisitResult aclemit_body(CXCursor h_cur, ae2f_unused CXCursor h_pare
 		case CXCursor_UnaryOperator:
 		case CXCursor_UnaryExpr:
 		case CXCursor_CallExpr:
+			/** a barrier is a void statement with no result, so the
+			 * expression machinery has nothing to hand back for it: it is
+			 * lowered into the block here and now. every other call
+			 * statement falls through and is carved through the
+			 * default-recurse walk below, which reaches the call as a
+			 * child. */
+			if(aclemit_sync_is_barrier(h_cur)) {
+				if(aclemit_sync_barrier(h_cur, CTX))
+					jmpfail(ACLSPV_COMPILE_UNHANDLED_BODY);
+
+				ctxcheck(CTX) else goto LBL_DONE;
+			}
+
+			ae2f_fallthrough;
 		case CXCursor_ArraySubscriptExpr:
 		case CXCursor_CStyleCastExpr:
 		case CXCursor_ConditionalOperator:

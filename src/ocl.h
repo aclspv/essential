@@ -49,4 +49,37 @@ typedef	u32 uptr;typedef i32 iptr;
 #define	__local		storage_class(4)
 #endif
 
+/**
+ * @name synchronisation builtins
+ *
+ * they have no definition on purpose: the compiler recognises the call by
+ * spelling and emits the instruction in place, so no symbol is ever created
+ * and no body is ever looked for.
+ *
+ * the arguments are scope / memory-semantics words, not expressions: each one
+ * must be an integer constant expression, and its numbering belongs to the
+ * memory model the context declares (GLSL450 uses `SpvScope*` and
+ * `SpvMemorySemantics*Mask`; Vulkan uses `SpvScope*KHR`).
+ *
+ * both return void: a barrier is a statement, not a value.
+ * @{
+ * */
+
+/** OpControlBarrier: synchronise the execution and memory domains.
+ *
+ * @param scope_exec	SpvScope_: who has to reach this point
+ * @param scope_mem	SpvScope_: the memory any following control-dependent
+ *			access observes under the semantics below
+ * @param mem_sem	SpvMemorySemanticsMask: which memories and which
+ *			flavours of ordering
+ * */
+void aclspv_ctlbar(u32 scope_exec, u32 scope_mem, u32 mem_sem);
+
+/** OpMemoryBarrier: order this invocation's memory accesses against every
+ * memory access in `scope_mem`.
+ * */
+void aclspv_membar(u32 scope_mem, u32 mem_sem);
+
+/** @} */
+
 #endif

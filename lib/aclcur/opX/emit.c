@@ -14,23 +14,38 @@ aclspv_compile_t EMIT_aclcur_opx(h_aclcur_t h, h_aclspv_ctx_t h_ctx) {
 
 	aclspv_wrd_t	i = 0;
 	aclspv_wrd_t	idx;
+	aclspv_wrd_t	at;
 	aclspv_wrd_t* ae2f_restrict wr;
 	const aclspv_wrd_t	ANCHOUR = h_ctx->m_count.m_fnimpl;
 	const aclspv_bool_t	IS_EXT = h->m_d.m_opx.m_op == SpvOpExtInst;
-	const aclspv_wrd_t	EXTRA = IS_EXT ? 2 : 0;
 	const aclspv_wrd_t	NUM_OPRND = h->m_d.m_opx.m_num;
-	const aclspv_wrd_t	WORDCOUNT = NUM_OPRND + 3 + EXTRA;
+
+	/** a node with no type has no result, and the barriers are exactly that:
+	 * [op|n][operands...] instead of [op|n][type][result][operands...].
+	 * HEAD is the word count between the opcode word and the operands, the
+	 * opcode word itself not included. */
+	const aclspv_bool_t	IS_RESULT = h->m_ty != 0;
+	const aclspv_wrd_t	HEAD = (IS_RESULT ? 2u : 0u) + (IS_EXT ? 2u : 0u);
+	const aclspv_wrd_t	WORDCOUNT = 1u + HEAD + NUM_OPRND;
 
 	s_assume(h, ACLSPV_COMPILE_UNHANDLED);
 	s_assume(h->m_class == ACLCUR_OPX, ACLSPV_COMPILE_UNHANDLED);
-	s_assume(h->m_id, ACLSPV_COMPILE_UNHANDLED);
-	s_assume(h->m_val == h->m_id, ACLSPV_COMPILE_UNHANDLED);
-	s_assume(h->m_flag0 & aclcur_flag0(ACLCUR_FLAG0_VALUE), ACLSPV_COMPILE_UNHANDLED);
 	s_assume(h_ctx, ACLSPV_COMPILE_UNHANDLED);
 
-	unless(h->m_num_ref
-			|| (h->m_flag0 & aclcur_flag0(ACLCUR_FLAG0_EFFECT)))
-		return ACLSPV_COMPILE_OK;
+	if(IS_RESULT) {
+		s_assume(h->m_id, ACLSPV_COMPILE_UNHANDLED);
+		s_assume(h->m_val == h->m_id, ACLSPV_COMPILE_UNHANDLED);
+		s_assume(h->m_flag0 & aclcur_flag0(ACLCUR_FLAG0_VALUE), ACLSPV_COMPILE_UNHANDLED);
+
+		unless(h->m_num_ref
+				|| (h->m_flag0 & aclcur_flag0(ACLCUR_FLAG0_EFFECT)))
+			return ACLSPV_COMPILE_OK;
+	}
+	else {
+		/** a barrier has an effect by definition: it is never dropped. */
+		s_assume(!h->m_val, ACLSPV_COMPILE_UNHANDLED);
+		s_assume(!(h->m_flag0 & aclcur_flag0(ACLCUR_FLAG0_VALUE)), ACLSPV_COMPILE_UNHANDLED);
+	}
 
 	ae2f_ifezerr(h_ctx->m_count.m_fnimpl = aclutil_emit_wrd(
 				&h_ctx->m_section.m_fnimpl
@@ -38,14 +53,22 @@ aclspv_compile_t EMIT_aclcur_opx(h_aclcur_t h, h_aclspv_ctx_t h_ctx) {
 				, 0
 				)) return ACLSPV_COMPILE_ALLOC_FAILED_CURSOR;
 
+	/** the allocation above may have moved the buffer: resolve the words only
+	 * now, and walk the operand chain (which lives in the cursor buffer, not
+	 * here) afterwards. */
 	wr = &aclutil_get_wrd_of_vec(&h_ctx->m_section.m_fnimpl)[ANCHOUR];
 	wr[0] = aclspv_opcode_to_wrd(h->m_d.m_opx.m_op, WORDCOUNT - 1);
-	wr[1] = h->m_ty;
-	wr[2] = h->m_id;
+
+	at = 1;
+
+	if(IS_RESULT) {
+		wr[at++] = h->m_ty;
+		wr[at++] = h->m_id;
+	}
 
 	if(IS_EXT) {
-		wr[3] = h->m_d.m_opx.m_set;
-		wr[4] = h->m_d.m_opx.m_inst;
+		wr[at++] = h->m_d.m_opx.m_set;
+		wr[at++] = h->m_d.m_opx.m_inst;
 	}
 
 	idx = h->m_d.m_opx.m_o_head;
@@ -54,7 +77,7 @@ aclspv_compile_t EMIT_aclcur_opx(h_aclcur_t h, h_aclspv_ctx_t h_ctx) {
 #if __ACLSPV_CHECK_EXTRA
 		ae2f_ifnezerr_strict(p_mbr->m_class != ACLCUR_OPX_MBR) return ACLSPV_COMPILE_UNHANDLED;
 #endif
-		wr[3 + EXTRA + i] = p_mbr->m_d.m_opx_mbr.m_operand;
+		wr[at + i] = p_mbr->m_d.m_opx_mbr.m_operand;
 		idx = p_mbr->m_d.m_opx_mbr.m_nxt;
 		++i;
 	}

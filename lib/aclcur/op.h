@@ -132,4 +132,7 @@ aclcur_id_t aclcur_cfg_st(
 
 #include "./op/emit.h"
 
+/** the result-less, id-free-operand instructions (the barriers). */
+#include "./op/none.h"
+
 #endif

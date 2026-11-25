@@ -39,29 +39,26 @@
  * @param	rdwr_lst_extra	the operator's operand-0 extra (the l-value read)
  * @param	VAL		the computed new value of the l-value
  * @param	h_ctx		the compile context
- * @param	c_tag		a caller-supplied tag for the failure log
+ * @param	c_tag		a caller-supplied tag for the failure log. only the
+ *			logging build can report it: when ERROR is off the tag
+ *			is unused, so it is marked as such rather than removed
+ *			from the signature. removing it (a second signature
+ *			behind a macro) left the body's err_puts(c_tag) naming a
+ *			parameter that did not exist, so `-DNDEBUG -DERROR=1` did
+ *			not compile at all.
  *
  * @return	non-zero when the store landed, 0 otherwise (m_err is set).
  * */
-
-#if	defined(NDEBUG) && NDEBUG
-ae2f_inline_f static aclspv_bool_t aclexpr_lvalue_storeback(
-		const aclexpr_opbincfg_extra* ae2f_restrict	rdwr_lst_extra,
-		const aclspv_id_t			c_val,
-		const h_aclspv_ctx_t			h_ctx
-		)
-#define	aclexpr_lvalue_storeback(rdwr_lst_extra, c_val, h_ctx, c_tag)	\
-		aclexpr_lvalue_storeback(rdwr_lst_extra, c_val, h_ctx)
-#else
 ae2f_inline_f static aclspv_bool_t aclexpr_lvalue_storeback(
 		const aclexpr_opbincfg_extra* ae2f_restrict	rdwr_lst_extra,
 		const aclspv_id_t			c_val,
 		const h_aclspv_ctx_t			h_ctx,
+#if	ERROR
 		const char*				c_tag
-		)
-#define	aclexpr_lvalue_storeback(rdwr_lst_extra, c_val, h_ctx, c_tag)	\
-		aclexpr_lvalue_storeback(rdwr_lst_extra, c_val, h_ctx, c_tag)
+#else
+		ae2f_unused const char*			c_tag
 #endif
+		)
 {
 	/** view-rooted l-value: the read built the view naming the region, so
 	 * the store goes through it, exactly like a plain variable's. */

@@ -154,10 +154,20 @@ static aclspv_bool_t	s_argv_load_chain(
 
 	P_M0		= aclty_find(c_mbr0, h_ctx);
 
-	if(!P_M0)
-		return 0;
+	/** member 0 is a BUILTIN scalar or vector (`struct { T }` around a `T*`
+	 * whose T is `int`, `float`, ...): those have no type node, so
+	 * aclty_find answers null. the wrapper is still the one-index form, and
+	 * the only thing left to compare is the id itself. reporting 0 here is
+	 * what made the caller fall back to a plain OpCopyObject of the
+	 * wrapper-typed variable, i.e. a pointer value whose operand type does
+	 * not match its result type. */
+	if(!P_M0) {
+		if(c_mbr0 != id_log)
+			return 0;
 
-	if(P_M0->m_class == ACLTY_ARR) {
+		*rdwr_num_idx	= 1;
+	}
+	else if(P_M0->m_class == ACLTY_ARR) {
 		/** `T* -> struct { T[] }`: member 0, then element 0. */
 		if(P_M0->m_info.m_arr.m_type != id_log)
 			return 0;

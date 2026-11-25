@@ -2,6 +2,8 @@
 #include <aclctx/err.h>
 #include "./sym.h"
 
+#include <aclemit/sync.h>
+
 #include <aclsym/fn.h>
 
 #include <aclty.h>
@@ -126,6 +128,13 @@ static enum CXChildVisitResult s_visit(
 	aclsym_fn_t* ae2f_restrict	p_sym;
 
 	if(c_cur.kind != CXCursor_CallExpr)
+		return CXChildVisit_Recurse;
+
+	/** a synchronisation builtin is lowered in place: it is not a callee, so
+	 * there is nothing to import for it even when a prototype declared it.
+	 * this must come first, before the symbol lookup, which finds a symbol for
+	 * any declared name. */
+	if(aclemit_sync_is_barrier(c_cur))
 		return CXChildVisit_Recurse;
 
 	c_callee = clang_getCursorReferenced(c_cur);

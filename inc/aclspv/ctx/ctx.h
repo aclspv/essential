@@ -37,7 +37,7 @@ struct a_aclspv_ctx {
 	 * cache for cursors for parsing one function 
 	 * for its use see util/cursor.h
 	 *
-	 * [util_cursor]
+	 * [aclcur_t]
 	 *
 	 * @details
 	 * reset on every function
@@ -52,7 +52,7 @@ struct a_aclspv_ctx {
 	 * cache for complex types which needs to be stored somewhere
 	 * for its use see util/cxtp.h
 	 *
-	 * [aclutil_cxtp]
+	 * [aclty_t]
 	 * */
 	x_aclspv_vec		m_type_uniques;
 
