@@ -181,6 +181,7 @@ the same operation on fp8 does not compile:
 === builtin math
 
 * <<__builtin_sinf16,__builtin_sinf16>>, <<__builtin_cosf16,__builtin_cosf16>> and <<__builtin_tanf16,__builtin_tanf16>> emit `GLSL.std.450` `Sin` / `Cos` / `Tan` (13 / 14 / 15) with a 16-bit operand and result.
+* <<__builtin_floorf,__builtin_floorf>> / <<__builtin_floorf16,__builtin_floorf16>> / <<__builtin_elementwise_floor,__builtin_elementwise_floor>> emit `GLSL.std.450` `Floor` (instruction 8), the rounding builtin that is not a trigonometric one.
 * a literal operand is folded on the host into a binary16 `OpConstant`, because an extension instruction is not a legal `OpSpecConstantOp`. This is gated by `ACLSPV_MATH_LITERAL` (default on).
 * `bf16` has no `GLSL.std.450` lowering: a literal operand folds, a runtime operand is rejected with `ACLSPV_COMPILE_UNHANDLED_CARVE`.
 * fp8 has no math builtin and no `GLSL.std.450` lowering.
@@ -240,28 +241,56 @@ ____
 </div>
 ++++
 
+[[Inline_and_destructors]]
 === Inline and destructors
 
 [quote]
 ____
-`always_inline` is inlined when its body is straight-line or its returns are
-reachable through `if`/`switch` selection. Such bodies are wrapped in a
-single-iteration loop whose header phis carry the return value and the done
-flag, so an early return is a structured branch to the loop continue target.
-A return nested inside a loop is not a structured exit from that loop: for the
-`inline` key word that call falls back to `OpFunctionCall`, and for
-`always_inline` it is a diagnosed rejection (see below). The C++ `inline`
-keyword follows
-`ACLSPV_CTX_FLAG0_INLINE_BY_DEFAULT`; with the flag off the call stays and the
-function control still carries `Inline`. `__forceinline__` is clang's alias of
-`always_inline` and follows it, as does `__always_inline__`. `noinline` always
-wins.
+`always_inline` is inlined when its body is straight-line, or when its returns
+are reachable through `if`/`switch` selection, or when it returns from inside a
+loop. Such a body is wrapped in a single-iteration loop whose header phis carry
+the return value and the done flag, so an early return is a structured branch
+to the continue target of that scaffold instead of a branch out of an
+`OpSelection`.
 
-an inlined body that the inliner cannot carve (a return nested inside a loop)
-is a diagnosed rejection for a `always_inline` callee, never a silent
-`OpFunctionCall`: the attribute is a requirement, and the call site is the only
-place that can report it.
+The C++ `inline` keyword follows `ACLSPV_CTX_FLAG0_INLINE_BY_DEFAULT`; with the
+flag off the call stays and the function control still carries `Inline`.
+`__forceinline__` is clang's alias of `always_inline` and follows it, as does
+`__always_inline__`. `noinline` always wins.
 ____
+
+* the scaffold nests, so these are all fine to call and be called from one
+  another: a carved body that itself calls a carved body is what the
+  single-iteration loop has to survive. `test/compile/inline-nest.1.0.c`
+  covers it.
+* a carved body's return value, its done flag and an inlined frame's
+  temporaries live in the scaffold's own registers. They return on the
+  scaffold's back edge, so they are never carried by a phi of an enclosing
+  loop — a slice-local register falls back to memory instead, which is always
+  current.
+* an inlined frame's destructors run on its own return path, not on the
+  caller's return. A frame that outlives its block (a merge block whose arms
+  all returned) still does not emit its destructors there.
+* `always_inline` that the inliner cannot carve is a diagnosed rejection
+  (`ACLSPV_COMPILE_UNHANDLED`), never a silent `OpFunctionCall`: the attribute
+  is a requirement, and the call site is the only place that can report it.
+
+++++
+<div class="listingblock" style="background-color:#1c171b;color:#d8ccd3;padding:0.8em 1em;overflow-x:auto;border-radius:4px">
+<pre style="font-family:'Source Code Pro','DejaVu Sans Mono','Courier New',monospace;font-size:14px;line-height:1.3;margin:0;background:transparent;color:inherit">/* returns from a loop and from a selection: carved */
+__attribute__((always_inline))
+int find(int x) {
+    for (int i = 0; i < 4; i = i + 1) {
+        if (x < i) return i;    /* structured exit, not a branch out */
+    }
+    return -1;
+}
+
+/* the same body as a plain call: the callee stays an OpFunction */
+__attribute__((noinline))
+int find_slow(int x);</pre>
+</div>
+++++
 
 * a destructor of a whole local object is an ordinary function call
   (`OpFunctionCall`).
@@ -279,6 +308,56 @@ ____
 * `noinline` is a hard rejection for a subobject destructor: the compiler cannot
   form the required pointer argument and must not silently skip the destruction.
 
+[[Control_flow]]
+=== Control flow
+
+[quote]
+____
+`if`, `switch`, `while`, `for` and `do` lower to structured SPIR-V. +
+Every loop is an `OpLoopMerge` with a dedicated continue target, so `break` and
+`continue` are ordinary branches and never leave the construct they belong to.
+____
+
+* `for (init; cond; inc)` puts `inc` in the **continue** target, not in the
+  header. `continue` therefore still runs the increment, and a body whose only
+  exit is `break` leaves the increment block with no live predecessor, which is
+  harmless: it emits no reads.
+* `switch` falls through between case groups in source order. A case that ends
+  without `break` or `return` branches to the next group, and the last group
+  branches to the merge.
+* `return` may appear anywhere: inside an `if`, inside a `switch` case, and
+  inside a loop. A function's own `return` lowers to `OpReturn` /
+  `OpReturnValue`: the function exit leaves its enclosing structured
+  constructs itself.
+* a `return` inside an **inlined** body is different — it must branch to that
+  body's own exit, not out of the caller. The inliner handles it with the
+  single-iteration loop described in <<Inline_and_destructors,Inline and
+  destructors>>; a loop nested in the carved body is still recoverable, which is
+  what `always_inline` bodies returning from a loop rely on.
+* a block that is emitted but has no live incoming edge (a `switch` merge whose
+  every case returned) is still terminated, with `OpUnreachable`, so the module
+  stays structurally valid without inventing a branch nobody can take.
+
+++++
+<div class="listingblock" style="background-color:#1c171b;color:#d8ccd3;padding:0.8em 1em;overflow-x:auto;border-radius:4px">
+<pre style="font-family:'Source Code Pro','DejaVu Sans Mono','Courier New',monospace;font-size:14px;line-height:1.3;margin:0;background:transparent;color:inherit">int scan(int up_to) {
+    int sum = 0;
+    for (int i = 0; i &lt; up_to; i = i + 1) {
+        if (i == 2) continue;   /* still runs i = i + 1 */
+        if (i == 9) break;
+        sum = sum + i;
+    }
+
+    switch (up_to) {
+    case 1:  return sum;        /* every case returns: the merge is       */
+    case 2:  return -sum;       /* emitted with OpUnreachable              */
+    default: return 0;
+    }
+}</pre>
+</div>
+++++
+
+[[ExportAttributes]]
 === ExportAttributes
 
 [quote]
@@ -325,6 +404,7 @@ int also_exported(int x) { return x * 2; }</pre>
 `__declspec(dllexport)` is the Microsoft spelling. a target that does not understand it drops the attribute (clang warns), so there is nothing to detect; use `visibility("default")` there.
 ====
 
+[[FunctionControlAttributes]]
 === FunctionControlAttributes
 
 [quote]
@@ -355,6 +435,7 @@ int plain(int x) { return x + 4; }  /* OpFunction ... Inline */</pre>
 </div>
 ++++
 
+[[AnnotationAttributes]]
 === AnnotationAttributes
 
 [quote]
@@ -1022,6 +1103,47 @@ ____
 
 * emits `GLSL.std.450` `Tan` (instruction 15).
 * same `f32` scalar, literal-folding, and import rules as <<__builtin_sinf,__builtin_sinf>>.
+
+[[__builtin_floorf]]
+=== __builtin_floorf
+
+[quote]
+`__builtin_floorf(x)`
+
+* emits `GLSL.std.450` `Floor` (instruction 8).
+* scalar only: operand and result are 32-bit floating point (`f32`).
+* same literal-folding and import rules as <<__builtin_sinf,__builtin_sinf>>: a scalar literal folds to an `OpConstant` instead of `OpExtInst`, and the `GLSL.std.450` import appears on first use.
+* `__builtin_floor` (`f64`) and the bare `floorf` name are not recognised.
+
+++++
+<div class="listingblock" style="background-color:#1c171b;color:#d8ccd3;padding:0.8em 1em;overflow-x:auto;border-radius:4px">
+<pre style="font-family:'Source Code Pro','DejaVu Sans Mono','Courier New',monospace;font-size:14px;line-height:1.3;margin:0;background:transparent;color:inherit"><span style="color:#c47791;font-weight:bold">typedef</span> <span style="color:#d0aa68">float</span> <span style="color:#d0aa68;font-weight:bold">f32</span><span style="color:#857780">;</span>
+
+<span style="color:#d0aa68">void</span> <span style="color:#7ba9c4;font-weight:bold">round_down</span><span style="color:#857780">(</span><span style="color:#d0aa68;font-weight:bold">f32</span><span style="color:#6fa6a8;font-style:italic">*</span><span style="color:#a99ba3;font-style:italic"> </span><span style="color:#d8ccd3;font-style:italic">in</span><span style="color:#857780">,</span> <span style="color:#d0aa68;font-weight:bold">f32</span><span style="color:#6fa6a8;font-style:italic">*</span><span style="color:#a99ba3;font-style:italic"> </span><span style="color:#d8ccd3;font-style:italic">out</span><span style="color:#857780">)</span> <span style="color:#857780">{</span>
+    <span style="color:#6fa6a8">*</span><span style="color:#d8ccd3">out</span> <span style="color:#6fa6a8">=</span> <span style="color:#7ba9c4">__builtin_floorf</span><span style="color:#857780">(</span><span style="color:#6fa6a8">*</span><span style="color:#d8ccd3">in</span><span style="color:#857780">);</span>
+<span style="color:#857780">}</span></pre>
+</div>
+++++
+
+[[__builtin_floorf16]]
+=== __builtin_floorf16
+
+[quote]
+`__builtin_floorf16(x)`
+
+* emits `GLSL.std.450` `Floor` (instruction 8).
+* scalar only: operand and result are 16-bit floating point (`_Float16`).
+* same rules as <<__builtin_sinf16,__builtin_sinf16>>.
+
+[[__builtin_elementwise_floor]]
+=== __builtin_elementwise_floor
+
+[quote]
+`__builtin_elementwise_floor(x)`
+
+* emits `GLSL.std.450` `Floor` (instruction 8), elementwise.
+* accepts a scalar or a vector; the result has the same shape with 32-bit floating point (`f32`) components.
+* same scalar/vector `f32` rules as <<__builtin_elementwise_sin,__builtin_elementwise_sin>>.
 
 [[__builtin_sinf16]]
 === __builtin_sinf16
