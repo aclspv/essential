@@ -1,5 +1,6 @@
 #include "./emit.h"
 #include <aclctx/err.h>
+#include <aclutil/wrdemit.h>
 #include "./util.h"
 #include "./flag0.h"
 #include "./phi.h"
@@ -171,6 +172,18 @@ aclspv_compile_t aclcur_emit(h_aclspv_ctx_t h_ctx) {
 
 						  break;
 					  }
+
+			case ACLCUR_UNREACHABLE:
+				/** a structurally emitted block with no live incoming
+				 * edge still needs a terminator; OpUnreachable is the
+				 * only valid one that does not add an edge. */
+				ae2f_ifezerr(h_ctx->m_count.m_fnimpl = emit_opcode(
+							&h_ctx->m_section.m_fnimpl
+							, h_ctx->m_count.m_fnimpl
+							, SpvOpUnreachable
+							, 0))
+					return ACLSPV_COMPILE_ALLOC_FAILED_CURSOR;
+				break;
 
 			case ACLCUR_STORE: {
 						   h_aclcur_t p_reg = aclcur_get_node(p->m_d.m_store.m_reg, h_ctx);

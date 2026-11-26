@@ -73,6 +73,66 @@ ae2f_ccpure aclspv_id_t aclcur_get_lbl_cur(h_aclspv_ctx_t h_ctx) {
 	return p ? p->m_id : 0;
 }
 
+static void s_set_lbl_fnterm(aclspv_bool_t c_on, h_aclspv_ctx_t h_ctx);
+
+aclspv_bool_t aclcur_lbl_is_fnterm(h_aclspv_ctx_t h_ctx) {
+	h_aclcur_t p_root = s_get_root1(h_ctx);
+
+	ae2f_ifezerr(p_root)
+		return 0;
+
+	return (aclspv_bool_t)(p_root->m_flag0
+			& aclcur_flag0(ACLCUR_FLAG0_LBLTERM));
+}
+
+static void s_set_lbl_fnterm(aclspv_bool_t c_on, h_aclspv_ctx_t h_ctx) {
+	h_aclcur_t p_root = s_get_root1(h_ctx);
+
+	ae2f_ifezerr(p_root)
+		return;
+
+	if(c_on)
+		p_root->m_flag0 |= aclcur_flag0(ACLCUR_FLAG0_LBLTERM);
+	else
+		p_root->m_flag0 &= (aclspv_wrd_t)~aclcur_flag0(
+				ACLCUR_FLAG0_LBLTERM);
+}
+
+void aclcur_set_lbl_fnterm(aclspv_bool_t c_on, h_aclspv_ctx_t h_ctx) {
+	s_set_lbl_fnterm(c_on, h_ctx);
+}
+
+aclspv_bool_t aclcur_lbl_cur_is_open(h_aclspv_ctx_t h_ctx) {
+	h_aclcur_t p_lbl = aclcur_get_lbl_cur1(h_ctx);
+
+	ae2f_ifezerr(p_lbl)
+		return 0;
+
+	/** a label nobody branches to is powered off at emission: its
+	 * instructions never land, so nothing is left open to terminate. */
+	unless(p_lbl->m_num_ref)
+		return 0;
+
+	if(p_lbl->m_d.m_lbl.m_nop < 2u)
+		return 1;
+
+	{
+		h_aclcur_t p_tail = &p_lbl[p_lbl->m_d.m_lbl.m_nop - 1u];
+
+		switch(p_tail->m_class) {
+			case ACLCUR_J:
+			case ACLCUR_JC:
+			case ACLCUR_SW:
+			case ACLCUR_RET:
+			case ACLCUR_UNREACHABLE:
+				return 0;
+
+			default:
+				return 1;
+		}
+	}
+}
+
 /** the root label owns the open-label cursor. */
 static void s_set_idx_lbl_cur(aclcur_idx_t c_idx, h_aclspv_ctx_t h_ctx) {
 	h_aclcur_t p_root = s_get_root1(h_ctx);
@@ -194,6 +254,10 @@ aclspv_id_t aclcur_cfg_lbl(aclcur_lblid_t c, h_aclspv_ctx_t h_ctx) {
 
 	p->m_class		= ACLCUR_LBL;
 	p->m_d.m_lbl.m_nop	= 1;
+
+	/** a new block starts here: an earlier inlined slice's "no
+	 * fall-through" does not describe it. */
+	s_set_lbl_fnterm(0, h_ctx);
 
 
 	/** 

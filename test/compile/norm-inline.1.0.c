@@ -10,9 +10,13 @@
  * `OpFunction` function control, read from the declaration when the function
  * is emitted.
  *
- * inl:   `always_inline` -> Inline
+ * only an explicit `noinline` says DontInline; every other emitted function
+ * says Inline, so a downstream inliner decides for itself.
+ *
+ * inl:   `always_inline` -> Inline (and carved at the call site)
  * never: `noinline`      -> DontInline
- * plain, entry point     -> None
+ * plain:                 -> Inline
+ * t_ctrl, entry point    -> None (not a call target)
  * */
 static const char s_src_norm_inline[] =
 "typedef int i32;\n"
@@ -52,12 +56,12 @@ static int s_count_ctrl(
 		if(!wc || i + wc > c)
 			return 1;
 
-		if(op == (unsigned)SpvOpFunction && wc >= 5) {
+		if(op == (unsigned)ACLTEST_SPV_OP_FUNCTION && wc >= 5) {
 			const aclspv_wrd_t ctrl = rd[i + 3];
 
-			if(ctrl & (aclspv_wrd_t)SpvFunctionControlInlineMask)
+			if(ctrl & (aclspv_wrd_t)ACLTEST_SPV_FNCTRL_INLINE)
 				++wr->m_inline;
-			else if(ctrl & (aclspv_wrd_t)SpvFunctionControlDontInlineMask)
+			else if(ctrl & (aclspv_wrd_t)ACLTEST_SPV_FNCTRL_DONT_INLINE)
 				++wr->m_dont;
 			else
 				++wr->m_none;
@@ -119,7 +123,7 @@ int main(void) {
 		return EXIT_FAILURE;
 	}
 
-	c_fn = acltest_spirv_count_op(spirv, count, (unsigned)SpvOpFunction);
+	c_fn = acltest_spirv_count_op(spirv, count, (unsigned)ACLTEST_SPV_OP_FUNCTION);
 
 	if(s_count_ctrl(spirv, count, &ctrl)) {
 		fputs("[norm-inline] malformed OpFunction\n", stderr);
@@ -130,8 +134,10 @@ int main(void) {
 	printf("fn=%u inline=%u dontinline=%u none=%u\n"
 			, c_fn, ctrl.m_inline, ctrl.m_dont, ctrl.m_none);
 
-	if(c_fn != 4 || ctrl.m_inline != 1
-			|| ctrl.m_dont != 1 || ctrl.m_none != 2) {
+	/** the entry point is not a call target and carries no inline policy;
+	 * every other function says Inline unless it is `noinline`. */
+	if(c_fn != 4 || ctrl.m_inline != 2
+			|| ctrl.m_dont != 1 || ctrl.m_none != 1) {
 		fputs("[norm-inline] function control mismatch\n", stderr);
 		free(spirv);
 		return EXIT_FAILURE;
@@ -139,7 +145,7 @@ int main(void) {
 
 	/** always_inline is now inlined at the call site: only `never` and
 	 * `plain` remain as OpFunctionCall. */
-	if(acltest_spirv_count_op(spirv, count, (unsigned)SpvOpFunctionCall) != 2) {
+	if(acltest_spirv_count_op(spirv, count, (unsigned)ACLTEST_SPV_OP_FUNCTION_CALL) != 2) {
 		fputs("[norm-inline] always_inline call was not inlined\n", stderr);
 		free(spirv);
 		return EXIT_FAILURE;

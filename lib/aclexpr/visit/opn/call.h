@@ -46,26 +46,48 @@
  * `a.get()` takes the address of the local, `p->get()` passes p's value, and
  * an implicit `get()` inside another method passes the current `this`. */
 
-/** should this callee be inlined at the call site? */
+/** should this callee be carved into the caller?
+ *
+ * `always_inline` / `__forceinline__` mandate it. the `inline` key word does
+ * it only when ACLSPV_CTX_FLAG0_INLINE_BY_DEFAULT is set; otherwise the call
+ * stays and the declaration's Inline control lets a downstream inliner
+ * decide. `noinline` always wins. */
 static aclspv_bool_t s_should_inline(
 		CXCursor	c_callee,
-		h_aclspv_ctx_t	h_ctx
+		h_aclspv_ctx_t	h_ctx,
+		aclspv_bool_t*	wr_mandatory
 		) {
+	aclspv_bool_t c_want;
+
+	if(wr_mandatory)
+		*wr_mandatory = 0;
+
 	if(aclattr_is_noinline(c_callee))
 		return 0;
 
-	if(!aclemit_inline_supported(c_callee))
+	if(aclattr_is_always_inline(c_callee))
+		c_want = 1;
+	else
+		c_want = (aclspv_bool_t)(aclattr_is_kw_inline(c_callee)
+				&& (h_ctx->m_usrcfg.m_flag0
+					& ACLSPV_CTX_FLAG0_INLINE_BY_DEFAULT));
+
+	if(!c_want)
 		return 0;
 
-	if(aclattr_is_always_inline(c_callee))
-		return 1;
+	/** a body the inliner cannot carve (a return nested in a loop) is a
+	 * rejection for `always_inline` and a fallback for the `inline` key
+	 * word, which only ever expressed a preference. */
+	if(!aclemit_inline_supported(c_callee)) {
+		if(aclattr_is_always_inline(c_callee)) {
+			if(wr_mandatory)
+				*wr_mandatory = 1;
+			return 1;
+		}
+		return 0;
+	}
 
-	if(clang_Cursor_isFunctionInlined(c_callee)
-			&& (h_ctx->m_usrcfg.m_flag0
-				& ACLSPV_CTX_FLAG0_INLINE_BY_DEFAULT))
-		return 1;
-
-	return 0;
+	return 1;
 }
 
 static aclspv_bool_t s_method_object(
@@ -180,6 +202,7 @@ ae2f_inline_f static aclexpr_visit_lbl_t aclexpr_visit_opn_call(
 	int			NARG;
 	aclspv_bool_t		c_has_this;
 	aclspv_bool_t		c_inline;
+	aclspv_bool_t		c_forced;
 	aclspv_id_t		c_obj;
 	aclty_id_t		c_obj_ty;
 
@@ -215,9 +238,29 @@ ae2f_inline_f static aclexpr_visit_lbl_t aclexpr_visit_opn_call(
 	unless(p_sym)
 		return c_lbl_pass;
 
-	/** only an emitted body can be called yet. */
-	if(!(p_sym->m_flag0 & aclsym_fn_flag0(ACLSYM_FN_FLAG0_EMITTED)))
+	c_forced = 0;
+
+	c_inline = (aclspv_bool_t)(
+			(p_sym->m_flag0 & aclsym_fn_flag0(ACLSYM_FN_FLAG0_DEFINED))
+			&& s_should_inline(c_callee, ctx, &c_forced));
+
+	/** `always_inline` is a requirement, not a preference: a body the
+	 * inliner cannot carve is rejected here instead of silently becoming
+	 * an `OpFunctionCall`. */
+	if(c_inline && c_forced) {
+		err_puts("[inline] an always_inline callee has a body the inliner "
+				"cannot carve (a return nested in a loop)");
+		_aclctx_err(ctx, ACLSPV_COMPILE_UNHANDLED);
 		return c_lbl_fail;
+	}
+
+	/** an emitted body can be called; one that is about to be carved into
+	 * this very call needs no id of its own (`f()` may precede the
+	 * definition of an always_inline `f`). */
+	if(!c_inline) {
+		unless(p_sym->m_flag0 & aclsym_fn_flag0(ACLSYM_FN_FLAG0_EMITTED))
+			return c_lbl_fail;
+	}
 
 	ae2f_ifezerr(id_fn_ty = aclty_mk_fn1_this(
 				c_callee
@@ -236,9 +279,6 @@ ae2f_inline_f static aclexpr_visit_lbl_t aclexpr_visit_opn_call(
 	c_num = (aclspv_wrd_t)NARG;
 	c_has_this = aclutil_fn_has_this(c_callee);
 	c_total = c_num + (c_has_this ? 1u : 0u);
-	c_inline = (aclspv_bool_t)(
-			(p_sym->m_flag0 & aclsym_fn_flag0(ACLSYM_FN_FLAG0_DEFINED))
-			&& s_should_inline(c_callee, ctx));
 
 	if(!c_total || (c_has_this && !c_num)) {
 		aclspv_id_t	id_call;

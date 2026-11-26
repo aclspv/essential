@@ -5,6 +5,9 @@
 #include <clang-c/Index.h>
 #include <string.h>
 
+#include <aclsym/fn.h>
+#include <aclattr/fnctrl.h>
+
 /** a C++ method, constructor, or destructor: the declaration kinds that can
  * carry an implicit `this`. */
 ae2f_inline_f static aclspv_bool_t aclutil_fn_is_method(CXCursor c_fn) {
@@ -31,6 +34,68 @@ ae2f_inline_f static aclspv_bool_t aclutil_fn_has_this(CXCursor c_fn) {
 		return 0;
 
 	return 1;
+}
+
+/** can this body be emitted before every callee it names?
+ *
+ * aclsym_body_ready asks for a callee id. a call the inliner carves needs
+ * none — the callee's body is carved right here — so e.g. an `always_inline`
+ * callee may be defined after (or inside) its caller. everything else still
+ * has to be emitted first. one policy applies at every call site of a given
+ * callee, so the declaration's answer is the body's answer. */
+struct s_aclutil_call_ready {
+	h_aclspv_ctx_t	m_ctx;
+	aclspv_bool_t	m_ready;
+};
+
+static enum CXChildVisitResult s_aclutil_call_ready_visit(
+		CXCursor		c_cur,
+		ae2f_unused CXCursor	c_par,
+		CXClientData		rdwr
+		) {
+	struct s_aclutil_call_ready* ae2f_restrict p = rdwr;
+
+	if(c_cur.kind == CXCursor_CallExpr) {
+		CXCursor		c_callee = clang_getCursorReferenced(c_cur);
+		aclsym_fn_t* ae2f_restrict p_sym;
+
+		if(!clang_Cursor_isNull(c_callee)
+				&& (c_callee.kind == CXCursor_FunctionDecl
+					|| aclutil_fn_is_method(c_callee))) {
+			p_sym = aclsym_fn_find(c_callee, p->m_ctx);
+
+			unless(p_sym)
+				return CXChildVisit_Recurse;
+
+			/** the module can name it. */
+			if(p_sym->m_flag0 & aclsym_fn_flag0(ACLSYM_FN_FLAG0_EMITTED))
+				return CXChildVisit_Recurse;
+
+			/** a defined callee the inliner will carve needs no id of
+			 * its own. */
+			if((p_sym->m_flag0 & aclsym_fn_flag0(ACLSYM_FN_FLAG0_DEFINED))
+					&& aclattr_wants_inlining(c_callee, p->m_ctx))
+				return CXChildVisit_Recurse;
+
+			p->m_ready = 0;
+			return CXChildVisit_Break;
+		}
+	}
+
+	return CXChildVisit_Recurse;
+}
+
+ae2f_inline_f static aclspv_bool_t aclutil_body_calls_ready(
+		CXCursor	c_body,
+		h_aclspv_ctx_t	h_ctx
+		) {
+	struct s_aclutil_call_ready P;
+
+	P.m_ctx		= h_ctx;
+	P.m_ready	= 1;
+
+	clang_visitChildren(c_body, s_aclutil_call_ready_visit, &P);
+	return P.m_ready;
 }
 
 enum ACLUTIL_VARINIT_ {

@@ -244,12 +244,23 @@ ____
 
 [quote]
 ____
-`always_inline` is inlined when its body is straight-line or has a single final
-return. A body with multiple/early returns falls back to `OpFunctionCall`
-because structured SPIR-V cannot branch out of an `OpSelection` to the inline
-merge without a return-merge transformation. The C++ `inline` keyword follows
+`always_inline` is inlined when its body is straight-line or its returns are
+reachable through `if`/`switch` selection. Such bodies are wrapped in a
+single-iteration loop whose header phis carry the return value and the done
+flag, so an early return is a structured branch to the loop continue target.
+A return nested inside a loop is not a structured exit from that loop: for the
+`inline` key word that call falls back to `OpFunctionCall`, and for
+`always_inline` it is a diagnosed rejection (see below). The C++ `inline`
+keyword follows
 `ACLSPV_CTX_FLAG0_INLINE_BY_DEFAULT`; with the flag off the call stays and the
-function control still carries `Inline`. `noinline` always wins.
+function control still carries `Inline`. `__forceinline__` is clang's alias of
+`always_inline` and follows it, as does `__always_inline__`. `noinline` always
+wins.
+
+an inlined body that the inliner cannot carve (a return nested inside a loop)
+is a diagnosed rejection for a `always_inline` callee, never a silent
+`OpFunctionCall`: the attribute is a requirement, and the call site is the only
+place that can report it.
 ____
 
 * a destructor of a whole local object is an ordinary function call
@@ -260,6 +271,8 @@ ____
 * therefore, subobject destruction is only supported when the destructor is
   inlinable. a member function defined inside its class body is implicitly
   inline; an out-of-class definition must say `inline` or `always_inline`.
+  the declaration has to say it: the class-body implicit inline is a linkage
+  property, not a request to inline, so it is not enough here.
   a non-inline destructor is still valid for a whole object, but struct members
   and array elements whose destructor is not inlined are not usable in this
   language model.
@@ -320,21 +333,25 @@ The `OpFunction` control mask is read from the declaration when the function is 
 It is a hint for a downstream inliner; this compiler emits the declaration as written.
 ____
 
-* `__attribute__((always_inline))`, or the `inline` keyword where the language mode has it, emits `Inline`.
-* `__attribute__((noinline))` emits `DontInline`. when both are present, `noinline` wins.
+* `__attribute__((noinline))` emits `DontInline`. it always wins, and it is the only way to opt out: every other function this compiler emits says `Inline`, so a downstream inliner is never told "do not".
+* `__attribute__((always_inline))` (and its spellings `__always_inline__`, `__forceinline__`) emits `Inline` **and** is carved at every call site by this compiler.
+* the `inline` key word (C `inline`, C++ `inline`/`__inline__`) emits `Inline`. it is carved at the call site only when `ACLSPV_CTX_FLAG0_INLINE_BY_DEFAULT` is set; otherwise the call stays.
+* an entry point is not a call target: it carries `None`.
 * a defined body is analysed: one that writes no state it does not own emits `Pure`, and one that also reads none emits `Const` (`Const` implies `Pure`).
 * a body-less declaration has nothing to analyse: its `__attribute__((pure))` / `__attribute__((const))` is what the declaration carries.
-* without any of these, the mask is `None`. an entry point always carries `None`.
 
 ++++
 <div class="listingblock" style="background-color:#1c171b;color:#d8ccd3;padding:0.8em 1em;overflow-x:auto;border-radius:4px">
 <pre style="font-family:'Source Code Pro','DejaVu Sans Mono','Courier New',monospace;font-size:14px;line-height:1.3;margin:0;background:transparent;color:inherit">__attribute__((always_inline))
-int inl(int x) { return x + 1; }    /* OpFunction ... Inline */
+int inl(int x) { return x + 1; }    /* OpFunction ... Inline, carved at the call */
 
 __attribute__((noinline))
 int never(int x) { return x + 2; }  /* OpFunction ... DontInline */
 
-int plain(int x) { return x + 3; }  /* OpFunction ... None */</pre>
+inline int kwd(int x) { return x + 3; }
+                    /* OpFunction ... Inline; carved only under the flag */
+
+int plain(int x) { return x + 4; }  /* OpFunction ... Inline */</pre>
 </div>
 ++++
 

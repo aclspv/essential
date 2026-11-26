@@ -146,7 +146,10 @@ ae2f_MAC((L, )) aclemit_body_if(CXCursor h_cur, aclemit_body_t& rdwr_body) {
 
 		L$$FNRET_TRUE = aclcur_get_fnret((rdwr_body).m_ctx);
 
-		unless(L$$FNRET_TRUE) {
+		/** a slice with no fall-through (an inlined body that returned
+		 * inside this arm) already ended the block: adding the merge edge
+		 * beside the exit branch would leave a terminator twice. */
+		if(!L$$FNRET_TRUE && !aclcur_lbl_is_fnterm((rdwr_body).m_ctx)) {
 			ae2f_expected_but_else(aclcur_cfg_jmp(L$$IFPART.m_b_default, (rdwr_body).m_ctx))
 				goto L$$LBL_END;
 		}
@@ -180,7 +183,7 @@ ae2f_MAC((L, )) aclemit_body_if(CXCursor h_cur, aclemit_body_t& rdwr_body) {
 
 		L$$FNRET_FALSE = aclcur_get_fnret((rdwr_body).m_ctx);
 
-		unless(L$$FNRET_FALSE) {
+		if(!L$$FNRET_FALSE && !aclcur_lbl_is_fnterm((rdwr_body).m_ctx)) {
 			ae2f_expected_but_else(aclcur_cfg_jmp(L$$IFPART.m_b_default, (rdwr_body).m_ctx))
 				goto L$$LBL_END;
 		}

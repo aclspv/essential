@@ -4,15 +4,19 @@
 #include <acldef.h>
 #include <aclty/common.h>
 
-/** is this function's body shape supported by the inliner? multiple or
- * nested returns are not (they fall back to OpFunctionCall). */
+/** is this function's body shape supported by the inliner?
+ *
+ * multiple returns through if/switch are inlined through a single-iteration
+ * loop scaffold; returns under a nested loop are not a structured exit from
+ * that loop, so such bodies fall back to OpFunctionCall. */
 aclspv_bool_t aclemit_inline_supported(CXCursor c_fn);
 
 /** inline one function body into the current control-flow context.
  *
  * c_args are already-converted parameter values, in function-type order
- * (including `this` for a method). the body is carved into the caller graph;
- * its return paths branch to a local end label, so the caller's own return
+ * (including `this` for a method). the body is wrapped in a single-iteration
+ * loop; its return paths branch to the loop continue target and the result /
+ * done flag are carried by loop-header phis, so the caller's own return
  * state is untouched.
  *
  * @return 1 on success. wr_ret receives the loaded return value (0 for void).
@@ -25,6 +29,11 @@ aclspv_bool_t aclemit_inline_fn(
 		aclspv_id_t*	wr_ret,
 		h_aclspv_ctx_t	h_ctx
 		);
+
+/** the declaration whose body is being carved right now (a null cursor
+ * outside a body). a call site names the CALLEE's parameter cursors, and so
+ * does an inlined body: a pointer argument binds to these. */
+CXCursor aclemit_inline_callee(h_aclspv_ctx_t h_ctx);
 
 #endif
 

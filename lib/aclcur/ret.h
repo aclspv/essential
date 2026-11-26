@@ -9,6 +9,10 @@ aclspv_id_t aclcur_cfg_ret(
 		h_aclspv_ctx_t h_ctx
 		);
 
+/** SpvOpUnreachable terminator: a structurally emitted block with no live
+ * incoming edge must still end with a branch/terminator instruction. */
+aclspv_id_t aclcur_cfg_unreachable(h_aclspv_ctx_t h_ctx);
+
 #include "./ret/emit.h"
 
 #endif

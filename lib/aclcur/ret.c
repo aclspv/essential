@@ -32,3 +32,19 @@ aclspv_id_t aclcur_cfg_ret(
 
 	return id_ret;
 }
+
+aclspv_id_t aclcur_cfg_unreachable(h_aclspv_ctx_t h_ctx) {
+	h_aclcur_t p;
+	aclspv_id_t id;
+
+	ae2f_ifezerr(id = aclcur_cfg_node(0, h_ctx))
+		return 0;
+
+	ae2f_ifezerr(p = aclcur_get_node(id, h_ctx))
+		return 0;
+
+	p->m_class	= ACLCUR_UNREACHABLE;
+	p->m_val	= 0;
+
+	return id;
+}

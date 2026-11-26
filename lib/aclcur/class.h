@@ -38,7 +38,12 @@ enum ACLCUR_ {
 
 	/** case entry of an ACLCUR_SW node: literal value and target label.
 	 * appendix after its SW node, never emitted. */
-	ACLCUR_SW_CASE
+	ACLCUR_SW_CASE,
+
+	/** SpvOpUnreachable: terminator of a block that is structurally
+	 * emitted (referenced as a merge block) but has no live incoming
+	 * edge. */
+	ACLCUR_UNREACHABLE
 };
 
 /** `aclcur_t` is forward-declared in the public context header. */

@@ -128,9 +128,16 @@ static aclspv_bool_t s_ready(
 		const struct s_pending*	c_it,
 		h_aclspv_ctx_t		h_ctx
 		) {
-	return c_it->m_entry
-		? aclsym_body_ready(c_it->m_body, h_ctx)
-		: aclsym_fn_ready(c_it->m_fn, h_ctx);
+	/** a call the inliner carves needs no callee id, so such a callee is
+	 * not worth waiting for: its body is carved right at the call site.
+	 * that is what lets an always_inline callee be defined after (or
+	 * inside) its caller. */
+	if(c_it->m_entry
+			? aclsym_body_ready(c_it->m_body, h_ctx)
+			: aclsym_fn_ready(c_it->m_fn, h_ctx))
+		return 1;
+
+	return aclutil_body_calls_ready(c_it->m_fn, h_ctx);
 }
 
 /** declare the imports every pending body needs, and prepend the declaration

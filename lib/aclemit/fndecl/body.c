@@ -61,6 +61,24 @@ enum CXChildVisitResult	aclemit_fndecl_bodycfg(
 	aclctx_err_check2(h_ctx, aclcur_emit(h_ctx))
 		return CXChildVisit_Break;
 
+	/** the last block must be terminated before OpFunctionEnd. the
+	 * function-level flag describes the last TOP-LEVEL path only, so it can
+	 * miss a merge block an if/switch left open; measuring the block itself
+	 * covers it. the fall-off below is the plain-return case and must not be
+	 * duplicated. */
+	if(!h_ctx->m_count.m_fnimpl
+			&& aclcur_get_fnret(h_ctx)
+			&& aclcur_lbl_cur_is_open(h_ctx)) {
+		ae2f_ifezerr(h_ctx->m_count.m_fnimpl = emit_opcode(
+					&h_ctx->m_section.m_fnimpl
+					, h_ctx->m_count.m_fnimpl
+					, aclcur_get_retty(h_ctx) == ACLSPV_ID_VOID
+						? SpvOpReturn
+						: SpvOpUnreachable
+					, 0))
+			return CXChildVisit_Break;
+	}
+
 	if(h_ctx->m_count.m_fnimpl) {
 		ae2f_ifnezerr_strict(s_aclmem_cgrow2(
 				&h_ctx->m_section.m_fndef

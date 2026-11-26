@@ -12,6 +12,7 @@
 #include <aclctx/id.h>
 
 #include <aclemit/body.h>
+#include <aclemit/inline.h>
 #include <aclutil/emitx.h>
 #include <util/visitfromroot.h>
 
@@ -300,7 +301,11 @@ static aclspv_bool_t s_aclemit_switch_close(s_aclemit_switch_emit_t* rdwr_p) {
 
 	rdwr_p->m_open = 0;
 
-	unless(aclcur_get_fnret(rdwr_p->m_ctx)) {
+	/* a slice with no fall-through (an inlined body that returned in this
+	 * case) already ended the block: adding the next-group edge beside the
+	 * exit branch would leave a terminator twice. */
+	unless(aclcur_get_fnret(rdwr_p->m_ctx)
+			|| aclcur_lbl_is_fnterm(rdwr_p->m_ctx)) {
 		TAR = rdwr_p->m_group + 1u < rdwr_p->m_num_groups
 			? rdwr_p->m_groups[rdwr_p->m_group + 1u]
 			: rdwr_p->m_merge;
@@ -487,6 +492,9 @@ ae2f_MAC((L, )) aclemit_body_switch(CXCursor h_cur, aclemit_body_t& rdwr_body) {
 		goto L$$LBL_END;
 	}
 
+	unless(aclemit_inline_merge_push((rdwr_body).m_ctx, L$$MERGE))
+		goto L$$LBL_END;
+
 	aclutil_mkname_dbg_fn(
 			L$$MERGE
 			, "switch"
@@ -515,6 +523,7 @@ ae2f_MAC((L, )) aclemit_body_switch(CXCursor h_cur, aclemit_body_t& rdwr_body) {
 		(void)s_aclemit_switch_close(&L$$EMIT);
 
 	aclcur_set_break_loop(L$$BRK_PAR, (rdwr_body).m_ctx);
+	aclemit_inline_merge_pop((rdwr_body).m_ctx);
 
 	if(L$$EMIT.m_err) {
 		_aclctx_err((rdwr_body).m_ctx, ACLSPV_COMPILE_UNHANDLED_SWITCH);

@@ -74,6 +74,9 @@ ae2f_ccpure aclcur_t* aclcur_get_lbl_cur1(h_aclspv_ctx_t h_ctx);
 /** id of the currently open label, or 0. */
 ae2f_ccpure aclspv_id_t aclcur_get_lbl_cur(h_aclspv_ctx_t h_ctx);
 
+/** is the currently open block still missing its terminator? */
+aclspv_bool_t aclcur_lbl_cur_is_open(h_aclspv_ctx_t h_ctx);
+
 /** function-level "last top-level path returned" bit. */
 ae2f_ccpure aclspv_bool_t aclcur_get_fnret(const x_aclspv_ctx* ae2f_restrict h_ctx);
 void aclcur_set_fnret(aclspv_bool_t c_ret, h_aclspv_ctx_t h_ctx);
@@ -99,6 +102,17 @@ aclcur_lblid_t aclcur_cfg_lbl(aclcur_lblid_t c, h_aclspv_ctx_t h_ctx);
  *
  * */
 aclcur_lblid_t aclcur_cfg_lbl_loop(aclcur_lblid_t c, h_aclspv_ctx_t h_ctx);
+
+/** does the body being carved have no fall-through?
+ *
+ * the answer lives on the root label's ACLCUR_FLAG0_LBLTERM bit and covers
+ * everything carved into that body — an inlined slice sets it while it is
+ * carved, and the next label opened in the enclosing body clears it. a
+ * selection arm holding a return adds no merge edge when it is set. */
+aclspv_bool_t aclcur_lbl_is_fnterm(h_aclspv_ctx_t h_ctx);
+
+/** set / clear the no-fall-through answer above. */
+void aclcur_set_lbl_fnterm(aclspv_bool_t c_on, h_aclspv_ctx_t h_ctx);
 
 /**
  * return type of the current function: the root label's `m_ty`.

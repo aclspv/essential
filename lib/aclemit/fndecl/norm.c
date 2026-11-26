@@ -93,7 +93,9 @@ enum CXChildVisitResult aclemit_fndecl_norm(
 	c_fnctrl = aclattr_get_fnctrl(h_parent);
 
 	/** where this OpFunction's control word lands:
-	 * [op][result type][result id][control][function type]. */
+	 * [op][result type][result id][control][function type]. it is the slot
+	 * the instruction is written into; the parameters emitted next advance
+	 * m_fndef past it. */
 	c_fn_wrd = ctx->m_count.m_fndef;
 
 	ae2f_ifezerr(ctx->m_count.m_fndef = aclutil_emitx_5(

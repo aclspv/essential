@@ -213,13 +213,13 @@ enum CXChildVisitResult aclemit_body(CXCursor h_cur, ae2f_unused CXCursor h_pare
 						jmpfail(ACLSPV_COMPILE_UNHANDLED_BODY_RET);
 				}
 
+				/** the branch below ends this block, so nothing of the
+				 * inlined body's frames may outlive it: a top-level return
+				 * leaves every frame. */
 				if(!aclemit_dtor_flush_to(CTX, CTX->m_inline.m_dtor_base))
 					jmpfail(ACLSPV_COMPILE_UNHANDLED);
 
 				aclcur_set_fnret(1, CTX);
-
-				if(CTX->m_inline.m_merge_depth == 0)
-					CTX->m_inline.m_terminated = 1;
 
 				if(CTX->m_inline.m_lbl_end) {
 					ae2f_ifezerr(aclcur_cfg_jmp(CTX->m_inline.m_lbl_end, CTX))
