@@ -691,7 +691,7 @@ enum CXChildVisitResult aclexpr_visit(
 			if(IS_OPERATOR) {
 				err_prefix(i);
 				err_call(fprintf, (stderr
-							, (const char*)SPELL.data
+							, "%s"
 							, (const char*)KINDSPELL.data));
 
 				clang_disposeString(SPELL);

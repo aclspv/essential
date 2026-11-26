@@ -154,7 +154,7 @@ static enum CXChildVisitResult s_ret_loop_visit(
 			|| KIND == CXCursor_DoStmt)
 		CHILD.m_in_loop = 1;
 
-	RES = clang_visitChildren(c, s_ret_loop_visit, &CHILD);
+	RES = (enum CXChildVisitResult)clang_visitChildren(c, s_ret_loop_visit, &CHILD);
 	if(CHILD.m_found)
 		S->m_found = 1;
 
