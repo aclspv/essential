@@ -35,6 +35,24 @@ aclspv_bool_t aclemit_inline_fn(
  * does an inlined body: a pointer argument binds to these. */
 CXCursor aclemit_inline_callee(h_aclspv_ctx_t h_ctx);
 
+/** is an inline slice (the single-iteration loop scaffold of an inlined
+ * body with returns) currently being carved? */
+aclspv_bool_t aclemit_inline_nested(const x_aclspv_ctx* ae2f_restrict h_ctx);
+
+/** is c_reg LOCAL to an inline slice: declared in one, or written by a block
+ * of one?
+ *
+ * such a register lives inside the slice's single-iteration loop, whose
+ * continue edge jumps back to the slice header. nothing of it "flows out"
+ * the way a straight-line assignment does — only the slice's own result
+ * register does — so the value flow must not treat its last store as the
+ * register's value outside the slice: that store is defined INSIDE a loop
+ * and dominates neither that loop's back edge nor the code after it. */
+aclspv_bool_t aclemit_inline_is_local(
+		aclspv_id_t		c_reg,
+		const x_aclspv_ctx* ae2f_restrict	h_ctx
+		);
+
 #endif
 
 /** selection merge stack used by inline returns. */

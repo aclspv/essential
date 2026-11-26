@@ -10,6 +10,7 @@
 #include <util/log.h>
 
 #include <aclty.h>
+#include <aclemit/inline.h>
 
 /* ================================================================== */
 /* SSA value flow for non-explicit accesses.                          */
@@ -296,6 +297,13 @@ static aclspv_id_t	s_ssa_entry_r(
 	 * loop back edge: the carried value is constant around the loop (a
 	 * store inside the loop would have been found before this recursion). */
 	if(c_depth && c_lbl == c_root)
+		return ACLCUR_SSA_NONE;
+
+	/** a register of an inlined body's loop scaffold never flows out of it:
+	 * its value returns on the slice's OWN back edge, so carrying it here
+	 * would put a definition from inside one loop on the edge of another.
+	 * memory holds it and is current. */
+	if(aclemit_inline_is_local(c_reg, h_ctx))
 		return ACLCUR_SSA_NONE;
 
 	/** a loop header's entry value is its authoritative chain: a read at
@@ -652,6 +660,10 @@ static aclspv_id_t	s_ssa_loop_read(
 	/** the resolutions below append cursor nodes and may realloc and free
 	 * the buffer: keep the label id, never the pointer. */
 	c_lbl = p_lbl->m_id;
+
+	/** the same for the header's own read (aclemit_inline_is_local). */
+	if(aclemit_inline_is_local(c_reg, h_ctx))
+		return 0;
 
 	/** a chain already serves the register: return its head. */
 	{
@@ -1128,9 +1140,23 @@ static aclspv_compile_t	s_ssa_fill_pass(h_aclspv_ctx_t h_ctx) {
 					}
 				}
 
-				/** still nothing: the chain head itself. */
-				if(!carry || carry == ACLCUR_SSA_NONE)
+				/** still nothing: the chain head itself.
+				 *
+				 * the head lives in the header block, so naming it is only
+				 * sound for an operand of a HEADER edge. on a BACK edge it
+				 * is a forward reference — the phi would name a value
+				 * defined after it. a back edge that resolves to nothing
+				 * therefore drops the register back to memory (which the
+				 * back-edge store keeps current) instead of inventing an
+				 * operand. */
+				if(!carry || carry == ACLCUR_SSA_NONE) {
+					if(pds[k] != lbl
+							&& aclemit_inline_is_local(reg, h_ctx)
+							&& !aclcur_get_node_store(reg, pds[k], h_ctx))
+						continue;
+
 					carry = head;
+				}
 
 				/** append {carry, pred} at the chain tail. */
 				{

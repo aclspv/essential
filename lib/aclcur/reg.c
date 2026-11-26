@@ -1,4 +1,6 @@
 #include "./reg.h"
+
+#include <aclemit/inline.h>
 #include "./util.h"
 
 
@@ -240,6 +242,10 @@ aclspv_id_t aclcur_cfg_reg1(
 	 * flag uniformly (see aclcur_store_reg). */
 	if(c_storage_class == (aclspv_wrd_t)SpvStorageClassFunction)
 		p->m_flag0 |= aclcur_flag0_reg(ACLCUR_FLAG0_REG_SCOPED);
+
+	/** created inside an inlined body's loop scaffold: local to it. */
+	if(aclemit_inline_nested(h_ctx))
+		p->m_flag0 |= aclcur_flag0_reg(ACLCUR_FLAG0_REG_INLINE_SLICE);
 
 	return id;
 }

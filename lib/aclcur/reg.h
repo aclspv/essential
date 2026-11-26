@@ -140,6 +140,15 @@ enum ACLCUR_FLAG0_REG_ {
 	 * again. */
 	ACLCUR_FLAG0_REG_DTOR,
 
+	/** local to an inlined body's single-iteration loop scaffold.
+	 *
+	 * a register created while such a slice is being carved belongs to it:
+	 * its parameter copy, its scratch, its result, its temporaries. its
+	 * value returns to the slice header on the slice's OWN back edge, so it
+	 * must never be carried by a phi of an enclosing loop — memory holds
+	 * it, and memory is current. see aclemit_inline_is_local. */
+	ACLCUR_FLAG0_REG_INLINE_SLICE,
+
 	ACLCUR_FLAG0_REG_MAX
 };
 

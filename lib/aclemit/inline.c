@@ -76,6 +76,53 @@ CXCursor aclemit_inline_callee(h_aclspv_ctx_t h_ctx) {
 	return s_body_fn;
 }
 
+/* the inliner's slice bookkeeping.
+ *
+ * an inlined body with returns is carved into a single-iteration loop: the
+ * body, its parameter copies, its scratch, its result and its temporaries all
+ * live inside that loop. its values return to the slice header on the slice's
+ * OWN back edge, so none of them may be carried by a phi of an enclosing
+ * loop — that would name a value defined inside one loop as the operand of a
+ * phi in another, which spirv-val rejects as a dominance violation. nesting
+ * one slice inside another is what makes it bite.
+ *
+ * every register a slice creates is marked ACLCUR_FLAG0_REG_INLINE_SLICE, and
+ * the value flow leaves a marked register in memory (memory is always kept
+ * current). the mark needs no per-slice record: it only says "this lives in
+ * some slice", which is exactly what the value flow needs to know. */
+static aclspv_bool_t s_carving_slice;
+
+aclspv_bool_t aclemit_inline_nested(const x_aclspv_ctx* ae2f_restrict h_ctx) {
+	(void)h_ctx;
+
+	return s_carving_slice;
+}
+
+aclspv_bool_t aclemit_inline_is_local(
+		aclspv_id_t		c_reg,
+		const x_aclspv_ctx* ae2f_restrict	h_ctx
+		) {
+	h_aclcur_t p = aclcur_get_node(c_reg, h_ctx);
+
+	ae2f_ifezerr(p)
+		return 0;
+
+	return (aclspv_bool_t)(
+			p->m_class == ACLCUR_REG
+			&& (p->m_flag0
+				& aclcur_flag0_reg(ACLCUR_FLAG0_REG_INLINE_SLICE)));
+}
+
+/** mark c_reg as one of the slice's own registers. */
+static void s_slice_mark(aclspv_id_t c_reg, h_aclspv_ctx_t h_ctx) {
+	h_aclcur_t p = aclcur_get_node(c_reg, h_ctx);
+
+	ae2f_ifezerr(p)
+		return;
+
+	p->m_flag0 |= aclcur_flag0_reg(ACLCUR_FLAG0_REG_INLINE_SLICE);
+}
+
 static aclspv_bool_t s_has_return(CXCursor c_body) {
 	struct s_shape S;
 	if(clang_Cursor_isNull(c_body)) return 0;
@@ -221,6 +268,7 @@ aclspv_bool_t aclemit_inline_fn(
 	aclspv_id_t old_end, old_ret, old_ty, old_retflag;
 	CXCursor old_callee;
 	aclspv_wrd_t old_base, old_depth, old_merge;
+	aclspv_bool_t old_carving;
 	aclemit_body_t DAT;
 	h_scale_t S;
 
@@ -242,40 +290,6 @@ aclspv_bool_t aclemit_inline_fn(
 	S = get_last_scale_from_vec(&h_ctx->m_dtor_scope);
 	c_dtor_base = S ? S->m_id : 0;
 	if(!aclemit_dtor_push(h_ctx)) return 0;
-
-	if(c_has_ret) {
-		const aclcur_reg_t REGIN = aclcur_regvar_in();
-		id_end = h_ctx->m_id++;
-		id_header = h_ctx->m_id++;
-		id_body = h_ctx->m_id++;
-		id_cont = h_ctx->m_id++;
-		ae2f_ifezerr(id_flag = aclcur_cfg_reg(clang_getNullCursor(),
-					ACLSPV_ID_BOOL, SpvStorageClassFunction, &REGIN, h_ctx)) return 0;
-		if(!aclcur_store_reg(id_flag, aclval_cfg_bool(1, h_ctx), h_ctx)) return 0;
-	}
-
-	if(ty_ret != ACLSPV_ID_VOID) {
-		const aclcur_reg_t REGIN = aclcur_regvar_in();
-		ae2f_ifezerr(id_ret = aclcur_cfg_reg(clang_getNullCursor(),
-					ty_ret, SpvStorageClassFunction, &REGIN, h_ctx)) return 0;
-		{
-			h_aclcur_t p = aclcur_get_node(id_ret, h_ctx);
-			if(p) {
-				p->m_flag0 &= (aclspv_wrd_t)~aclcur_flag0_reg(ACLCUR_FLAG0_REG_SCOPED);
-				p->m_flag0 |= aclcur_flag0_reg(ACLCUR_FLAG0_REG_ALLOCATED);
-			}
-		}
-
-		/** seed the result so the loop header has a forward-edge value
-		 * to build its carry phi from; without it the header load
-		 * cannot resolve and the post-loop read would fall back to a
-		 * value defined in the continue block (dominance violation). */
-		if(c_has_ret) {
-			aclspv_id_t id_nil;
-			ae2f_ifezerr(id_nil = aclval_cfg_nil(ty_ret, h_ctx)) return 0;
-			ae2f_ifezerr(aclcur_store_reg(id_ret, id_nil, h_ctx)) return 0;
-		}
-	}
 
 	for(i = 0; i < c_num; ++i) {
 		aclty_t* p_arg;
@@ -314,9 +328,64 @@ aclspv_bool_t aclemit_inline_fn(
 			const aclcur_reg_t REGIN = aclcur_regvar_in();
 			ae2f_ifezerr(id_reg = aclcur_cfg_reg(c_parm, ty_arg,
 						SpvStorageClassFunction, &REGIN, h_ctx)) return 0;
+			s_slice_mark(id_reg, h_ctx);
 			ae2f_ifezerr(aclcur_store_reg(id_reg, c_args[i], h_ctx)) return 0;
 			if(!aclemit_dtor_reserve(c_parm, id_reg, ty_arg, h_ctx)) return 0;
 		}
+	}
+
+	/** the scaffold's own ids, and the registers named straight away.
+	 *
+	 * the naming is what a nested carve forces: aclcur_cfg_node2 hands out
+	 * the first still-reserved id, so a register of THIS slice that is
+	 * merely reserved is still waiting to be built when a nested carve at
+	 * this call site asks for its next id — and takes it. the nested body
+	 * then writes through the outer slice's register, and every later read
+	 * of that register resolves to a node owned by another slice's loop.
+	 * taking and naming the registers before anything else keeps them out
+	 * of reach. the two labels the scaffold opens are taken after, so a
+	 * nested carve never lands on one of them either. */
+	if(c_has_ret) {
+		const aclcur_reg_t REGIN = aclcur_regvar_in();
+		ae2f_ifezerr(id_flag = aclcur_cfg_reg(clang_getNullCursor(),
+					ACLSPV_ID_BOOL, SpvStorageClassFunction, &REGIN, h_ctx)) return 0;
+		s_slice_mark(id_flag, h_ctx);
+	}
+
+	if(ty_ret != ACLSPV_ID_VOID) {
+		const aclcur_reg_t REGIN = aclcur_regvar_in();
+		h_aclcur_t p;
+
+		ae2f_ifezerr(id_ret = aclcur_cfg_reg(clang_getNullCursor(),
+					ty_ret, SpvStorageClassFunction, &REGIN, h_ctx)) return 0;
+
+		s_slice_mark(id_ret, h_ctx);
+
+		p = aclcur_get_node(id_ret, h_ctx);
+		if(p) {
+			p->m_flag0 &= (aclspv_wrd_t)~aclcur_flag0_reg(ACLCUR_FLAG0_REG_SCOPED);
+			p->m_flag0 |= aclcur_flag0_reg(ACLCUR_FLAG0_REG_ALLOCATED);
+		}
+	}
+
+	if(c_has_ret) {
+		id_end = h_ctx->m_id++;
+		id_header = h_ctx->m_id++;
+		id_body = h_ctx->m_id++;
+		id_cont = h_ctx->m_id++;
+	}
+
+	if(c_has_ret)
+		if(!aclcur_store_reg(id_flag, aclval_cfg_bool(1, h_ctx), h_ctx)) return 0;
+
+	/** seed the result so the loop header has a forward-edge value to
+	 * build its carry phi from; without it the header load cannot resolve
+	 * and the post-loop read would fall back to a value defined in the
+	 * continue block (dominance violation). */
+	if(c_has_ret && ty_ret != ACLSPV_ID_VOID) {
+		aclspv_id_t id_nil;
+		ae2f_ifezerr(id_nil = aclval_cfg_nil(ty_ret, h_ctx)) return 0;
+		ae2f_ifezerr(aclcur_store_reg(id_ret, id_nil, h_ctx)) return 0;
 	}
 
 	DAT.m_ctx = h_ctx; DAT.m_vid = 0; DAT.m_ty = 0;
@@ -345,39 +414,51 @@ aclspv_bool_t aclemit_inline_fn(
 	h_ctx->m_inline.m_terminated = 0;
 	s_body_fn = c_fn;
 
+	/** from here every register this body creates is its own: it is marked
+	 * at creation so the value flow leaves it in memory (see
+	 * aclemit_inline_is_local). a nested carve pushes our mark back when it
+	 * returns. */
+	old_carving = s_carving_slice;
+	s_carving_slice = 1;
+
 	if(c_has_ret) {
 		aclspv_id_t c_cond;
 		if(!aclcur_cfg_jmp(id_header, h_ctx)
 				|| !aclcur_cfg_lbl(id_header, h_ctx)
 				|| !aclcur_cfg_lbl_loop(id_header, h_ctx)) {
 			h_ctx->m_inline.m_active = old_active;
+			s_carving_slice = old_carving;
 			return 0;
 		}
 		ae2f_ifezerr(c_cond = aclcur_load_reg(id_flag, h_ctx, 0)) {
 			h_ctx->m_inline.m_active = old_active;
+			s_carving_slice = old_carving;
 			return 0;
 		}
 		if(ty_ret != ACLSPV_ID_VOID) {
 			ae2f_ifezerr(aclcur_load_reg(id_ret, h_ctx, 0)) {
 				h_ctx->m_inline.m_active = old_active;
+				s_carving_slice = old_carving;
 				return 0;
 			}
 		}
 		if(!aclcur_cfg_jc(c_cond, id_body, id_end, 0, 0, id_end, id_cont, 0, h_ctx)
 				|| !aclcur_cfg_lbl(id_body, h_ctx)) {
 			h_ctx->m_inline.m_active = old_active;
+			s_carving_slice = old_carving;
 			return 0;
 		}
 		if(!aclcur_store_reg(id_flag, aclval_cfg_bool(0, h_ctx), h_ctx)) {
 			h_ctx->m_inline.m_active = old_active;
+			s_carving_slice = old_carving;
 			return 0;
 		}
 	}
 
-	if(!s_park_expr(h_ctx)) { h_ctx->m_inline.m_active = old_active; return 0; }
+	if(!s_park_expr(h_ctx)) { h_ctx->m_inline.m_active = old_active; s_carving_slice = old_carving; return 0; }
 
 	clang_visitChildren(c_body, aclemit_body, &DAT);
-	aclctx_err_check(h_ctx) { s_unpark_expr(h_ctx); h_ctx->m_inline.m_active = old_active; return 0; }
+	aclctx_err_check(h_ctx) { s_unpark_expr(h_ctx); h_ctx->m_inline.m_active = old_active; s_carving_slice = old_carving; return 0; }
 	if(!aclemit_dtor_flush_to(h_ctx, c_dtor_base)) { s_unpark_expr(h_ctx); return 0; }
 
 	if(c_has_ret) {
@@ -403,6 +484,7 @@ aclspv_bool_t aclemit_inline_fn(
 				&& aclcur_cfg_lbl(id_end, h_ctx)) { s_unpark_expr(h_ctx); return 0; }
 	}
 	s_unpark_expr(h_ctx);
+	s_carving_slice = old_carving;
 
 	h_ctx->m_inline.m_active = old_active;
 	h_ctx->m_inline.m_lbl_end = old_end;
