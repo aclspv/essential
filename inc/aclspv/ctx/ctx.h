@@ -18,13 +18,6 @@ typedef aclspv_wrd2_t	aclcur_lbl_dfs_visit_t;
 typedef struct aclspv_entp	aclspv_entp_t;
 typedef struct aclspv_fn	aclspv_fn_t;
 
-/** internal: which emission phase has run. see aclspv_ctx_compile / build. */
-enum ACLSPV_CTX_PHASE_ {
-	ACLSPV_CTX_PHASE_NONE = 0,
-	ACLSPV_CTX_PHASE_COMPILE,
-	ACLSPV_CTX_PHASE_BUILD
-};
-
 struct a_aclspv_ctx {
 	/** sub-ctx for something not should be emitted */
 	x_aclspv_ctx* ae2f_restrict m_ctx_slave;
@@ -90,9 +83,6 @@ struct a_aclspv_ctx {
 	}	m_body;
 
 	aclspv_compile_t	m_err;
-
-	/** internal: enum ACLSPV_CTX_PHASE_. 0 on a fresh context. */
-	aclspv_wrd_t		m_phase;
 
 	/** 
 	 * @brief

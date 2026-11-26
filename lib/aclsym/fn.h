@@ -41,8 +41,32 @@ enum ACLSYM_FN_FLAG0_ {
 	 * static cache and is never imported or exported. */
 	ACLSYM_FN_FLAG0_STATIC,
 
+	/** the module already declares this symbol as an import: the build phase
+	 * emitted its OpFunction declaration plus `LinkageAttributes Import`.
+	 *
+	 * an import has m_id as well, but EMITTED says "the body is out" and would
+	 * be a lie for it, so the two are kept apart. the bit survives a pass, so a
+	 * later source that DEFINES the function does not silently become the
+	 * definition of it: that contradiction is what the build reports
+	 * (ACLSPV_COMPILE_IMPORT_DEFINED). */
+	ACLSYM_FN_FLAG0_IMPORTED,
+
+	/** the module already decorates this symbol `LinkageAttributes Export`.
+	 *
+	 * a pass re-walks the translation unit of an earlier pass too, so the
+	 * export pass asks the symbol instead of remembering cursors: an id names
+	 * one function, and one function carries one linkage decoration. */
+	ACLSYM_FN_FLAG0_EXPORTED,
+
 	ACLSYM_FN_FLAG0_MAX
 };
+
+/** the bits that mean the module can name this symbol: its body is out, or the
+ * build phase declared it as an import. anything that wants to CALL a symbol
+ * tests this, which is a different question from "is there a body". */
+#define	ACLSYM_FN_FLAG0_NAMED	\
+	(((aclspv_wrd_t)1u << (aclspv_wrd_t)ACLSYM_FN_FLAG0_EMITTED)	\
+	 | ((aclspv_wrd_t)1u << (aclspv_wrd_t)ACLSYM_FN_FLAG0_IMPORTED))
 
 ae2f_inline_f ae2f_ccconst static aclspv_wrd_t aclsym_fn_flag0(
 		enum ACLSYM_FN_FLAG0_ c
@@ -114,6 +138,12 @@ const char* aclsym_cursor_name(CXCursor c_cur, CXString* ae2f_restrict wr_name);
  * function symbols: the declaration cache pass 1 builds before any body is
  * handed to the emitter.
  *
+ * the cache OUTLIVES a pass. compile and build may each run on a different
+ * translation unit, and the module they write is one: a symbol emitted by an
+ * earlier pass keeps its id, so a later pass emits the function once and a
+ * call in the later source resolves through the same id. only the body-less
+ * symbols are re-decided per pass (see aclsym_fn_static_reset_pass).
+ *
  * every file-scope FunctionDecl of the MAIN file is recorded, declaration or
  * definition. the cache is what later passes resolve a name or a cursor
  * against, so a call never has to re-walk the AST to learn a callee's
@@ -146,12 +176,30 @@ const char* aclsym_cursor_name(CXCursor c_cur, CXString* ae2f_restrict wr_name);
  * */
 aclspv_compile_t aclsym_fn_gather(h_aclspv_ctx_t h_ctx, CXCursor c_root);
 
-/** discard the static cache and its name arena. a fresh compile pass calls
- * this before it starts gathering declarations: static symbols are TU-local
- * scratch and must not accumulate across passes. a build keeps the cache when
- * its compile half has already run, because bodies deferred to the build phase
- * still resolve their static callees through it. */
+/** discard the static cache and its name arena. */
 void aclsym_fn_reset_static(h_aclspv_ctx_t h_ctx);
+
+/**
+ * discard the symbols the module does not carry, and rebuild the cache from
+ * the ones it does.
+ *
+ * a context outlives one translation unit, but a symbol the module cannot name
+ * is a claim about the TU it came from: its 4-byte mark points back into a tree
+ * the compiler no longer owns. such a symbol from an EARLIER pass is stale, so
+ * it goes — the next pass re-decides the question from its own source.
+ *
+ * a symbol the module DOES carry is kept: DEFINED or EMITTED (its body is in
+ * the emitted words) and IMPORTED (the module declares it). keeping it is what
+ * makes a pass idempotent — the second walk finds the function already there
+ * and writes no second OpFunction for it, and a call from a later source
+ * resolves through the id the earlier pass assigned.
+ *
+ * the static cache goes back to zero, as it does for a compile: a static
+ * symbol is TU-local by definition, so none of it survives a different source.
+ *
+ * the vectors keep their buffers: only the used lengths move.
+ * */
+void aclsym_fn_static_reset_pass(h_aclspv_ctx_t h_ctx);
 
 /**
  * the symbol for c_fn, matched by cursor first and by name as a fallback

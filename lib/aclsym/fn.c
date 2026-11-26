@@ -582,6 +582,52 @@ const char* aclsym_fn_name(const aclsym_fn_t* c_sym, h_aclspv_ctx_t h_ctx) {
 	return c_base + c_sym->m_idx_name;
 }
 
+/** true when the symbol still describes this pass: the module carries it, as a
+ * body or as an import. everything else is a claim about a translation unit
+ * that has since died. */
+static aclspv_bool_t s_kept(const aclsym_fn_t* c_sym) {
+	return (aclspv_bool_t)(c_sym->m_flag0 & (aclspv_wrd_t)(
+				aclsym_fn_flag0(ACLSYM_FN_FLAG0_DEFINED)
+				| ACLSYM_FN_FLAG0_NAMED));
+}
+
+void aclsym_fn_static_reset_pass(h_aclspv_ctx_t h_ctx) {
+	aclsym_fn_t* ae2f_restrict	base;
+	aclspv_wrdcount_t		c_kept = 0;
+	aclspv_wrdcount_t		i;
+
+	ae2f_ifezerr(h_ctx)		return;
+
+	h_ctx = s_cache(h_ctx);
+
+	ae2f_ifezerr(h_ctx)		return;
+
+	base = (aclsym_fn_t*)h_ctx->m_fnlist.m_fn.m_p;
+
+	if(!base) {
+		h_ctx->m_fnlist.m_num_fn = 0;
+	}
+	else {
+		for(i = 0; i < h_ctx->m_fnlist.m_num_fn; ++i) {
+			if(!s_kept(&base[i]))
+				continue;
+
+			if(c_kept != i)
+				base[c_kept] = base[i];
+
+			++c_kept;
+		}
+
+		h_ctx->m_fnlist.m_num_fn = c_kept;
+	}
+
+	/** the static half is TU-local by definition: no symbol of it survives a
+	 * different source, so both counts go back to zero and the buffers stay
+	 * for the next pass to reuse. */
+	h_ctx->m_fnlist.m_num_fn_static		= 0;
+	h_ctx->m_fnlist.m_num_fn_static_name	= 0;
+}
+
 void aclsym_fn_reset_static(h_aclspv_ctx_t h_ctx) {
 	ae2f_ifezerr(h_ctx)		return;
 
@@ -696,8 +742,9 @@ static enum CXChildVisitResult s_body_ready_visit(
 	unless(p_sym)
 		return CXChildVisit_Recurse;
 
-	/** the module can name it. */
-	if(p_sym->m_flag0 & aclsym_fn_flag0(ACLSYM_FN_FLAG0_EMITTED))
+	/** the module can name it: a body emitted by a pass, or an import the
+	 * build phase already declared. */
+	if(p_sym->m_flag0 & ACLSYM_FN_FLAG0_NAMED)
 		return CXChildVisit_Recurse;
 
 	/** a body-less callee becomes nameable once its import is declared;

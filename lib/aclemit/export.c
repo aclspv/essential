@@ -42,7 +42,7 @@ static enum CXChildVisitResult s_visit(
 	/** only an emitted definition has an OpFunction to decorate. */
 	if(!(p_sym->m_flag0 & (aclspv_wrd_t)(
 				aclsym_fn_flag0(ACLSYM_FN_FLAG0_DEFINED)
-				| aclsym_fn_flag0(ACLSYM_FN_FLAG0_EMITTED))))
+				| ACLSYM_FN_FLAG0_NAMED)))
 		return CXChildVisit_Continue;
 
 	EXP = aclattr_get_export(c_cur);
@@ -54,6 +54,11 @@ static enum CXChildVisitResult s_visit(
 					& ACLSPV_CTX_FLAG0_EXPORT_BY_DEFAULT)));
 
 	unless(c_export)
+		return CXChildVisit_Continue;
+
+	/** one id, one linkage decoration: a pass that re-walks this translation
+	 * unit has nothing left to say about it. */
+	if(p_sym->m_flag0 & aclsym_fn_flag0(ACLSYM_FN_FLAG0_EXPORTED))
 		return CXChildVisit_Continue;
 
 	ae2f_ifezerr(aclutil_add_capability_by_flag(ctx, SpvCapabilityLinkage))
@@ -70,6 +75,8 @@ static enum CXChildVisitResult s_visit(
 	}
 
 	ctx->m_count.m_decorate = c;
+
+	p_sym->m_flag0 |= aclsym_fn_flag0(ACLSYM_FN_FLAG0_EXPORTED);
 
 	return CXChildVisit_Continue;
 }

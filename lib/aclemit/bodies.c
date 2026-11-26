@@ -34,11 +34,6 @@ struct s_collect {
 	x_aclspv_vec*		m_buf;
 	h_aclspv_ctx_t		m_ctx;
 	aclspv_wrd_t		m_num;
-
-	/** building: only what the compile phase left behind. compiling: every
-	 * body with no OpFunction yet, including the entry points it may still
-	 * manage to emit. */
-	aclspv_bool_t		m_build;
 };
 
 static enum CXChildVisitResult s_collect_visit(
@@ -65,19 +60,21 @@ static enum CXChildVisitResult s_collect_visit(
 	p_sym = aclsym_fn_find(c_par, p->m_ctx);
 
 	if(p_sym) {
-		/** a defined function: the body is out already, or this phase will
-		 * schedule it. */
+		/** a body emitted by an earlier pass has nothing left to emit. the
+		 * IMPORTED case is not so simple: a later source may DEFINE it, and
+		 * that contradiction is the build's to report, so such a body is
+		 * still collected (s_settled decides). */
 		if(p_sym->m_flag0 & aclsym_fn_flag0(ACLSYM_FN_FLAG0_EMITTED))
 			return CXChildVisit_Continue;
 
 		ITEM.m_entry = 0;
 	}
 	else {
-		/** no symbol: an entry point. in the build phase a ready body was
-		 * already emitted by the compile phase, so it is skipped; in the
-		 * compile phase every entry body is collected and the queue decides
-		 * when it goes out. */
-		if(p->m_build && aclsym_body_ready(c_cur, p->m_ctx))
+		/** no symbol: an entry point. one this module already carries is done
+		 * — a later pass re-walks the translation unit the earlier one saw, and
+		 * a second OpEntryPoint for one function is not a module. otherwise the
+		 * queue decides when it goes out. */
+		if(aclemit_fndecl_entp_exists(c_par, p->m_ctx))
 			return CXChildVisit_Continue;
 
 		ITEM.m_entry = 1;
@@ -138,6 +135,54 @@ static aclspv_bool_t s_ready(
 		return 1;
 
 	return aclutil_body_calls_ready(c_it->m_fn, h_ctx);
+}
+
+/** the symbol this item emits a body for, or 0 for an entry point. */
+static aclsym_fn_t* s_sym(
+		const struct s_pending*	c_it,
+		h_aclspv_ctx_t		h_ctx
+		) {
+	return c_it->m_entry ? 0 : aclsym_fn_find(c_it->m_fn, h_ctx);
+}
+
+/**
+ * settle one item against what the module already carries, before anything is
+ * emitted for it:
+ *  - done: an earlier pass emitted this body.
+ *  - done, as an error: the module declares this function as an import — the
+ *    pass that saw a call to it found no body, and this one found one.
+ *
+ * true means the item needs no queue slot.
+ * */
+static aclspv_bool_t s_settled(
+		struct s_pending*			c_it,
+		h_aclspv_ctx_t			h_ctx,
+		aclspv_bool_t* ae2f_restrict	wr_done
+		) {
+	aclsym_fn_t* ae2f_restrict p_sym;
+
+	*wr_done = 0;
+
+	p_sym = s_sym(c_it, h_ctx);
+
+	unless(p_sym)
+		return 0;
+
+	if(p_sym->m_flag0 & aclsym_fn_flag0(ACLSYM_FN_FLAG0_IMPORTED)) {
+		/** SPIR-V gives one answer per function: a declaration that promises
+		 * `Import` and a definition in this module cannot both stand. */
+		err_puts("a function this module imports is defined by a later pass");
+		_aclctx_err(h_ctx, ACLSPV_COMPILE_IMPORT_DEFINED);
+		*wr_done = 1;
+		return 1;
+	}
+
+	if(p_sym->m_flag0 & ACLSYM_FN_FLAG0_NAMED) {
+		*wr_done = 1;
+		return 1;
+	}
+
+	return 0;
 }
 
 /** declare the imports every pending body needs, and prepend the declaration
@@ -213,7 +258,6 @@ ae2f_inline_f static aclspv_compile_t s_run(
 	col.m_buf	= &buf;
 	col.m_ctx	= h_ctx;
 	col.m_num	= 0;
-	col.m_build	= c_build;
 
 	clang_visitChildren(c_root, s_collect_visit, &col);
 
@@ -240,6 +284,24 @@ ae2f_inline_f static aclspv_compile_t s_run(
 
 		for(i = 0; i < c_num; ++i) {
 			unless(items[i].m_done) {
+				aclspv_bool_t c_done;
+
+				/** a body an earlier pass emitted, or an import this module
+				 * already declares: neither has anything to emit. */
+				if(s_settled(&items[i], h_ctx, &c_done)) {
+					if(c_done) {
+						items[i].m_done = 1;
+						c_progress = 1;
+					}
+
+					aclctx_err_check(h_ctx) {
+						aclmem_fini(&buf);
+						return h_ctx->m_err;
+					}
+
+					continue;
+				}
+
 				unless(s_ready(&items[i], h_ctx))
 					continue;
 

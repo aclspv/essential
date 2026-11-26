@@ -143,13 +143,9 @@ ACLSPV_ABI_LINK aclspv_compile_t aclspv_ctx_compile(
 	ae2f_ifezerr(h_ctx)		return ACLSPV_COMPILE_PRM_INVAL_NIL;
 	aclctx_err_check(h_ctx)	return h_ctx->m_err;
 
-	/** the phases are one shot: compile once, then build once. */
-	if(h_ctx->m_phase >= ACLSPV_CTX_PHASE_COMPILE)
-		return h_ctx->m_err;
-
-	/** a fresh compile pass gets a fresh static cache: internal-linkage
-	 * symbols are TU-local and must not accumulate across passes. */
-	aclsym_fn_reset_static(h_ctx);
+	/** each pass drops the symbols no translation unit can vouch for any
+	 * more, and keeps the bodies this module already carries. */
+	aclsym_fn_static_reset_pass(h_ctx);
 
 	ae2f_ifnezerr(s_setup(h_ctx))
 		return h_ctx->m_err;
@@ -159,8 +155,6 @@ ACLSPV_ABI_LINK aclspv_compile_t aclspv_ctx_compile(
 	 * conflicting redeclaration. */
 	aclctx_err_check2(h_ctx, aclsym_fn_gather(h_ctx, c_cur_root))
 		return h_ctx->m_err;
-
-	h_ctx->m_phase = ACLSPV_CTX_PHASE_COMPILE;
 
 	/** pass 2, compile half: every body that can be emitted now, in
 	 * dependency order. a body waiting on a body-less callee is the build
@@ -200,23 +194,13 @@ ACLSPV_ABI_LINK aclspv_compile_t aclspv_ctx_build(
 	ae2f_ifezerr(h_ctx)		return ACLSPV_COMPILE_PRM_INVAL_NIL;
 	aclctx_err_check(h_ctx)	return h_ctx->m_err;
 
-	if(h_ctx->m_phase >= ACLSPV_CTX_PHASE_BUILD)
-		return h_ctx->m_err;
-
-	/** a build without a compile starts a fresh pipeline: clear the static
-	 * cache here. a build after a compile keeps it: bodies deferred to this
-	 * phase still resolve their static callees through it. */
-	if(h_ctx->m_phase == ACLSPV_CTX_PHASE_NONE)
-		aclsym_fn_reset_static(h_ctx);
-
-	/** a build without a compile: run the compile phase first. */
+	/** a build without a compile first runs the compile phase, which
+	 * rebuilds the cache from this translation unit before it emits. */
 	ae2f_ifnezerr(aclspv_ctx_compile(h_ctx, c_cur_root))
 		return h_ctx->m_err;
 
 	/** the build half: the imports, then the deferred bodies in dependency
 	 * order. */
-	h_ctx->m_phase = ACLSPV_CTX_PHASE_BUILD;
-
 	ae2f_ifnezerr(aclemit_build_bodies(h_ctx, c_cur_root))
 		return h_ctx->m_err;
 

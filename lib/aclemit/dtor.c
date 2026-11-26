@@ -286,7 +286,7 @@ static aclspv_bool_t s_reserve_own(
 		return 1;
 	}
 
-	if(!(p_sym->m_flag0 & aclsym_fn_flag0(ACLSYM_FN_FLAG0_EMITTED))) {
+	if(!(p_sym->m_flag0 & ACLSYM_FN_FLAG0_NAMED)) {
 		_aclctx_err(h_ctx, ACLSPV_COMPILE_UNHANDLED);
 		return 0;
 	}

@@ -22,6 +22,10 @@
  * the translation unit must stay alive until the build call: the cursors
  * held by this phase are the compiler's handles into it, and the context
  * never takes ownership of it.
+ *
+ * both phases may run any number of times, on as many translation units as the
+ * caller likes: the context accumulates one module, and a function emitted by
+ * an earlier pass keeps the id it was given rather than being emitted twice.
  * */
 ae2f_extern ACLSPV_ABI_LINK aclspv_compile_t aclspv_ctx_compile(
 		const h_aclspv_ctx_t	h_ctx,
@@ -45,6 +49,10 @@ ae2f_extern ACLSPV_ABI_LINK aclspv_compile_t aclspv_ctx_compile1(
  *
  * runs the compile phase first when it has not run. the TU must still be
  * alive: the build phase re-walks it.
+ *
+ * a function this module already declares as an import has no body to gain:
+ * a later pass that finds a definition of it reports
+ * ACLSPV_COMPILE_IMPORT_DEFINED.
  * */
 ae2f_extern ACLSPV_ABI_LINK aclspv_compile_t aclspv_ctx_build(
 		const h_aclspv_ctx_t	h_ctx,

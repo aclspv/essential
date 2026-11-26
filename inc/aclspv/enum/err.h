@@ -127,6 +127,15 @@ enum ACLSPV_COMPILE_ {
 	 * (recursion), or a callee that never got a body. */
 	ACLSPV_COMPILE_RECURSIVE_CALL,
 
+	/** the module already declares this symbol as an import, and this pass
+	 * found a body for it: `LinkageAttributes Import` promises the definition
+	 * comes from another module, so emitting one here would contradict the
+	 * declaration the module already carries.
+	 *
+	 * a function is imported by the pass that sees a call to it with no body,
+	 * so this says the passes disagree about where the function lives. */
+	ACLSPV_COMPILE_IMPORT_DEFINED,
+
 	/** a subobject destructor cannot be called by pointer and is not
 	 * inlinable. mark it inline/always_inline or avoid the subobject. */
 	ACLSPV_COMPILE_SUBOBJECT_DTOR_NOT_INLINE

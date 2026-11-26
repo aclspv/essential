@@ -20,8 +20,7 @@
 
 #include <ae2f/pat/dbg.h>
 
-enum CXChildVisitResult aclemit_fndecl_entp(
-		CXCursor h_cur,
+enum CXChildVisitResult aclemit_fndecl_entp(		CXCursor h_cur,
 		CXCursor h_parent,
 		CXClientData h_ctx
 		) {
@@ -42,6 +41,7 @@ enum CXChildVisitResult aclemit_fndecl_entp(
 	}
 
 	entp = aclemit_fndecl_entp_cfg(h_parent, ctx);
+	entp.m_mark = (aclspv_wrd_t)clang_hashCursor(h_parent);
 	aclctx_err_check(ctx)
 		return CXChildVisit_Break;
 
@@ -128,4 +128,26 @@ enum CXChildVisitResult aclemit_fndecl_entp(
 	}
 
 	ae2f_unreachable();
+}
+
+aclspv_bool_t aclemit_fndecl_entp_exists(
+		CXCursor		c_entp,
+		h_aclspv_ctx_t		h_ctx
+		) {
+	const aclspv_wrd_t		c_mark = (aclspv_wrd_t)clang_hashCursor(c_entp);
+	aclsym_entp_t* ae2f_restrict	base;
+	aclspv_wrdcount_t		i;
+
+	ae2f_ifezerr(h_ctx)	return 0;
+
+	base = (aclsym_entp_t* ae2f_restrict)h_ctx->m_fnlist.m_entp.m_p;
+
+	unless(base)		return 0;
+
+	for(i = 0; i < h_ctx->m_fnlist.m_num_entp; ++i) {
+		if(base[i].m_mark == c_mark)
+			return 1;
+	}
+
+	return 0;
 }

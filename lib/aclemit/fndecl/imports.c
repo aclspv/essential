@@ -106,8 +106,9 @@ static aclspv_compile_t s_declare(
 	h_ctx->m_count.m_decorate = c;
 
 	/** the callee now has an id in the module: call sites take the ordinary
-	 * emitted path. */
-	p_sym->m_flag0 |= aclsym_fn_flag0(ACLSYM_FN_FLAG0_EMITTED);
+	 * emitted path. IMPORTED, not EMITTED: no body of it is out, and a later
+	 * pass that finds a definition of it must see that. */
+	p_sym->m_flag0 |= aclsym_fn_flag0(ACLSYM_FN_FLAG0_IMPORTED);
 
 	return ACLSPV_COMPILE_OK;
 }
@@ -155,7 +156,7 @@ static enum CXChildVisitResult s_visit(
 	 * an already declared one needs nothing. */
 	if(p_sym->m_flag0 & (aclspv_wrd_t)(
 				aclsym_fn_flag0(ACLSYM_FN_FLAG0_DEFINED)
-				| aclsym_fn_flag0(ACLSYM_FN_FLAG0_EMITTED)))
+				| ACLSYM_FN_FLAG0_NAMED))
 		return CXChildVisit_Recurse;
 
 	/** an internal-linkage function has no external definition to import:

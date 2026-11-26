@@ -31,8 +31,10 @@ aclspv_compile_t aclemit_compile_bodies(h_aclspv_ctx_t h_ctx, CXCursor c_root);
  * collects the bodies with no OpFunction yet, declares the imports they need
  * (prepended: SPIR-V requires declarations before definitions), then runs the
  * same readiness queue. a body that never becomes ready is a call cycle
- * (recursion) or a callee that never got a body — reported as
- * ACLSPV_COMPILE_RECURSIVE_CALL.
+ * (recursion) or a callee that never got a body, reported as
+ * ACLSPV_COMPILE_RECURSIVE_CALL. a definition of a function the module already
+ * declares as an import is the other contradiction, reported as
+ * ACLSPV_COMPILE_IMPORT_DEFINED.
  * */
 aclspv_compile_t aclemit_build_bodies(h_aclspv_ctx_t h_ctx, CXCursor c_root);
 
