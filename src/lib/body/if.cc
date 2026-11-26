@@ -9,6 +9,7 @@
 #include <aclcur/common.h>
 
 #include <aclemit/body.h>
+#include <aclemit/inline.h>
 #include <aclutil/emitx.h>
 #include <util/visitfromroot.h>
 
@@ -126,6 +127,9 @@ ae2f_MAC((L, )) aclemit_body_if(CXCursor h_cur, aclemit_body_t& rdwr_body) {
 				, (rdwr_body).m_ctx
 				)) goto L$$LBL_END;
 
+	unless(aclemit_inline_merge_push((rdwr_body).m_ctx, L$$IFPART.m_b_default))
+		goto L$$LBL_END;
+
 	{
 		L$$FNRET_TRUE = L$$FNRET_FALSE = 0;
 		aclcur_set_fnret(0, (rdwr_body).m_ctx);
@@ -188,6 +192,8 @@ ae2f_MAC((L, )) aclemit_body_if(CXCursor h_cur, aclemit_body_t& rdwr_body) {
 				, &(rdwr_body).m_ctx->m_tmp.m_v0
 				);
 	}
+
+	aclemit_inline_merge_pop((rdwr_body).m_ctx);
 
 	/** the merge label below is opened and left unterminated: fall-through
 	 * here means "the current block still needs its terminator", which is

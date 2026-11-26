@@ -51,12 +51,20 @@ static aclspv_bool_t s_should_inline(
 		CXCursor	c_callee,
 		h_aclspv_ctx_t	h_ctx
 		) {
-	/** call-site inlining is staged: the inliner and the
-	 * INLINE_BY_DEFAULT flag are in place, but ordinary calls still emit
-	 * OpFunctionCall until the inliner is stable. subobject destructors
-	 * use the inliner directly. */
-	(void)c_callee;
-	(void)h_ctx;
+	if(aclattr_is_noinline(c_callee))
+		return 0;
+
+	if(!aclemit_inline_supported(c_callee))
+		return 0;
+
+	if(aclattr_is_always_inline(c_callee))
+		return 1;
+
+	if(clang_Cursor_isFunctionInlined(c_callee)
+			&& (h_ctx->m_usrcfg.m_flag0
+				& ACLSPV_CTX_FLAG0_INLINE_BY_DEFAULT))
+		return 1;
+
 	return 0;
 }
 

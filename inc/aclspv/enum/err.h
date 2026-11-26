@@ -125,7 +125,11 @@ enum ACLSPV_COMPILE_ {
 
 	/** build phase: a deferred body never becomes emittable — a call cycle
 	 * (recursion), or a callee that never got a body. */
-	ACLSPV_COMPILE_RECURSIVE_CALL
+	ACLSPV_COMPILE_RECURSIVE_CALL,
+
+	/** a subobject destructor cannot be called by pointer and is not
+	 * inlinable. mark it inline/always_inline or avoid the subobject. */
+	ACLSPV_COMPILE_SUBOBJECT_DTOR_NOT_INLINE
 };
 
 /** 

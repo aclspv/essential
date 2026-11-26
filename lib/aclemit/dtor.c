@@ -97,7 +97,7 @@ static aclspv_bool_t s_emit_one(const acldtor_t* c_rec, h_aclspv_ctx_t h_ctx) {
 				|| !(aclattr_is_always_inline(c_rec->m_cur)
 					|| clang_Cursor_isFunctionInlined(c_rec->m_cur))) {
 			err_puts("[dtor] a subobject destructor must be inlinable");
-			_aclctx_err(h_ctx, ACLSPV_COMPILE_UNHANDLED);
+			_aclctx_err(h_ctx, ACLSPV_COMPILE_SUBOBJECT_DTOR_NOT_INLINE);
 			return 0;
 		}
 

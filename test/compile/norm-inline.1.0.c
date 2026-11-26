@@ -137,6 +137,14 @@ int main(void) {
 		return EXIT_FAILURE;
 	}
 
+	/** always_inline is now inlined at the call site: only `never` and
+	 * `plain` remain as OpFunctionCall. */
+	if(acltest_spirv_count_op(spirv, count, (unsigned)SpvOpFunctionCall) != 2) {
+		fputs("[norm-inline] always_inline call was not inlined\n", stderr);
+		free(spirv);
+		return EXIT_FAILURE;
+	}
+
 	{
 		FILE* const fp = fopen(ACLTEST_OUT, "wb");
 

@@ -74,6 +74,8 @@ static aclspv_bool_t s_arg_addr(
 	h_aclcur_t	p_reg;
 	const aclty_t* ae2f_restrict p_ty;
 
+	c_arg = aclexpr_expr_unwrap(c_arg);
+
 	if(aclutil_cursor_is_std_move(c_arg)) {
 		CXCursor MOVE_ARG = clang_Cursor_getArgument(c_arg, 0);
 

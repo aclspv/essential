@@ -235,6 +235,10 @@ struct a_aclspv_ctx {
 		aclspv_wrd_t	m_dtor_base;
 		aclspv_bool_t	m_branched;
 		aclspv_wrd_t	m_depth;
+		aclspv_id_t	m_reg_returned;
+		aclspv_id_t	m_merge[16];
+		aclspv_wrd_t	m_merge_depth;
+		aclspv_bool_t	m_terminated;
 	} m_inline;
 
 	/**

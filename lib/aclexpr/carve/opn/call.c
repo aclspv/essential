@@ -260,7 +260,7 @@ aclspv_bool_t aclexpr_carve_opn_call(
 
 	if(rdwr_lst_extra[c_num].m_state0
 			& (aclspv_wrd_t)ACLEXPR_OPCFGX_STATE0_INLINE_CALL) {
-		ae2f_ifnezerr(aclemit_inline_fn(
+		if(!aclemit_inline_fn(
 					rdwr_lst_extra[c_num].m_cursor
 					, clang_getNullCursor()
 					, &os[1]

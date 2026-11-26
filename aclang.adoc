@@ -244,8 +244,12 @@ ____
 
 [quote]
 ____
-Call-site inlining is not enabled for ordinary calls yet. Destructor bodies are
-inlined only where the language model requires it, namely subobjects.
+`always_inline` is inlined when its body is straight-line or has a single final
+return. A body with multiple/early returns falls back to `OpFunctionCall`
+because structured SPIR-V cannot branch out of an `OpSelection` to the inline
+merge without a return-merge transformation. The C++ `inline` keyword follows
+`ACLSPV_CTX_FLAG0_INLINE_BY_DEFAULT`; with the flag off the call stays and the
+function control still carries `Inline`. `noinline` always wins.
 ____
 
 * a destructor of a whole local object is an ordinary function call
