@@ -31,22 +31,26 @@ struct PushData {
 /*
  * what this example exercises, end to end:
  *
- *   head_clr   `always_inline`, early return through nested if   -> carved
- *   corner     `always_inline`, `switch` returning from a case   -> carved
- *   clamp01    plain `inline` (key word only)                    -> call
- *   tri_edge   plain `inline` (key word only)                    -> call
- *   tri_sdf    plain `inline` (key word only)                    -> call
- *   hotspot    `noinline`                                        -> DontInline
+ *   lane_of     always_inline, early return through a chain of ifs  -> carved
+ *   palette     always_inline, nested if/else returning             -> carved
+ *   lane_shape  always_inline, switch returning from every case     -> carved
+ *   clamp01     plain `inline` (key word only)                      -> call
+ *   smooth      plain `inline`                                      -> call
+ *   seg2        plain `inline`                                      -> call
+ *   tri         plain `inline`, calls seg2 three times              -> call
+ *   scan        plain `inline`, a loop with an early return         -> call
+ *   ring        `noinline`                                          -> DontInline
  *
  * every OpFunction this module emits says `Inline` unless the source said
  * `noinline`; only the call sites decide what is carved. build the same
- * binary with ACLSPV_INLINE_BY_DEFAULT=1 and the three `inline` helpers are
- * carved too: identical shader, different module.
+ * binary with ACLSPV_INLINE_BY_DEFAULT=1 (or comp.cc --flag 0x100) and the
+ * `inline` helpers are carved too: identical shader, different module
+ * (OpFunctionCall 12 -> 3).
  *
- * what you should see: three vertical lanes, red / green / blue. the lane
- * under the pointer carries a small upright triangle (about a third of the
- * lane wide) with a white outline; moving the pointer left and right moves
- * it to the next lane. a soft white spot follows the pointer.
+ * what you should see: four vertical lanes (red / green / blue / amber).
+ * every lane is banded, and the lane the pointer is in gets a small upright
+ * triangle with a bright outline near its middle. a soft white spot follows
+ * the pointer. q quits.
  */
 static const char src[] =
 	"typedef float f32;\n"
@@ -56,45 +60,60 @@ static const char src[] =
 	"\n"
 	"struct PushData { f32 mx; f32 my; f32 aspect; f32 pad; };\n"
 	"\n"
-	"/* ---- carved helpers: no OpFunctionCall survives these ---------------- */\n"
-	"\n"
-	"/* `always_inline` + early return through a selection. */\n"
+	"/* ---- helpers ---------------------------------------------------------- */\n"
+	"/* which of the four lanes a horizontal position falls in */\n"
 	"__attribute__((always_inline))\n"
-	"f32x3 head_clr(int tri, int hot) {\n"
-	"    if (tri == 0) {\n"
-	"        if (hot) return (f32x3){ 1.00f, 0.58f, 0.53f };\n"
-	"        return (f32x3){ 0.86f, 0.22f, 0.17f };\n"
-	"    }\n"
-	"    if (tri == 1) {\n"
-	"        if (hot) return (f32x3){ 0.58f, 1.00f, 0.66f };\n"
-	"        return (f32x3){ 0.16f, 0.74f, 0.28f };\n"
-	"    }\n"
-	"    if (hot) return (f32x3){ 0.56f, 0.72f, 1.00f };\n"
-	"    return (f32x3){ 0.16f, 0.32f, 0.82f };\n"
+	"int lane_of(f32 u) {\n"
+	"    if (u < 0.25f) return 0;\n"
+	"    if (u < 0.50f) return 1;\n"
+	"    if (u < 0.75f) return 2;\n"
+	"    return 3;\n"
 	"}\n"
 	"\n"
-	"/* `always_inline` + switch returning from every case: the merge block is\n"
-	" * unreachable, so OpUnreachable terminates it. */\n"
+	"/* the lane's base colour, and its highlighted variant. every branch\n"
+	" * returns: a carved body with returns is what the loop scaffold is for. */\n"
 	"__attribute__((always_inline))\n"
-	"f32x4 corner(int vid) {\n"
-	"    switch (vid) {\n"
-	"    case 0: return (f32x4){ -1.0f, -1.0f, 0.0f, 1.0f };\n"
-	"    case 1: return (f32x4){ 3.0f, -1.0f, 0.0f, 1.0f };\n"
-	"    default: return (f32x4){ -1.0f, 3.0f, 0.0f, 1.0f };\n"
+	"f32x3 palette(int lane, int hot) {\n"
+	"    if (lane == 0) {\n"
+	"        if (hot) return (f32x3){ 1.00f, 0.62f, 0.56f };\n"
+	"        return (f32x3){ 0.78f, 0.20f, 0.16f };\n"
+	"    }\n"
+	"    if (lane == 1) {\n"
+	"        if (hot) return (f32x3){ 0.62f, 1.00f, 0.72f };\n"
+	"        return (f32x3){ 0.16f, 0.68f, 0.28f };\n"
+	"    }\n"
+	"    if (lane == 2) {\n"
+	"        if (hot) return (f32x3){ 0.64f, 0.78f, 1.00f };\n"
+	"        return (f32x3){ 0.16f, 0.32f, 0.80f };\n"
+	"    }\n"
+	"    if (hot) return (f32x3){ 1.00f, 0.90f, 0.50f };\n"
+	"    return (f32x3){ 0.70f, 0.54f, 0.14f };\n"
+	"}\n"
+	"\n"
+	"/* a switch that returns from every arm: the merge is unreachable */\n"
+	"__attribute__((always_inline))\n"
+	"f32 lane_shape(int lane, f32 u) {\n"
+	"    switch (lane) {\n"
+	"    case 0: return u * 4.0f;\n"
+	"    case 1: return (u - 0.25f) * 4.0f;\n"
+	"    case 2: return (u - 0.50f) * 4.0f;\n"
+	"    default: return (u - 0.75f) * 4.0f;\n"
 	"    }\n"
 	"}\n"
 	"\n"
-	"/* plain `inline`: a call, unless ACLSPV_CTX_FLAG0_INLINE_BY_DEFAULT. */\n"
 	"inline f32 clamp01(f32 x) {\n"
 	"    if (x < 0.0f) return 0.0f;\n"
 	"    if (x > 1.0f) return 1.0f;\n"
 	"    return x;\n"
 	"}\n"
 	"\n"
-	"/* squared distance to a triangle edge, the edge included. the clamp is\n"
-	" * inline: a carved body that calls another carved body would put a phi\n"
-	" * above a definition the merge block can reach. */\n"
-	"inline f32 tri_edge(f32 px, f32 py, f32 ax, f32 ay, f32 bx, f32 by) {\n"
+	"inline f32 smooth(f32 x) {\n"
+	"    f32 c = clamp01(x);\n"
+	"    return c * c * (3.0f - 2.0f * c);\n"
+	"}\n"
+	"\n"
+	"/* squared distance to a segment, the edge included */\n"
+	"inline f32 seg2(f32 px, f32 py, f32 ax, f32 ay, f32 bx, f32 by) {\n"
 	"    f32 vx = bx - ax;\n"
 	"    f32 vy = by - ay;\n"
 	"    f32 wx = px - ax;\n"
@@ -107,20 +126,19 @@ static const char src[] =
 	"    return dx * dx + dy * dy;\n"
 	"}\n"
 	"\n"
-	"inline f32 tri_sdf(f32 px, f32 py, f32 cx, f32 cy, f32 r) {\n"
-	"    /* apex up: y grows downward, so the apex has the smallest y */\n"
+	"/* apex-up triangle: inside only when inside all three half planes */\n"
+	"inline f32 tri(f32 px, f32 py, f32 cx, f32 cy, f32 r) {\n"
 	"    f32 ax = cx;\n"
 	"    f32 ay = cy - r;\n"
 	"    f32 bx = cx - r * 0.866f;\n"
 	"    f32 by = cy + r * 0.5f;\n"
 	"    f32 qx = cx + r * 0.866f;\n"
 	"    f32 qy = cy + r * 0.5f;\n"
-	"    f32 e = tri_edge(px, py, ax, ay, bx, by);\n"
-	"    f32 e2 = tri_edge(px, py, bx, by, qx, qy);\n"
+	"    f32 e = seg2(px, py, ax, ay, bx, by);\n"
+	"    f32 e2 = seg2(px, py, bx, by, qx, qy);\n"
 	"    if (e2 < e) e = e2;\n"
-	"    e2 = tri_edge(px, py, qx, qy, ax, ay);\n"
+	"    e2 = seg2(px, py, qx, qy, ax, ay);\n"
 	"    if (e2 < e) e = e2;\n"
-	"    /* inside only when inside all three half planes */\n"
 	"    int i0 = (bx - ax) * (py - ay) - (by - ay) * (px - ax) < 0.0f;\n"
 	"    int i1 = (qx - bx) * (py - by) - (qy - by) * (px - bx) < 0.0f;\n"
 	"    int i2 = (ax - qx) * (py - qy) - (ay - qy) * (px - qx) < 0.0f;\n"
@@ -128,14 +146,30 @@ static const char src[] =
 	"    return e;\n"
 	"}\n"
 	"\n"
-	"/* never inlined: FunctionControl says DontInline, the call stays. */\n"
+	"/* never inlined: FunctionControl says DontInline and the call stays */\n"
 	"__attribute__((noinline))\n"
-	"f32 hotspot(f32 d) {\n"
-	"    f32 k = 1.0f - (d / 0.045f);\n"
-	"    return clamp01(k);\n"
+	"f32 ring(f32 d, f32 w) {\n"
+	"    f32 a = d / w;\n"
+	"    if (a < 0.0f) a = -a;\n"
+	"    f32 k = 1.0f - a;\n"
+	"    if (k < 0.0f) return 0.0f;\n"
+	"    return k * k;\n"
 	"}\n"
 	"\n"
-	"/* ---- vertex --------------------------------------------------------- */\n"
+	"/* a loop with an early return: a fragment may do this, a carved body may\n"
+	" * not (the inliner refuses a return nested inside a loop). */\n"
+	"inline f32 scan(f32 v, int n) {\n"
+	"    f32 acc = 0.0f;\n"
+	"    for (int i = 0; i < n; i = i + 1) {\n"
+	"        f32 s = v * (f32)(i + 1);\n"
+	"        s = s - (f32)(int)s;\n"
+	"        acc = acc + s;\n"
+	"        if (acc > 2.5f) return acc;\n"
+	"    }\n"
+	"    return acc;\n"
+	"}\n"
+	"\n"
+	"/* ---- vertex ----------------------------------------------------------- */\n"
 	"__attribute__((annotate(\"aclspv_execmodel(0)\")))\n"
 	"void vs_main(\n"
 	"    __attribute__((annotate(\"aclspv_storage_class(9)\")))\n"
@@ -146,31 +180,35 @@ static const char src[] =
 	"    __attribute__((annotate(\"aclspv_storage_class(3)\")))\n"
 	"    __attribute__((annotate(\"aclspv_bltin(0)\")))\n"
 	"    f32x4* out_pos,\n"
-	"    __attribute__((annotate(\"aclspv_location(0)\")))\n"
-	"    __attribute__((annotate(\"aclspv_storage_class(3)\")))\n"
-	"    f32x3* out_color,\n"
 	"    __attribute__((annotate(\"aclspv_location(1)\")))\n"
 	"    __attribute__((annotate(\"aclspv_storage_class(3)\")))\n"
 	"    f32x2* out_uv\n"
 	") {\n"
 	"    int vid = *in_vertidx;\n"
-	"    *out_pos = corner(vid);\n"
-	"    /* uv covers the screen: (0,0) top-left, (1,1) bottom-right */\n"
-	"    f32 u = (vid == 1 || vid == 2) ? 1.0f : 0.0f;\n"
-	"    f32 v = (vid == 0 || vid == 1) ? 0.0f : 1.0f;\n"
-	"    *out_uv = (f32x2){ u, v };\n"
-	"    *out_color = (f32x3){ pc->mx, pc->my, pc->aspect };\n"
+	"    /* a triangle that covers the screen: two corners far outside */\n"
+	"    if (vid == 0) *out_pos = (f32x4){ -1.0f, -1.0f, 0.0f, 1.0f };\n"
+	"    else if (vid == 1) *out_pos = (f32x4){ 3.0f, -1.0f, 0.0f, 1.0f };\n"
+	"    else *out_pos = (f32x4){ -1.0f, 3.0f, 0.0f, 1.0f };\n"
+	"\n"
+	"    /* uv has to read 0..1 across the WINDOW. the covering triangle has its\n"
+	"     * far corners at +3, so a window point at fraction f along both axes is\n"
+	"     * barycentric (1-2f, f/2, f/2) in it -- hence the corner warp below,\n"
+	"     * which lands uv on (f, f) exactly. (0,0) is the top-left corner and\n"
+	"     * (1,1) the bottom-right one. */\n"
+	"    if (vid == 0) *out_uv = (f32x2){ 0.0f, 0.0f };\n"
+	"    else if (vid == 1) *out_uv = (f32x2){ 4.0f, 0.0f };\n"
+	"    else *out_uv = (f32x2){ 0.0f, 4.0f };\n"
+	"\n"
+	"    /* keeps the push constant live in the vertex stage */\n"
+	"    if (pc->aspect < 0.0f) *out_uv = (f32x2){ -1.0f, -1.0f };\n"
 	"}\n"
 	"\n"
-	"/* ---- fragment ------------------------------------------------------- */\n"
+	"/* ---- fragment --------------------------------------------------------- */\n"
 	"__attribute__((annotate(\"aclspv_execmode0(7)\")))\n"
 	"__attribute__((annotate(\"aclspv_execmodel(4)\")))\n"
 	"void fs_main(\n"
 	"    __attribute__((annotate(\"aclspv_storage_class(9)\")))\n"
 	"    struct PushData* pc,\n"
-	"    __attribute__((annotate(\"aclspv_location(0)\")))\n"
-	"    __attribute__((annotate(\"aclspv_storage_class(1)\")))\n"
-	"    f32x3* in_uv_color,\n"
 	"    __attribute__((annotate(\"aclspv_location(1)\")))\n"
 	"    __attribute__((annotate(\"aclspv_storage_class(1)\")))\n"
 	"    f32x2* in_uv,\n"
@@ -179,36 +217,55 @@ static const char src[] =
 	"    f32x4* out_color\n"
 	") {\n"
 	"    f32x2 uv = *in_uv;\n"
-	"    /* three lanes left to right; the triangle sits in the pointed lane */\n"
-	"    int tri = 0;\n"
-	"    f32 hx = pc->mx * 0.5f + 0.5f;\n"
-	"    if (hx > 0.33334f) tri = 1;\n"
-	"    if (hx > 0.66667f) tri = 2;\n"
-	"    f32 cx = 0.5f / 3.0f + (f32)tri * (1.0f / 3.0f);\n"
+	"    f32 u = uv[0];\n"
+	"    f32 v = uv[1];\n"
+	"\n"
+	"    int lane = lane_of(u);\n"
+	"\n"
+	"    /* the triangle sits in the lane the pointer is in */\n"
+	"    int hl = lane_of(pc->mx * 0.5f + 0.5f);\n"
+	"\n"
+	"    f32 cx = 1.0f / 8.0f + (f32)hl * 0.25f;\n"
 	"    f32 cy = 0.5f;\n"
-	"    f32 r = 0.20f;\n"
-	"    f32 d = tri_sdf(uv[0], uv[1], cx, cy, r);\n"
-	"    int hot = d < 0.0f;\n"
-	"    f32x3 bg = head_clr(tri, 0);\n"
-	"    f32x3 fg = head_clr(tri, 1);\n"
-	"    /* dark floor, bright body */\n"
-	"    f32x3 dark = { bg[0] * 0.35f, bg[1] * 0.35f, bg[2] * 0.35f };\n"
-	"    f32x3 base = hot ? fg : dark;\n"
-	"    /* hard edge ring */\n"
-	"    f32 ring = 1.0f - clamp01(d / 0.006f);\n"
-	"    f32x3 edge = { 1.0f, 1.0f, 1.0f };\n"
-	"    f32x3 shaded = { base[0] * (1.0f - ring) + edge[0] * ring,\n"
-	"                     base[1] * (1.0f - ring) + edge[1] * ring,\n"
-	"                     base[2] * (1.0f - ring) + edge[2] * ring };\n"
-	"    /* a soft spot under the pointer */\n"
-	"    f32 mdx = uv[0] - (pc->mx * 0.5f + 0.5f);\n"
-	"    f32 mdy = uv[1] - (pc->my * 0.5f + 0.5f);\n"
-	"    f32 md = mdx * mdx + mdy * mdy;\n"
-	"    f32 spot = hotspot(md);\n"
-	"    f32x3 out = { shaded[0] + spot * 0.45f, shaded[1] + spot * 0.45f, shaded[2] + spot * 0.45f };\n"
-	"    *out_color = (f32x4){ out[0], out[1], out[2], 1.0f };\n"
-	"}\n"
-	"\n";
+	"    f32 r = 0.13f;\n"
+	"    f32 d = tri(u, v, cx, cy, r);\n"
+	"    int inside = d < 0.0f;\n"
+	"\n"
+	"    /* body: palette colour, brighter toward the middle */\n"
+	"    f32 shade = smooth((d + r) / (r * 2.0f));\n"
+	"    f32x3 c = palette(lane, inside ? 1 : 0);\n"
+	"    f32 x = c[0] * (0.30f + 0.70f * shade);\n"
+	"    f32 y = c[1] * (0.30f + 0.70f * shade);\n"
+	"    f32 z = c[2] * (0.30f + 0.70f * shade);\n"
+	"\n"
+	"    /* a hard bright outline on the triangle's boundary */\n"
+	"    f32 ad = d < 0.0f ? -d : d;\n"
+	"    f32 edge = ring(ad - 0.004f, 0.0030f);\n"
+	"    c = (f32x3){ x + edge, y + edge, z + edge };\n"
+	"\n"
+	"    /* background: banded stripes per lane, darker far from the triangle */\n"
+	"    f32 lm = lane_shape(lane, u);\n"
+	"    f32 bands = scan(lm * 1.5f + v * 2.0f, 4);\n"
+	"    f32 gk = 0.55f + 0.45f * (bands * 0.25f);\n"
+	"    if (!inside) {\n"
+	"        c = (f32x3){ c[0] * gk, c[1] * gk, c[2] * gk };\n"
+	"    }\n"
+	"\n"
+	"    /* pointer spotlight, in window space (uv reads 0..1 now) */\n"
+	"    f32 mxu = pc->mx * 0.5f + 0.5f;\n"
+	"    f32 myu = pc->my * 0.5f + 0.5f;\n"
+	"    f32 dx = u - mxu;\n"
+	"    f32 dy = (v - myu) * pc->aspect;\n"
+	"    f32 spot = ring(dx * dx + dy * dy, 0.010f);\n"
+	"\n"
+	"    c = (f32x3){\n"
+	"        clamp01(c[0] + spot * 0.55f),\n"
+	"        clamp01(c[1] + spot * 0.55f),\n"
+	"        clamp01(c[2] + spot * 0.55f)\n"
+	"    };\n"
+	"\n"
+	"    *out_color = (f32x4){ c[0], c[1], c[2], 1.0f };\n"
+	"}\n";
 
 
 /* ── compile the shader → SPIR-V ───────────────────────────────────────── */
@@ -217,7 +274,10 @@ static aclspv_wrd_t *compile_spirv(const char src[len], size_t *out_words) {
 	if (getenv("ACLSPV_DUMP_SRC")) fputs(src, stderr);
 
 	aclspv::ctx ctx(aclspv::usrcfg_t()
-			.flag0(ACLSPV_CTX_FLAG0_SYMBOL | ACLSPV_CTX_FLAG0_DUMP_DIAGNOSTICS)
+			.flag0(
+				ACLSPV_CTX_FLAG0_SYMBOL 
+				| ACLSPV_CTX_FLAG0_DUMP_DIAGNOSTICS
+				)
 			.mdl_addr(SpvAddressingModelLogical)
 			.mdl_mem(SpvMemoryModelGLSL450)
 			.spirv_ver(1, 3));
@@ -381,7 +441,9 @@ int main(void) {
 	sc_ci.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
 	sc_ci.preTransform     = caps.currentTransform;
 	sc_ci.compositeAlpha   = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
-	sc_ci.presentMode      = VK_PRESENT_MODE_FIFO_KHR;
+	sc_ci.presentMode      = getenv("ACLSPV_IMMEDIATE")
+		? VK_PRESENT_MODE_IMMEDIATE_KHR
+		: VK_PRESENT_MODE_FIFO_KHR;
 	sc_ci.clipped          = VK_TRUE;
 
 	VkSwapchainKHR swapchain;
@@ -391,6 +453,8 @@ int main(void) {
 	vkGetSwapchainImagesKHR(device, swapchain, &sc_img_count, NULL);
 	std::vector<VkImage> sc_images(sc_img_count);
 	vkGetSwapchainImagesKHR(device, swapchain, &sc_img_count, &sc_images[0]);
+	fprintf(stderr, "swapchain images=%u (min=%u max=%u)\n",
+			sc_img_count, caps.minImageCount, caps.maxImageCount);
 
 	std::vector<VkImageView> sc_views(sc_img_count);
 	for (uint32_t i = 0; i < sc_img_count; i++) {
@@ -558,19 +622,25 @@ int main(void) {
 	VkCommandPool cmd_pool;
 	VK_CHECK(vkCreateCommandPool(device, &cp_ci, NULL, &cmd_pool));
 
-	std::vector<VkCommandBuffer> cmd_bufs(sc_img_count);
+	/** frames in flight, kept BELOW the swapchain image count so the next
+	 * acquire always has an image free to hand back. tying these 1:1 makes
+	 * vkAcquireNextImageKHR block through every image once they are all
+	 * submitted but not yet re-presented — the 150ms stall observed. */
+	const uint32_t frames_in_flight = 2;
+
+	std::vector<VkCommandBuffer> cmd_bufs(frames_in_flight);
 	VkCommandBufferAllocateInfo cb_ai = {};
 	cb_ai.sType              = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
 	cb_ai.commandPool        = cmd_pool;
 	cb_ai.level              = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-	cb_ai.commandBufferCount = sc_img_count;
+	cb_ai.commandBufferCount = frames_in_flight;
 	VK_CHECK(vkAllocateCommandBuffers(device, &cb_ai, &cmd_bufs[0]));
 
-	std::vector<VkSemaphore> img_avail_sems(sc_img_count), render_done_sems(sc_img_count);
-	std::vector<VkFence> render_fences(sc_img_count);
+	std::vector<VkSemaphore> img_avail_sems(frames_in_flight), render_done_sems(frames_in_flight);
+	std::vector<VkFence> render_fences(frames_in_flight);
 	VkSemaphoreCreateInfo se_ci = {VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO};
 	VkFenceCreateInfo fe_ci = {VK_STRUCTURE_TYPE_FENCE_CREATE_INFO, NULL, VK_FENCE_CREATE_SIGNALED_BIT};
-	for (uint32_t i = 0; i < sc_img_count; i++) {
+	for (uint32_t i = 0; i < frames_in_flight; i++) {
 		VK_CHECK(vkCreateSemaphore(device, &se_ci, NULL, &img_avail_sems[i]));
 		VK_CHECK(vkCreateSemaphore(device, &se_ci, NULL, &render_done_sems[i]));
 		VK_CHECK(vkCreateFence(device, &fe_ci, NULL, &render_fences[i]));
@@ -580,11 +650,17 @@ int main(void) {
 	bool running = true;
 	uint32_t frame_idx = 0;
 	float mouse_x = 0.0f, mouse_y = 0.0f;
+	uint64_t perf_freq = SDL_GetPerformanceFrequency();
+	uint64_t last_tick = SDL_GetPerformanceCounter();
+	uint64_t nframes = 0;
 
 	fputs("aclspv: render loop\n", stderr);
 
 	while (running) {
 		SDL_Event evt;
+		/** never let the mouse starve: drain every queued event, then do the
+		 * (possibly blocking) GPU work. both waits below are bounded, and the
+		 * fence wait is dropped entirely when the GPU is already idle. */
 		while (SDL_PollEvent(&evt)) {
 			if (evt.type == SDL_EVENT_QUIT || evt.type == SDL_EVENT_WINDOW_CLOSE_REQUESTED)
 				running = false;
@@ -596,14 +672,33 @@ int main(void) {
 			}
 		}
 
-		vkWaitForFences(device, 1, &render_fences[frame_idx], VK_TRUE, UINT64_MAX);
-		vkResetFences(device, 1, &render_fences[frame_idx]);
+		if (!running)
+			break;
+
+		/** a hidden / minimized window has nobody to present to: compositors
+		 * stop handing out swapchain images, so vkAcquireNextImageKHR would
+		 * block here (the 150ms stall). instead, poll events and nap, and
+		 * start drawing again the instant the window is shown. */
+		{
+			SDL_WindowFlags wf = SDL_GetWindowFlags(window);
+			if (wf & (SDL_WINDOW_MINIMIZED | SDL_WINDOW_HIDDEN | SDL_WINDOW_OCCLUDED)) {
+				SDL_Delay(16);
+				continue;
+			}
+		}
 
 		uint32_t img_idx;
 		VkResult acq = vkAcquireNextImageKHR(device, swapchain, UINT64_MAX,
 				img_avail_sems[frame_idx], VK_NULL_HANDLE, &img_idx);
 		if (acq == VK_ERROR_OUT_OF_DATE_KHR) continue;
 		VK_CHECK(acq);
+
+		/** the frame slot is free to reuse once its fence is signalled.
+		 * wait only while it is still in flight, then reset and hand it
+		 * right back to the submit below. */
+		if (vkGetFenceStatus(device, render_fences[frame_idx]) == VK_NOT_READY)
+			VK_CHECK(vkWaitForFences(device, 1, &render_fences[frame_idx], VK_TRUE, UINT64_MAX));
+		VK_CHECK(vkResetFences(device, 1, &render_fences[frame_idx]));
 
 		VkCommandBuffer cmd = cmd_bufs[frame_idx];
 		VkCommandBufferBeginInfo cb_bi = {};
@@ -628,11 +723,12 @@ int main(void) {
 		vkCmdSetScissor(cmd, 0, 1, &sc_val);
 
 		int win_w = 1, win_h = 1;
-		SDL_GetWindowSize(window, &win_w, &win_h);
+		win_w = (int)extent.width;
+		win_h = (int)extent.height;
 
 		PushData pc = {};
-		pc.mx     = (mouse_x / (float)win_w) * 2.0f - 1.0f;
-		pc.my     = (mouse_y / (float)win_h) * 2.0f - 1.0f;
+		pc.mx     = (mouse_x / (float)(win_w ? win_w : 1)) * 2.0f - 1.0f;
+		pc.my     = (mouse_y / (float)(win_h ? win_h : 1)) * 2.0f - 1.0f;
 		pc.aspect = (float)extent.width / (float)extent.height;
 
 		vkCmdPushConstants(cmd, pipeline_layout,
@@ -665,18 +761,22 @@ int main(void) {
 		pres.pImageIndices      = &img_idx;
 		VK_CHECK(vkQueuePresentKHR(queue, &pres));
 
-		frame_idx = (frame_idx + 1) % sc_img_count;
-		SDL_Delay(1);
+		frame_idx = (frame_idx + 1) % frames_in_flight;
+
+		/** don't throttle: FIFO present mode already paces us at vsync, and
+		 * an extra sleep here is what makes mouse motion feel rubbery. */
 	}
 
 	/* ── cleanup ────────────────────────────────────────────────────── */
 	vkDeviceWaitIdle(device);
 
-	vkFreeCommandBuffers(device, cmd_pool, sc_img_count, &cmd_bufs[0]);
+	vkFreeCommandBuffers(device, cmd_pool, frames_in_flight, &cmd_bufs[0]);
 	vkDestroyCommandPool(device, cmd_pool, NULL);
 	for (uint32_t i = 0; i < sc_img_count; i++) {
 		vkDestroyFramebuffer(device, framebuffers[i], NULL);
 		vkDestroyImageView(device, sc_views[i], NULL);
+	}
+	for (uint32_t i = 0; i < frames_in_flight; i++) {
 		vkDestroySemaphore(device, img_avail_sems[i], NULL);
 		vkDestroySemaphore(device, render_done_sems[i], NULL);
 		vkDestroyFence(device, render_fences[i], NULL);
