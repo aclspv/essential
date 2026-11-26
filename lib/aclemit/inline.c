@@ -78,18 +78,21 @@ CXCursor aclemit_inline_callee(h_aclspv_ctx_t h_ctx) {
 
 /* the inliner's slice bookkeeping.
  *
- * an inlined body with returns is carved into a single-iteration loop: the
- * body, its parameter copies, its scratch, its result and its temporaries all
- * live inside that loop. its values return to the slice header on the slice's
- * OWN back edge, so none of them may be carried by a phi of an enclosing
- * loop — that would name a value defined inside one loop as the operand of a
- * phi in another, which spirv-val rejects as a dominance violation. nesting
- * one slice inside another is what makes it bite.
+ * an inlined body with returns is carved into a single-iteration loop. the
+ * temporaries the body creates DURING the carve live inside that loop: they
+ * are written on one trip around it and read back before the next, so their
+ * value returns on the slice's OWN back edge. none of them may be carried by
+ * a phi of an enclosing loop — that would name a value defined inside one
+ * loop as the operand of a phi in another, which spirv-val rejects as a
+ * dominance violation. nesting one slice inside another is what makes it
+ * bite.
  *
- * every register a slice creates is marked ACLCUR_FLAG0_REG_INLINE_SLICE, and
- * the value flow leaves a marked register in memory (memory is always kept
- * current). the mark needs no per-slice record: it only says "this lives in
- * some slice", which is exactly what the value flow needs to know. */
+ * only registers created WHILE the loop is being carved are subject to this:
+ * they are marked ACLCUR_FLAG0_REG_INLINE_SLICE (see aclcur_cfg_reg1), and the
+ * value flow leaves them in memory (which is always kept current). the
+ * scaffold's own registers and the parameter copies are created BEFORE the
+ * loop and are not marked — the parameters are plain SSA values whose initial
+ * store is just their entry binding, and the scaffold result alone flows out. */
 static aclspv_bool_t s_carving_slice;
 
 aclspv_bool_t aclemit_inline_nested(const x_aclspv_ctx* ae2f_restrict h_ctx) {
@@ -111,16 +114,6 @@ aclspv_bool_t aclemit_inline_is_local(
 			p->m_class == ACLCUR_REG
 			&& (p->m_flag0
 				& aclcur_flag0_reg(ACLCUR_FLAG0_REG_INLINE_SLICE)));
-}
-
-/** mark c_reg as one of the slice's own registers. */
-static void s_slice_mark(aclspv_id_t c_reg, h_aclspv_ctx_t h_ctx) {
-	h_aclcur_t p = aclcur_get_node(c_reg, h_ctx);
-
-	ae2f_ifezerr(p)
-		return;
-
-	p->m_flag0 |= aclcur_flag0_reg(ACLCUR_FLAG0_REG_INLINE_SLICE);
 }
 
 static aclspv_bool_t s_has_return(CXCursor c_body) {
@@ -328,7 +321,6 @@ aclspv_bool_t aclemit_inline_fn(
 			const aclcur_reg_t REGIN = aclcur_regvar_in();
 			ae2f_ifezerr(id_reg = aclcur_cfg_reg(c_parm, ty_arg,
 						SpvStorageClassFunction, &REGIN, h_ctx)) return 0;
-			s_slice_mark(id_reg, h_ctx);
 			ae2f_ifezerr(aclcur_store_reg(id_reg, c_args[i], h_ctx)) return 0;
 			if(!aclemit_dtor_reserve(c_parm, id_reg, ty_arg, h_ctx)) return 0;
 		}
@@ -349,7 +341,6 @@ aclspv_bool_t aclemit_inline_fn(
 		const aclcur_reg_t REGIN = aclcur_regvar_in();
 		ae2f_ifezerr(id_flag = aclcur_cfg_reg(clang_getNullCursor(),
 					ACLSPV_ID_BOOL, SpvStorageClassFunction, &REGIN, h_ctx)) return 0;
-		s_slice_mark(id_flag, h_ctx);
 	}
 
 	if(ty_ret != ACLSPV_ID_VOID) {
@@ -358,8 +349,6 @@ aclspv_bool_t aclemit_inline_fn(
 
 		ae2f_ifezerr(id_ret = aclcur_cfg_reg(clang_getNullCursor(),
 					ty_ret, SpvStorageClassFunction, &REGIN, h_ctx)) return 0;
-
-		s_slice_mark(id_ret, h_ctx);
 
 		p = aclcur_get_node(id_ret, h_ctx);
 		if(p) {
