@@ -24,11 +24,15 @@ static ae2f_inline_f aclspv_id_t aclexpr_curreg_find(CXCursor c_cur, h_aclspv_ct
 	if(clang_Cursor_isNull(c_cur))
 		return 0;
 
-	for(i = 0; i < h_ctx->m_num_cursor; ++i) {
+	/** walk from the newest register back: an inlined body bound at several
+	 * call sites creates one register per carve for the same parameter
+	 * cursor, and the body being carved must resolve to the binding created
+	 * by THIS carve (the last one), not a stale one an earlier carve made. */
+	for(i = h_ctx->m_num_cursor; i; --i) {
 		if(
-				p[i].m_class == ACLCUR_REG
-				&& clang_equalCursors(p[i].m_cur, c_cur)
-		  ) return p[i].m_id;
+				p[i - 1u].m_class == ACLCUR_REG
+				&& clang_equalCursors(p[i - 1u].m_cur, c_cur)
+		  ) return p[i - 1u].m_id;
 	}
 
 	return 0;

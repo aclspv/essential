@@ -103,9 +103,13 @@ aclspv_bool_t	aclcur_reg_needs_memory(aclspv_id_t c_reg, h_aclspv_ctx_t h_ctx) {
 		return 1;
 
 	/** a non-SCOPED root is observable outside the SSA scope; an ALLOCATED
-	 * root had its address taken. either way a store must reach memory. */
+	 * root had its address taken. a slice-local register lives inside an
+	 * inlined body's single-iteration loop, so its value is carried on the
+	 * loop's own back edge and must read/write memory rather than ride SSA.
+	 * any of these forces the store to emit its OpStore. */
 	return (aclspv_bool_t)(!(p->m_flag0 & aclcur_flag0_reg(ACLCUR_FLAG0_REG_SCOPED))
-			|| (p->m_flag0 & aclcur_flag0_reg(ACLCUR_FLAG0_REG_ALLOCATED)));
+			|| (p->m_flag0 & aclcur_flag0_reg(ACLCUR_FLAG0_REG_ALLOCATED))
+			|| (p->m_flag0 & aclcur_flag0_reg(ACLCUR_FLAG0_REG_INLINE_SLICE)));
 }
 
 aclspv_id_t	aclcur_reg_alias2(
