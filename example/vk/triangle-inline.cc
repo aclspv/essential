@@ -8,7 +8,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
-#include <string>
 
 #include <vector>
 
@@ -190,14 +189,13 @@ static const char src[] =
 	"    else if (vid == 1) *out_pos = (f32x4){ 3.0f, -1.0f, 0.0f, 1.0f };\n"
 	"    else *out_pos = (f32x4){ -1.0f, 3.0f, 0.0f, 1.0f };\n"
 	"\n"
-	"    /* uv has to read 0..1 across the WINDOW. the covering triangle has its\n"
-	"     * far corners at +3, so a window point at fraction f along both axes is\n"
-	"     * barycentric (1-2f, f/2, f/2) in it -- hence the corner warp below,\n"
-	"     * which lands uv on (f, f) exactly. (0,0) is the top-left corner and\n"
-	"     * (1,1) the bottom-right one. */\n"
+	"    /* uv has to read 0..1 across the WINDOW. the covering triangle (two\n"
+	"     * corners at +3, one at -1) spans the NDC square, and each vertex's\n"
+	"     * uv advances 2 per NDC 4, so a window point at fraction f lands on\n"
+	"     * uv (f, f). (0,0) is one corner and (1,1) its opposite. */\n"
 	"    if (vid == 0) *out_uv = (f32x2){ 0.0f, 0.0f };\n"
-	"    else if (vid == 1) *out_uv = (f32x2){ 4.0f, 0.0f };\n"
-	"    else *out_uv = (f32x2){ 0.0f, 4.0f };\n"
+	"    else if (vid == 1) *out_uv = (f32x2){ 2.0f, 0.0f };\n"
+	"    else *out_uv = (f32x2){ 0.0f, 2.0f };\n"
 	"\n"
 	"    /* keeps the push constant live in the vertex stage */\n"
 	"    if (pc->aspect < 0.0f) *out_uv = (f32x2){ -1.0f, -1.0f };\n"
@@ -314,52 +312,7 @@ static aclspv_wrd_t *compile_spirv(const char src[len], size_t *out_words) {
 
 int main(void) {
 	size_t shader_words = 0;
-	aclspv_wrd_t *spirv;
-
-	/** flat diagnostic shader: drop every per-pixel helper and write a single
-	 * constant colour. set ACLSPV_FLAT to A/B a fragment-cost hypothesis. */
-	static const char flat_src[] =
-		"typedef float f32;\n"
-		"__attribute__((annotate(\"aclspv_execmodel(0)\")))\n"
-		"void vs_main(\n"
-		"    __attribute__((annotate(\"aclspv_bltin(42)\")))\n"
-		"    __attribute__((annotate(\"aclspv_storage_class(1)\")))\n"
-		"    int* in_vid,\n"
-		"    __attribute__((annotate(\"aclspv_bltin(0)\")))\n"
-		"    __attribute__((annotate(\"aclspv_storage_class(3)\")))\n"
-		"    f32* out_pos\n"
-		") {\n"
-		"    *out_pos = (f32)*in_vid;\n"
-		"}\n"
-		"__attribute__((annotate(\"aclspv_execmodel(4)\")))\n"
-		"void fs_main(\n"
-		"    __attribute__((annotate(\"aclspv_location(0)\")))\n"
-		"    __attribute__((annotate(\"aclspv_storage_class(3)\")))\n"
-		"    f32* out_color\n"
-		") {\n"
-		"    *out_color = 0.5f;\n"
-		"}\n";
-
-	if (getenv("ACLSPV_FLAT"))
-		spirv = compile_spirv<sizeof(flat_src)>(flat_src, &shader_words);
-	else {
-		std::string s = src;
-		size_t pos;
-		if (getenv("ACLSPV_NO_SCAFFOLD"))
-			for (pos = 0; (pos = s.find("always_inline", pos)) != std::string::npos; )
-				s.replace(pos, 13, "noinline ");
-		if (getenv("ACLSPV_NOTRI")) {
-			pos = s.find("f32 d = tri(u, v, cx, cy, r);");
-			if (pos != std::string::npos)
-				s.replace(pos, 30, "f32 d = 0.1f;");
-		}
-		if (getenv("ACLSPV_NOSCAN")) {
-			pos = s.find("f32 bands = scan(lm * 1.5f + v * 2.0f, 4);");
-			if (pos != std::string::npos)
-				s.replace(pos, 42, "f32 bands = 0.5f;");
-		}
-		spirv = compile_spirv<4096>(s.c_str(), &shader_words);
-	}
+	aclspv_wrd_t *spirv = compile_spirv<sizeof(src)>(src, &shader_words);
 	if (!shader_words || !spirv) return EXIT_FAILURE;
 	fputs("aclspv: shader compiled\n", stderr);
 
@@ -498,8 +451,6 @@ int main(void) {
 	vkGetSwapchainImagesKHR(device, swapchain, &sc_img_count, NULL);
 	std::vector<VkImage> sc_images(sc_img_count);
 	vkGetSwapchainImagesKHR(device, swapchain, &sc_img_count, &sc_images[0]);
-	fprintf(stderr, "swapchain images=%u (min=%u max=%u)\n",
-			sc_img_count, caps.minImageCount, caps.maxImageCount);
 
 	std::vector<VkImageView> sc_views(sc_img_count);
 	for (uint32_t i = 0; i < sc_img_count; i++) {
@@ -695,9 +646,6 @@ int main(void) {
 	bool running = true;
 	uint32_t frame_idx = 0;
 	float mouse_x = 0.0f, mouse_y = 0.0f;
-	uint64_t perf_freq = SDL_GetPerformanceFrequency();
-	uint64_t last_tick = SDL_GetPerformanceCounter();
-	uint64_t nframes = 0;
 
 	fputs("aclspv: render loop\n", stderr);
 
@@ -767,13 +715,9 @@ int main(void) {
 		vkCmdSetViewport(cmd, 0, 1, &vp_val);
 		vkCmdSetScissor(cmd, 0, 1, &sc_val);
 
-		int win_w = 1, win_h = 1;
-		win_w = (int)extent.width;
-		win_h = (int)extent.height;
-
 		PushData pc = {};
-		pc.mx     = (mouse_x / (float)(win_w ? win_w : 1)) * 2.0f - 1.0f;
-		pc.my     = (mouse_y / (float)(win_h ? win_h : 1)) * 2.0f - 1.0f;
+		pc.mx     = (mouse_x / (float)(extent.width  ? extent.width  : 1)) * 2.0f - 1.0f;
+		pc.my     = (mouse_y / (float)(extent.height ? extent.height : 1)) * 2.0f - 1.0f;
 		pc.aspect = (float)extent.width / (float)extent.height;
 
 		vkCmdPushConstants(cmd, pipeline_layout,
@@ -810,17 +754,6 @@ int main(void) {
 
 		/** don't throttle: FIFO present mode already paces us at vsync, and
 		 * an extra sleep here is what makes mouse motion feel rubbery. */
-		++nframes;
-		{
-			uint64_t now = SDL_GetPerformanceCounter();
-			if (now - last_tick >= perf_freq) {
-				fprintf(stderr, "fps=%llu frame=%.2fms\n",
-						(unsigned long long)(nframes * perf_freq / (now - last_tick)),
-						(double)(now - last_tick) * 1000.0 / (double)perf_freq / (double)(nframes ? nframes : 1));
-				nframes = 0;
-				last_tick = now;
-			}
-		}
 	}
 
 	/* ── cleanup ────────────────────────────────────────────────────── */
