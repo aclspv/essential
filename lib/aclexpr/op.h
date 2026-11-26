@@ -49,6 +49,10 @@ enum ACLEXPR_OP_ {
 	ACLEXPR_OP1_COS,
 	ACLEXPR_OP1_TAN,
 
+	/** `__builtin_floorf` (f32), `__builtin_floorf16` (f16), and
+	 * `__builtin_elementwise_floor` (f32 scalar/vector). GLSLstd450Floor. */
+	ACLEXPR_OP1_FLOOR,
+
 #if	__ACLSPV_MATH_NR
 	ACLEXPR_OP1_RSQRTF_NR,
 #endif

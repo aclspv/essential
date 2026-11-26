@@ -12,6 +12,7 @@
  *   __builtin_sinf16 / __builtin_cosf16 / __builtin_tanf16 (f16)
  *   __builtin_elementwise_sin / __builtin_elementwise_cos /
  *   __builtin_elementwise_tan                             (f32 scalar/vector)
+ *   __builtin_floorf / __builtin_floorf16 / __builtin_elementwise_floor
  *
  * the spellings share one visitor: the builtin's own signature fixes the
  * expected operand type (f32 for `*f`, f16 for `*f16`), and the generic

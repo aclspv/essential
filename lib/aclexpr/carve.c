@@ -346,6 +346,16 @@ static aclspv_bool_t s_carve(
 						, RET_LITERAL
 						));
 
+		case ACLEXPR_OP1_FLOOR:
+			return (aclspv_bool_t)ae2f_expected_not_strict(aclexpr_carve1_floor(
+						rdwr_data
+						, rdwr_prv_idval
+						, rdwr_prv_extra
+						, LST_SCALE_BUF
+						, LST_EXTRA
+						, RET_LITERAL
+						));
+
 		case ACLEXPR_OP3_COND:
 			return (aclspv_bool_t)ae2f_expected_not_strict(aclexpr_carve3_cond(
 						rdwr_data

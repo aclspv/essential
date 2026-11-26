@@ -25,16 +25,19 @@ static const struct s_glslmath {
 	{ "__builtin_sinf",		ACLEXPR_OP1_SIN, ACLSPV_ID_F32 },
 	{ "__builtin_cosf",		ACLEXPR_OP1_COS, ACLSPV_ID_F32 },
 	{ "__builtin_tanf",		ACLEXPR_OP1_TAN, ACLSPV_ID_F32 },
+	{ "__builtin_floorf",		ACLEXPR_OP1_FLOOR, ACLSPV_ID_F32 },
 
 #if	__ACLSPV_SCLR_F16
 	{ "__builtin_sinf16",	ACLEXPR_OP1_SIN, ACLSPV_ID_F16 },
 	{ "__builtin_cosf16",	ACLEXPR_OP1_COS, ACLSPV_ID_F16 },
 	{ "__builtin_tanf16",	ACLEXPR_OP1_TAN, ACLSPV_ID_F16 },
+	{ "__builtin_floorf16",	ACLEXPR_OP1_FLOOR, ACLSPV_ID_F16 },
 #endif
 
 	{ "__builtin_elementwise_sin",	ACLEXPR_OP1_SIN, 0 },
 	{ "__builtin_elementwise_cos",	ACLEXPR_OP1_COS, 0 },
 	{ "__builtin_elementwise_tan",	ACLEXPR_OP1_TAN, 0 },
+	{ "__builtin_elementwise_floor",	ACLEXPR_OP1_FLOOR, 0 },
 };
 
 /** a CallExpr has the callee as its first child and the argument as its

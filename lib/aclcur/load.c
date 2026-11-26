@@ -1124,21 +1124,29 @@ static aclspv_compile_t	s_ssa_fill_pass(h_aclspv_ctx_t h_ctx) {
 				if(covered)
 					continue;
 
-				/** the value on entry of the predecessor, on the final
-				 * graph. */
-				carry = s_ssa_entry_i(reg, pds[k], pds[k], h_ctx, 0);
-				if(!carry || carry == ACLCUR_SSA_NONE) {
+				/** the value the predecessor leaves on the back edge, on the
+				 * final graph.
+				 *
+				 * a loop index incremented in the continue block (`i = i + 1`)
+				 * is stored THERE, so its block-exit value is that store, not
+				 * its entry. the store is checked FIRST: a register written in
+				 * the predecessor leaves exactly that value, whereas its entry
+				 * would be the pre-increment (pre-loop) value flowing in from
+				 * the header — the very chain this fill is completing. */
+				{
 					h_aclcur_t p_st;
-					aclspv_id_t id_st = aclcur_get_node_store(reg, lbl, h_ctx);
+					aclspv_id_t id_st = aclcur_get_node_store(reg, pds[k], h_ctx);
 
-					/** the header's last store of the register: its
-					 * block-exit value. */
 					carry = 0;
 					if(id_st) {
 						p_st = aclcur_get_node(id_st, h_ctx);
 						carry = p_st ? p_st->m_val : 0;
 					}
 				}
+
+				/** no store in the predecessor: its entry value flows out. */
+				if(!carry || carry == ACLCUR_SSA_NONE)
+					carry = s_ssa_entry_i(reg, pds[k], pds[k], h_ctx, 0);
 
 				/** still nothing: the chain head itself.
 				 *

@@ -18,6 +18,7 @@ static const char s_src_f16_math[] =
 "    *out = __builtin_sinf16(*in);\n"
 "    *out = __builtin_cosf16(*in);\n"
 "    *out = __builtin_tanf16(*in);\n"
+"    *out = __builtin_floorf16(*in);\n"
 "}\n";
 
 int main(void);
@@ -70,20 +71,22 @@ int main(void) {
 		return EXIT_FAILURE;
 	}
 
-	printf("inst=%u extinst=%u sin=%u cos=%u tan=%u targets_ok=%d\n"
+	printf("inst=%u extinst=%u sin=%u cos=%u tan=%u floor=%u targets_ok=%d\n"
 			, stats.m_num_inst
 			, stats.m_num_extinst
 			, stats.m_num_sin
 			, stats.m_num_cos
 			, stats.m_num_tan
+			, stats.m_num_floor
 			, stats.m_targets_ok
 			);
 
 	if(stats.m_num_sin < 1
 			|| stats.m_num_cos < 1
 			|| stats.m_num_tan < 1
+			|| stats.m_num_floor < 1
 			|| !stats.m_targets_ok) {
-		fputs("[f16-math] sin/cos/tan were not emitted\n", stderr);
+		fputs("[f16-math] sin/cos/tan/floor were not emitted\n", stderr);
 		free(spirv);
 		return EXIT_FAILURE;
 	}

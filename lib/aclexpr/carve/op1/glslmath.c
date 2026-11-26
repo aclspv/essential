@@ -20,6 +20,7 @@
 #define	sinf(x)		((float)sin((double)x))
 #define	cosf(x)		((float)cos((double)x))
 #define	tanf(x)		((float)tan((double)x))
+#define	floorf(x)	((float)floor((double)x))
 #endif
 
 #endif
@@ -31,6 +32,7 @@ static aclspv_bool_t s_fold(aclspv_wrd_t c_inst, float* ae2f_restrict rw) {
 		case GLSLstd450Sin:	*rw = sinf(*rw); return 1;
 		case GLSLstd450Cos:	*rw = cosf(*rw); return 1;
 		case GLSLstd450Tan:	*rw = tanf(*rw); return 1;
+		case GLSLstd450Floor:	*rw = floorf(*rw); return 1;
 		default:		return 0;
 	}
 }
@@ -238,6 +240,20 @@ static aclspv_bool_t s_carve1_glsl_math(
 			) {
 		return s_carve1_glsl_math(
 				GLSLstd450Tan
+				, rdwr_data, rdwr_prv_idval, rdwr_prv_extra
+				, rdwr_lst_scale_buf, rdwr_lst_extra, r_ltrl);
+	}
+
+	aclspv_bool_t aclexpr_carve1_floor(
+			struct aclexpr_visit_data	ae2fcc_arg_sarr_restrict(rdwr_data, 1),
+			aclspv_wrd_t			ae2fcc_arg_sarr_restrict(rdwr_prv_idval, 1),
+			aclexpr_opbincfg_extra		ae2fcc_arg_sarr_restrict(rdwr_prv_extra, 1),
+			aclspv_wrd_t			ae2fcc_arg_sarr_restrict(rdwr_lst_scale_buf, ACLEXPR_OPBINCFG_END + 1),
+			aclexpr_opbincfg_extra		ae2fcc_arg_sarr_restrict(rdwr_lst_extra, 1),
+			acltrl_t			ae2fcc_arg_sarr_restrict(r_ltrl, 1)
+			) {
+		return s_carve1_glsl_math(
+				GLSLstd450Floor
 				, rdwr_data, rdwr_prv_idval, rdwr_prv_extra
 				, rdwr_lst_scale_buf, rdwr_lst_extra, r_ltrl);
 	}

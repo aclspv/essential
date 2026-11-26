@@ -8,6 +8,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
+#include <string>
 
 #include <vector>
 
@@ -162,9 +163,8 @@ static const char src[] =
 	"    f32 acc = 0.0f;\n"
 	"    for (int i = 0; i < n; i = i + 1) {\n"
 	"        f32 s = v * (f32)(i + 1);\n"
-	"        s = s - (f32)(int)s;\n"
-	"        acc = acc + s;\n"
-	"        if (acc > 2.5f) return acc;\n"
+	"        s = s - __builtin_floorf(s);\n"
+	"        acc = acc <= 2.5f ? acc + s : acc;\n"
 	"    }\n"
 	"    return acc;\n"
 	"}\n"
@@ -287,7 +287,7 @@ static aclspv_wrd_t *compile_spirv(const char src[len], size_t *out_words) {
 
 	files[0].Contents = src;
 	files[0].Filename = "shader.c";
-	files[0].Length   = len - 1;
+	files[0].Length   = (unsigned)strlen(src) ? (unsigned)strlen(src) : (unsigned)(len - 1);
 
 	aclspv_compile_t ret = ctx.build3(files, 1, argv, 1, 0);
 	if (ret != ACLSPV_COMPILE_OK) {
@@ -314,7 +314,52 @@ static aclspv_wrd_t *compile_spirv(const char src[len], size_t *out_words) {
 
 int main(void) {
 	size_t shader_words = 0;
-	aclspv_wrd_t *spirv = compile_spirv<sizeof(src)>(src, &shader_words);
+	aclspv_wrd_t *spirv;
+
+	/** flat diagnostic shader: drop every per-pixel helper and write a single
+	 * constant colour. set ACLSPV_FLAT to A/B a fragment-cost hypothesis. */
+	static const char flat_src[] =
+		"typedef float f32;\n"
+		"__attribute__((annotate(\"aclspv_execmodel(0)\")))\n"
+		"void vs_main(\n"
+		"    __attribute__((annotate(\"aclspv_bltin(42)\")))\n"
+		"    __attribute__((annotate(\"aclspv_storage_class(1)\")))\n"
+		"    int* in_vid,\n"
+		"    __attribute__((annotate(\"aclspv_bltin(0)\")))\n"
+		"    __attribute__((annotate(\"aclspv_storage_class(3)\")))\n"
+		"    f32* out_pos\n"
+		") {\n"
+		"    *out_pos = (f32)*in_vid;\n"
+		"}\n"
+		"__attribute__((annotate(\"aclspv_execmodel(4)\")))\n"
+		"void fs_main(\n"
+		"    __attribute__((annotate(\"aclspv_location(0)\")))\n"
+		"    __attribute__((annotate(\"aclspv_storage_class(3)\")))\n"
+		"    f32* out_color\n"
+		") {\n"
+		"    *out_color = 0.5f;\n"
+		"}\n";
+
+	if (getenv("ACLSPV_FLAT"))
+		spirv = compile_spirv<sizeof(flat_src)>(flat_src, &shader_words);
+	else {
+		std::string s = src;
+		size_t pos;
+		if (getenv("ACLSPV_NO_SCAFFOLD"))
+			for (pos = 0; (pos = s.find("always_inline", pos)) != std::string::npos; )
+				s.replace(pos, 13, "noinline ");
+		if (getenv("ACLSPV_NOTRI")) {
+			pos = s.find("f32 d = tri(u, v, cx, cy, r);");
+			if (pos != std::string::npos)
+				s.replace(pos, 30, "f32 d = 0.1f;");
+		}
+		if (getenv("ACLSPV_NOSCAN")) {
+			pos = s.find("f32 bands = scan(lm * 1.5f + v * 2.0f, 4);");
+			if (pos != std::string::npos)
+				s.replace(pos, 42, "f32 bands = 0.5f;");
+		}
+		spirv = compile_spirv<4096>(s.c_str(), &shader_words);
+	}
 	if (!shader_words || !spirv) return EXIT_FAILURE;
 	fputs("aclspv: shader compiled\n", stderr);
 
@@ -765,6 +810,17 @@ int main(void) {
 
 		/** don't throttle: FIFO present mode already paces us at vsync, and
 		 * an extra sleep here is what makes mouse motion feel rubbery. */
+		++nframes;
+		{
+			uint64_t now = SDL_GetPerformanceCounter();
+			if (now - last_tick >= perf_freq) {
+				fprintf(stderr, "fps=%llu frame=%.2fms\n",
+						(unsigned long long)(nframes * perf_freq / (now - last_tick)),
+						(double)(now - last_tick) * 1000.0 / (double)perf_freq / (double)(nframes ? nframes : 1));
+				nframes = 0;
+				last_tick = now;
+			}
+		}
 	}
 
 	/* ── cleanup ────────────────────────────────────────────────────── */

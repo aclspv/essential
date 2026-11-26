@@ -56,6 +56,7 @@ typedef struct {
 	unsigned	m_num_sin;
 	unsigned	m_num_cos;
 	unsigned	m_num_tan;
+	unsigned	m_num_floor;
 	unsigned	m_num_select;
 	unsigned	m_num_shuffle;
 	unsigned	m_num_lnot;
@@ -183,6 +184,7 @@ static int acltest_spirv_scan(
 	r->m_num_sin		= 0;
 	r->m_num_cos		= 0;
 	r->m_num_tan		= 0;
+	r->m_num_floor	= 0;
 	r->m_num_select		= 0;
 	r->m_num_shuffle	= 0;
 	r->m_num_lnot		= 0;
@@ -259,12 +261,13 @@ static int acltest_spirv_scan(
 			case ACLTEST_SPV_OP_EXT_INST:
 				++r->m_num_extinst;
 				/** [op][type][result][set][instruction][operand...]
-				 * 13 = Sin, 14 = Cos, 15 = Tan */
+				 * 13 = Sin, 14 = Cos, 15 = Tan, 8 = Floor */
 				if(wc >= 6) {
 					switch(rd[i + 4]) {
 						case 13: ++r->m_num_sin; break;
 						case 14: ++r->m_num_cos; break;
 						case 15: ++r->m_num_tan; break;
+						case 8:  ++r->m_num_floor; break;
 						default: break;
 					}
 				}
