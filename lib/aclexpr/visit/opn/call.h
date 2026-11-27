@@ -276,7 +276,7 @@ ae2f_inline_f static aclexpr_visit_lbl_t aclexpr_visit_opn_call(
 	 * this very call needs no id of its own (`f()` may precede the
 	 * definition of an always_inline `f`). */
 	if(!c_inline) {
-		unless(p_sym->m_flag0 & ACLSYM_FN_FLAG0_NAMED)
+		unless(p_sym->m_flag0 & ACLSYM_FN_FLAG0_CALLABLE)
 			return c_lbl_fail;
 	}
 

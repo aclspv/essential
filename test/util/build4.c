@@ -41,6 +41,20 @@
  *
  *  3. a static call cycle. a static function is never imported, so no source
  *     could help either: the failure is the cycle, and build4 must name it.
+ *
+ *  4. mutual recursion inside one translation unit. both bodies are here, so
+ *     the queue could carve them in any order — and that is why the cycle is
+ *     rejected explicitly rather than left to the dependency order.
+ *
+ *  5. the same cycle with ACLSPV_CTX_FLAG0_ALLOW_RECURSION. plain SPIR-V
+ *     accepts a recursive call graph; Vulkan does not, so the caller decides.
+ *
+ *  6. the cycle SPLIT across two translation units. each compile defers its
+ *     half; the cache carries the deferred body's cursors so the later source
+ *     finishes the earlier one's body.
+ *
+ *  7. every unit disposed once build returns, then dumped and built again:
+ *     nothing may still point into a dead unit.
  * */
 static const char* const s_src_lines[] = {
 	"int helper(int x) { return x + 1; }\n",
@@ -59,6 +73,16 @@ static const char* const s_cycle_lines[] = {
 	"int entry_cycle(int x) { return ping(x); }\n",
 };
 static char s_cycle[1024];
+
+/** a call cycle inside ONE translation unit: both bodies are here, so the
+ * compile phase can finish both — a forward declaration gives the second one
+ * an id while the first is being carved. */
+static const char* const s_mutual_lines[] = {
+	"int g(int x);\n",
+	"int f(int x) { return g(x) + 1; }\n",
+	"int g(int x) { return f(x) + 2; }\n",
+};
+static char s_mutual[1024];
 
 static const char* const s_entp_lines[] = {
 	"typedef int i32;\n",
@@ -346,10 +370,10 @@ LBL_DONE:
 
 /** scenario 3: a static call cycle.
  *
- * a static function is never imported, so its body can only come out of its
- * own translation unit, and the compile phase already sorted that unit's
- * bodies. what is left is a cycle — build4 must name that, not ask for a
- * source that could not help.
+ * a static function is never imported, so its body can only come out of its own
+ * translation unit. a cycle among them cannot be expressed either: SPIR-V has
+ * no recursive OpFunctionCall. the compile phase is where that is found, since
+ * it is the phase that sees both bodies.
  * */
 static int s_case_static_cycle(void) {
 	x_aclspv_ctx	ctx;
@@ -364,28 +388,371 @@ static int s_case_static_cycle(void) {
 	}
 
 	if(s_compile(&ctx, s_cycle, 0)) {
-		fputs("[build4/3] compile failed\n", stderr);
+		printf("[build4/3] compile named a static cycle: %d (want %d)\n"
+				, (int)ctx.m_err, (int)ACLSPV_COMPILE_RECURSIVE_CALL);
+
+		if(ctx.m_err != ACLSPV_COMPILE_RECURSIVE_CALL) {
+			fputs("[build4/3] a static cycle was reported as something else\n"
+					, stderr);
+			ret = EXIT_FAILURE;
+		}
+
+		goto LBL_DONE;
+	}
+
+	fputs("[build4/3] a static call cycle compiled\n", stderr);
+	ret = EXIT_FAILURE;
+
+LBL_DONE:
+	aclspv_fini_ctx(&ctx);
+	return ret;
+}
+
+/** scenario 4: mutual recursion inside one translation unit.
+ *
+ * `f` calls `g` before `g` is defined, and `g` calls `f` back. both bodies are
+ * here, so the queue can carve them in any order — and that is exactly why the
+ * cycle has to be rejected explicitly: the module would otherwise carry a
+ * recursive OpFunctionCall, which SPIR-V does not have.
+ * */
+static int s_case_mutual_one_tu(void) {
+	x_aclspv_ctx	ctx;
+	aclspv_usrcfg_t	cfg;
+	int		ret = EXIT_SUCCESS;
+
+	memset(&cfg, 0, sizeof(cfg));
+
+	if(aclspv_init_ctx(&ctx, &cfg)) {
+		fputs("[build4/4] init failed\n", stderr);
+		return EXIT_FAILURE;
+	}
+
+	if(s_compile(&ctx, s_mutual, 0)) {
+		printf("[build4/4] compile named a mutual recursion: %d (want %d)\n"
+				, (int)ctx.m_err, (int)ACLSPV_COMPILE_RECURSIVE_CALL);
+
+		if(ctx.m_err != ACLSPV_COMPILE_RECURSIVE_CALL) {
+			fputs("[build4/4] mutual recursion was reported as something "
+					"else\n", stderr);
+			ret = EXIT_FAILURE;
+		}
+
+		goto LBL_DONE;
+	}
+
+	fputs("[build4/4] a mutual recursion compiled\n", stderr);
+	ret = EXIT_FAILURE;
+
+LBL_DONE:
+	aclspv_fini_ctx(&ctx);
+	return ret;
+}
+
+/** scenario 5: ALLOW_RECURSION keeps the cycle.
+ *
+ * the flag is the caller's statement that the target tolerates recursion —
+ * Vulkan does not ([VUID-StandaloneSpirv-None-04634]), plain SPIR-V does. with
+ * it on, a cycle is emitted instead of rejected: the ids are reserved up front
+ * so every body of the cycle can be carved, and no placeholder OpFunction is
+ * left behind.
+ * */
+static int s_case_recursion_allowed(void) {
+	x_aclspv_ctx		ctx;
+	aclspv_usrcfg_t		cfg;
+	struct CXUnsavedFile	f;
+	CXIndex			idx;
+	CXTranslationUnit	tu = 0;
+	aclspv_wrd_t*		spv = 0;
+	aclspv_wrdcount_t	count = 0;
+	unsigned		c_fn;
+	unsigned		c_call;
+	acltest_spirv_stats	stats;
+	int			ret = EXIT_SUCCESS;
+
+	memset(&cfg, 0, sizeof(cfg));
+	cfg.m_flag0 = ACLSPV_CTX_FLAG0_ALLOW_RECURSION;
+	cfg.m_ver_spv = aclspv_ver_spv(1, 3);
+
+	if(aclspv_init_ctx(&ctx, &cfg)) {
+		fputs("[build4/5] init failed\n", stderr);
+		return EXIT_FAILURE;
+	}
+
+	f.Filename	= "main.c";
+	f.Contents	= s_mutual;
+	f.Length	= (unsigned long)strlen(s_mutual);
+
+	idx = clang_createIndex(0, 0);
+
+	if(!idx
+			|| clang_parseTranslationUnit2(
+				idx, "main.c", 0, 0, &f, 1
+				, CXTranslationUnit_None, &tu) != CXError_Success
+			|| !tu) {
+		fputs("[build4/5] parse failed\n", stderr);
+		clang_disposeIndex(idx);
+		aclspv_fini_ctx(&ctx);
+		return EXIT_FAILURE;
+	}
+
+	if(aclspv_ctx_compile1(&ctx, tu) != ACLSPV_COMPILE_OK
+			|| aclspv_ctx_build4(&ctx) != ACLSPV_COMPILE_OK) {
+		fprintf(stderr, "[build4/5] allowed recursion failed: %d\n"
+				, (int)ctx.m_err);
 		ret = EXIT_FAILURE;
 		goto LBL_DONE;
 	}
 
-	if(aclspv_ctx_build4(&ctx) == ACLSPV_COMPILE_OK) {
-		fputs("[build4/3] build4 closed a module with a call cycle\n"
-				, stderr);
+	if(s_dump(&ctx, &spv, &count))
+		goto LBL_DONE;
+
+	if(acltest_spirv_scan(spv, count, &stats) != 0) {
+		fputs("[build4/5] malformed spir-v instruction stream\n", stderr);
 		ret = EXIT_FAILURE;
 		goto LBL_DONE;
 	}
 
-	printf("[build4/3] build4 named a static cycle: %d (want %d)\n"
-			, (int)ctx.m_err, (int)ACLSPV_COMPILE_RECURSIVE_CALL);
+	c_fn	= acltest_spirv_count_op(spv, count, (unsigned)SpvOpFunction);
+	c_call	= acltest_spirv_count_op(spv, count, (unsigned)SpvOpFunctionCall);
 
-	if(ctx.m_err != ACLSPV_COMPILE_RECURSIVE_CALL) {
-		fputs("[build4/3] a static cycle was reported as something else\n"
+	printf("[build4/5] recursion allowed: fn=%u call=%u\n", c_fn, c_call);
+
+	/** f and g, each defined exactly once — an id is reserved for the cycle,
+	 * never declared twice — and the two calls that make the cycle. */
+	if(c_fn != 2 || c_call != 2) {
+		fputs("[build4/5] allowed recursion did not emit the cycle\n"
 				, stderr);
 		ret = EXIT_FAILURE;
 	}
 
 LBL_DONE:
+	free(spv);
+	clang_disposeTranslationUnit(tu);
+	clang_disposeIndex(idx);
+	aclspv_fini_ctx(&ctx);
+	return ret;
+}
+
+/** scenario 6: mutual recursion ACROSS translation units.
+ *
+ * a.c defines `f`, which calls `g`; b.c defines `g`, which calls `f`. neither
+ * compile pass can see the other body, so each defers — and the symbol cache
+ * keeps the deferred body's cursors for the next pass to pick up
+ * (s_collect_deferred). by the time b.c is compiled, `f`'s callee is out.
+ *
+ * that is why compile1 documents "the TU must outlive the build": the cache
+ * holds cursors into both units. this test keeps them, which is the contract.
+ * */
+static int s_case_recursion_across_tu(void) {
+	x_aclspv_ctx		ctx;
+	aclspv_usrcfg_t		cfg;
+	struct CXUnsavedFile	f[2];
+	const char*		ARG[] = {"m.c"};
+	CXIndex			idx;
+	CXTranslationUnit	tu[2];
+	aclspv_wrd_t*		spv = 0;
+	aclspv_wrdcount_t	count = 0;
+	unsigned		c_fn;
+	unsigned		c_call;
+	acltest_spirv_stats	stats;
+	int			ret = EXIT_FAILURE;
+	int			k;
+
+	memset(&cfg, 0, sizeof(cfg));
+	cfg.m_flag0 = ACLSPV_CTX_FLAG0_ALLOW_RECURSION;
+	cfg.m_ver_spv = aclspv_ver_spv(1, 3);
+
+	tu[0] = 0;
+	tu[1] = 0;
+
+	if(aclspv_init_ctx(&ctx, &cfg)) {
+		fputs("[build4/6] init failed\n", stderr);
+		return EXIT_FAILURE;
+	}
+
+	idx = clang_createIndex(0, 0);
+
+	if(!idx) {
+		fputs("[build4/6] index failed\n", stderr);
+		aclspv_fini_ctx(&ctx);
+		return EXIT_FAILURE;
+	}
+
+	f[0].Filename	= "a.c";
+	f[0].Contents	= "int g(int x);\nint f(int x) { return g(x) + 1; }\n";
+	f[0].Length	= (unsigned long)strlen(f[0].Contents);
+
+	if(clang_parseTranslationUnit2(
+				idx, "a.c", ARG, 0, f, 1
+				, CXTranslationUnit_None, &tu[0]) != CXError_Success
+			|| !tu[0]
+			|| aclspv_ctx_compile1(&ctx, tu[0]) != ACLSPV_COMPILE_OK) {
+		fprintf(stderr, "[build4/6] a.c failed: %d\n", (int)ctx.m_err);
+		goto LBL_DONE;
+	}
+
+	f[0].Filename	= "b.c";
+	f[0].Contents	= "int f(int x);\nint g(int x) { return f(x) + 2; }\n";
+	f[0].Length	= (unsigned long)strlen(f[0].Contents);
+
+	if(clang_parseTranslationUnit2(
+				idx, "b.c", ARG, 0, f, 1
+				, CXTranslationUnit_None, &tu[1]) != CXError_Success
+			|| !tu[1]
+			|| aclspv_ctx_compile1(&ctx, tu[1]) != ACLSPV_COMPILE_OK) {
+		fprintf(stderr, "[build4/6] b.c failed: %d\n", (int)ctx.m_err);
+		goto LBL_DONE;
+	}
+
+	if(aclspv_ctx_build4(&ctx) != ACLSPV_COMPILE_OK) {
+		fprintf(stderr, "[build4/6] build4 failed: %d\n", (int)ctx.m_err);
+		goto LBL_DONE;
+	}
+
+	if(s_dump(&ctx, &spv, &count))
+		goto LBL_DONE;
+
+	if(acltest_spirv_scan(spv, count, &stats) != 0) {
+		fputs("[build4/6] malformed spir-v instruction stream\n", stderr);
+		goto LBL_DONE;
+	}
+
+	c_fn	= acltest_spirv_count_op(spv, count, (unsigned)SpvOpFunction);
+	c_call	= acltest_spirv_count_op(spv, count, (unsigned)SpvOpFunctionCall);
+
+	printf("[build4/6] recursion across TU: fn=%u call=%u\n", c_fn, c_call);
+
+	/** f and g, each defined once, and the two calls that make the cycle:
+	 * the module a single-source cycle would have produced. */
+	if(c_fn != 2 || c_call != 2) {
+		fputs("[build4/6] mutual recursion across units did not close\n"
+				, stderr);
+		goto LBL_DONE;
+	}
+
+	ret = EXIT_SUCCESS;
+
+LBL_DONE:
+	free(spv);
+	for(k = 0; k < 2; ++k)
+		clang_disposeTranslationUnit(tu[k]);
+	clang_disposeIndex(idx);
+	aclspv_fini_ctx(&ctx);
+	return ret;
+}
+
+/** scenario 7: every translation unit is disposable once build returns.
+ *
+ * build is the last phase, so the cache must not still point into any unit.
+ * this compiles two sources, builds, disposes both units, and then dumps and
+ * builds AGAIN: a cursor left behind would show up as a crash or a second
+ * decoration here, and as a failure in spirv-val.
+ * */
+static int s_case_disposable_after_build(void) {
+	x_aclspv_ctx		ctx;
+	aclspv_usrcfg_t		cfg;
+	struct CXUnsavedFile	f[2];
+	const char*		ARG[] = {"m.c"};
+	CXIndex			idx;
+	CXTranslationUnit	tu[2];
+	aclspv_wrd_t*		spv = 0;
+	aclspv_wrdcount_t	count = 0;
+	unsigned		c_fn;
+	unsigned		c_call;
+	acltest_spirv_stats	stats;
+	int			ret = EXIT_FAILURE;
+	int			k;
+
+	memset(&cfg, 0, sizeof(cfg));
+	cfg.m_flag0 = ACLSPV_CTX_FLAG0_ALLOW_RECURSION;
+	cfg.m_ver_spv = aclspv_ver_spv(1, 3);
+
+	tu[0] = 0;
+	tu[1] = 0;
+
+	if(aclspv_init_ctx(&ctx, &cfg)) {
+		fputs("[build4/7] init failed\n", stderr);
+		return EXIT_FAILURE;
+	}
+
+	idx = clang_createIndex(0, 0);
+
+	if(!idx) {
+		fputs("[build4/7] index failed\n", stderr);
+		aclspv_fini_ctx(&ctx);
+		return EXIT_FAILURE;
+	}
+
+	f[0].Filename	= "a.c";
+	f[0].Contents	= "int g(int x);\nint f(int x) { return g(x) + 1; }\n";
+	f[0].Length	= (unsigned long)strlen(f[0].Contents);
+
+	f[1].Filename	= "b.c";
+	f[1].Contents	= "int f(int x);\nint g(int x) { return f(x) + 2; }\n";
+	f[1].Length	= (unsigned long)strlen(f[1].Contents);
+
+	if(clang_parseTranslationUnit2(
+				idx, "a.c", ARG, 0, &f[0], 1
+				, CXTranslationUnit_None, &tu[0]) != CXError_Success
+			|| !tu[0]
+			|| clang_parseTranslationUnit2(
+				idx, "b.c", ARG, 0, &f[1], 1
+				, CXTranslationUnit_None, &tu[1]) != CXError_Success
+			|| !tu[1]) {
+		fputs("[build4/7] parse failed\n", stderr);
+		goto LBL_DONE;
+	}
+
+	if(aclspv_ctx_compile1(&ctx, tu[0]) != ACLSPV_COMPILE_OK
+			|| aclspv_ctx_compile1(&ctx, tu[1]) != ACLSPV_COMPILE_OK
+			|| aclspv_ctx_build4(&ctx) != ACLSPV_COMPILE_OK) {
+		fprintf(stderr, "[build4/7] compile/build failed: %d\n"
+				, (int)ctx.m_err);
+		goto LBL_DONE;
+	}
+
+	/** build is over: the units are the caller's to drop, and dropping them
+	 * must leave the context fully usable. */
+	clang_disposeTranslationUnit(tu[0]);
+	clang_disposeTranslationUnit(tu[1]);
+	tu[0] = 0;
+	tu[1] = 0;
+
+	if(s_dump(&ctx, &spv, &count))
+		goto LBL_DONE;
+
+	if(acltest_spirv_scan(spv, count, &stats) != 0) {
+		fputs("[build4/7] malformed spir-v instruction stream\n", stderr);
+		goto LBL_DONE;
+	}
+
+	c_fn	= acltest_spirv_count_op(spv, count, (unsigned)SpvOpFunction);
+	c_call	= acltest_spirv_count_op(spv, count, (unsigned)SpvOpFunctionCall);
+
+	/** a second build has nothing left to say, and must not reach for a unit
+	 * that is gone. */
+	if(aclspv_ctx_build4(&ctx) != ACLSPV_COMPILE_OK) {
+		fprintf(stderr, "[build4/7] second build4 failed: %d\n"
+				, (int)ctx.m_err);
+		goto LBL_DONE;
+	}
+
+	printf("[build4/7] disposable after build: fn=%u call=%u\n"
+			, c_fn, c_call);
+
+	if(c_fn != 2 || c_call != 2) {
+		fputs("[build4/7] the module changed after the units were "
+				"disposed\n", stderr);
+		goto LBL_DONE;
+	}
+
+	ret = EXIT_SUCCESS;
+
+LBL_DONE:
+	free(spv);
+	for(k = 0; k < 2; ++k)
+		clang_disposeTranslationUnit(tu[k]);
+	clang_disposeIndex(idx);
 	aclspv_fini_ctx(&ctx);
 	return ret;
 }
@@ -406,5 +773,20 @@ int main(void) {
 	if(s_case_pending())
 		return EXIT_FAILURE;
 
-	return s_case_static_cycle();
+	acltest_concat(s_mutual, s_mutual_lines,
+			(unsigned)(sizeof(s_mutual_lines) / sizeof(s_mutual_lines[0])));
+
+	if(s_case_static_cycle())
+		return EXIT_FAILURE;
+
+	if(s_case_mutual_one_tu())
+		return EXIT_FAILURE;
+
+	if(s_case_recursion_allowed())
+		return EXIT_FAILURE;
+
+	if(s_case_recursion_across_tu())
+		return EXIT_FAILURE;
+
+	return s_case_disposable_after_build();
 }

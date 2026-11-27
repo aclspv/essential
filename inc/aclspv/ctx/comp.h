@@ -53,7 +53,15 @@ ae2f_extern ACLSPV_ABI_LINK aclspv_compile_t aclspv_ctx_compile(
 /**
  * @brief	COMPILE phase from a caller-owned translation unit.
  *
- * the TU is NOT disposed and MUST outlive the matching aclspv_ctx_build1.
+ * the TU is NOT disposed and MUST outlive the matching build call — build1 for
+ * the source it is handed, and for EVERY source, aclspv_ctx_build4.
+ *
+ * the reason is a body the phase had to defer. a body defers when a callee is
+ * not nameable yet, and only another source can change that: `f` in a.c waits
+ * for `g`, and b.c defines it. the symbol cache keeps that body's cursors, so
+ * the next compile picks it up and finishes it once the callee is out — which
+ * is what makes mutual recursion work across translation units. dropping the
+ * TU drops those cursors with it.
  * */
 ae2f_extern ACLSPV_ABI_LINK aclspv_compile_t aclspv_ctx_compile1(
 		const h_aclspv_ctx_t	h_ctx,
@@ -127,9 +135,10 @@ ae2f_extern ACLSPV_ABI_LINK aclspv_compile_t aclspv_ctx_build3(
  *    carries (m_type_id) is already interned in this context, so a called
  *    function with no body needs no cursor to be declared.
  *
- * only a body the compile phase DEFERRED needs the source: it must be carved
- * again, and that is a walk into its translation unit. build4 was given none,
- * so it reports that as ACLSPV_COMPILE_HOST_PENDING instead.
+ * a body the compile phase deferred is finished by the next compile that can
+ * name its callee, not here: its cursors are carried in the cache, and every
+ * translation unit stays alive until build. build4 only has to report one that
+ * no source ever settled, as ACLSPV_COMPILE_HOST_PENDING.
  *
  * the compile phase must have run at least once. otherwise the module would
  * silently close without any source vouching for it, reported as

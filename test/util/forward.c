@@ -278,21 +278,19 @@ static int s_recursive(void) {
 		goto LBL_TU;
 	}
 
-	/** the compile phase simply leaves both bodies pending. */
-	if(aclspv_ctx_compile1(&ctx, tu) != ACLSPV_COMPILE_OK) {
-		fprintf(stderr, "[forward] recursion compile failed: %d\n"
-				, (int)ctx.m_err);
-		goto LBL_CTX;
-	}
-
-	ret = aclspv_ctx_build1(&ctx, tu);
+	/** a call cycle is rejected by the COMPILE phase: it is the phase that
+	 * sees both bodies, and SPIR-V has no recursive OpFunctionCall for the
+	 * build phase to complete. */
+	ret = aclspv_ctx_compile1(&ctx, tu);
 
 	printf("recursion: %d\n", (int)ret);
 
 	if(ret == ACLSPV_COMPILE_RECURSIVE_CALL)
 		rc = 0;
+	else
+		fprintf(stderr, "[forward] recursion compile: %d, want %d\n"
+				, (int)ret, (int)ACLSPV_COMPILE_RECURSIVE_CALL);
 
-LBL_CTX:
 	aclspv_fini_ctx(&ctx);
 
 LBL_TU:

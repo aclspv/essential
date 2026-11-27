@@ -1303,6 +1303,6 @@ Some statements / extensions may not be planned to be supported for now.
 * pointer arithmetic on non-physical addressing model
 * global variables
 * pointer to struct on input | output buffer
-* recursion, direct or mutual: the call graph must be acyclic. a cycle is reported as `ACLSPV_COMPILE_RECURSIVE_CALL` instead of emitted, because SPIR-V has no recursive `OpFunctionCall`.
+* recursion, direct or mutual: rejected by default. SPIR-V itself admits a recursive `OpFunctionCall`, but Vulkan does not — an entry point may not have a call graph with a cycle (`VUID-StandaloneSpirv-None-04634`). a cycle is therefore reported as `ACLSPV_COMPILE_RECURSIVE_CALL` unless `ACLSPV_CTX_FLAG0_ALLOW_RECURSION` says the target tolerates it, in which case the cycle is emitted.
 * `bf16` and `fp8` block-scope variables: those types exist as parameters, pointees, function results and expression values, see <<narrow-float,narrow float types>>.
 * arithmetic, comparison and math on `fp8`: the encodings define no such instructions, see <<narrow-float,narrow float types>>.

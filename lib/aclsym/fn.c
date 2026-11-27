@@ -32,6 +32,7 @@
 #include <ae2f/cc/tail.h>
 
 #include <string.h>
+#include <stdlib.h>
 
 /** the context pass 1 works in: the scratch sub-context, when the host has
  * one. building a signature builds an aclty type, and that must not reach
@@ -715,16 +716,26 @@ const char* aclsym_fn_name(const aclsym_fn_t* c_sym, h_aclspv_ctx_t h_ctx) {
 }
 
 /** true when the symbol still describes this pass: the module carries it, as a
- * body or as an import. everything else is a claim about a translation unit
- * that has since died.
+ * body or as an import, or the module still OWES its body.
  *
  * DEFINED alone is not enough. a body another translation unit declared but
  * never emitted is a cursor into that unit — nothing in the module answers for
- * it, and the pass starting now has to see the declaration again. only EMITTED
- * (the body is out) and IMPORTED (the module declares it) are facts about the
- * module rather than about a source. */
+ * it, and the pass starting now has to see the declaration again.
+ *
+ * a body the module still owes is the exception, and it is the reason the
+ * cache keeps `m_body`: the source that could not finish it is gone from this
+ * walk, so dropping the record would drop the only handle on that body. kept,
+ * the next compile picks it up (s_collect_deferred) once its callee is out.
+ * the caller's contract — every translation unit alive until build — is what
+ * makes that cursor usable. */
 static aclspv_bool_t s_kept(const aclsym_fn_t* c_sym) {
-	return (aclspv_bool_t)(c_sym->m_flag0 & (aclspv_wrd_t)ACLSYM_FN_FLAG0_NAMED);
+	if(c_sym->m_flag0 & (aclspv_wrd_t)ACLSYM_FN_FLAG0_NAMED)
+		return 1;
+
+	if(!c_sym->m_body.kind || clang_Cursor_isNull(c_sym->m_body))
+		return 0;
+
+	return 1;
 }
 
 void aclsym_fn_static_reset_pass(h_aclspv_ctx_t h_ctx) {
@@ -767,6 +778,35 @@ void aclsym_fn_static_reset_pass(h_aclspv_ctx_t h_ctx) {
 	 * for the next pass to reuse. */
 	h_ctx->m_fnlist.m_num_fn_static		= 0;
 	h_ctx->m_fnlist.m_num_fn_static_name	= 0;
+}
+
+void aclsym_fn_drop_deferred(h_aclspv_ctx_t h_ctx) {
+	aclsym_fn_t* ae2f_restrict	base;
+	aclspv_wrdcount_t		i;
+
+	ae2f_ifezerr(h_ctx)		return;
+
+	h_ctx = s_cache(h_ctx);
+
+	ae2f_ifezerr(h_ctx)		return;
+
+	base = (aclsym_fn_t*)h_ctx->m_fnlist.m_fn.m_p;
+
+	if(base) {
+		for(i = 0; i < h_ctx->m_fnlist.m_num_fn; ++i) {
+			base[i].m_fn	= clang_getNullCursor();
+			base[i].m_body	= clang_getNullCursor();
+		}
+	}
+
+	base = (aclsym_fn_t*)h_ctx->m_fnlist.m_fn_static.m_p;
+
+	if(base) {
+		for(i = 0; i < h_ctx->m_fnlist.m_num_fn_static; ++i) {
+			base[i].m_fn	= clang_getNullCursor();
+			base[i].m_body	= clang_getNullCursor();
+		}
+	}
 }
 
 void aclsym_fn_reset_static(h_aclspv_ctx_t h_ctx) {
@@ -883,13 +923,23 @@ static enum CXChildVisitResult s_body_ready_visit(
 	unless(p_sym)
 		return CXChildVisit_Recurse;
 
-	/** the module can name it: a body emitted by a pass, or an import the
-	 * build phase already declared. */
-	if(p_sym->m_flag0 & ACLSYM_FN_FLAG0_NAMED)
+	/** the module can name it: a body emitted by a pass, an import the build
+	 * phase declared, or an id reserved for a body that is on its way (a
+	 * cycle bound up front, see s_reserve_ids). */
+	if(p_sym->m_flag0 & ACLSYM_FN_FLAG0_CALLABLE)
 		return CXChildVisit_Recurse;
 
-	/** a body-less callee becomes nameable once its import is declared;
-	 * a defined callee must be emitted first. either way: not yet. */
+	/** a callee DEFINED in this translation unit but not out yet is still a
+	 * callee this body waits for: the dependency order exists for it, and a
+	 * forward declaration is written for it before any body is carved (see
+	 * s_run), so it becomes nameable in that same run.
+	 *
+	 * waiting is also what makes a CYCLE impossible to emit: a cycle never
+	 * becomes ready, and s_cycle rejects it. that ordering is deliberate —
+	 * recursion is not expressible in SPIR-V, so it must not become carvable
+	 * just because a forward declaration exists. */
+
+	/** a body-less callee becomes nameable once its import is declared. */
 	p->m_ready = 0;
 	return CXChildVisit_Break;
 }

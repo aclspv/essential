@@ -177,7 +177,7 @@ static aclspv_bool_t s_call_copy_ctor(
 	unless(p_sym)
 		return 0;
 
-	if(!(p_sym->m_flag0 & ACLSYM_FN_FLAG0_NAMED)) {
+	if(!(p_sym->m_flag0 & ACLSYM_FN_FLAG0_CALLABLE)) {
 		_aclctx_err(h_ctx, ACLSPV_COMPILE_UNHANDLED);
 		return 1;
 	}
@@ -448,7 +448,7 @@ aclspv_bool_t aclexpr_varinit(
 	unless(p_sym)
 		return 1;
 
-	if(!(p_sym->m_flag0 & ACLSYM_FN_FLAG0_NAMED)) {
+	if(!(p_sym->m_flag0 & ACLSYM_FN_FLAG0_CALLABLE)) {
 		err_puts("[aclexpr::varinit] constructor is not emitted yet");
 		_aclctx_err(h_ctx, ACLSPV_COMPILE_UNHANDLED);
 		return 1;

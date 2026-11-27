@@ -33,13 +33,19 @@
 
 #include <ae2f/pat/dbg.h>
 
-/** emit the import declaration for one body-less symbol.
+/** emit the import declaration for one body-less symbol: the signature and the
+ * id, no blocks, plus `LinkageAttributes Import` and the Linkage capability.
  *
  * the signature comes from the symbol, not from a cursor: the gather pass
  * recorded the declared function type (m_type_id) while the translation unit
  * was alive, and aclty interned it, so the same declaration has one entry no
  * matter which pass asks. that is what lets a build phase declare the import
- * with no source at all. */
+ * with no source at all.
+ *
+ * a body that IS defined but not out yet is a different case: it only needs an
+ * id, not a declaration, and gets one from aclemit_fndecl_reserve. a function
+ * may carry exactly one OpFunction, and that one is its definition.
+ * */
 static aclspv_compile_t s_declare(
 		aclsym_fn_t*		p_sym,
 		x_aclspv_vec*		h_wrds,
@@ -129,6 +135,12 @@ static aclspv_compile_t s_declare(
 	 * pass that finds a definition of it must see that. */
 	p_sym->m_flag0 |= aclsym_fn_flag0(ACLSYM_FN_FLAG0_IMPORTED);
 
+	/** the module settled it as an import, so no body is owed any more. the
+	 * caller may dispose every translation unit once build returns, and a
+	 * cursor left here would be the only thing still reaching into one. */
+	p_sym->m_fn	= clang_getNullCursor();
+	p_sym->m_body	= clang_getNullCursor();
+
 	return ACLSPV_COMPILE_OK;
 }
 
@@ -171,11 +183,22 @@ static enum CXChildVisitResult s_visit(
 	unless(p_sym)
 		return CXChildVisit_Recurse;
 
-	/** a body in this translation unit is ordered by emission, not linked;
-	 * an already declared one needs nothing. */
-	if(p_sym->m_flag0 & (aclspv_wrd_t)(
-				aclsym_fn_flag0(ACLSYM_FN_FLAG0_DEFINED)
-				| ACLSYM_FN_FLAG0_NAMED))
+	/** a body in this translation unit is ordered by emission, not linked. a
+	 * call site only needs its id, so reserve one when the body is not out yet
+	 * — nothing is written to the module, and the definition fills the same id
+	 * when the scheduler reaches it. */
+	if(p_sym->m_flag0 & aclsym_fn_flag0(ACLSYM_FN_FLAG0_DEFINED)) {
+		if(p_sym->m_flag0 & ACLSYM_FN_FLAG0_CALLABLE)
+			return CXChildVisit_Recurse;
+
+		ae2f_ifnezerr(aclemit_fndecl_reserve(p_sym, ctx))
+			return CXChildVisit_Break;
+
+		return CXChildVisit_Recurse;
+	}
+
+	/** an already declared one needs nothing. */
+	if(p_sym->m_flag0 & ACLSYM_FN_FLAG0_NAMED)
 		return CXChildVisit_Recurse;
 
 	/** an internal-linkage function has no external definition to import:
@@ -215,6 +238,25 @@ aclspv_compile_t aclemit_fndecl_imports(
 	cf.m_count	= wr_count;
 
 	clang_visitChildren(c_body, s_visit, &cf);
+
+	return h_ctx->m_err;
+}
+
+aclspv_compile_t aclemit_fndecl_reserve(
+		aclsym_fn_t*		p_sym,
+		h_aclspv_ctx_t		h_ctx
+		) {
+	ae2f_ifezerr(h_ctx)		return ACLSPV_COMPILE_PRM_INVAL_NIL;
+	aclctx_err_check(h_ctx)	return h_ctx->m_err;
+
+	ae2f_ifezerr(p_sym)		return ACLSPV_COMPILE_PRM_INVAL_NIL;
+
+	/** an id and nothing else: no OpFunction, no decoration. the definition
+	 * writes the OpFunction when its body is carved, and a call site only ever
+	 * needed the id. */
+	p_sym->m_id = h_ctx->m_id++;
+
+	p_sym->m_flag0 |= aclsym_fn_flag0(ACLSYM_FN_FLAG0_DECLARED);
 
 	return h_ctx->m_err;
 }

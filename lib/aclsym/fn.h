@@ -20,11 +20,12 @@
  *
  * pre-emit function symbols. no aclcur graph, no emission: records only.
  *
- * no CXCursor is kept. a cursor is a language-precise view into a live
- * translation unit, not compiler state: the caller owns the TU's lifetime and
- * must keep it alive while the compiler is still using the cache (point the
- * compile phase at it, keep it until build). a symbol carries only a 4-byte
- * mark and its name, never the cursor itself.
+ * the caller owns every translation unit's lifetime and must keep it alive
+ * until build — aclspv_ctx_compile1 and aclspv_ctx_build1 both document that.
+ * the cache leans on it: a symbol records the mark of its declaration for
+ * lookup, and ONE cursor, `m_body`, for a body this module still owes. keeping
+ * that cursor is what lets a later translation unit's compile finish a body an
+ * earlier one had to defer (mutual recursion across sources).
  * */
 
 #ifndef aclsym_fn_h
@@ -89,6 +90,14 @@ enum ACLSYM_FN_FLAG0_ {
 	 * an export-by-default policy. recorded for the same reason. */
 	ACLSYM_FN_FLAG0_DECL_HIDDEN,
 
+	/** the module declares this function (an OpFunction with no block) while
+	 * its body is still pending: a call reached it before it was emitted, and
+	 * mutual recursion would otherwise have every body waiting forever.
+	 *
+	 * the id is valid from here on, so call sites take the ordinary path. the
+	 * definition that follows reuses it — one id, one OpFunction. */
+	ACLSYM_FN_FLAG0_DECLARED,
+
 	/** the module already decorates this symbol `LinkageAttributes Export`.
 	 *
 	 * a pass re-walks the translation unit of an earlier pass too, so the
@@ -99,12 +108,24 @@ enum ACLSYM_FN_FLAG0_ {
 	ACLSYM_FN_FLAG0_MAX
 };
 
-/** the bits that mean the module can name this symbol: its body is out, or the
- * build phase declared it as an import. anything that wants to CALL a symbol
- * tests this, which is a different question from "is there a body". */
+/** the bits that mean the module can name this symbol: its body is out, the
+ * build phase declared it as an import, or it was forward-declared because a
+ * caller reached it first. anything that wants to CALL a symbol tests this,
+ * which is a different question from "is there a body".
+ *
+ * DECLARED is deliberately NOT here. it only says an id was reserved so a
+ * stalled cycle could bind every body before carving any; the body still has
+ * to come out, and readiness must keep waiting for it. a call site is the one
+ * place that can already go through — see ACLSYM_FN_FLAG0_CALLABLE. */
 #define	ACLSYM_FN_FLAG0_NAMED	\
 	(((aclspv_wrd_t)1u << (aclspv_wrd_t)ACLSYM_FN_FLAG0_EMITTED)	\
 	 | ((aclspv_wrd_t)1u << (aclspv_wrd_t)ACLSYM_FN_FLAG0_IMPORTED))
+
+/** the bits a call site may reference: the module can name it, or has already
+ * reserved its id for a body that is on its way. */
+#define	ACLSYM_FN_FLAG0_CALLABLE	\
+	(ACLSYM_FN_FLAG0_NAMED	\
+	 | ((aclspv_wrd_t)1u << (aclspv_wrd_t)ACLSYM_FN_FLAG0_DECLARED))
 
 ae2f_inline_f ae2f_ccconst static aclspv_wrd_t aclsym_fn_flag0(
 		enum ACLSYM_FN_FLAG0_ c
@@ -144,12 +165,30 @@ typedef struct {
 
 	/* @brief short handle for the declaration: clang_hashCursor.
 	 *
-	 * no CXCursor is stored. a cursor is a language-precise view into a
-	 * live translation unit, not compiler state: the builder hands one in
-	 * while the TU is alive, and this 4-byte mark lets a later walk of the
-	 * same TU resolve the declaration again. m_mark follows the definition
-	 * when one supersedes a prototype. */
+	 * the 4-byte mark is the durable key: a later walk of the same
+	 * translation unit resolves the declaration again through it, without
+	 * holding a cursor. m_mark follows the definition when one supersedes a
+	 * prototype. */
 	aclspv_wrd_t	m_mark;
+
+	/* @brief the declaration of `m_body`, kept with it: a later pass queues the
+	 * pair as one pending item, and the emitter needs both (the declaration for
+	 * the signature and the symbol, the body for the carve). */
+	CXCursor	m_fn;
+
+	/* @brief the body this module still owes, or a null cursor.
+	 *
+	 * set when the compile phase has to defer a body — a callee is not
+	 * nameable yet — and cleared once it is emitted. it is the ONE cursor the
+	 * cache holds, and it is valid because the caller keeps every translation
+	 * unit alive until build: a later source's compile picks the deferred body
+	 * back up from here and carves it once its callees are out.
+	 *
+	 * without it, a body deferred in one source could only be finished by
+	 * walking that source again — which is exactly what
+	 * aclspv_ctx_build4 cannot do.
+	 */
+	CXCursor	m_body;
 
 	/* @brief the symbol name, as a slice of the cache context's
 	 * m_fnlist.m_fn_name. this is the mangled name (or spelling when
@@ -240,6 +279,20 @@ void aclsym_fn_reset_static(h_aclspv_ctx_t h_ctx);
 void aclsym_fn_static_reset_pass(h_aclspv_ctx_t h_ctx);
 
 /**
+ * drop every deferred body cursor the cache is still holding.
+ *
+ * the cache carries a body it owes so the next compile can finish it, and that
+ * cursor points into the translation unit it came from. build is the end of
+ * the line: once it returns the caller may dispose every translation unit, so
+ * nothing may still reach into one. this is what makes that safe.
+ *
+ * a body still owed after build is NOT silently forgotten — it is reported by
+ * the build itself (ACLSPV_COMPILE_HOST_PENDING / _RECURSIVE_CALL). this only
+ * releases the cursors.
+ * */
+void aclsym_fn_drop_deferred(h_aclspv_ctx_t h_ctx);
+
+/**
  * the context the symbol caches live in: the scratch sub-context when the host
  * has one, the host otherwise. every aclsym lookup goes through this, so a
  * caller that wants to read the caches directly (rather than by cursor) asks
@@ -260,6 +313,10 @@ aclsym_fn_t* aclsym_fn_find(CXCursor c_fn, h_aclspv_ctx_t h_ctx);
 
 /** the symbol emitted as c_id (an OpFunction result id), or 0. */
 aclsym_fn_t* aclsym_fn_find_id(aclspv_id_t c_id, h_aclspv_ctx_t h_ctx);
+
+/** the cache a symbol belongs to: the scratch context when there is one. every
+ * walk that wants to visit the symbols directly goes through this. */
+x_aclspv_ctx* aclsym_fn_cache(h_aclspv_ctx_t h_ctx);
 
 /** the symbol's declared name, NUL-terminated, valid for the compile.
  * returns 0 when the symbol or its storage is invalid. */

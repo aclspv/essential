@@ -17,6 +17,7 @@
  */
 
 #include "./norm.h"
+#include <aclutil/wrdemit.h>
 
 #include <aclsym/fn.h>
 
@@ -98,8 +99,14 @@ enum CXChildVisitResult aclemit_fndecl_norm(
 
 	id_ret = p_root_ty->m_info.m_fn.m_ret_id;
 
-	/** the symbol carries the emitted identity for call sites. */
-	p_sym->m_id = ctx->m_id++;
+	/** the symbol carries the emitted identity for call sites. a stalled
+	 * cycle may have reserved this id before any body was carved
+	 * (aclemit_fndecl_reserve): the definition reuses it, so one function has
+	 * one id and the call sites already point here.
+	 *
+	 * a symbol with no reservation takes a new id now. */
+	unless(p_sym->m_flag0 & aclsym_fn_flag0(ACLSYM_FN_FLAG0_DECLARED))
+		p_sym->m_id = ctx->m_id++;
 
 	/** name the symbol when the flag asks for it. */
 	ae2f_ifnezerr(aclemit_fndecl_sym_name(p_sym, ctx))

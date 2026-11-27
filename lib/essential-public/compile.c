@@ -209,6 +209,17 @@ ACLSPV_ABI_LINK aclspv_compile_t aclspv_ctx_compile1(
 			);
 }
 
+/** release every deferred body cursor, whatever the outcome.
+ *
+ * build is the last phase: once it returns the caller may dispose each
+ * translation unit it compiled from. the cache must not still point into one.
+ * a body that never got finished is already reported by the phase that tried —
+ * this only lets go of the cursors. */
+static aclspv_compile_t s_release(h_aclspv_ctx_t h_ctx) {
+	aclsym_fn_drop_deferred(h_ctx);
+	return h_ctx->m_err;
+}
+
 ACLSPV_ABI_LINK aclspv_compile_t aclspv_ctx_build(
 		h_aclspv_ctx_t	h_ctx,
 		CXCursor	c_cur_root
@@ -236,7 +247,9 @@ ACLSPV_ABI_LINK aclspv_compile_t aclspv_ctx_build(
 	}
 
 	/** every emitted body has an id now: decorate the exports. */
-	return aclemit_export(h_ctx);
+	(void)aclemit_export(h_ctx);
+
+	return s_release(h_ctx);
 }
 
 ACLSPV_ABI_LINK aclspv_compile_t aclspv_ctx_build4(
@@ -255,7 +268,7 @@ ACLSPV_ABI_LINK aclspv_compile_t aclspv_ctx_build4(
 	 * has vouched for, and the caller would only find out downstream. */
 	ae2f_ifnezerr_strict(c_null_cursor) {
 		_aclctx_err(h_ctx, ACLSPV_COMPILE_UNHANDLED);
-		return h_ctx->m_err;
+		return s_release(h_ctx);
 	}
 
 	/** a still-pending body has exactly two causes, and they are not the same
@@ -265,31 +278,35 @@ ACLSPV_ABI_LINK aclspv_compile_t aclspv_ctx_build4(
 	 *    unit can emit it, and the compile phase already sorted that unit's
 	 *    bodies. what is left is a call cycle.
 	 *
-	 *  - anything else: a deferred body that only a walk of its translation
-	 *    unit can complete, and this call was given no source. report that
-	 *    instead of walking a unit the caller may already have disposed.
+	 *  - anything else: a body no compiled source could ever settle — every
+	 *    source that defines its callee has been compiled already, and the
+	 *    body is still owed. nothing more can be done here; the caller decides
+	 *    whether to compile the source that finishes it or accept the module
+	 *    without it.
 	 * */
 	ae2f_ifnezerr_strict(aclemit_body_pending(h_ctx)) {
 		if(aclemit_body_cyclic(h_ctx)) {
 			err_puts("a static body never became emittable: a call cycle");
 			_aclctx_err(h_ctx, ACLSPV_COMPILE_RECURSIVE_CALL);
-			return h_ctx->m_err;
+			return s_release(h_ctx);
 		}
 
-		err_puts("a body is still deferred: close the module while its "
-				"translation unit is alive (aclspv_ctx_build1)");
+		err_puts("a body is still deferred: no compiled source could "
+				"name its callee");
 		_aclctx_err(h_ctx, ACLSPV_COMPILE_HOST_PENDING);
-		return h_ctx->m_err;
+		return s_release(h_ctx);
 	}
 
 	/** nothing defers, so there is no body left to complete: what a build
 	 * still owes the module is the decoration. */
 	ae2f_ifezerr(aclutil_add_capability_by_flag(
 				h_ctx, SpvCapabilityLinkage))
-		return h_ctx->m_err;
+		return s_release(h_ctx);
 
 	/** every emitted body has an id now: decorate the exports. */
-	return aclemit_export(h_ctx);
+	(void)aclemit_export(h_ctx);
+
+	return s_release(h_ctx);
 }
 
 ACLSPV_ABI_LINK aclspv_compile_t aclspv_ctx_build1(
