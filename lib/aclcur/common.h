@@ -18,6 +18,39 @@
 #include "./opX.h"
 #include "./emit.h"
 
+/**
+ * one node of the per-function cursor buffer.
+ *
+ * APPEND-ONLY. a node is only ever appended (aclcur_cfg_node2), at the end of
+ * the buffer, and nothing is removed, moved or reordered afterwards. the two
+ * things that look like shrinking are not:
+ *
+ *  - m_num_cursor is reset to 0 when a function's emission is bootstrapped
+ *    (aclemit/root.c, aclemit/bodies.c) and aclcur_cfg_root then appends the
+ *    root label as node 0. the buffer therefore describes ONE function, and an
+ *    index is meaningless outside it.
+ *  - m_num_skip / m_num_skip_prv are word counts over the EMITTED SPIR-V
+ *    stream: they say how many words the next/previous node's instruction
+ *    occupies, so a node whose instruction was dropped can be walked past. no
+ *    node is deleted and no slot is reused.
+ *
+ * what that buys: the physical index is an immutable identity for the lifetime
+ * of the function's cursor scope, and aclcur_get_node_idx() resolves one in
+ * O(1) — where aclcur_get_node() has to scan for the id.
+ *
+ * two caveats, both load-bearing:
+ *
+ *  - a POINTER into the buffer (h_aclcur_t) is invalidated when the buffer
+ *    grows, because growth reallocates it. only indices stay put; re-fetch by
+ *    id/index after anything that may append (every aclcur_cfg_* call).
+ *  - a node appended for a RESERVED id is claimed later: aclcur_cfg_node2 hands
+ *    back the id of a node still classified ACLCUR_RESERVED and the caller
+ *    then configures it. so an index means one node only from the moment its
+ *    class is set — do not stamp an identity onto a slot that is still
+ *    reserved.
+ *
+ * node 0 is always the root label, so no register is ever at index 0.
+ * */
 struct aclcur {
 	union {
 		aclcur_lbl_t	m_lbl;
@@ -38,6 +71,13 @@ struct aclcur {
 
 	/** enum ACLCUR_FLAG0_ */
 	aclspv_wrd_t	m_flag0;
+
+	/** the node's id: a compile-time handle, NOT the node's index in the
+	 * buffer (the layout is append-only, so the index could serve as one —
+	 * see struct aclcur). it doubles as the register's SPIR-V result id for a
+	 * register that owns storage (aclcur_regvar_emit_reg emits
+	 * `OpVariable <ty> <m_id>`), which is why the entry-point argument path
+	 * and the function-parameter path patch it to the id they emitted. */
 	aclcur_id_t	m_id;
 
 	/** current label */

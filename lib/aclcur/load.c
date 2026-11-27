@@ -885,9 +885,19 @@ static aclspv_id_t	s_load_without_phi(
 
 LBL_MEM:
 	{
-		aclspv_id_t load = aclcur_cfg_node(0, h_ctx);
-		h_aclcur_t p_load = aclcur_get_node(load, h_ctx);
-		h_aclcur_t p_lbl = aclcur_get_lbl_last1(h_ctx);
+		const aclspv_id_t c_addr = aclcur_reg_addr(c_reg, h_ctx);
+		aclspv_id_t load;
+		h_aclcur_t p_load;
+		h_aclcur_t p_lbl;
+
+		if(c_addr && c_addr != c_reg) {
+			h_aclcur_t p_addr = aclcur_get_node(c_addr, h_ctx);
+			if(p_addr) (void)++p_addr->m_num_ref;
+		}
+
+		load	= aclcur_cfg_node(0, h_ctx);
+		p_load	= aclcur_get_node(load, h_ctx);
+		p_lbl	= aclcur_get_lbl_last1(h_ctx);
 
 		p = aclcur_get_node(c_reg, h_ctx);
 
@@ -899,6 +909,7 @@ LBL_MEM:
 		p_load->m_ty			= p->m_ty;
 		p_load->m_num_ref		= 0;
 		p_load->m_d.m_load.m_reg	= c_reg;
+		p_load->m_d.m_load.m_addr	= c_addr;
 		p_load->m_lbl			= p_lbl->m_id;
 		p_load->m_flag0 |= aclcur_flag0(ACLCUR_FLAG0_VALUE);
 		if(c_explicit)

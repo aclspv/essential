@@ -9,11 +9,17 @@
 #include <aclutil/emitx.h>
 #include <ae2f/Cxx/Constexpr.h>
 
-aclspv_id_t	aclcur_regvar_addr(aclspv_id_t c_reg, ae2f_unused h_aclspv_ctx_t h_ctx) {
-	/** an OpVariable / OpFunctionParameter result id is already the
-	 * pointer to the storage it declares, so the register id is its own
-	 * address. taking one's address is an id passthrough: no opcode. */
-	return c_reg;
+aclspv_id_t	aclcur_regvar_addr(aclspv_id_t c_reg, h_aclspv_ctx_t h_ctx) {
+	h_aclcur_t p;
+
+	/** an OpVariable / OpFunctionParameter result id is already the pointer to
+	 * the storage it declares: taking the register's address is that id
+	 * passthrough, no opcode. it is the ADDRESS field, not the node's identity
+	 * — see aclcur_reg_t::m_id_addr. */
+	ae2f_ifezerr(p = aclcur_get_node(c_reg, h_ctx))
+		return 0;
+
+	return p->m_d.m_reg.m_id_addr;
 }
 
 aclconst_specsz	aclcur_regvar_size(aclspv_id_t c_reg, h_aclspv_ctx_t h_ctx) {
@@ -121,7 +127,7 @@ aclspv_compile_t	aclcur_regvar_emit_reg(aclcur_regid_root_t c_reg, h_aclspv_ctx_
 					, h_ctx->m_count.m_fndef
 					, SpvOpVariable
 					, ty
-					, c_reg
+					, p->m_d.m_reg.m_id_addr
 					, p->m_d.m_reg.m_storage_class
 					)) return ACLSPV_COMPILE_ALLOC_FAILED_CURSOR;
 	} else {
@@ -130,7 +136,7 @@ aclspv_compile_t	aclcur_regvar_emit_reg(aclcur_regid_root_t c_reg, h_aclspv_ctx_
 					, h_ctx->m_count.m_vars
 					, SpvOpVariable
 					, ty
-					, c_reg
+					, p->m_d.m_reg.m_id_addr
 					, p->m_d.m_reg.m_storage_class
 					)) return ACLSPV_COMPILE_ALLOC_FAILED_CURSOR;
 	}
@@ -395,8 +401,12 @@ aclspv_compile_t	aclcur_regvar_emit_loadof(
 	/** the OpLoad memory operand: the register id by default, or the
 	 * producer's pointer — e.g. an ALIAS2 view chain minted as a
 	 * freshly emitted OpAccessChain. */
-	ae2f_ifnezerr(err = fn_ptr(p->m_d.m_load.m_reg, &id_ptr, h_ctx))
-		return err;
+	id_ptr = p->m_d.m_load.m_addr;
+
+	if(!id_ptr) {
+		ae2f_ifnezerr(err = fn_ptr(p->m_d.m_load.m_reg, &id_ptr, h_ctx))
+			return err;
+	}
 
 	if(c_volatile) {
 		/** volatile load: OpLoad with the Volatile memory-access operand. */
@@ -462,8 +472,12 @@ aclspv_compile_t	aclcur_regvar_emit_storeof(
 
 	/** the OpStore memory operand: the register id by default, or the
 	 * producer's pointer. */
-	ae2f_ifnezerr(err = fn_ptr(p->m_d.m_store.m_reg, &id_ptr, h_ctx))
-		return err;
+	id_ptr = p->m_d.m_store.m_addr;
+
+	if(!id_ptr) {
+		ae2f_ifnezerr(err = fn_ptr(p->m_d.m_store.m_reg, &id_ptr, h_ctx))
+			return err;
+	}
 
 	ae2f_ifezerr(h_ctx->m_count.m_fnimpl = aclutil_emitx_3(
 				&h_ctx->m_section.m_fnimpl

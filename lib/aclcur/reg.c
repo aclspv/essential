@@ -64,13 +64,12 @@ aclspv_id_t	aclcur_reg_base(aclspv_id_t c_reg, h_aclspv_ctx_t h_ctx) {
 	ae2f_ifnezerr_strict(p->m_class != ACLCUR_REG)
 		return 0;
 
-	/** m_base == 0 is the real-register identity sentinel: the register's
-	 * own id is its base. m_id is read live, not copied, because it may
-	 * have been reassigned to a shared OpVariable result id. a ghost
-	 * carries its held pointer value here instead. */
+	/** m_base == 0 means "the register's own ADDRESS is its base", which is
+	 * m_id_addr — never m_id, that is the node's identity. a ghost carries its
+	 * held pointer value in m_base instead. */
 	return p->m_d.m_reg.m_base
 		? p->m_d.m_reg.m_base
-		: p->m_id;
+		: p->m_d.m_reg.m_id_addr;
 }
 
 aclspv_bool_t	aclcur_reg_needs_memory(aclspv_id_t c_reg, h_aclspv_ctx_t h_ctx) {
@@ -243,6 +242,33 @@ aclspv_id_t	aclcur_value_var(aclspv_id_t c_val, h_aclspv_ctx_t h_ctx) {
 	return s_value_var(c_val, h_ctx, 0);
 }
 
+aclspv_id_t	aclcur_reg_of_addr(aclspv_id_t c_addr, h_aclspv_ctx_t h_ctx) {
+	aclspv_wrd_t		i;
+	aclspv_id_t		c_any = 0;
+	const aclspv_wrd_t	c_n = h_ctx ? h_ctx->m_num_cursor : 0;
+
+	if(!c_addr)
+		return 0;
+
+	for(i = 0; i < c_n; ++i) {
+		h_aclcur_t p = aclcur_get_node_idx(i, h_ctx);
+
+		if(!p || p->m_class != ACLCUR_REG)
+			continue;
+		if(p->m_d.m_reg.m_id_addr != c_addr)
+			continue;
+
+		/** the storage owner wins: several registers can name one address. */
+		if(p->m_flag0 & aclcur_flag0_reg(ACLCUR_FLAG0_REG_VAR))
+			return p->m_id;
+
+		if(!c_any)
+			c_any = p->m_id;
+	}
+
+	return c_any;
+}
+
 void	aclcur_reg_ptr_var_store(
 		aclspv_id_t	c_reg,
 		aclspv_id_t	c_ptee,
@@ -284,6 +310,15 @@ static aclspv_id_t s_value_var(
 
 	if(!c_val || c_depth >= ACLCUR_VAR_MAX_DEPTH)
 		return 0;
+
+	/** a value may be a register's ADDRESS, which is a SPIR-V id that can
+	 * collide with another node's identity: resolve it as an address first. */
+	{
+		const aclspv_id_t c_reg = aclcur_reg_of_addr(c_val, h_ctx);
+
+		if(c_reg)
+			return aclcur_reg_var(c_reg, h_ctx);
+	}
 
 	ae2f_ifezerr(p = aclcur_get_node(c_val, h_ctx))
 		return 0;
@@ -462,8 +497,15 @@ aclspv_id_t aclcur_cfg_reg1(
 	p->m_cur			= c_cur;
 	p->m_ty				= c_ty;
 	p->m_d.m_reg.m_storage_class	= c_storage_class;
-	if(c_in_opt)
+
+	if(c_in_opt) {
 		p->m_d.m_reg.m_in = c_in_opt->m_in;
+
+		/** a register that owns storage emits its own OpVariable, so its
+		 * identity doubles as the address. the entry-point argument and
+		 * function-parameter paths replace this with the id they emitted. */
+		p->m_d.m_reg.m_id_addr = id;
+	}
 
 	/** fresh identity: a real register's base is its own id (sentinel 0);
 	 * m_step only becomes meaningful once the register is an ALIAS2 view. */

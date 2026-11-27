@@ -336,6 +336,14 @@ void	aclcur_reg_ptr_var_store(
  * read back from memory nobody recorded. */
 aclspv_id_t	aclcur_value_var(aclspv_id_t c_val, h_aclspv_ctx_t h_ctx);
 
+/** the register whose ADDRESS is `c_addr`, or 0.
+ *
+ * an address is a SPIR-V id and may be SHARED (an entry point's argument
+ * register and the parameter bound to the same OpFunctionParameter), so this
+ * scans and prefers the register that OWNS the storage —
+ * ACLCUR_FLAG0_REG_VAR — over a parameter that merely names it. */
+aclspv_id_t	aclcur_reg_of_addr(aclspv_id_t c_addr, h_aclspv_ctx_t h_ctx);
+
 /** mark c_reg's cached value as taken NOW (after a store or a load filled
  * it), so it stays current until the var is written again. */
 void	aclcur_reg_val_mark(aclspv_id_t c_reg, h_aclspv_ctx_t h_ctx);
@@ -413,6 +421,18 @@ typedef struct aclcur_reg {
 
 	/** see enum SpvStorageClass_ */
 	aclspv_wrd_t m_storage_class;
+
+	/** the SPIR-V id of this register's ADDRESS: its OpVariable result id, the
+	 * OpFunctionParameter it was bound to, or (for a ghost) the held pointer
+	 * value. 0 for a register that owns no address of its own.
+	 *
+	 * SEPARATE from m_id on purpose: m_id is the node's identity (unique in the
+	 * compile context, never emitted), while an ADDRESS is shared — an entry
+	 * point's argument register and the parameter bound to the same
+	 * OpFunctionParameter name one address, and a ghost's address is the
+	 * pointer value it holds. patching m_id to an address is only safe while no
+	 * two registers share one. */
+	aclspv_id_t	m_id_addr;
 
 	/** cached aclcur_reg_var() answer; valid only with
 	 * ACLCUR_FLAG0_REG_VAR_RESOLVED. 0 means "names no var". */

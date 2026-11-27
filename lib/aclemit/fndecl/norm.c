@@ -185,7 +185,10 @@ enum CXChildVisitResult aclemit_fndecl_norm(
 		ae2f_ifezerr(p_reg = aclcur_get_node(id_reg, ctx))
 			return CXChildVisit_Break;
 
-		p_reg->m_id = id_parm;
+		/** the parameter's ADDRESS is the id the emitter produced; the node
+		 * keeps its own identity (an address may be shared — see
+		 * aclcur_reg_t::m_id_addr). */
+		p_reg->m_d.m_reg.m_id_addr = id_parm;
 		p_reg->m_val = id_parm;
 		p_reg->m_flag0 |= aclcur_flag0(ACLCUR_FLAG0_VALUE)
 			| aclcur_flag0_reg(ACLCUR_FLAG0_REG_PARAM);
@@ -200,7 +203,8 @@ enum CXChildVisitResult aclemit_fndecl_norm(
 		if(c_has_this && i == 0) {
 			/** the parameter value id is the node's identity after the
 			 * m_id patch above; the cursor arena is keyed on it. */
-			ctx->m_this = id_parm;
+			/** a node KEY, not the parameter's SPIR-V id. */
+			ctx->m_this = id_reg;
 			continue;
 		}
 

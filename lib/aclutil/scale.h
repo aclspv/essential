@@ -38,6 +38,33 @@ struct x_scale {
 #define	get_buf_from_scale2(buf_T, h_alloc, c_scale)	\
 	((buf_T* ae2f_restrict)get_buf_from_scale(h_alloc, c_scale))
 
+/**
+ * @fn		aclscale_last_copy
+ * @brief	copy the LAST scale BY VALUE.
+ *
+ * a scale pointer — get_last_scale_from_vec's answer, and any buffer resolved
+ * from it — points INSIDE the vector, so every one of them is stale the moment
+ * the vector grows (a nested scope push, a frame grow). the copy is not: its
+ * m_buf is the OFFSET that names the scope, and that offset survives.
+ *
+ * keep the copy across anything that may allocate, and resolve the buffer
+ * through the vector's CURRENT base with get_buf_from_scale2(buf_T, h_alloc,
+ * copy). capturing the pointer instead is a use-after-realloc.
+ *
+ * @return	the copy; m_buf is 0 when the vector holds no scale yet.
+ * */
+ae2f_inline_f ae2f_ccpure static struct x_scale aclscale_last_copy(
+		x_aclspv_vec* ae2f_restrict const	h_alloc
+		) {
+	struct x_scale		C = {0, };
+	const h_scale_t		LAST = h_alloc ? get_last_scale_from_vec(h_alloc) : 0;
+
+	if(!LAST)
+		return C;
+
+	return *LAST;
+}
+
 #define	get_nxt_from_scale(h_alloc, c_scale)	\
 	((x_scale* ae2f_restrict)(((uintptr_t)(h_alloc)->m_p) + ((uintptr_t)(c_scale).m_nxt)))
 

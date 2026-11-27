@@ -38,11 +38,6 @@ typedef struct {
 } acldtor_t;
 
 /** the used count lives in the first word of each scale frame. */
-static aclspv_wrd_t* s_frame(h_aclspv_ctx_t h_ctx) {
-	h_scale_t S = get_last_scale_from_vec(&h_ctx->m_dtor_scope);
-	return S ? get_buf_from_scale2(aclspv_wrd_t, &h_ctx->m_dtor_scope, *S) : 0;
-}
-
 static acldtor_t* s_records(aclspv_wrd_t* c_frame) {
 	return (acldtor_t*)(void*)(c_frame + 1);
 }
@@ -95,6 +90,12 @@ static aclspv_bool_t s_emit_one(const acldtor_t* c_rec, h_aclspv_ctx_t h_ctx) {
 	ae2f_ifezerr(id_obj = aclcur_reg_addr(c_rec->m_reg, h_ctx))
 		return 0;
 
+	/** both calls above may allocate (aclexpr_ptr_taken marks the storage,
+	 * aclcur_reg_addr mints the view's OpAccessChain), and the cursor buffer
+	 * is a growing vector: re-fetch before deciding on the reservation. */
+	ae2f_ifezerr(p_reg = aclcur_get_node(c_rec->m_reg, h_ctx))
+		return 0;
+
 	/** a subobject is an OpAccessChain view; SPIR-V rejects it as an
 	 * OpFunctionCall pointer argument, so the destructor body has to be
 	 * carved here. an explicitly `inline` (or `always_inline`) destructor is
@@ -145,33 +146,52 @@ static aclspv_bool_t s_emit_one(const acldtor_t* c_rec, h_aclspv_ctx_t h_ctx) {
 }
 
 static aclspv_bool_t s_flush_last(h_aclspv_ctx_t h_ctx) {
-	aclspv_wrd_t*		FRAME = s_frame(h_ctx);
-	acldtor_t*		REC;
+	/** the scope stack is a VECTOR, so anything that pushes a scope may move
+	 * it — and an emitted destructor pushes one (an inlined body does). the
+	 * frame is therefore named by a VALUE copy of its scale (its offset) and
+	 * resolved through the vector's current base every time; see
+	 * aclscale_last_copy. */
+	const struct x_scale	S = aclscale_last_copy(&h_ctx->m_dtor_scope);
+	aclspv_wrd_t*		FRAME;
 	aclspv_wrd_t		c_used;
 	aclspv_wrd_t		i;
+
+	unless(S.m_buf)
+		return 0;
+
+	FRAME = get_buf_from_scale2(aclspv_wrd_t, &h_ctx->m_dtor_scope, S);
 
 	unless(FRAME)
 		return 0;
 
 	c_used = FRAME[0];
-	REC = s_records(FRAME);
 
 	for(i = c_used; i --> 0; ) {
 		const aclspv_id_t	c_lbl = aclcur_get_lbl_cur(h_ctx);
+		acldtor_t		RECI;
+
+		/** re-resolve, and copy the record out before emitting: the record
+		 * lives in the frame, which the call below may move. */
+		FRAME = get_buf_from_scale2(aclspv_wrd_t, &h_ctx->m_dtor_scope, S);
+
+		unless(FRAME)
+			break;
+
+		RECI = s_records(FRAME)[i];
 
 		/** an object declared in a block that was already left (a merge
 		 * block whose arms all returned, an inlined body's frame) must not
 		 * be destroyed here: its scope is over, and an instruction emitted
 		 * at the current block would refer to storage it no longer owns.
 		 * the reservation is simply spent. */
-		if(c_lbl && REC[i].m_lbl && REC[i].m_lbl != c_lbl)
+		if(c_lbl && RECI.m_lbl && RECI.m_lbl != c_lbl)
 			continue;
 
-		unless(s_emit_one(&REC[i], h_ctx))
+		unless(s_emit_one(&RECI, h_ctx))
 			return 0;
 	}
 
-	FRAME = s_frame(h_ctx);
+	FRAME = get_buf_from_scale2(aclspv_wrd_t, &h_ctx->m_dtor_scope, S);
 
 	if(FRAME)
 		FRAME[0] = 0;

@@ -99,7 +99,10 @@ aclspv_id_t	aclcur_regview_addr(aclcur_regid_alias2_t c_reg, h_aclspv_ctx_t h_ct
 
 	/** the chain roots on the root register's ANCHOR, not its own id: m_base
 	 * for a ghost (a held pointer value), else the register's own id (the
-	 * real-register identity sentinel). see aclcur_reg_base(). */
+	 * real-register identity sentinel). see aclcur_reg_base(). re-fetched
+	 * because everything below allocates. */
+	ae2f_ifezerr(p = aclcur_get_node(id_cur, h_ctx))
+		return 0;
 	ae2f_ifezerr(id_base = aclcur_reg_base(p->m_id, h_ctx))
 		return 0;
 
@@ -112,7 +115,7 @@ aclspv_id_t	aclcur_regview_addr(aclcur_regid_alias2_t c_reg, h_aclspv_ctx_t h_ct
 	 * actually needed. the node pointer above is re-fetched because the
 	 * chain mint below allocates. */
 	{
-		h_aclcur_t p_root = aclcur_get_node(p->m_id, h_ctx);
+		h_aclcur_t p_root = aclcur_get_node(id_cur, h_ctx);
 
 		if(p_root)
 			p_root->m_flag0 |= aclcur_flag0_reg(ACLCUR_FLAG0_REG_ALLOCATED);
@@ -481,11 +484,28 @@ aclspv_id_t aclcur_reg_ghost(aclspv_id_t c_base, h_aclspv_ctx_t h_ctx) {
 	aclspv_wrd_t c_storage;
 	aclspv_id_t id;
 	aclspv_id_t c_anchor;
+	aclspv_id_t c_base_reg;
 	h_aclcur_t p;
 	aclspv_wrd_t i;
 
-	ae2f_ifezerr(p_base = aclcur_get_node(c_base, h_ctx))
-		return 0;
+	c_base_reg = c_base;
+
+	ae2f_ifezerr(p_base = aclcur_get_node(c_base, h_ctx)) {
+		/** the held value may be an ADDRESS or a parameter VALUE — a function
+		 * parameter's value IS its OpFunctionParameter id, which the register
+		 * carries as its ADDRESS (see aclcur_reg_t::m_id_addr). resolve it to
+		 * the register that names it, which is what carries the type. */
+		const aclspv_id_t c_reg = aclcur_reg_of_addr(c_base, h_ctx);
+
+		ae2f_ifezerr(c_reg)
+			return 0;
+		ae2f_ifezerr(p_base = aclcur_get_node(c_reg, h_ctx))
+			return 0;
+
+		/** the value is that register's address; keep the REGISTER for the
+		 * reference below, since the id names no node. */
+		c_base_reg = c_reg;
+	}
 
 	/** the held value must be a pointer: its pointee is the ghost's own
 	 * region type, its storage class the ghost's. */
@@ -522,7 +542,8 @@ aclspv_id_t aclcur_reg_ghost(aclspv_id_t c_base, h_aclspv_ctx_t h_ctx) {
 				&& p_base->m_d.m_op.m_op == SpvOpCopyObject
 				&& p_inner
 				&& p_inner->m_class == ACLCUR_REG
-				&& p_inner->m_id == p_base->m_d.m_op.m_o[0])
+				&& p_inner->m_d.m_reg.m_id_addr
+					== p_base->m_d.m_op.m_o[0])
 			c_anchor = p_base->m_d.m_op.m_o[0];
 	}
 
@@ -558,7 +579,7 @@ aclspv_id_t aclcur_reg_ghost(aclspv_id_t c_base, h_aclspv_ctx_t h_ctx) {
 	/** aclcur_cfg_node2 above may have grown the cursor buffer and moved it,
 	 * so the node handle taken at entry is stale: re-fetch it before use.
 	 * (a handle is only stable while no cursor-allocating call runs.) */
-	ae2f_ifezerr(p_base = aclcur_get_node(c_base, h_ctx))
+	ae2f_ifezerr(p_base = aclcur_get_node(c_base_reg, h_ctx))
 		return 0;
 
 	/** the ghost's chain (and any view over it) names the held value later;

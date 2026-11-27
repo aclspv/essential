@@ -235,7 +235,7 @@ static aclspv_compile_t	s_argv_emit_load(aclspv_id_t c_id, h_aclspv_ctx_t h_ctx)
 							, SpvOpAccessChain
 							, p_reg->m_ty
 							, c_id
-							, p_reg->m_id
+							, p_reg->m_d.m_reg.m_id_addr
 							, IDX0
 							, IDX0
 							)) return ACLSPV_COMPILE_ALLOC_FAILED_CURSOR;
@@ -246,7 +246,7 @@ static aclspv_compile_t	s_argv_emit_load(aclspv_id_t c_id, h_aclspv_ctx_t h_ctx)
 							, SpvOpAccessChain
 							, p_reg->m_ty
 							, c_id
-							, p_reg->m_id
+							, p_reg->m_d.m_reg.m_id_addr
 							, IDX0
 							)) return ACLSPV_COMPILE_ALLOC_FAILED_CURSOR;
 			}
@@ -257,7 +257,7 @@ static aclspv_compile_t	s_argv_emit_load(aclspv_id_t c_id, h_aclspv_ctx_t h_ctx)
 						, SpvOpCopyObject
 						, p_reg->m_ty
 						, c_id
-						, p_reg->m_id
+						, p_reg->m_d.m_reg.m_id_addr
 						)) return ACLSPV_COMPILE_ALLOC_FAILED_CURSOR;
 		}
 	}
@@ -1042,11 +1042,13 @@ static aclspv_compile_t s_arg_reg(
 					return ACLSPV_COMPILE_UNHANDLED_ARGS;
 				}
 
-				/** the register id must BE the OpVariable result id. */
+				/** the register's ADDRESS is the OpVariable result id; its
+				 * identity is the node's own (an address can be shared — see
+				 * aclcur_reg_t::m_id_addr). */
 				ae2f_ifezerr(p_reg = aclcur_get_node(reg, CTX)) {
 					return ACLSPV_COMPILE_UNHANDLED_ARGS;
 				}
-				p_reg->m_id = var_id;
+				p_reg->m_d.m_reg.m_id_addr = var_id;
 
 				/** its value is that variable's ADDRESS: s_argv_emit_load
 				 * copies the variable (or a view of it), it never loads data
@@ -1080,9 +1082,12 @@ static aclspv_compile_t s_arg_reg(
 						 * intermediate view: the same (parent, step, idx,
 						 * ty) tuple, hence one node (see
 						 * aclcur_reg_view's dedup). */
+						/** the view's parent is the register, not the
+						 * OpVariable: var_id is the register's ADDRESS (see
+						 * aclcur_reg_t::m_id_addr). */
 						ae2f_ifezerr(id_nat = aclcur_reg_view(
 									clang_getNullCursor()
-									, var_id
+									, reg
 									, p_mbr0->m_info.m_struct_mbr.m_id_mbr
 									, cst0
 									, storage_class
@@ -1092,9 +1097,8 @@ static aclspv_compile_t s_arg_reg(
 							return ACLSPV_COMPILE_UNHANDLED_ARGS;
 						}
 
-						/** aclcur_reg_view allocates; and m_id is now
-						 * var_id, so re-fetch by that. */
-						ae2f_ifezerr(p_reg = aclcur_get_node(var_id, CTX)) {
+						/** aclcur_reg_view allocates: re-fetch by identity. */
+						ae2f_ifezerr(p_reg = aclcur_get_node(reg, CTX)) {
 							return ACLSPV_COMPILE_UNHANDLED_ARGS;
 						}
 						p_reg->m_d.m_reg.m_id_native = id_nat;

@@ -10,6 +10,9 @@
 
 typedef struct aclcur_load {
 	aclspv_id_t	m_reg;
+
+	/** memory operand, materialized at carve time (aclcur_reg_addr). */
+	aclspv_id_t	m_addr;
 	aclspv_wrd_t	m_num_phi;
 	aclspv_id_t	m_phi;
 } aclcur_load_t;

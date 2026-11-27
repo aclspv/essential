@@ -241,7 +241,11 @@ aclspv_compile_t aclcur_emit(h_aclspv_ctx_t h_ctx) {
 				return h_ctx->m_err;
 			}
 
-			_aclutil_mkname_dbg(L, p->m_id, strbuf, (*h_ctx), (h_ctx->m_section.m_name));
+			/** a register emits its ADDRESS; every other node emits m_id. */
+			_aclutil_mkname_dbg(L
+					, (p->m_class == ACLCUR_REG && p->m_d.m_reg.m_id_addr)
+						? p->m_d.m_reg.m_id_addr : p->m_id
+					, strbuf, (*h_ctx), (h_ctx->m_section.m_name));
 			clang_disposeString(str);
 		}
 

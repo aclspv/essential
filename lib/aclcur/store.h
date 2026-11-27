@@ -17,6 +17,9 @@ aclcur_flag0_tent(ACLCUR_FLAG0_STORE_, aclcur_flag0_store);
 
 typedef struct aclcur_store {
 	aclspv_id_t	m_reg;
+
+	/** memory operand, materialized at carve time (see aclcur_load_t). */
+	aclspv_id_t	m_addr;
 } aclcur_store_t;
 
 typedef aclcur_id_t aclcur_storeid_t;

@@ -9,6 +9,11 @@
 aclspv_id_t	aclcur_store_reg(aclcur_regid_t c_reg, aclspv_vid_t c_val, h_aclspv_ctx_t h_ctx) {
 	aclspv_id_t node;
 	aclspv_id_t c_ref;
+	/** 0: no memory operand stamped. a store that only reaches memory after
+	 * carving (an address taken later) emits through the register's hook
+	 * instead — see aclcur_regvar_emit_storeof. */
+	aclspv_id_t c_addr = 0;
+	aclty_id_t c_val_ty;
 	aclcur_t b_val;
 	aclspv_bool_t c_mem;
 	h_aclcur_t p;
@@ -22,6 +27,21 @@ aclspv_id_t	aclcur_store_reg(aclcur_regid_t c_reg, aclspv_vid_t c_val, h_aclspv_
 	c_reg = aclcur_reg_resolve(c_reg, h_ctx);
 	ae2f_ifezerr(c_reg)	return 0;
 
+	/** the memory operand is derived only when this store will actually reach
+	 * memory: an SSA-only store emits nothing, and asking for a view's address
+	 * would demote its root to memory (`aclcur_regview_addr` marks the root
+	 * ALLOCATED) — turning every aggregate SSA store into an OpStore. */
+	c_mem	= aclcur_reg_needs_memory(c_reg, h_ctx);
+
+	if(c_mem) {
+		c_addr = aclcur_reg_addr(c_reg, h_ctx);
+
+		if(c_addr && c_addr != c_reg) {
+			h_aclcur_t p_addr = aclcur_get_node(c_addr, h_ctx);
+			if(p_addr) (void)++p_addr->m_num_ref;
+		}
+	}
+
 	node	= aclcur_cfg_node(0, h_ctx);
 	b_val	= aclcur_get_load(c_val, h_ctx);
 	p	= aclcur_get_node(node, h_ctx);
@@ -33,13 +53,27 @@ aclspv_id_t	aclcur_store_reg(aclcur_regid_t c_reg, aclspv_vid_t c_val, h_aclspv_
 	ae2f_ifezerr(p_val)		return 0;
 	ae2f_ifezerr(p_val->m_val)	return 0;
 
+	/** the value may be an ADDRESS with no node of its own (a function
+	 * parameter's value is its OpFunctionParameter id): its type is then the
+	 * type of the register that names it. */
+	c_val_ty = p_val->m_ty;
+
+	if(!b_val.m_id) {
+		const aclspv_id_t c_owner = aclcur_reg_of_addr(c_val, h_ctx);
+		h_aclcur_t p_owner = c_owner ? aclcur_get_node(c_owner, h_ctx) : 0;
+
+		if(p_owner)
+			c_val_ty = p_owner->m_ty;
+	}
+
 	ae2f_ifnezerr_strict(p_reg->m_class != ACLCUR_REG)
 		return 0;
 
-	ae2f_ifezerr(p_val->m_flag0 & aclcur_flag0(ACLCUR_FLAG0_VALUE))
-		return 0;
+	if(b_val.m_id)
+		ae2f_ifezerr(p_val->m_flag0 & aclcur_flag0(ACLCUR_FLAG0_VALUE))
+			return 0;
 
-	ae2f_ifnezerr_strict(p_reg->m_ty != p_val->m_ty)
+	ae2f_ifnezerr_strict(p_reg->m_ty != c_val_ty)
 		return 0;
 
 	/** validation (uniform across register kinds): a register whose value
@@ -48,7 +82,14 @@ aclspv_id_t	aclcur_store_reg(aclcur_regid_t c_reg, aclspv_vid_t c_val, h_aclspv_
 	 * storage root (aclcur_reg_needs_memory); the emit gate re-checks it
 	 * (aclcur_regvar_emit_storeof) so an address taken after this store was
 	 * carved still forces its OpStore out. */
-	c_mem = aclcur_reg_needs_memory(c_reg, h_ctx);
+	/** nothing below may hold a node handle across an allocating call: the
+	 * cursor buffer is a growing vector. re-fetch before the cache write. */
+	ae2f_ifezerr(p_reg = aclcur_get_node(c_reg, h_ctx))
+		return 0;
+	p_val = b_val.m_id ? aclcur_get_node(b_val.m_id, h_ctx) : &b_val;
+
+	ae2f_ifezerr(p_val)		return 0;
+	ae2f_ifezerr(p_val->m_val)	return 0;
 
 	/** the register's tracked value is only a cache of a value some node
 	 * already owns: a store operand, an op result, a phi. tracking takes
@@ -60,6 +101,7 @@ aclspv_id_t	aclcur_store_reg(aclcur_regid_t c_reg, aclspv_vid_t c_val, h_aclspv_
 
 	p->m_class		= ACLCUR_STORE;
 	p->m_d.m_store.m_reg	= c_reg;
+	p->m_d.m_store.m_addr	= c_addr;
 	p->m_val		= c_val;
 	if(c_mem)
 		p->m_flag0 |= aclcur_flag0_store(ACLCUR_FLAG0_STORE_EXPLICIT);
