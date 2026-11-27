@@ -6,6 +6,8 @@
 #include <aclsym/fn.h>
 
 #include <aclcur/common.h>
+#include <aclcur/load.h>
+#include <aclcur/load/get.h>
 #include <aclcur/reg.h>
 #include <aclcur/reg/var.h>
 #include <aclcur/reg/view.h>
@@ -114,6 +116,129 @@ aclspv_bool_t aclemit_inline_is_local(
 			p->m_class == ACLCUR_REG
 			&& (p->m_flag0
 				& aclcur_flag0_reg(ACLCUR_FLAG0_REG_INLINE_SLICE)));
+}
+
+static aclspv_bool_t s_refs_parm(CXCursor c_cur, CXCursor c_parm);
+static aclspv_bool_t s_is_write_site(CXCursor c_cur);
+
+struct s_parm_ref {
+	CXCursor	m_parm;
+	aclspv_bool_t	m_found;
+};
+
+static enum CXChildVisitResult s_parm_ref_visit(
+		CXCursor c, ae2f_unused CXCursor p, CXClientData rw) {
+	struct s_parm_ref* ae2f_restrict S = rw;
+
+	if(S->m_found)
+		return CXChildVisit_Break;
+
+	if(clang_getCursorKind(c) == CXCursor_DeclRefExpr
+			&& clang_equalCursors(clang_getCursorReferenced(c), S->m_parm)) {
+		S->m_found = 1;
+		return CXChildVisit_Break;
+	}
+
+	clang_visitChildren(c, s_parm_ref_visit, S);
+
+	return S->m_found ? CXChildVisit_Break : CXChildVisit_Continue;
+}
+
+struct s_parm_write {
+	CXCursor	m_parm;
+	aclspv_bool_t	m_written;
+};
+
+static enum CXChildVisitResult s_parm_write_visit(
+		CXCursor c, ae2f_unused CXCursor p, CXClientData rw) {
+	struct s_parm_write* ae2f_restrict S = rw;
+
+	if(S->m_written)
+		return CXChildVisit_Break;
+
+	if(s_is_write_site(c) && s_refs_parm(c, S->m_parm)) {
+		S->m_written = 1;
+		return CXChildVisit_Break;
+	}
+
+	clang_visitChildren(c, s_parm_write_visit, S);
+
+	return S->m_written ? CXChildVisit_Break : CXChildVisit_Continue;
+}
+
+/** does `c_cur`'s subtree reference the parameter `c_parm`? */
+static aclspv_bool_t s_refs_parm(CXCursor c_cur, CXCursor c_parm) {
+	struct s_parm_ref S;
+
+	S.m_parm = c_parm;
+	S.m_found = 0;
+	clang_visitChildren(c_cur, s_parm_ref_visit, &S);
+
+	return S.m_found;
+}
+
+/** a write site for a parameter: an assignment, a compound assignment, an
+ * increment / decrement, or its address being taken. */
+static aclspv_bool_t s_is_write_site(CXCursor c_cur) {
+	switch((aclspv_cxcurkind_t)c_cur.kind) {
+		case CXCursor_BinaryOperator:
+			switch((aclspv_cxbinopkind_t)clang_getCursorBinaryOperatorKind(c_cur)) {
+				default:
+					return 0;
+
+				case CXBinaryOperator_Assign:
+				case CXBinaryOperator_AddAssign:
+				case CXBinaryOperator_SubAssign:
+				case CXBinaryOperator_MulAssign:
+				case CXBinaryOperator_DivAssign:
+				case CXBinaryOperator_RemAssign:
+				case CXBinaryOperator_ShlAssign:
+				case CXBinaryOperator_ShrAssign:
+				case CXBinaryOperator_AndAssign:
+				case CXBinaryOperator_XorAssign:
+				case CXBinaryOperator_OrAssign:
+					return 1;
+			}
+
+		case CXCursor_CompoundAssignOperator:
+			return 1;
+
+		case CXCursor_UnaryOperator:
+			switch((aclspv_cxunaryopkind_t)clang_getCursorUnaryOperatorKind(c_cur)) {
+				default:
+					return 0;
+
+				case CXUnaryOperator_PostInc:
+				case CXUnaryOperator_PostDec:
+				case CXUnaryOperator_PreInc:
+				case CXUnaryOperator_PreDec:
+				/** its address escapes: a write through it is invisible here. */
+				case CXUnaryOperator_AddrOf:
+					return 1;
+			}
+
+		default:
+			return 0;
+	}
+}
+
+/** is the parameter ever written inside the body?
+ *
+ * a parameter that is only READ can be bound as an SSA value (a PARAM
+ * register) instead of a variable: no store, no OpLoad, and — inside a loop
+ * scaffold — no memory round trip that would drop the literal it arrived with.
+ * */
+static aclspv_bool_t s_param_written(CXCursor c_body, CXCursor c_parm) {
+	struct s_parm_write S;
+
+	if(clang_Cursor_isNull(c_body) || clang_Cursor_isNull(c_parm))
+		return 1;
+
+	S.m_parm	= c_parm;
+	S.m_written	= 0;
+	clang_visitChildren(c_body, s_parm_write_visit, &S);
+
+	return S.m_written;
 }
 
 static aclspv_bool_t s_has_return(CXCursor c_body) {
@@ -345,6 +470,33 @@ aclspv_bool_t aclemit_inline_fn(
 			}
 			continue;
 		}
+		/** a parameter the body only READS is an SSA value: bind the argument
+		 * straight onto the register (PARAM semantics — no store, valid in
+		 * every block, and its literal travels with it). inside a loop
+		 * scaffold this is what keeps an argument from becoming an OpLoad
+		 * through memory on the first statement. */
+		if(!s_param_written(c_body, c_parm)) {
+			const aclcur_reg_t REGIN = aclcur_regvar_in();
+			h_aclcur_t p;
+			aclcur_t b_arg = aclcur_get_load(c_args[i], h_ctx);
+
+			ae2f_ifezerr(id_reg = aclcur_cfg_reg(c_parm, ty_arg,
+						SpvStorageClassFunction, &REGIN, h_ctx)) return 0;
+
+			ae2f_ifezerr(p = aclcur_get_node(id_reg, h_ctx)) return 0;
+
+			p->m_val	= c_args[i];
+			p->m_val_mask	= b_arg.m_val_mask;
+			p->m_val_lit	= b_arg.m_val_lit;
+			p->m_flag0	|= aclcur_flag0(ACLCUR_FLAG0_VALUE)
+				| aclcur_flag0_reg(ACLCUR_FLAG0_REG_PARAM);
+			p->m_flag0	&= (aclspv_wrd_t)~aclcur_flag0_reg(
+					ACLCUR_FLAG0_REG_VAR);
+
+			if(!aclemit_dtor_reserve(c_parm, id_reg, ty_arg, h_ctx)) return 0;
+			continue;
+		}
+
 		{
 			const aclcur_reg_t REGIN = aclcur_regvar_in();
 			ae2f_ifezerr(id_reg = aclcur_cfg_reg(c_parm, ty_arg,

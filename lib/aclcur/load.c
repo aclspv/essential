@@ -741,8 +741,14 @@ static aclspv_id_t	s_load_without_phi(
 
 	/** a function parameter is an SSA value: its value id is the value, and
 	 * it stays valid across labels. no LOAD node, no OpLoad. */
-	if(p->m_flag0 & aclcur_flag0_reg(ACLCUR_FLAG0_REG_PARAM))
+	if(p->m_flag0 & aclcur_flag0_reg(ACLCUR_FLAG0_REG_PARAM)) {
+		/** a parameter holds a value, and that value may be a literal (an
+		 * inlined body's argument): report it, so the body keeps folding. */
+		if(r_lit_opt && (p->m_val_mask & ACLTRL_MASK_LTRL))
+			*r_lit_opt = p->m_val_lit;
+
 		return p->m_val;
+	}
 
 	if((p->m_flag0 & aclcur_flag0_reg(ACLCUR_FLAG0_REG_TRACKED))
 			&& !c_explicit) {
