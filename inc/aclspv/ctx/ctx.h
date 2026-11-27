@@ -104,6 +104,18 @@ struct a_aclspv_ctx {
 	 * */
 	aclspv_id_t		m_id;
 
+	/** write generations. a register's cached value carries the generations it
+	 * was filled at and is current only while they match — so a store
+	 * invalidates every other cached value of the same var with two word
+	 * increments instead of a walk over the cursor buffer.
+	 *
+	 * m_gen_alias   : every store whose VAR cannot be named (a pointer
+	 *                 parameter, a pointer read back from memory) — such a
+	 *                 write may land in ANY var, so it invalidates the caches
+	 *                 of named vars too.
+	 * see aclcur_reg_val_current. */
+	aclspv_wrd_t		m_gen_alias;
+
 	struct {
 		aclspv_wrdcount_t
 			m_capability,

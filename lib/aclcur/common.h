@@ -73,6 +73,21 @@ struct aclcur {
 	 * see enum ACLUTIL_LITERAL_
 	 * */
 	aclspv_wrd_t	m_val_mask;
+
+	/** this VAR's write generation (meaningful on ACLCUR_FLAG0_REG_VAR): the
+	 * count of stores that landed in it. a cached value of any register naming
+	 * this var is current only while the generation it recorded still
+	 * matches. */
+	aclspv_wrd_t	m_gen;
+
+	/** the var generation m_val was filled at (0 when the register names no
+	 * var: nothing to compare, the alias watermark decides). */
+	aclspv_wrd_t	m_val_gen;
+
+	/** the m_gen_alias m_val was filled at, and the point an untrack resyncs
+	 * to — so "an alias write happened since we last looked" is expressible
+	 * without walking anything. */
+	aclspv_wrd_t	m_val_alias;
 };
 
 aclcur_id_t aclcur_cfg_node2(aclspv_id_reserved_t c_newid, h_aclspv_ctx_t h_ctx, aclspv_bool_t c_toskip);

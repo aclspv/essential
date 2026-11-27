@@ -17,12 +17,12 @@
 
 #include <ae2f/pat/dbg.h>
 
-/** a call may have written state this function does not own: the callee can
- * reach exactly the same storage a pointer write can, so the treatment is the
- * same one (see aclcur_store_clobber_reachable). an inlined body's stores go
- * through the ordinary store path and are handled there. */
-static aclspv_bool_t s_clobber_reachable(h_aclspv_ctx_t h_ctx) {
-	return aclcur_store_clobber_reachable(0, h_ctx);
+/** a call may have written state this function does not own: it names no var
+ * of ours, so it bumps the alias generation and every cached value that is
+ * only current while nothing unknown was written reloads on its next read.
+ * an inlined body's stores go through the ordinary store path instead. */
+static void s_clobber_reachable(h_aclspv_ctx_t h_ctx) {
+	aclcur_reg_gen_wrote(0, h_ctx);
 }
 
 aclspv_bool_t aclexpr_call_make(
@@ -69,9 +69,9 @@ aclspv_bool_t aclexpr_call_make(
 		is_pure = (aclspv_bool_t)!!(p_sym->m_flag0
 				& aclsym_fn_flag0(ACLSYM_FN_FLAG0_PURE));
 
-	/** unknown callee counts as impure: conservatively reload. */
+	/** unknown callee counts as impure: forget what memory may have held. */
 	unless(is_pure)
-		ae2f_ifezerr(s_clobber_reachable(h_ctx)) return 1;
+		s_clobber_reachable(h_ctx);
 
 	if(wr_is_pure)
 		*wr_is_pure = is_pure;

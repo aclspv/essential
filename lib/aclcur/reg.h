@@ -93,17 +93,6 @@ enum ACLCUR_FLAG0_REG_ {
 	 * */
 	ACLCUR_FLAG0_REG_SCOPED,
 
-	/**
-	 * its value has been changed to a different value than the one the branch
-	 * started with.
-	 *
-	 * two producers: a store, and an impure call for every register whose
-	 * storage the call can reach (see aclcur_reg_needs_memory). the load path
-	 * treats the latter as "memory is authoritative now" and skips both the
-	 * tracked cache and the SSA resolution, so the next read loads.
-	 * */
-	ACLCUR_FLAG0_REG_CHANGED,
-
 	/** 
 	 * this register is referenced as memory: it should be allocated
 	 * (emitted) even though nothing else in the frontend mandates it,
@@ -310,6 +299,25 @@ aclspv_bool_t	aclcur_reg_needs_memory(aclspv_id_t c_reg, h_aclspv_ctx_t h_ctx);
  * parameter, a pointer read back from memory, a value with no storage at all.
  * a write through one of those has to be treated conservatively. */
 aclspv_id_t	aclcur_reg_var(aclspv_id_t c_reg, h_aclspv_ctx_t h_ctx);
+
+/** is the value cached on c_reg still current?
+ *
+ * a cached value carries the write generations it was taken at (its var's,
+ * plus the alias generation), so this is two compares — no walk, no per-store
+ * invalidation pass over the cursor buffer. */
+aclspv_bool_t	aclcur_reg_val_current(
+		aclspv_id_t		c_reg,
+		const x_aclspv_ctx*	ae2f_restrict h_ctx
+		);
+
+/** mark c_reg's cached value as taken NOW (after a store or a load filled
+ * it), so it stays current until the var is written again. */
+void	aclcur_reg_val_mark(aclspv_id_t c_reg, h_aclspv_ctx_t h_ctx);
+
+/** record that a write landed in c_var (0: a var this compiler cannot name,
+ * i.e. one that may be any of them). every cached value of that var is stale
+ * from here on. */
+void	aclcur_reg_gen_wrote(aclspv_id_t c_var, h_aclspv_ctx_t h_ctx);
 
 /** the kind of a single view step: how an ALIAS2 view derives from its
  * parent. stored explicitly on the view (m_step) rather than derived from

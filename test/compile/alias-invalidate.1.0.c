@@ -11,10 +11,11 @@
  * a write invalidates the cached value of the storage it may have landed in.
  *
  * there is no alias analysis here: `*p = 3` writes whatever `p` points at, and
- * `t = 7` is observable through a pointer taken from `t` earlier. the compiler
- * cannot say which register either one touched, so every register the write
- * can reach re-reads memory on its next use (`aclcur_store_clobber_reachable`,
- * driven by `aclcur_store_reg`).
+ * `t = 7` is observable through a pointer taken from `t` earlier. each write
+ * names a VAR, and a cached value carries the var's write generation it was
+ * taken at, so a register that names the same var — through the view chain, a
+ * pointer value, or another view of the same object — finds its cache stale on
+ * the next read (aclcur_reg_val_current) and reloads.
  *
  * without it each side handed out a value from before the write:
  *

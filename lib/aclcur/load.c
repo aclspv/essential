@@ -746,19 +746,36 @@ static aclspv_id_t	s_load_without_phi(
 
 	if((p->m_flag0 & aclcur_flag0_reg(ACLCUR_FLAG0_REG_TRACKED))
 			&& !c_explicit) {
-		if(r_lit_opt && p->m_val_mask & ACLTRL_MASK_LTRL)
-			*r_lit_opt = p->m_val_lit;
+		/** the cached value carries the write generations it was taken at: a
+		 * store to the same var — or any write through a pointer this
+		 * compiler cannot name — makes it stale without touching this node. */
+		if(aclcur_reg_val_current(c_reg, h_ctx)) {
+			if(r_lit_opt && p->m_val_mask & ACLTRL_MASK_LTRL)
+				*r_lit_opt = p->m_val_lit;
 
-		return p->m_val;
+			return p->m_val;
+		}
+
+		/** stale: drop it, and take the memory path where memory is the
+		 * authority for this register (a plain SSA local keeps the flow's
+		 * value: re-resolving it from memory would load storage that need
+		 * not exist). */
+		p->m_flag0 &= (aclspv_wrd_t)~aclcur_flag0_reg(ACLCUR_FLAG0_REG_TRACKED);
+		p->m_val = 0;
+		p->m_val_mask = 0;
+
+		if(aclcur_reg_needs_memory(c_reg, h_ctx))
+			goto LBL_MEM;
 	}
 
-	/** CHANGED on a register whose storage a call can reach means the change
-	 * happened behind our back (an impure call): the SSA value flow predates
-	 * it, so the read must come from memory. a CHANGED SSA-only register
-	 * (needs no memory) keeps the SSA resolution. */
+	/** an alias write is one whose var this compiler could not name (a
+	 * pointer parameter, a call, a pointer read back from memory): it may
+	 * have landed here, and the SSA value flow predates it, so the read must
+	 * come from memory. an SSA-only register (needs no memory) keeps the SSA
+	 * resolution. */
 	{
 		const aclspv_bool_t c_stale = (aclspv_bool_t)(
-				(p->m_flag0 & aclcur_flag0_reg(ACLCUR_FLAG0_REG_CHANGED))
+				p->m_val_alias != h_ctx->m_gen_alias
 				&& aclcur_reg_needs_memory(c_reg, h_ctx));
 
 		if(c_stale)
@@ -803,6 +820,8 @@ static aclspv_id_t	s_load_without_phi(
 			p->m_flag0 |= aclcur_flag0_reg(ACLCUR_FLAG0_REG_TRACKED);
 			p->m_val	= id_ssa;
 			p->m_val_mask	= 0;
+
+			aclcur_reg_val_mark(c_reg, h_ctx);
 
 			if(r_lit_opt && p_b
 					&& (p_b->m_val_mask & ACLTRL_MASK_LTRL))
@@ -1005,7 +1024,11 @@ static aclspv_id_t	s_load_reg(
 
 	/** after load, value is tracked. */
 	p_reg->m_flag0 |= aclcur_flag0_reg(ACLCUR_FLAG0_REG_TRACKED);
-	return p_reg->m_val = id_val;
+	p_reg->m_val = id_val;
+
+	aclcur_reg_val_mark(c_reg, h_ctx);
+
+	return id_val;
 }
 
 aclspv_id_t	aclcur_load_reg(

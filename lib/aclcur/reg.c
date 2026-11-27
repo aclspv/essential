@@ -74,39 +74,24 @@ aclspv_id_t	aclcur_reg_base(aclspv_id_t c_reg, h_aclspv_ctx_t h_ctx) {
 }
 
 aclspv_bool_t	aclcur_reg_needs_memory(aclspv_id_t c_reg, h_aclspv_ctx_t h_ctx) {
-	aclspv_wrd_t n = h_ctx ? h_ctx->m_num_cursor : 0;
-	aclspv_id_t c = c_reg;
+	const aclspv_id_t c_var = aclcur_reg_var(c_reg, h_ctx);
 	h_aclcur_t p;
 
-	/** an ALIAS2 view's memory policy is its ROOT's, never a copy: the
-	 * root's ALLOCATED is set only once an address escapes, which may
-	 * happen after the view was created. walk to the storage owner,
-	 * bounded by the cursor count like every other chain walk. */
-	while(c && n--) {
-		ae2f_ifezerr(p = aclcur_get_node(c, h_ctx))
-			return 1;
-		ae2f_ifnezerr_strict(p->m_class != ACLCUR_REG)
-			return 1;
-
-		if(!(p->m_flag0 & aclcur_flag0_reg(ACLCUR_FLAG0_REG_ALIAS2)))
-			break;
-
-		c = p->m_d.m_reg.m_d.m_ref.m_id;
-	}
-
-	/** unknown root: be conservative — memory is always a safe answer. */
-	ae2f_ifezerr(c)
+	/** names no var: assume memory, the safe answer. */
+	ae2f_ifezerr(c_var)
 		return 1;
-	ae2f_ifezerr(p = aclcur_get_node(c, h_ctx))
-		return 1;
-	ae2f_ifnezerr_strict(p->m_class != ACLCUR_REG)
+	ae2f_ifezerr(p = aclcur_get_node(c_var, h_ctx))
 		return 1;
 
-	/** a non-SCOPED root is observable outside the SSA scope; an ALLOCATED
-	 * root had its address taken. a slice-local register lives inside an
-	 * inlined body's single-iteration loop, so its value is carried on the
-	 * loop's own back edge and must read/write memory rather than ride SSA.
-	 * any of these forces the store to emit its OpStore. */
+	if(p->m_class != ACLCUR_REG)
+		return 1;
+
+	/** the VAR decides whether it must exist in memory, not any view of it:
+	 * a non-SCOPED root is observable outside the SSA scope, an ALLOCATED one
+	 * had its address taken, and a slice-local register lives inside an
+	 * inlined body's single-iteration loop (its value returns on that loop's
+	 * own back edge, so memory holds it). any of these forces the store to
+	 * emit its OpStore. */
 	return (aclspv_bool_t)(!(p->m_flag0 & aclcur_flag0_reg(ACLCUR_FLAG0_REG_SCOPED))
 			|| (p->m_flag0 & aclcur_flag0_reg(ACLCUR_FLAG0_REG_ALLOCATED))
 			|| (p->m_flag0 & aclcur_flag0_reg(ACLCUR_FLAG0_REG_INLINE_SLICE)));
@@ -149,6 +134,85 @@ aclspv_id_t	aclcur_reg_var(aclspv_id_t c_reg, h_aclspv_ctx_t h_ctx) {
 	}
 
 	return 0;
+}
+
+aclspv_bool_t	aclcur_reg_val_current(
+		aclspv_id_t		c_reg,
+		const x_aclspv_ctx*	ae2f_restrict	h_ctx
+		) {
+	const h_aclcur_t p = aclcur_get_node(c_reg, h_ctx);
+	const aclspv_id_t c_var = aclcur_reg_var(c_reg, (h_aclspv_ctx_t)h_ctx);
+
+	ae2f_ifezerr(p)		return 0;
+	ae2f_ifezerr(h_ctx)	return 0;
+
+	unless(p->m_flag0 & aclcur_flag0_reg(ACLCUR_FLAG0_REG_TRACKED))
+		return 0;
+
+	/** its value is its own ADDRESS (an entry point's interface variable):
+	 * no write changes that, so nothing can make it stale. */
+	if(p->m_flag0 & aclcur_flag0_reg(ACLCUR_FLAG0_REG_ADDRESS))
+		return 1;
+
+	if(c_var) {
+		const h_aclcur_t p_var = aclcur_get_node(c_var, h_ctx);
+
+		ae2f_ifezerr(p_var) return 0;
+
+		/** the var was written since this value was taken? */
+		if(p->m_val_gen != p_var->m_gen)
+			return 0;
+
+		/** a write this compiler could not attribute to any var may have
+		 * landed here — but only where memory is the authority: a plain SSA
+		 * local's value is the flow's, and no pointer can reach it. */
+		return (aclspv_bool_t)(
+				!aclcur_reg_needs_memory(c_reg, (h_aclspv_ctx_t)h_ctx)
+				|| p->m_val_alias == h_ctx->m_gen_alias);
+	}
+
+	/** names no var: nothing here can be compared, so the alias watermark the
+	 * load path checks decides (see s_load_without_phi). */
+	return 1;
+}
+
+void	aclcur_reg_val_mark(aclspv_id_t c_reg, h_aclspv_ctx_t h_ctx) {
+	const aclspv_id_t c_var = aclcur_reg_var(c_reg, h_ctx);
+	h_aclcur_t p = aclcur_get_node(c_reg, h_ctx);
+
+	ae2f_ifezerr(p) return;
+
+	if(c_var) {
+		const h_aclcur_t p_var = aclcur_get_node(c_var, h_ctx);
+
+		p->m_val_gen = p_var ? p_var->m_gen : 0;
+	} else p->m_val_gen = 0;
+
+	p->m_val_alias = h_ctx->m_gen_alias;
+}
+
+/**
+ * record a write that landed in `c_var` (0: a var we cannot name).
+ *
+ * this is the whole invalidation: every register naming the var sees a
+ * generation it did not record, and reloads when it is next read. nothing is
+ * walked, nothing is eagerly loaded.
+ * */
+void	aclcur_reg_gen_wrote(aclspv_id_t c_var, h_aclspv_ctx_t h_ctx) {
+	h_aclcur_t p_var;
+
+	ae2f_ifezerr(h_ctx) return;
+
+	if(c_var) {
+		ae2f_ifezerr(p_var = aclcur_get_node(c_var, h_ctx))
+			return;
+
+		(void)++p_var->m_gen;
+		return;
+	}
+
+	/** no var: it may be any of them. */
+	(void)++h_ctx->m_gen_alias;
 }
 
 /** the var a pointer VALUE names, or 0 when it names none we can follow.
@@ -283,11 +347,15 @@ void	aclcur_reg_untrack(aclspv_id_t c_reg, h_aclspv_ctx_t h_ctx) {
 		ae2f_ifnezerr_strict(p->m_class != ACLCUR_REG)
 			break;
 
-		p->m_flag0 &= (aclspv_wrd_t)~(aclcur_flag0_reg(ACLCUR_FLAG0_REG_TRACKED)
-		                            | aclcur_flag0_reg(ACLCUR_FLAG0_REG_CHANGED));
+		p->m_flag0 &= (aclspv_wrd_t)~aclcur_flag0_reg(ACLCUR_FLAG0_REG_TRACKED);
 		p->m_val	= 0;
 		p->m_val_mask	= 0;
 		p->m_val_lit.m_api_uintmax = 0;
+
+		/** forgetting is not staleness: everything written so far is folded
+		 * into the flow this block will resolve against, so resync the
+		 * watermark rather than claiming an alias write went unseen. */
+		p->m_val_alias	= h_ctx ? h_ctx->m_gen_alias : 0;
 
 		c_reg = (p->m_flag0 & aclcur_flag0_reg(ACLCUR_FLAG0_REG_ALIAS2))
 		      ? p->m_d.m_reg.m_d.m_ref.m_id
