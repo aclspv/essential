@@ -21,89 +21,111 @@
 
 #include <aclsym/fn.h>
 
-#include <aclattr/export.h>
-
 #include <aclutil/capability.h>
 #include <aclutil/linkage.h>
 
 #include <ae2f/pat/dbg.h>
 
-static enum CXChildVisitResult s_visit(
-		CXCursor		c_cur,
-		ae2f_unused CXCursor	c_par,
-		CXClientData		rdwr_ctx
-		) {
-	h_aclspv_ctx_t			ctx = rdwr_ctx;
-	aclsym_fn_t* ae2f_restrict	p_sym;
-	aclattr_export_t		EXP;
-	aclspv_bool_t			c_export;
-	aclspv_sz_t			c;
+/** decorate every symbol of `h_ctx`'s symbol caches that the module can name.
+ *
+ * the symbols live in the gather's scratch context (or directly in `h_ctx`
+ * when it has none), while the decoration is a word of the MODULE: the section
+ * and the user configuration are `h_ctx`'s either way. reading the intent from
+ * the symbol instead of from a cursor is what lets a build phase that takes no
+ * source still close the module.
+ * */
+static aclspv_compile_t s_cache(h_aclspv_ctx_t h_ctx) {
+	aclsym_fn_t* ae2f_restrict	base;
+	aclspv_wrdcount_t		i;
+	aclspv_bool_t			c_static;
+	x_aclspv_ctx* ae2f_restrict	h_cache;
 
-	if(c_cur.kind != CXCursor_FunctionDecl)
-		return CXChildVisit_Continue;
+	h_cache = h_ctx->m_ctx_slave ? h_ctx->m_ctx_slave : h_ctx;
 
-	unless(clang_Location_isFromMainFile(clang_getCursorLocation(c_cur)))
-		return CXChildVisit_Continue;
+	for(c_static = 0; c_static <= 1; ++c_static) {
+		const aclspv_wrdcount_t c_num = c_static
+			? h_cache->m_fnlist.m_num_fn_static
+			: h_cache->m_fnlist.m_num_fn;
 
-	/** entry points are not callable, so they have no symbol and no
-	 * export: they are reached through OpEntryPoint. */
-	p_sym = aclsym_fn_find(c_cur, ctx);
+		base = (aclsym_fn_t*)(c_static
+				? h_cache->m_fnlist.m_fn_static.m_p
+				: h_cache->m_fnlist.m_fn.m_p);
 
-	unless(p_sym)
-		return CXChildVisit_Continue;
+		unless(base)		continue;
 
-	/** an internal-linkage definition has no ABI name to export: it lives
-	 * in the static cache and stays inside this module. */
-	if(p_sym->m_flag0 & aclsym_fn_flag0(ACLSYM_FN_FLAG0_STATIC))
-		return CXChildVisit_Continue;
+		for(i = 0; i < c_num; ++i) {
+			aclsym_fn_t* ae2f_restrict	p_sym = &base[i];
+			aclspv_bool_t			c_export;
 
-	/** only an emitted definition has an OpFunction to decorate. */
-	if(!(p_sym->m_flag0 & (aclspv_wrd_t)(
-				aclsym_fn_flag0(ACLSYM_FN_FLAG0_DEFINED)
-				| ACLSYM_FN_FLAG0_NAMED)))
-		return CXChildVisit_Continue;
+			/** an entry point is not callable: it is reached through
+			 * OpEntryPoint, never through a linkage decoration. */
+			if(p_sym->m_flag0 & aclsym_fn_flag0(ACLSYM_FN_FLAG0_ENTRY))
+				continue;
 
-	EXP = aclattr_get_export(c_cur);
+			/** an internal-linkage definition has no ABI name to export:
+			 * it lives in the static cache and stays inside this module. */
+			if(p_sym->m_flag0 & aclsym_fn_flag0(ACLSYM_FN_FLAG0_STATIC))
+				continue;
 
-	c_export = (aclspv_bool_t)(
-			EXP.m_export
-			|| (!EXP.m_hidden
-				&& (ctx->m_usrcfg.m_flag0
-					& ACLSPV_CTX_FLAG0_EXPORT_BY_DEFAULT)));
+			/** only an emitted definition has an OpFunction to decorate. */
+			unless(p_sym->m_flag0 & (aclspv_wrd_t)(
+						aclsym_fn_flag0(ACLSYM_FN_FLAG0_DEFINED)
+						| ACLSYM_FN_FLAG0_NAMED))
+				continue;
 
-	unless(c_export)
-		return CXChildVisit_Continue;
+			c_export = (aclspv_bool_t)(
+					(p_sym->m_flag0
+					 & aclsym_fn_flag0(ACLSYM_FN_FLAG0_DECL_EXPORT))
+					|| (!(p_sym->m_flag0
+							& aclsym_fn_flag0(ACLSYM_FN_FLAG0_DECL_HIDDEN))
+						&& (h_ctx->m_usrcfg.m_flag0
+							& ACLSPV_CTX_FLAG0_EXPORT_BY_DEFAULT)));
 
-	/** one id, one linkage decoration: a pass that re-walks this translation
-	 * unit has nothing left to say about it. */
-	if(p_sym->m_flag0 & aclsym_fn_flag0(ACLSYM_FN_FLAG0_EXPORTED))
-		return CXChildVisit_Continue;
+			unless(c_export)
+				continue;
 
-	ae2f_ifezerr(aclutil_add_capability_by_flag(ctx, SpvCapabilityLinkage))
-		return CXChildVisit_Break;
+			/** one id, one linkage decoration: a pass that re-walks this
+			 * translation unit has nothing left to say about it. */
+			if(p_sym->m_flag0 & aclsym_fn_flag0(ACLSYM_FN_FLAG0_EXPORTED))
+				continue;
 
-	ae2f_ifezerr(c = aclutil_emit_linkage(
-				&ctx->m_section.m_decorate
-				, ctx->m_count.m_decorate
-				, p_sym->m_id
-				, aclsym_fn_name(p_sym, ctx)
-				, (aclspv_wrd_t)SpvLinkageTypeExport)) {
-		_aclctx_err(ctx, ACLSPV_COMPILE_ALLOC_FAILED);
-		return CXChildVisit_Break;
+			ae2f_ifezerr(aclutil_add_capability_by_flag(
+						h_ctx, SpvCapabilityLinkage))
+				return h_ctx->m_err;
+
+			{
+				aclspv_sz_t c;
+
+				ae2f_ifezerr(c = aclutil_emit_linkage(
+							&h_ctx->m_section.m_decorate
+							, h_ctx->m_count.m_decorate
+							, p_sym->m_id
+							, aclsym_fn_name(p_sym, h_cache)
+							, (aclspv_wrd_t)SpvLinkageTypeExport)) {
+					_aclctx_err(h_ctx, ACLSPV_COMPILE_ALLOC_FAILED);
+					return h_ctx->m_err;
+				}
+
+				h_ctx->m_count.m_decorate = c;
+			}
+
+			p_sym->m_flag0 |= aclsym_fn_flag0(ACLSYM_FN_FLAG0_EXPORTED);
+		}
 	}
 
-	ctx->m_count.m_decorate = c;
-
-	p_sym->m_flag0 |= aclsym_fn_flag0(ACLSYM_FN_FLAG0_EXPORTED);
-
-	return CXChildVisit_Continue;
+	return h_ctx->m_err;
 }
 
-aclspv_compile_t aclemit_export(h_aclspv_ctx_t h_ctx, CXCursor c_root) {
+aclspv_compile_t aclemit_export(h_aclspv_ctx_t h_ctx) {
+	aclspv_compile_t ret;
+
 	ae2f_ifezerr(h_ctx)		return ACLSPV_COMPILE_PRM_INVAL_NIL;
 	aclctx_err_check(h_ctx)	return h_ctx->m_err;
 
-	clang_visitChildren(c_root, s_visit, h_ctx);
+	/** the export intent was recorded by the gather pass, while the
+	 * translation unit was alive: decorating here needs no cursor, which is
+	 * what lets a build phase that takes no source still close the module. */
+	ret = s_cache(h_ctx);
 
-	return h_ctx->m_err;
+	return ret;
 }

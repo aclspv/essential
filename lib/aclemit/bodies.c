@@ -48,6 +48,109 @@ struct s_pending {
 	aclspv_bool_t		m_done;
 };
 
+/**
+ * true when a body an earlier compile pass recorded still has no OpFunction
+ * in the module.
+ *
+ * this asks the symbol cache, not the translation unit: a deferred body is
+ * exactly a main-file function the gather pass recorded as DEFINED while
+ * nothing has emitted it (no EMITTED bit). that covers an entry point too:
+ * it is not a call target, but the gather pass records it (ACLSYM_FN_FLAG0_ENTRY)
+ * for the same reason a normal symbol is recorded.
+ * */
+aclspv_bool_t aclemit_body_pending(h_aclspv_ctx_t h_ctx) {
+	h_aclspv_ctx_t		cache;
+	aclsym_fn_t* ae2f_restrict	base;
+	aclspv_wrdcount_t		i;
+	aclspv_bool_t			c_static;
+
+	ae2f_ifezerr(h_ctx)		return 0;
+
+	cache = aclsym_fn_cache(h_ctx);
+
+	ae2f_ifezerr(cache)		return 0;
+
+	for(c_static = 0; c_static <= 1; ++c_static) {
+		const aclspv_wrdcount_t c_num = c_static
+			? cache->m_fnlist.m_num_fn_static
+			: cache->m_fnlist.m_num_fn;
+
+		base = (aclsym_fn_t*)(c_static
+				? cache->m_fnlist.m_fn_static.m_p
+				: cache->m_fnlist.m_fn.m_p);
+
+		unless(base)		continue;
+
+		for(i = 0; i < c_num; ++i) {
+			/** a definition this module has not emitted is a body that
+			 * still waits: for an import, or for another body. */
+			unless(base[i].m_flag0
+					& aclsym_fn_flag0(ACLSYM_FN_FLAG0_DEFINED))
+				continue;
+
+			if(base[i].m_flag0 & aclsym_fn_flag0(ACLSYM_FN_FLAG0_EMITTED))
+				continue;
+
+			/** an IMPORTED-and-defined symbol is the contradiction the build
+			 * reports; it is not a body waiting to be emitted. */
+			if(base[i].m_flag0 & aclsym_fn_flag0(ACLSYM_FN_FLAG0_IMPORTED))
+				continue;
+
+			/** nothing calls an entry point, so it has no import to wait
+			 * for: it waits only for the bodies it calls. */
+			if(base[i].m_flag0 & aclsym_fn_flag0(ACLSYM_FN_FLAG0_ENTRY)) {
+				if(aclemit_fndecl_entp_exists_by_mark(base[i].m_mark, h_ctx))
+					continue;
+
+				return 1;
+			}
+
+			return 1;
+		}
+	}
+
+	return 0;
+}
+
+/**
+ * true when a body still pending can no longer be completed by ANY phase —
+ * its waiting is a call cycle, not a missing import.
+ *
+ * an internal-linkage function is the whole answer. it can never be imported
+ * (aclspv imports only external-linkage functions), so its body must come out
+ * of the translation unit that declares it. the compile phase already sorts
+ * the bodies of one translation unit by dependency, so a static body that is
+ * still pending after it means the dependency graph has a cycle.
+ * */
+aclspv_bool_t aclemit_body_cyclic(h_aclspv_ctx_t h_ctx) {
+	h_aclspv_ctx_t		cache;
+	aclsym_fn_t* ae2f_restrict	base;
+	aclspv_wrdcount_t		i;
+
+	ae2f_ifezerr(h_ctx)		return 0;
+
+	cache = aclsym_fn_cache(h_ctx);
+
+	ae2f_ifezerr(cache)		return 0;
+
+	base = (aclsym_fn_t*)cache->m_fnlist.m_fn_static.m_p;
+
+	unless(base)		return 0;
+
+	for(i = 0; i < cache->m_fnlist.m_num_fn_static; ++i) {
+		unless(base[i].m_flag0
+				& aclsym_fn_flag0(ACLSYM_FN_FLAG0_DEFINED))
+			continue;
+
+		if(base[i].m_flag0 & aclsym_fn_flag0(ACLSYM_FN_FLAG0_EMITTED))
+			continue;
+
+		return 1;
+	}
+
+	return 0;
+}
+
 struct s_collect {
 	x_aclspv_vec*		m_buf;
 	h_aclspv_ctx_t		m_ctx;
@@ -77,7 +180,18 @@ static enum CXChildVisitResult s_collect_visit(
 
 	p_sym = aclsym_fn_find(c_par, p->m_ctx);
 
-	if(p_sym) {
+	if(p_sym && (p_sym->m_flag0 & aclsym_fn_flag0(ACLSYM_FN_FLAG0_ENTRY))) {
+		/** an entry point the gather pass recorded: it has a symbol, but not
+		 * as a call target — nothing calls it, nothing imports or exports it.
+		 * one this module already carries is done — a later pass re-walks the
+		 * translation unit the earlier one saw, and a second OpEntryPoint for
+		 * one function is not a module. */
+		if(aclemit_fndecl_entp_exists_by_mark(p_sym->m_mark, p->m_ctx))
+			return CXChildVisit_Continue;
+
+		ITEM.m_entry = 1;
+	}
+	else if(p_sym) {
 		/** a body emitted by an earlier pass has nothing left to emit. the
 		 * IMPORTED case is not so simple: a later source may DEFINE it, and
 		 * that contradiction is the build's to report, so such a body is
@@ -88,10 +202,9 @@ static enum CXChildVisitResult s_collect_visit(
 		ITEM.m_entry = 0;
 	}
 	else {
-		/** no symbol: an entry point. one this module already carries is done
-		 * — a later pass re-walks the translation unit the earlier one saw, and
-		 * a second OpEntryPoint for one function is not a module. otherwise the
-		 * queue decides when it goes out. */
+		/** no symbol at all: an entry point the gather pass could not record
+		 * (it was not from the main file, or it is an entry the cache dropped).
+		 * the same rule applies. */
 		if(aclemit_fndecl_entp_exists(c_par, p->m_ctx))
 			return CXChildVisit_Continue;
 
@@ -286,6 +399,7 @@ ae2f_inline_f static aclspv_compile_t s_run(
 
 	items = buf.m_p;
 	c_num = col.m_num;
+
 
 
 	/** the imports must exist before readiness can accept the callers. */

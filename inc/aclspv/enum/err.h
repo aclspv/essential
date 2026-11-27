@@ -156,7 +156,14 @@ enum ACLSPV_COMPILE_ {
 
 	/** a subobject destructor cannot be called by pointer and is not
 	 * inlinable. mark it inline/always_inline or avoid the subobject. */
-	ACLSPV_COMPILE_SUBOBJECT_DTOR_NOT_INLINE
+	ACLSPV_COMPILE_SUBOBJECT_DTOR_NOT_INLINE,
+
+	/** build phase without a source: a body the compile phase deferred is
+	 * still pending, and completing it would mean walking the translation
+	 * unit it came from. aclspv_ctx_build4 takes no source, so such a caller
+	 * must close the module while that translation unit is alive
+	 * (aclspv_ctx_build1), or compile in a shape that defers nothing. */
+	ACLSPV_COMPILE_HOST_PENDING
 };
 
 /** 

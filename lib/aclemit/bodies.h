@@ -56,4 +56,27 @@ aclspv_compile_t aclemit_compile_bodies(h_aclspv_ctx_t h_ctx, CXCursor c_root);
  * */
 aclspv_compile_t aclemit_build_bodies(h_aclspv_ctx_t h_ctx, CXCursor c_root);
 
+/**
+ * true when a body an earlier compile pass recorded still has no OpFunction:
+ * the compile phase deferred it, and completing it means walking the
+ * translation unit it came from.
+ *
+ * asks the symbol cache only, so it is answerable after that translation unit
+ * is gone. entry points have no symbol and are not covered — they can only be
+ * answered by a walk.
+ * */
+aclspv_bool_t aclemit_body_pending(h_aclspv_ctx_t h_ctx);
+
+/**
+ * true when a body that is still pending cannot be completed by any phase: its
+ * waiting is a call cycle, not an import.
+ *
+ * an internal-linkage function is never imported — its body must be emitted
+ * from the translation unit that declares it, and the compile phase already
+ * sorts that unit's bodies by dependency. a static body still pending after
+ * the compile phase is therefore a cycle (ACLSPV_COMPILE_RECURSIVE_CALL),
+ * never a missing source.
+ * */
+aclspv_bool_t aclemit_body_cyclic(h_aclspv_ctx_t h_ctx);
+
 #endif

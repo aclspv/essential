@@ -27,12 +27,14 @@
  * a defined function is exported when its declaration says so
  * (`__declspec(dllexport)` / `visibility("default")`), or when
  * ACLSPV_CTX_FLAG0_EXPORT_BY_DEFAULT is set and it is not
- * `visibility("hidden")`.
+ * `visibility("hidden")`. the declaration says so through the symbol the
+ * gather pass recorded (ACLSYM_FN_FLAG0_DECL_EXPORT / _DECL_HIDDEN), not
+ * through a cursor: a build phase that takes no source has none to read.
  *
  * every target must have an OpFunction already (the compile phase or the
- * build phase emitted its body); entry points have no symbol and are left
- * alone. adds the Linkage capability on the first export.
+ * build phase emitted its body); entry points are left alone. adds the Linkage
+ * capability on the first export.
  * */
-aclspv_compile_t aclemit_export(h_aclspv_ctx_t h_ctx, CXCursor c_root);
+aclspv_compile_t aclemit_export(h_aclspv_ctx_t h_ctx);
 
 #endif

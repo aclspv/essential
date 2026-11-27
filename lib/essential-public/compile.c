@@ -168,6 +168,10 @@ ACLSPV_ABI_LINK aclspv_compile_t aclspv_ctx_compile(
 	ae2f_ifnezerr(s_setup(h_ctx))
 		return h_ctx->m_err;
 
+	/** this pass is the one the build phase will close the module with, so
+	 * its root is kept for aclspv_ctx_build4. */
+	h_ctx->m_root_built = c_cur_root;
+
 	/** pass 1: declarations before bodies. every file-scope function of
 	 * the main file is cached with its function type and checked for a
 	 * conflicting redeclaration. */
@@ -232,7 +236,60 @@ ACLSPV_ABI_LINK aclspv_compile_t aclspv_ctx_build(
 	}
 
 	/** every emitted body has an id now: decorate the exports. */
-	return aclemit_export(h_ctx, c_cur_root);
+	return aclemit_export(h_ctx);
+}
+
+ACLSPV_ABI_LINK aclspv_compile_t aclspv_ctx_build4(
+		const h_aclspv_ctx_t	h_ctx
+		) {
+	aclspv_bool_t		c_null_cursor;
+
+	ae2f_ifezerr(h_ctx)		return ACLSPV_COMPILE_PRM_INVAL_NIL;
+	aclctx_err_check(h_ctx)	return h_ctx->m_err;
+
+	c_null_cursor = (aclspv_bool_t)(
+			!h_ctx->m_root_built.kind
+			|| h_ctx->m_root_built.kind == CXCursor_NoDeclFound);
+
+	/** nothing was ever compiled: closing here would seal a module no source
+	 * has vouched for, and the caller would only find out downstream. */
+	ae2f_ifnezerr_strict(c_null_cursor) {
+		_aclctx_err(h_ctx, ACLSPV_COMPILE_UNHANDLED);
+		return h_ctx->m_err;
+	}
+
+	/** a still-pending body has exactly two causes, and they are not the same
+	 * failure:
+	 *
+	 *  - a static body: never imported, so nothing but its own translation
+	 *    unit can emit it, and the compile phase already sorted that unit's
+	 *    bodies. what is left is a call cycle.
+	 *
+	 *  - anything else: a deferred body that only a walk of its translation
+	 *    unit can complete, and this call was given no source. report that
+	 *    instead of walking a unit the caller may already have disposed.
+	 * */
+	ae2f_ifnezerr_strict(aclemit_body_pending(h_ctx)) {
+		if(aclemit_body_cyclic(h_ctx)) {
+			err_puts("a static body never became emittable: a call cycle");
+			_aclctx_err(h_ctx, ACLSPV_COMPILE_RECURSIVE_CALL);
+			return h_ctx->m_err;
+		}
+
+		err_puts("a body is still deferred: close the module while its "
+				"translation unit is alive (aclspv_ctx_build1)");
+		_aclctx_err(h_ctx, ACLSPV_COMPILE_HOST_PENDING);
+		return h_ctx->m_err;
+	}
+
+	/** nothing defers, so there is no body left to complete: what a build
+	 * still owes the module is the decoration. */
+	ae2f_ifezerr(aclutil_add_capability_by_flag(
+				h_ctx, SpvCapabilityLinkage))
+		return h_ctx->m_err;
+
+	/** every emitted body has an id now: decorate the exports. */
+	return aclemit_export(h_ctx);
 }
 
 ACLSPV_ABI_LINK aclspv_compile_t aclspv_ctx_build1(

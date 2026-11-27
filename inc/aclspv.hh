@@ -131,6 +131,11 @@ namespace aclspv {
 						rd_argv_opt, c_argc, rwr_cxerr_opt);
 			}
 
+			/** BUILD phase without a source: close what compile already saw. */
+			ae2f_inline_f aclspv_compile_t build4() {
+				return aclspv_ctx_build4(this);
+			}
+
 			ae2f_inline_f ae2f_ccpure aclspv_bool_t	chck_capability(
 					const enum SpvCapability_		c_cap
 					) const {

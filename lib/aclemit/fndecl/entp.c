@@ -148,11 +148,10 @@ enum CXChildVisitResult aclemit_fndecl_entp(		CXCursor h_cur,
 	ae2f_unreachable();
 }
 
-aclspv_bool_t aclemit_fndecl_entp_exists(
-		CXCursor		c_entp,
+aclspv_bool_t aclemit_fndecl_entp_exists_by_mark(
+		const aclspv_wrd_t	c_mark,
 		h_aclspv_ctx_t		h_ctx
 		) {
-	const aclspv_wrd_t		c_mark = (aclspv_wrd_t)clang_hashCursor(c_entp);
 	aclsym_entp_t* ae2f_restrict	base;
 	aclspv_wrdcount_t		i;
 
@@ -168,4 +167,13 @@ aclspv_bool_t aclemit_fndecl_entp_exists(
 	}
 
 	return 0;
+}
+
+aclspv_bool_t aclemit_fndecl_entp_exists(
+		CXCursor		c_entp,
+		h_aclspv_ctx_t		h_ctx
+		) {
+	return aclemit_fndecl_entp_exists_by_mark(
+			(aclspv_wrd_t)clang_hashCursor(c_entp)
+			, h_ctx);
 }

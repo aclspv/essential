@@ -71,6 +71,12 @@ ae2f_extern ACLSPV_ABI_LINK aclspv_compile_t aclspv_ctx_compile1(
  * a function this module already declares as an import has no body to gain:
  * a later pass that finds a definition of it reports
  * ACLSPV_COMPILE_IMPORT_DEFINED.
+ *
+ * this is exactly aclspv_ctx_compile followed by aclspv_ctx_build4; use
+ * aclspv_ctx_build4 when the source is already compiled and must not be
+ * walked again.
+ *
+ * @see	aclspv_ctx_build4
  * */
 ae2f_extern ACLSPV_ABI_LINK aclspv_compile_t aclspv_ctx_build(
 		const h_aclspv_ctx_t	h_ctx,
@@ -102,6 +108,52 @@ ae2f_extern ACLSPV_ABI_LINK aclspv_compile_t aclspv_ctx_build3(
 		const char* ae2f_restrict const * ae2f_restrict const	rd_argv_opt,
 		const int						c_argc,
 		enum CXErrorCode* ae2f_restrict				rwr_cxerr_opt
+		);
+
+/**
+ * @brief	BUILD phase from what the context already carries; no source is
+ *		taken.
+ *
+ * closes the module from what earlier aclspv_ctx_compile passes recorded. no
+ * part of it walks a translation unit:
+ *
+ *  - the export intent of a declaration, recorded by the gather pass while the
+ *    translation unit was alive (ACLSYM_FN_FLAG0_DECL_EXPORT / _DECL_HIDDEN),
+ *    is what decorates the exports of every emitted function.
+ *
+ *  - the Linkage capability goes in when the module has no entry point.
+ *
+ *  - an import is declared from the symbol too: the declared function type it
+ *    carries (m_type_id) is already interned in this context, so a called
+ *    function with no body needs no cursor to be declared.
+ *
+ * only a body the compile phase DEFERRED needs the source: it must be carved
+ * again, and that is a walk into its translation unit. build4 was given none,
+ * so it reports that as ACLSPV_COMPILE_HOST_PENDING instead.
+ *
+ * the compile phase must have run at least once. otherwise the module would
+ * silently close without any source vouching for it, reported as
+ * ACLSPV_COMPILE_UNHANDLED.
+ *
+ * a deferred body can never settle without its translation unit, so a caller
+ * that disposes one must leave nothing pending: a body only defers when it
+ * calls something not yet nameable (an import, or a body defined later in the
+ * same translation unit), and compiling one source per translation unit
+ * leaves no such body behind. build4 is then the closing step of a compile |
+ * build split — compile each source as it arrives, dispose it, and close the
+ * module once at the end.
+ *
+ * if a translation unit did defer a body, close the module while that
+ * translation unit is alive: aclspv_ctx_build1 still declares the import and
+ * emits it. build4 takes no source, so it reports the deferral as
+ * ACLSPV_COMPILE_HOST_PENDING rather than walking a translation unit that may
+ * already be gone.
+ *
+ * @see	aclspv_ctx_build
+ * @see	aclspv_ctx_compile
+ * */
+ae2f_extern ACLSPV_ABI_LINK aclspv_compile_t aclspv_ctx_build4(
+		const h_aclspv_ctx_t	h_ctx
 		);
 
 #endif

@@ -237,6 +237,16 @@ struct a_aclspv_ctx {
 	CXCursorVisitor		m_work_nxt;
 	CXClientData		m_work_data;
 
+	/** the translation-unit root of the last compile pass, or a null cursor
+	 * when no pass has run.
+	 *
+	 * aclspv_ctx_build4 reads it only to tell "a source has vouched for this
+	 * module" from "nothing has been compiled yet": the build it performs
+	 * decorates exports and declares imports from the symbol cache, never by
+	 * walking this translation unit. so the unit may already be disposed —
+	 * but nothing here frees it, and nothing here may walk it. */
+	CXCursor		m_root_built;
+
 	/** the implicit `this` pointer register of the method currently being
 	 * emitted; 0 in a free function. member reads/writes and method calls
 	 * use it when libclang hides the implicit base. */

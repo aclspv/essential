@@ -21,6 +21,7 @@
 
 #include <aclattr/execmodel.h>
 #include <aclattr/pure.h>
+#include <aclattr/export.h>
 #include <aclmem.h>
 
 #include <aclemit/sync.h>
@@ -37,6 +38,10 @@
  * the module being emitted. */
 static x_aclspv_ctx* s_cache(h_aclspv_ctx_t h_ctx) {
 	return (h_ctx && h_ctx->m_ctx_slave) ? h_ctx->m_ctx_slave : h_ctx;
+}
+
+x_aclspv_ctx* aclsym_fn_cache(h_aclspv_ctx_t h_ctx) {
+	return s_cache(h_ctx);
 }
 
 /** the symbol name of c_cur: mangled when clang has one, spelled
@@ -317,13 +322,32 @@ static aclspv_bool_t s_is_entry(CXCursor c_fn) {
  * typedef sugar, and the storage-class / layout annotations this compiler
  * lives by are attached to the typedef, not to the clang type. aclty is the
  * layer that understands them, and it interns by structure, so spelling
- * variants of the same signature still land on one id. */
-ae2f_inline_f static aclty_subid_t s_type(CXCursor c_fn, h_aclspv_ctx_t h_ctx) {
-	return (aclty_subid_t)aclty_mk_fn1_this(
-			c_fn
-			, clang_getCursorType(c_fn)
-			, h_ctx
-			);
+ * variants of the same signature still land on one id.
+ *
+ * the type is entered TWICE, once per context. the cache (slave) keeps the
+ * comparison key m_type_id; the module context keeps the real entry the build
+ * phase emits from. both are interned by structure, so they agree, and
+ * neither has to be rebuilt later from a cursor that may be gone. */
+static aclty_subid_t s_type(
+		CXCursor		c_fn,
+		h_aclspv_ctx_t		h_cache,
+		h_aclspv_ctx_t		h_module
+		) {
+	const CXType		TY = clang_getCursorType(c_fn);
+	const aclspv_id_t	ID = aclty_mk_fn1_this(c_fn, TY, h_cache);
+
+	ae2f_ifezerr(ID)
+		return 0;
+
+	/** the module half: the same declared type, interned in the context that
+	 * writes the module. a build phase that takes no source finds it there
+	 * and never has to rebuild it from a cursor. */
+	if(h_module && h_module != h_cache) {
+		ae2f_ifezerr(aclty_mk_fn1_this(c_fn, TY, h_module))
+			return 0;
+	}
+
+	return (aclty_subid_t)ID;
 }
 
 aclsym_fn_t* aclsym_fn_find(CXCursor c_fn, h_aclspv_ctx_t h_ctx) {
@@ -396,7 +420,11 @@ aclsym_fn_t* aclsym_fn_find_id(aclspv_id_t c_id, h_aclspv_ctx_t h_ctx) {
 	return 0;
 }
 
-static aclspv_compile_t s_add(CXCursor c_fn, h_aclspv_ctx_t h_ctx) {
+static aclspv_compile_t s_add(
+		CXCursor		c_fn,
+		h_aclspv_ctx_t		h_ctx,
+		h_aclspv_ctx_t		h_module
+		) {
 	aclsym_fn_t* ae2f_restrict	p_sym;
 	const aclspv_bool_t		c_static	= s_is_static(c_fn);
 	const aclspv_bool_t		is_def		= (aclspv_bool_t)clang_isCursorDefinition(c_fn);
@@ -417,7 +445,7 @@ static aclspv_compile_t s_add(CXCursor c_fn, h_aclspv_ctx_t h_ctx) {
 		? &h_ctx->m_fnlist.m_num_fn_static_name
 		: &h_ctx->m_fnlist.m_num_fn_name;
 
-	c_ty = s_type(c_fn, h_ctx);
+	c_ty = s_type(c_fn, h_ctx, h_module);
 
 	if(!c_ty) {
 		_aclctx_err(h_ctx, ACLSPV_COMPILE_UNHANDLED);
@@ -507,15 +535,91 @@ static aclspv_compile_t s_add(CXCursor c_fn, h_aclspv_ctx_t h_ctx) {
 	if(c_pure.m_is_const)
 		p_sym->m_flag0 |= aclsym_fn_flag0(ACLSYM_FN_FLAG0_CONST);
 
+	/** the export intent is a property of the declaration, recorded here while
+	 * the translation unit can still be asked: the build phase decorates from
+	 * the symbol, and a build that takes no source has no cursor left to read
+	 * it from. like the purity promise, it only accumulates. */
+	{
+		const aclattr_export_t EXP = aclattr_get_export(c_fn);
+
+		if(EXP.m_export)
+			p_sym->m_flag0 |= aclsym_fn_flag0(ACLSYM_FN_FLAG0_DECL_EXPORT);
+		if(EXP.m_hidden)
+			p_sym->m_flag0 |= aclsym_fn_flag0(ACLSYM_FN_FLAG0_DECL_HIDDEN);
+	}
+
 	return ACLSPV_COMPILE_OK;
 }
+
+/** record an entry-point declaration: no signature, no import, no export.
+ *
+ * the symbol exists only so a later phase can tell, without the translation
+ * unit, that this entry point's body has not been emitted yet. it is made
+ * once and re-marked on every pass that still sees the declaration. */
+static aclspv_compile_t s_add_entry(CXCursor c_fn, h_aclspv_ctx_t h_ctx) {
+	const aclspv_wrd_t	c_mark = (aclspv_wrd_t)clang_hashCursor(c_fn);
+	aclsym_fn_t* ae2f_restrict	p_sym;
+	aclspv_wrdcount_t		i;
+
+	/** matched by mark, never by name: a normal symbol that happens to share
+	 * the name is a different entity (the program would not link, and clang
+	 * has already said so), and the name cache is full of symbols from
+	 * translation units that are gone. */
+	for(i = 0; i < h_ctx->m_fnlist.m_num_fn; ++i) {
+		aclsym_fn_t* ae2f_restrict p
+			= &((aclsym_fn_t*)h_ctx->m_fnlist.m_fn.m_p)[i];
+
+		if(p->m_mark == c_mark) {
+			p->m_flag0 |= aclsym_fn_flag0(ACLSYM_FN_FLAG0_ENTRY);
+			return ACLSPV_COMPILE_OK;
+		}
+	}
+
+	for(i = 0; i < h_ctx->m_fnlist.m_num_fn_static; ++i) {
+		aclsym_fn_t* ae2f_restrict p
+			= &((aclsym_fn_t*)h_ctx->m_fnlist.m_fn_static.m_p)[i];
+
+		if(p->m_mark == c_mark) {
+			p->m_flag0 |= aclsym_fn_flag0(ACLSYM_FN_FLAG0_ENTRY);
+			return ACLSPV_COMPILE_OK;
+		}
+	}
+
+	ae2f_ifnezerr(s_aclmem_cgrow2(
+				&h_ctx->m_fnlist.m_fn,
+				h_ctx->m_fnlist.m_num_fn + 1,
+				sizeof(aclsym_fn_t),
+				ACLSPV_COMPILE_ALLOC_FAILED_FUNCTION))
+		return h_ctx->m_err;
+
+	p_sym = &((aclsym_fn_t*)h_ctx->m_fnlist.m_fn.m_p)
+		[h_ctx->m_fnlist.m_num_fn];
+
+	aclmemzero(p_sym, sizeof(*p_sym));
+
+	p_sym->m_mark		= c_mark;
+	p_sym->m_flag0		= aclsym_fn_flag0(ACLSYM_FN_FLAG0_DEFINED)
+		| aclsym_fn_flag0(ACLSYM_FN_FLAG0_ENTRY);
+
+	++h_ctx->m_fnlist.m_num_fn;
+
+	return ACLSPV_COMPILE_OK;
+}
+
+/** what the gather walk carries: the symbol cache it writes, and the module
+ * context a declared signature is also interned in (see s_type). */
+struct s_gather {
+	h_aclspv_ctx_t	m_cache;
+	h_aclspv_ctx_t	m_module;
+};
 
 static enum CXChildVisitResult s_gather(
 		CXCursor		c_cur,
 		ae2f_unused CXCursor	c_par,
-		CXClientData		rdwr_ctx
+		CXClientData		rdwr_data
 		) {
-	h_aclspv_ctx_t ctx = rdwr_ctx;
+	const struct s_gather* ae2f_restrict	data = rdwr_data;
+	h_aclspv_ctx_t				ctx = data->m_cache;
 
 	/** declarations only: never descend into a body. records and
 	 * namespaces are containers, so their methods are still declarations. */
@@ -544,32 +648,42 @@ static enum CXChildVisitResult s_gather(
 	unless(clang_Location_isFromMainFile(clang_getCursorLocation(c_cur)))
 		return CXChildVisit_Continue;
 
-	/** an entry point is not a call target: neither another entry point nor
-	 * a normal function may call it. give it no symbol and build no type,
-	 * so nothing of its declaration reaches the module. its body is still
-	 * parsed as an entry point (see aclemit_fndecl_entp). */
-	if(s_is_entry(c_cur))
-		return CXChildVisit_Continue;
+	if(s_is_entry(c_cur)) {
+		/** an entry point is not a call target: neither another entry point
+		 * nor a normal function may call it. give it no type, so nothing of
+		 * its signature reaches the module, and mark it ENTRY so the symbol is
+		 * not NAMED: no call resolves to it and no export decorates it.
+		 *
+		 * the record itself is still made: it is what tells a build that takes
+		 * no source whether this entry point's body has gone out yet. its body
+		 * is parsed as an entry point (see aclemit_fndecl_entp). */
+		ae2f_ifnezerr(s_add_entry(c_cur, ctx))
+			return CXChildVisit_Break;
 
-	ae2f_ifnezerr(s_add(c_cur, ctx))
+		return CXChildVisit_Continue;
+	}
+
+	ae2f_ifnezerr(s_add(c_cur, ctx, data->m_module))
 		return CXChildVisit_Break;
 
 	return CXChildVisit_Continue;
 }
 
 aclspv_compile_t aclsym_fn_gather(h_aclspv_ctx_t h_ctx, CXCursor c_root) {
-	h_aclspv_ctx_t cache;
+	struct s_gather	data;
 
 	ae2f_ifezerr(h_ctx)		return ACLSPV_COMPILE_PRM_INVAL_NIL;
 	aclctx_err_check(h_ctx)	return h_ctx->m_err;
 
-	cache = s_cache(h_ctx);
+	data.m_cache	= s_cache(h_ctx);
+	/** the module context the types are interned in as well: h_ctx itself. */
+	data.m_module	= h_ctx;
 
-	clang_visitChildren(c_root, s_gather, cache);
+	clang_visitChildren(c_root, s_gather, &data);
 
 	/** a failure inside the scratch context is the compile's failure. */
-	if(cache->m_err && !h_ctx->m_err)
-		_aclctx_err(h_ctx, cache->m_err);
+	if(data.m_cache->m_err && !h_ctx->m_err)
+		_aclctx_err(h_ctx, data.m_cache->m_err);
 
 	return h_ctx->m_err;
 }
@@ -602,11 +716,15 @@ const char* aclsym_fn_name(const aclsym_fn_t* c_sym, h_aclspv_ctx_t h_ctx) {
 
 /** true when the symbol still describes this pass: the module carries it, as a
  * body or as an import. everything else is a claim about a translation unit
- * that has since died. */
+ * that has since died.
+ *
+ * DEFINED alone is not enough. a body another translation unit declared but
+ * never emitted is a cursor into that unit — nothing in the module answers for
+ * it, and the pass starting now has to see the declaration again. only EMITTED
+ * (the body is out) and IMPORTED (the module declares it) are facts about the
+ * module rather than about a source. */
 static aclspv_bool_t s_kept(const aclsym_fn_t* c_sym) {
-	return (aclspv_bool_t)(c_sym->m_flag0 & (aclspv_wrd_t)(
-				aclsym_fn_flag0(ACLSYM_FN_FLAG0_DEFINED)
-				| ACLSYM_FN_FLAG0_NAMED));
+	return (aclspv_bool_t)(c_sym->m_flag0 & (aclspv_wrd_t)ACLSYM_FN_FLAG0_NAMED);
 }
 
 void aclsym_fn_static_reset_pass(h_aclspv_ctx_t h_ctx) {
@@ -627,6 +745,11 @@ void aclsym_fn_static_reset_pass(h_aclspv_ctx_t h_ctx) {
 	}
 	else {
 		for(i = 0; i < h_ctx->m_fnlist.m_num_fn; ++i) {
+			/** an ENTRY mark is a claim about the NEW source: the pass that
+			 * is starting has to see the declaration again (s_add_entry
+			 * re-marks it). the emitted or imported meaning survives. */
+			base[i].m_flag0 &= ~aclsym_fn_flag0(ACLSYM_FN_FLAG0_ENTRY);
+
 			if(!s_kept(&base[i]))
 				continue;
 

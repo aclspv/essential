@@ -67,10 +67,11 @@ static int s_check(
 		return 1;
 	}
 
-	/** an entry point is not a call target, so the gather pass gives it no
-	 * symbol: one entry record, zero symbols. */
+	/** an entry point is not a call target: one entry record, and the one
+	 * symbol the gather pass keeps for it (ENTRY — never NAMED) so a build
+	 * without a source can tell whether its body went out. */
 	if(ctx.m_fnlist.m_num_entp != 1 || !ctx.m_ctx_slave
-			|| ctx.m_ctx_slave->m_fnlist.m_num_fn != 0) {
+			|| ctx.m_ctx_slave->m_fnlist.m_num_fn != 1) {
 		fprintf(stderr, "[fnpure] function count: %u entry, %u symbol\n"
 				, (unsigned)ctx.m_fnlist.m_num_entp
 				, (unsigned)(ctx.m_ctx_slave

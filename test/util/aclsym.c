@@ -138,9 +138,10 @@ static int s_case_ok(void) {
 		return 1;
 	}
 
-	/** helper, twin. hdr_helper came from aux.h and t_aclsym is an entry
-	 * point, which is not a call target. */
-	if(ctx.m_ctx_slave->m_fnlist.m_num_fn != 2) {
+	/** helper, twin, and t_aclsym. hdr_helper came from aux.h; an entry
+	 * point is not a call target, but it is still recorded (ENTRY) so a build
+	 * phase that takes no source can tell whether its body has gone out. */
+	if(ctx.m_ctx_slave->m_fnlist.m_num_fn != 3) {
 		fprintf(stderr, "[aclsym] symbol count: %u\n"
 				, (unsigned)ctx.m_ctx_slave->m_fnlist.m_num_fn);
 		aclspv_fini_ctx(&ctx);
@@ -164,6 +165,16 @@ static int s_case_ok(void) {
 	 * type id: this is the value comparison the duplicate check relies on. */
 	CHECK(twin->m_type_id == helper->m_type_id);
 	CHECK(!(twin->m_flag0 & aclsym_fn_flag0(ACLSYM_FN_FLAG0_DEFINED)));
+
+	/** the entry point's record: marked ENTRY, never NAMED, so no call
+	 * resolves to it and no export decorates it. */
+	{
+		const aclsym_fn_t* const ENTP
+			= &((aclsym_fn_t*)ctx.m_ctx_slave->m_fnlist.m_fn.m_p)[2];
+
+		CHECK(ENTP->m_flag0 & aclsym_fn_flag0(ACLSYM_FN_FLAG0_ENTRY));
+		CHECK(!(ENTP->m_flag0 & ACLSYM_FN_FLAG0_NAMED));
+	}
 
 	/** the gather pass is a cache, not an emitter: of the three functions
 	 * in this file only the entry point has a body, so exactly one
@@ -194,9 +205,10 @@ static int s_case_ok(void) {
 	return 0;
 }
 
-/** an entry point is left out of the cache entirely: no symbol, and no
- * argument parsing. its body is still emitted, because it is the root of
- * the module. */
+/** an entry point is never a call target: no signature, no import, no export.
+ * it is recorded as an ENTRY symbol so a build without a source can still
+ * tell that its body went out, and its body is emitted as the root of the
+ * module. */
 static int s_case_entry_only(void) {
 	static const char src[] =
 		"__attribute__((annotate(\"aclspv_execmodel(5)\")))\n"
@@ -223,7 +235,7 @@ static int s_case_entry_only(void) {
 	}
 
 	if(!ctx.m_ctx_slave
-			|| ctx.m_ctx_slave->m_fnlist.m_num_fn != 0
+			|| ctx.m_ctx_slave->m_fnlist.m_num_fn != 1
 			|| ctx.m_fnlist.m_num_entp != 1) {
 		fprintf(stderr, "[aclsym] entry-only: %u symbol, %u entry\n"
 				, (unsigned)(ctx.m_ctx_slave

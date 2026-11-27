@@ -33,10 +33,15 @@
 
 #include <ae2f/pat/dbg.h>
 
-/** emit the import declaration for one body-less symbol. */
+/** emit the import declaration for one body-less symbol.
+ *
+ * the signature comes from the symbol, not from a cursor: the gather pass
+ * recorded the declared function type (m_type_id) while the translation unit
+ * was alive, and aclty interned it, so the same declaration has one entry no
+ * matter which pass asks. that is what lets a build phase declare the import
+ * with no source at all. */
 static aclspv_compile_t s_declare(
 		aclsym_fn_t*		p_sym,
-		CXCursor		c_fn,
 		x_aclspv_vec*		h_wrds,
 		aclspv_wrdcount_t* ae2f_restrict	wr_count,
 		h_aclspv_ctx_t		h_ctx
@@ -46,13 +51,9 @@ static aclspv_compile_t s_declare(
 	aclspv_wrd_t			c_fnctrl;
 	aclspv_sz_t			c;
 
-	ae2f_ifezerr(id_fn_ty = aclty_mk_fn1(
-				c_fn
-				, clang_getCursorType(c_fn)
-				, h_ctx)) {
-		_aclctx_err(h_ctx, ACLSPV_COMPILE_UNHANDLED);
-		return h_ctx->m_err;
-	}
+	/** the gather's id is a comparison key in the slave context; the emit
+	 * context interns the same declared type itself and gets its own id. */
+	id_fn_ty = (aclspv_id_t)p_sym->m_type_id;
 
 	ae2f_ifezerr(p_fn_ty = aclty_find(id_fn_ty, h_ctx)) {
 		_aclctx_err(h_ctx, ACLSPV_COMPILE_UNHANDLED);
@@ -187,7 +188,6 @@ static enum CXChildVisitResult s_visit(
 
 	ae2f_ifnezerr(s_declare(
 				p_sym
-				, c_callee
 				, rdwr_ctx->m_wrds
 				, rdwr_ctx->m_count
 				, ctx))

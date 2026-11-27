@@ -38,4 +38,11 @@ aclspv_bool_t aclemit_fndecl_entp_exists(
 		h_aclspv_ctx_t		h_ctx
 		);
 
+/** the same question from the cursor mark alone, for a caller that no longer
+ * holds a cursor. */
+aclspv_bool_t aclemit_fndecl_entp_exists_by_mark(
+		aclspv_wrd_t		c_mark,
+		h_aclspv_ctx_t		h_ctx
+		);
+
 #endif

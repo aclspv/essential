@@ -69,6 +69,26 @@ enum ACLSYM_FN_FLAG0_ {
 	 * (ACLSPV_COMPILE_IMPORT_DEFINED). */
 	ACLSYM_FN_FLAG0_IMPORTED,
 
+	/** the declaration is an entry point (carries aclspv_execmodel).
+	 *
+	 * an entry point is not a call target, so it has no body to call and no id
+	 * to export — but it is still a body that has to go out, and the symbol is
+	 * the only record of it that outlives the translation unit. the build
+	 * phase decides with this flag whether a body is still waiting, without
+	 * walking anything. the bit is cleared by a pass whose source does not
+	 * declare it. */
+	ACLSYM_FN_FLAG0_ENTRY,
+
+	/** the declaration carries an explicit export intent:
+	 * `__declspec(dllexport)` or `visibility("default")` (aclattr_get_export).
+	 * recorded while the translation unit is alive, so a build that takes no
+	 * source can still decorate the export without walking it. */
+	ACLSYM_FN_FLAG0_DECL_EXPORT,
+
+	/** the declaration is explicitly `visibility("hidden")`, which overrides
+	 * an export-by-default policy. recorded for the same reason. */
+	ACLSYM_FN_FLAG0_DECL_HIDDEN,
+
 	/** the module already decorates this symbol `LinkageAttributes Export`.
 	 *
 	 * a pass re-walks the translation unit of an earlier pass too, so the
@@ -218,6 +238,14 @@ void aclsym_fn_reset_static(h_aclspv_ctx_t h_ctx);
  * the vectors keep their buffers: only the used lengths move.
  * */
 void aclsym_fn_static_reset_pass(h_aclspv_ctx_t h_ctx);
+
+/**
+ * the context the symbol caches live in: the scratch sub-context when the host
+ * has one, the host otherwise. every aclsym lookup goes through this, so a
+ * caller that wants to read the caches directly (rather than by cursor) asks
+ * for the same context here.
+ * */
+x_aclspv_ctx* aclsym_fn_cache(h_aclspv_ctx_t h_ctx);
 
 /**
  * the symbol for c_fn, matched by cursor first and by name as a fallback
