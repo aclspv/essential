@@ -114,7 +114,7 @@ ae2f_inline_f static ae2f_ccconst aclcur_reg_t aclcur_regghost_in(void) {
 	const aclcur_reg_t in = {
 		{ 0, 0, aclcur_regghost_addr, aclcur_regview_size, 0, aclcur_regghost_emit_load, aclcur_regghost_emit_load_explicit, aclcur_regghost_emit_store, aclcur_regghost_emit_store_explicit },
 		{ { 0 } },
-		0, 0, 0, 0, 0, 0, 0
+		0, 0, 0, 0, 0, 0, 0, 0, 0
 	};
 	return in;
 }
@@ -123,7 +123,7 @@ ae2f_inline_f static ae2f_ccconst aclcur_reg_t aclcur_regview_in(void) {
 	const aclcur_reg_t in = {
 		{ 0, 0, aclcur_regview_addr, aclcur_regview_size, 0, aclcur_regview_emit_load, aclcur_regview_emit_load_explicit, aclcur_regview_emit_store, aclcur_regview_emit_store_explicit },
 		{ { 0 } },
-		0, 0, 0, 0, 0, 0, 0
+		0, 0, 0, 0, 0, 0, 0, 0, 0
 	};
 	return in;
 }

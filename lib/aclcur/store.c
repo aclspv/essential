@@ -109,6 +109,17 @@ aclspv_id_t	aclcur_store_reg(aclcur_regid_t c_reg, aclspv_vid_t c_val, h_aclspv_
 		/** this register's cache IS the value just stored. */
 		aclcur_reg_val_mark(c_reg, h_ctx);
 
+		/** a pointer stored here names a var from now on: `i32* q = &t` makes
+		 * `*q` a write into `t`, not into "somewhere". */
+		{
+			const aclty_t* ae2f_restrict p_ty = aclty_find(p_val->m_ty, h_ctx);
+
+			if(p_ty && p_ty->m_class == ACLTY_PTR)
+				aclcur_reg_ptr_var_store(c_reg
+						, aclcur_value_var(c_val, h_ctx)
+						, h_ctx);
+		}
+
 		return ID;
 	}
 }

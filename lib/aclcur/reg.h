@@ -158,6 +158,18 @@ enum ACLCUR_FLAG0_REG_ {
 	 * argument from being re-derived on every statement. */
 	ACLCUR_FLAG0_REG_ADDRESS,
 
+	/** m_d.m_reg.m_id_var has been computed for this register (it may be 0:
+	 * "names no var"). a view's root and a ghost's held pointer value never
+	 * change, so the answer is stable and the chain walk happens once. */
+	ACLCUR_FLAG0_REG_VAR_RESOLVED,
+
+	/** m_d.m_reg.m_id_ptee has been recorded: this register has had a pointer
+	 * value stored into it at least once. the field names the var that value
+	 * points at, or is 0 when more than one (or one we cannot name) was
+	 * stored — "one or none" is all the precision a single field buys, and
+	 * losing it only costs a conservative invalidation later. */
+	ACLCUR_FLAG0_REG_PTR_VAR,
+
 	ACLCUR_FLAG0_REG_MAX
 };
 
@@ -310,6 +322,20 @@ aclspv_bool_t	aclcur_reg_val_current(
 		const x_aclspv_ctx*	ae2f_restrict h_ctx
 		);
 
+/** record that a pointer value naming `c_ptee` was stored into c_reg (0:
+ * unknown). two different answers leave the register unnamed, which is the
+ * conservative side: its pointer value no longer names any single var. */
+void	aclcur_reg_ptr_var_store(
+		aclspv_id_t		c_reg,
+		aclspv_id_t		c_ptee,
+		h_aclspv_ctx_t		h_ctx
+		);
+
+/** the var a pointer VALUE names (aclcur_reg_var's value-side twin). 0 when
+ * the value cannot be followed: a constant, a pointer parameter, a pointer
+ * read back from memory nobody recorded. */
+aclspv_id_t	aclcur_value_var(aclspv_id_t c_val, h_aclspv_ctx_t h_ctx);
+
 /** mark c_reg's cached value as taken NOW (after a store or a load filled
  * it), so it stays current until the var is written again. */
 void	aclcur_reg_val_mark(aclspv_id_t c_reg, h_aclspv_ctx_t h_ctx);
@@ -387,6 +413,16 @@ typedef struct aclcur_reg {
 
 	/** see enum SpvStorageClass_ */
 	aclspv_wrd_t m_storage_class;
+
+	/** cached aclcur_reg_var() answer; valid only with
+	 * ACLCUR_FLAG0_REG_VAR_RESOLVED. 0 means "names no var". */
+	aclspv_id_t	m_id_var;
+
+	/** the var the POINTER VALUE held in this register points at, valid only
+	 * with ACLCUR_FLAG0_REG_PTR_VAR; 0 means "unknown, or more than one".
+	 * reading the register as a pointer value names that var, which is what
+	 * lets `i32* q = &t; *q = 1;` invalidate `t` and nothing else. */
+	aclspv_id_t	m_id_ptee;
 
 	/** the ALIAS2 view of member 0 of the storage the register's m_id
 	 * OpVariable was declared with, when that storage is the frontend's

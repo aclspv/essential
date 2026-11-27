@@ -480,6 +480,7 @@ aclspv_id_t aclcur_reg_ghost(aclspv_id_t c_base, h_aclspv_ctx_t h_ctx) {
 	aclspv_id_t c_poi;
 	aclspv_wrd_t c_storage;
 	aclspv_id_t id;
+	aclspv_id_t c_anchor;
 	h_aclcur_t p;
 	aclspv_wrd_t i;
 
@@ -497,6 +498,34 @@ aclspv_id_t aclcur_reg_ghost(aclspv_id_t c_base, h_aclspv_ctx_t h_ctx) {
 	c_poi		= p_ty->m_info.m_ptr.m_type;
 	c_storage	= (aclspv_wrd_t)p_ty->m_info.m_ptr.m_storage;
 
+	/** DEDUP on the ADDRESS, not on the pointer copy that wraps it. a
+	 * register's result id already IS the pointer to its storage, so an
+	 * `OpCopyObject <register>` (what `&x` and the entry point's argument
+	 * load emit, both because a store needs a typed pointer VALUE) and the
+	 * register name the same storage. keying on the register makes every
+	 * dereference of one object share a ghost — and therefore one
+	 * OpAccessChain node — instead of minting a copy per statement; the copies
+	 * nobody refers to are then dropped by the emit pass.
+	 *
+	 * the ghost still HOLDS the value (m_base), not the address: ptrval of a
+	 * ghost feeds nested dereferences and casts, which need a pointer value.
+	 *
+	 * a wrapped argument's pointer value is an OpAccessChain (member 0) and
+	 * is deliberately NOT unwrapped: there the variable's own address has the
+	 * wrapper's type, not the argument's. */
+	c_anchor = c_base;
+	{
+		h_aclcur_t p_inner = aclcur_get_node(
+				p_base->m_d.m_op.m_o[0], h_ctx);
+
+		if(p_base->m_class == ACLCUR_OP1
+				&& p_base->m_d.m_op.m_op == SpvOpCopyObject
+				&& p_inner
+				&& p_inner->m_class == ACLCUR_REG
+				&& p_inner->m_id == p_base->m_d.m_op.m_o[0])
+			c_anchor = p_base->m_d.m_op.m_o[0];
+	}
+
 	/** canonical dedup: one ghost per (held pointer value, pointee). a
 	 * pointer value plus a pointee names one region, so two member accesses
 	 * through the same pointer share one ghost and, with aclcur_reg_view's
@@ -509,7 +538,7 @@ aclspv_id_t aclcur_reg_ghost(aclspv_id_t c_base, h_aclspv_ctx_t h_ctx) {
 			continue;
 		if(!(pc->m_flag0 & aclcur_flag0_reg(ACLCUR_FLAG0_REG_GHOST)))
 			continue;
-		if(pc->m_d.m_reg.m_base == c_base && pc->m_ty == c_poi)
+		if(pc->m_d.m_reg.m_base == c_anchor && pc->m_ty == c_poi)
 			return pc->m_id;
 	}
 

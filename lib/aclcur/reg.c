@@ -107,7 +107,8 @@ static aclspv_id_t s_value_var(
 		aclspv_wrd_t		c_depth
 		);
 
-aclspv_id_t	aclcur_reg_var(aclspv_id_t c_reg, h_aclspv_ctx_t h_ctx) {
+/** the walk behind aclcur_reg_var(). */
+static aclspv_id_t s_reg_var_walk(aclspv_id_t c_reg, h_aclspv_ctx_t h_ctx) {
 	aclspv_wrd_t n = h_ctx ? h_ctx->m_num_cursor : 0;
 	aclspv_id_t c = c_reg;
 	h_aclcur_t p;
@@ -134,6 +135,29 @@ aclspv_id_t	aclcur_reg_var(aclspv_id_t c_reg, h_aclspv_ctx_t h_ctx) {
 	}
 
 	return 0;
+}
+
+aclspv_id_t	aclcur_reg_var(aclspv_id_t c_reg, h_aclspv_ctx_t h_ctx) {
+	aclspv_id_t c_var;
+	h_aclcur_t p = aclcur_get_node(c_reg, h_ctx);
+
+	ae2f_ifezerr(p) return 0;
+	ae2f_ifnezerr_strict(p->m_class != ACLCUR_REG) return 0;
+
+	/** a view's root and a ghost's held pointer value are fixed at creation:
+	 * resolve once, not on every store, read and needs_memory call. */
+	if(p->m_flag0 & aclcur_flag0_reg(ACLCUR_FLAG0_REG_VAR_RESOLVED))
+		return p->m_d.m_reg.m_id_var;
+
+	c_var = s_reg_var_walk(c_reg, h_ctx);
+
+	ae2f_ifezerr(p = aclcur_get_node(c_reg, h_ctx))
+		return c_var;
+
+	p->m_flag0 |= aclcur_flag0_reg(ACLCUR_FLAG0_REG_VAR_RESOLVED);
+	p->m_d.m_reg.m_id_var = c_var;
+
+	return c_var;
 }
 
 aclspv_bool_t	aclcur_reg_val_current(
@@ -215,6 +239,33 @@ void	aclcur_reg_gen_wrote(aclspv_id_t c_var, h_aclspv_ctx_t h_ctx) {
 	(void)++h_ctx->m_gen_alias;
 }
 
+aclspv_id_t	aclcur_value_var(aclspv_id_t c_val, h_aclspv_ctx_t h_ctx) {
+	return s_value_var(c_val, h_ctx, 0);
+}
+
+void	aclcur_reg_ptr_var_store(
+		aclspv_id_t	c_reg,
+		aclspv_id_t	c_ptee,
+		h_aclspv_ctx_t	h_ctx
+		) {
+	h_aclcur_t p = aclcur_get_node(c_reg, h_ctx);
+
+	ae2f_ifezerr(p) return;
+	ae2f_ifnezerr_strict(p->m_class != ACLCUR_REG) return;
+
+	if(p->m_flag0 & aclcur_flag0_reg(ACLCUR_FLAG0_REG_PTR_VAR)) {
+		/** one field cannot hold a set: a second answer retires the record
+		 * (and so does the same var being stored again — it stays). */
+		if(p->m_d.m_reg.m_id_ptee != c_ptee)
+			p->m_d.m_reg.m_id_ptee = 0;
+
+		return;
+	}
+
+	p->m_flag0 |= aclcur_flag0_reg(ACLCUR_FLAG0_REG_PTR_VAR);
+	p->m_d.m_reg.m_id_ptee = c_ptee;
+}
+
 /** the var a pointer VALUE names, or 0 when it names none we can follow.
  *
  * a value is nameable when it was built from a register's own address: the
@@ -250,10 +301,19 @@ static aclspv_id_t s_value_var(
 				h_aclcur_t p_reg = aclcur_get_node(
 						p->m_d.m_load.m_reg, h_ctx);
 
-				if(p_reg && (p_reg->m_flag0
-						& aclcur_flag0_reg(ACLCUR_FLAG0_REG_ADDRESS)))
+				if(!p_reg)
+					return 0;
+
+				if(p_reg->m_flag0
+						& aclcur_flag0_reg(ACLCUR_FLAG0_REG_ADDRESS))
 					return aclcur_reg_var(
 							p->m_d.m_load.m_reg, h_ctx);
+
+				/** a pointer the program stored: the store recorded what it
+				 * pointed at. */
+				if(p_reg->m_flag0
+						& aclcur_flag0_reg(ACLCUR_FLAG0_REG_PTR_VAR))
+					return p_reg->m_d.m_reg.m_id_ptee;
 
 				return 0;
 			}
