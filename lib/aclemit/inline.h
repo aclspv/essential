@@ -3,6 +3,7 @@
 
 #include <acldef.h>
 #include <aclty/common.h>
+#include <acltrl.h>
 
 /** is this function's body shape supported by the inliner?
  *
@@ -14,12 +15,22 @@ aclspv_bool_t aclemit_inline_supported(CXCursor c_fn);
 /** inline one function body into the current control-flow context.
  *
  * c_args are already-converted parameter values, in function-type order
- * (including `this` for a method). the body is wrapped in a single-iteration
- * loop; its return paths branch to the loop continue target and the result /
- * done flag are carried by loop-header phis, so the caller's own return
- * state is untouched.
+ * (including `this` for a method).
+ *
+ * a body whose only return is the last statement of its block is carved
+ * straight into the caller's block: the return stores the result and leaves
+ * the block open, so no scaffold, no carry phi — which is what keeps a literal
+ * argument a literal on the way in AND on the way out.
+ *
+ * every other shape (several returns, or a return under a selection) is
+ * wrapped in a single-iteration loop; its return paths branch to the loop
+ * continue target and the result / done flag are carried by loop-header phis,
+ * so the caller's own return state is untouched.
  *
  * @return 1 on success. wr_ret receives the loaded return value (0 for void).
+ * wr_lit_mask_opt / wr_literal_opt receive that value's literal state: a
+ * literal return value stays a literal here instead of collapsing into the
+ * runtime phi, so a call site can keep folding (`f(4) + 1`).
  * */
 aclspv_bool_t aclemit_inline_fn(
 		CXCursor	c_fn,
@@ -27,6 +38,8 @@ aclspv_bool_t aclemit_inline_fn(
 		const aclspv_id_t* c_args,
 		aclspv_wrd_t	c_num,
 		aclspv_id_t*	wr_ret,
+		acltrl_mask_t*	wr_lit_mask_opt,
+		acltrl_t*	wr_literal_opt,
 		h_aclspv_ctx_t	h_ctx
 		);
 

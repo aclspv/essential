@@ -203,7 +203,14 @@ aclspv_bool_t aclexpr_carve_opn_call(
 	const aclspv_id_t	c_fn = rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_SPECCONSTANTOP];
 	const aclspv_id_t	c_ty_fn = rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_RESID];
 	const aclty_id_t	c_ty_ret = rdwr_lst_scale_buf[ACLEXPR_OPBINCFG_RESTYID];
+	/** the call operands: a pointer argument is the memory object itself, not
+	 * the OpCopyObject wrapping its address (see s_arg_value). */
 	aclspv_vid_t		os[__ACLSPV_MAX_OPRND];
+	/** the value form of the same operands: a pointer argument stays the typed
+	 * pointer VALUE. an inline binds it as a ghost over that value, so
+	 * unwrapping here would hand aclemit_inline_fn a storage id whose type is
+	 * the pointee, not a pointer. */
+	aclspv_vid_t		vs[__ACLSPV_MAX_OPRND];
 	aclspv_bool_t		is_pure = 0;
 	aclty_t* ae2f_restrict	p_fn;
 	aclspv_wrd_t		i;
@@ -226,7 +233,7 @@ aclspv_bool_t aclexpr_carve_opn_call(
 		c_ty_to = p_arg->m_info.m_fn_arg.m_prm_id;
 
 		if(c_ty_from == c_ty_to) {
-			os[i + 1] = s_arg_value(c_id, ctx);
+			vs[i + 1] = c_id;
 		}
 		else {
 			acltrl_t		lit = rdwr_lst_extra[i].m_literal;
@@ -237,7 +244,7 @@ aclspv_bool_t aclexpr_carve_opn_call(
 					, c_ty_from
 					, rdwr_lst_extra[i].m_mask_literal
 					, lit
-					, &os[i + 1]
+					, &vs[i + 1]
 					, c_ty_to
 					, 0
 					, ctx
@@ -256,23 +263,34 @@ aclspv_bool_t aclexpr_carve_opn_call(
 					break;
 			}
 		}
+
+		os[i + 1] = s_arg_value(vs[i + 1], ctx);
 	}
 
 	if(rdwr_lst_extra[c_num].m_state0
 			& (aclspv_wrd_t)ACLEXPR_OPCFGX_STATE0_INLINE_CALL) {
+		acltrl_mask_t	LITMASK = 0;
+		acltrl_t	LIT;
+
+		aclmemzero(&LIT, sizeof(LIT));
+
 		if(!aclemit_inline_fn(
 					rdwr_lst_extra[c_num].m_cursor
 					, clang_getNullCursor()
-					, &os[1]
+					, &vs[1]
 					, c_num
 					, rdwr_prv_idval
+					, &LITMASK
+					, &LIT
 					, ctx))
 			return 1;
 
-		aclmemzero(r_ltrl, sizeof(*r_ltrl));
+		if((LITMASK & ACLTRL_MASK_LTRL) == ACLTRL_MASK_LTRL)
+			*r_ltrl = LIT;
 
 		rdwr_prv_extra->m_type_original = c_ty_ret;
-		rdwr_prv_extra->m_mask_literal = 0;
+		rdwr_prv_extra->m_mask_literal = LITMASK;
+		rdwr_prv_extra->m_literal = LIT;
 
 		return 0;
 	}

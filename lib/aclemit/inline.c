@@ -171,6 +171,30 @@ static aclspv_bool_t s_has_return_in_loop(CXCursor c_body) {
 	return S.m_found;
 }
 
+/** does the body need the single-iteration loop scaffold to inline?
+ *
+ * only a body whose single return is the LAST statement of its block can be
+ * carved straight into the caller's block: that return stores the result and
+ * the block stays open, so nothing has to be merged or carried. every other
+ * shape exits a block that is not the last one (an early return, a return
+ * under a selection, several returns) and needs the loop.
+ *
+ * the straight path is not just cheaper: it is the only one that folds. a
+ * scaffold puts the body behind a loop header, so every parameter read there
+ * resolves through a carry phi and the literal an argument arrived with is
+ * gone (see s_ssa_loop_read) — `f(4)` carving `return x + 3` folds only
+ * without the scaffold. */
+static aclspv_bool_t s_needs_loop(CXCursor c_body) {
+	struct s_shape S;
+
+	S.m_children = 0;
+	S.m_returns = 0;
+	S.m_last_ret = 0;
+	clang_visitChildren(c_body, s_shape_direct, &S);
+	clang_visitChildren(c_body, s_shape_all, &S);
+
+	return (aclspv_bool_t)!(S.m_returns == 1 && S.m_last_ret);
+}
 
 aclspv_bool_t aclemit_inline_supported(CXCursor c_fn) {
 	CXCursor B = s_body_of(c_fn);
@@ -250,12 +274,14 @@ aclspv_bool_t aclemit_inline_gate(h_aclspv_ctx_t h_ctx) {
 aclspv_bool_t aclemit_inline_fn(
 		CXCursor c_fn, CXCursor c_body,
 		const aclspv_id_t* c_args, aclspv_wrd_t c_num,
-		aclspv_id_t* wr_ret, h_aclspv_ctx_t h_ctx) {
+		aclspv_id_t* wr_ret,
+		acltrl_mask_t* wr_lit_mask_opt, acltrl_t* wr_literal_opt,
+		h_aclspv_ctx_t h_ctx) {
 	aclty_t* ae2f_restrict p_fn;
 	aclspv_id_t id_fn_ty, id_ret = 0, id_end = 0, id_flag = 0, id_header = 0, id_body = 0, id_cont = 0;
 	aclty_id_t ty_ret;
 	aclspv_wrd_t i, c_dtor_base;
-	aclspv_bool_t c_has_this, c_has_ret, c_fnret;
+	aclspv_bool_t c_has_this, c_has_ret, c_loop, c_fnret;
 	aclspv_id_t id_brk, id_cnt, id_this;
 	aclspv_bool_t old_active, old_branched, old_terminated, old_fnterm;
 	aclspv_id_t old_end, old_ret, old_ty, old_retflag;
@@ -276,6 +302,8 @@ aclspv_bool_t aclemit_inline_fn(
 	ty_ret = p_fn->m_info.m_fn.m_ret_id;
 	c_has_this = aclutil_fn_has_this(c_fn);
 	c_has_ret = s_has_return(c_body);
+	/** a single trailing return needs no scaffold (see s_needs_loop). */
+	c_loop = (aclspv_bool_t)(c_has_ret && s_needs_loop(c_body));
 	c_fnret = aclcur_get_fnret(h_ctx);
 	id_brk = aclcur_get_break_loop(h_ctx);
 	id_cnt = aclcur_get_continue_loop(h_ctx);
@@ -337,7 +365,7 @@ aclspv_bool_t aclemit_inline_fn(
 	 * taking and naming the registers before anything else keeps them out
 	 * of reach. the two labels the scaffold opens are taken after, so a
 	 * nested carve never lands on one of them either. */
-	if(c_has_ret) {
+	if(c_loop) {
 		const aclcur_reg_t REGIN = aclcur_regvar_in();
 		ae2f_ifezerr(id_flag = aclcur_cfg_reg(clang_getNullCursor(),
 					ACLSPV_ID_BOOL, SpvStorageClassFunction, &REGIN, h_ctx)) return 0;
@@ -345,33 +373,39 @@ aclspv_bool_t aclemit_inline_fn(
 
 	if(ty_ret != ACLSPV_ID_VOID) {
 		const aclcur_reg_t REGIN = aclcur_regvar_in();
-		h_aclcur_t p;
 
 		ae2f_ifezerr(id_ret = aclcur_cfg_reg(clang_getNullCursor(),
 					ty_ret, SpvStorageClassFunction, &REGIN, h_ctx)) return 0;
 
-		p = aclcur_get_node(id_ret, h_ctx);
-		if(p) {
-			p->m_flag0 &= (aclspv_wrd_t)~aclcur_flag0_reg(ACLCUR_FLAG0_REG_SCOPED);
-			p->m_flag0 |= aclcur_flag0_reg(ACLCUR_FLAG0_REG_ALLOCATED);
+		/** the result has to survive the scaffold's back edge, so it has to
+		 * reach memory. the straight path keeps it in SSA: it is stored and
+		 * read in one block, and staying in SSA is what carries the literal
+		 * (m_val_mask / m_val_lit) out of the body. */
+		if(c_loop) {
+			h_aclcur_t p = aclcur_get_node(id_ret, h_ctx);
+
+			if(p) {
+				p->m_flag0 &= (aclspv_wrd_t)~aclcur_flag0_reg(ACLCUR_FLAG0_REG_SCOPED);
+				p->m_flag0 |= aclcur_flag0_reg(ACLCUR_FLAG0_REG_ALLOCATED);
+			}
 		}
 	}
 
-	if(c_has_ret) {
+	if(c_loop) {
 		id_end = h_ctx->m_id++;
 		id_header = h_ctx->m_id++;
 		id_body = h_ctx->m_id++;
 		id_cont = h_ctx->m_id++;
 	}
 
-	if(c_has_ret)
+	if(c_loop)
 		if(!aclcur_store_reg(id_flag, aclval_cfg_bool(1, h_ctx), h_ctx)) return 0;
 
 	/** seed the result so the loop header has a forward-edge value to
 	 * build its carry phi from; without it the header load cannot resolve
 	 * and the post-loop read would fall back to a value defined in the
 	 * continue block (dominance violation). */
-	if(c_has_ret && ty_ret != ACLSPV_ID_VOID) {
+	if(c_loop && ty_ret != ACLSPV_ID_VOID) {
 		aclspv_id_t id_nil;
 		ae2f_ifezerr(id_nil = aclval_cfg_nil(ty_ret, h_ctx)) return 0;
 		ae2f_ifezerr(aclcur_store_reg(id_ret, id_nil, h_ctx)) return 0;
@@ -392,7 +426,7 @@ aclspv_bool_t aclemit_inline_fn(
 	old_callee = s_body_fn;
 
 	h_ctx->m_inline.m_active = 1;
-	h_ctx->m_inline.m_lbl_end = id_cont;
+	h_ctx->m_inline.m_lbl_end = c_loop ? id_cont : 0;
 	h_ctx->m_inline.m_reg_ret = id_ret;
 	h_ctx->m_inline.m_ty_ret = ty_ret;
 	h_ctx->m_inline.m_dtor_base = c_dtor_base;
@@ -406,11 +440,18 @@ aclspv_bool_t aclemit_inline_fn(
 	/** from here every register this body creates is its own: it is marked
 	 * at creation so the value flow leaves it in memory (see
 	 * aclemit_inline_is_local). a nested carve pushes our mark back when it
-	 * returns. */
+	 * returns.
+	 *
+	 * only a LOOP scaffold needs that mark: its registers are written on one
+	 * trip around it and read back before the next, so they cannot ride SSA
+	 * across the back edge. a straight slice opens no loop, so its registers
+	 * are ordinary SSA values of the caller's block — and staying in SSA is
+	 * what keeps a literal a literal through a nested call (`twice(4)` with
+	 * `return add3(a + 1)` folds only this way). */
 	old_carving = s_carving_slice;
-	s_carving_slice = 1;
+	s_carving_slice = (aclspv_bool_t)(old_carving || c_loop);
 
-	if(c_has_ret) {
+	if(c_loop) {
 		aclspv_id_t c_cond;
 		if(!aclcur_cfg_jmp(id_header, h_ctx)
 				|| !aclcur_cfg_lbl(id_header, h_ctx)
@@ -450,7 +491,7 @@ aclspv_bool_t aclemit_inline_fn(
 	aclctx_err_check(h_ctx) { s_unpark_expr(h_ctx); h_ctx->m_inline.m_active = old_active; s_carving_slice = old_carving; return 0; }
 	if(!aclemit_dtor_flush_to(h_ctx, c_dtor_base)) { s_unpark_expr(h_ctx); return 0; }
 
-	if(c_has_ret) {
+	if(c_loop) {
 		/** the body may have ended with a return (its block already branches
 		 * to the continue target) or with an open block to close. never both:
 		 * the exit block takes one terminator. */
@@ -494,8 +535,28 @@ aclspv_bool_t aclemit_inline_fn(
 
 	if(wr_ret) {
 		if(ty_ret != ACLSPV_ID_VOID) {
-			aclcur_reg_untrack(id_ret, h_ctx);
+			/** the straight path leaves the result tracked: untracking it
+			 * first (as the scaffold needs) would drop exactly the literal
+			 * this read is here to hand back. */
+			if(c_loop)
+				aclcur_reg_untrack(id_ret, h_ctx);
+
 			ae2f_ifezerr(*wr_ret = aclcur_load_reg(id_ret, h_ctx, 0)) return 0;
+
+			/** the read left the register's own literal state in place: the
+			 * return expression was folded to a constant and stored as one, so
+			 * this IS the call's value, not a runtime one. */
+			{
+				h_aclcur_t p = aclcur_get_node(id_ret, h_ctx);
+
+				if(p && (p->m_val_mask & ACLTRL_MASK_LTRL)
+						== ACLTRL_MASK_LTRL) {
+					if(wr_lit_mask_opt)
+						*wr_lit_mask_opt = ACLTRL_MASK_LTRL;
+					if(wr_literal_opt)
+						*wr_literal_opt = p->m_val_lit;
+				}
+			}
 		} else *wr_ret = 0;
 	}
 	return 1;
