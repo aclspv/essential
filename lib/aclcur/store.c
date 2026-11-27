@@ -2,7 +2,119 @@
 #include "./load/get.h"
 #include "./common.h"
 
+#include <aclty.h>
+
 #include <util/log.h>
+
+/** has this register ever been the target of a store? */
+static aclspv_bool_t s_ever_stored(aclspv_id_t c_reg, h_aclspv_ctx_t h_ctx) {
+	aclspv_wrd_t	i;
+
+	for(i = 0; i < h_ctx->m_num_cursor; ++i) {
+		h_aclcur_t p = aclcur_get_node_idx(i, h_ctx);
+
+		if(p && p->m_class == ACLCUR_STORE
+				&& p->m_d.m_store.m_reg == c_reg)
+			return 1;
+	}
+
+	return 0;
+}
+
+aclspv_bool_t aclcur_store_clobber_reachable(
+		aclspv_id_t		c_written,
+		h_aclspv_ctx_t		h_ctx
+		) {
+	aclspv_wrd_t		i;
+	const aclspv_wrd_t	c_n = h_ctx ? h_ctx->m_num_cursor : 0;
+	aclspv_id_t		c_var = 0;
+
+	ae2f_ifezerr(h_ctx) return 0;
+	ae2f_ifezerr(h_ctx->m_cursors.m_p) return 0;
+
+	/** WHICH var was written. a write names one — through a view, through the
+	 * var named by a pointer value, or (0) through a pointer nobody can
+	 * follow. this is the whole filter: no type, no storage class, no overlap
+	 * guess. */
+	if(c_written)
+		c_var = aclcur_reg_var(c_written, h_ctx);
+
+	/** snapshot: creating nodes below moves the cursor buffer. */
+	for(i = 0; i < c_n; ++i) {
+		h_aclcur_t p = aclcur_get_node_idx(i, h_ctx);
+		aclspv_id_t	c_reg;
+		aclspv_id_t	c_val;
+
+		if(!p || p->m_class != ACLCUR_REG)
+			continue;
+
+		c_reg = p->m_id;
+
+		/** the write that just happened is this register's own value: the
+		 * store path already re-tracked it, and re-reading it from memory
+		 * would only add a load. */
+		if(c_reg == c_written)
+			continue;
+
+		/** a parameter is an SSA value, and a pure alias has no var of its
+		 * own: neither holds a value a write can invalidate. nor does an
+		 * interface variable: its value is its own address, which no write
+		 * changes. */
+		if(p->m_flag0 & (aclcur_flag0_reg(ACLCUR_FLAG0_REG_PARAM)
+					| aclcur_flag0_reg(ACLCUR_FLAG0_REG_ALIAS)
+					| aclcur_flag0_reg(ACLCUR_FLAG0_REG_ADDRESS)))
+			continue;
+
+		if(c_var) {
+			/** the var this register names: the same one, every cached value
+			 * of it is stale (the written view, its root, a sibling member, a
+			 * write-through pointer to the same object). a KNOWN other var
+			 * cannot have been reached by a write that names this one. an
+			 * unknown one (0: "wherever that pointer points") still can. */
+			const aclspv_id_t c_reg_var
+				= aclcur_reg_var(c_reg, h_ctx);
+
+			if(c_reg_var && c_reg_var != c_var)
+				continue;
+		}
+
+		/** a var that can hold no memory (a plain local whose address never
+		 * escaped) is never observable through a write: leave its value
+		 * alone. untracking one would be worse than useless — its value lives
+		 * only in the cache/SSA definition, and the later read would fall to
+		 * a memory load of a var that was never written. */
+		unless(aclcur_reg_needs_memory(c_reg, h_ctx))
+			continue;
+
+		if(!(p->m_flag0 & aclcur_flag0_reg(ACLCUR_FLAG0_REG_TRACKED))
+				&& !s_ever_stored(c_reg, h_ctx)) {
+			aclcur_reg_untrack(c_reg, h_ctx);
+			continue;
+		}
+
+		/** creating nodes may move the cursor buffer: re-fetch by id. */
+		aclcur_reg_untrack(c_reg, h_ctx);
+
+		ae2f_ifezerr(p = aclcur_get_node(c_reg, h_ctx))
+			continue;
+
+		/** the tracked value predates the write, and the SSA value flow would
+		 * hand it back: mark the register changed so the read below (and every
+		 * later one in this block) comes from memory. */
+		p->m_flag0 |= aclcur_flag0_reg(ACLCUR_FLAG0_REG_CHANGED);
+
+		ae2f_ifezerr(c_val = aclcur_load_reg(c_reg, h_ctx, 0))
+			return 0;
+
+		/** the register's value for the rest of this block. no node is
+		 * created for the store itself, so nothing refers to the load here: a
+		 * read does, and the emitter drops it otherwise. */
+		ae2f_ifezerr(aclcur_store_reg_implicit(c_reg, c_val, h_ctx))
+			return 0;
+	}
+
+	return 1;
+}
 
 aclspv_id_t	aclcur_store_reg(aclcur_regid_t c_reg, aclspv_vid_t c_val, h_aclspv_ctx_t h_ctx) {
 	aclspv_id_t node;
@@ -94,7 +206,24 @@ aclspv_id_t	aclcur_store_reg(aclcur_regid_t c_reg, aclspv_vid_t c_val, h_aclspv_
 		p_reg->m_val_lit = p_val->m_val_lit;
 	}
 
-	return p->m_id;
+	{
+		const aclspv_id_t ID = p->m_id;
+
+		/** the write may have landed in a var this node does not own: a store
+		 * through a pointer VALUE writes the var that pointer names, and a
+		 * store to one object is observable through a pointer taken from it
+		 * earlier. every register naming that var drops its cached value —
+		 * the same treatment a call site gives them, for the same reason.
+		 *
+		 * the alternative is an alias analysis no part of this compiler has:
+		 * `i32* p = &t; *p = 3; use(t);` used to hand `t`'s pre-write value to
+		 * `use`, and `t = 3; *p` handed the pointer the pre-write one, both
+		 * silently. */
+		ae2f_ifezerr(aclcur_store_clobber_reachable(c_reg, h_ctx))
+			return 0;
+
+		return ID;
+	}
 }
 
 aclspv_id_t	aclcur_store_reg_implicit(

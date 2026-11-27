@@ -149,6 +149,26 @@ enum ACLCUR_FLAG0_REG_ {
 	 * it, and memory is current. see aclemit_inline_is_local. */
 	ACLCUR_FLAG0_REG_INLINE_SLICE,
 
+	/** this register OWNS storage: its id is the pointer to an object the
+	 * function can name (an OpVariable, or an entry point's interface
+	 * variable).
+	 *
+	 * the value flow needs that split: a VAR can be written through any
+	 * pointer that names it, while a register that only HOLDS a value (a
+	 * view, a ghost, a parameter) names nothing to write. see
+	 * aclcur_reg_var. */
+	ACLCUR_FLAG0_REG_VAR,
+
+	/** reading this register yields its OWN ADDRESS, not data stored in it:
+	 * the entry point's interface variable (its emitters copy the variable's
+	 * address instead of loading from it, see args.c).
+	 *
+	 * no write can invalidate such a value — the address of an object does
+	 * not change when the object is written through it — so the store
+	 * invalidation leaves it alone, which is what keeps a write through the
+	 * argument from being re-derived on every statement. */
+	ACLCUR_FLAG0_REG_ADDRESS,
+
 	ACLCUR_FLAG0_REG_MAX
 };
 
@@ -277,6 +297,19 @@ aclspv_id_t aclcur_reg_ptrval(aclspv_id_t c_reg, h_aclspv_ctx_t h_ctx);
  * resolved at emit time by aclcur_regvar_emit_storeof, so the answer is
  * independent of the order in which stores and address-of were carved. */
 aclspv_bool_t	aclcur_reg_needs_memory(aclspv_id_t c_reg, h_aclspv_ctx_t h_ctx);
+
+/** the VAR c_reg writes into (ACLCUR_FLAG0_REG_VAR), or 0 when it names none.
+ *
+ * a variable answers with itself, a view with its root, and a ghost with the
+ * variable its held pointer value names. that is the identity a store
+ * invalidates by, and the reason the value flow needs no type or
+ * storage-class guess: two registers name the same object exactly when their
+ * var is the same id.
+ *
+ * 0 means "no object this compiler can name": a ghost over a pointer
+ * parameter, a pointer read back from memory, a value with no storage at all.
+ * a write through one of those has to be treated conservatively. */
+aclspv_id_t	aclcur_reg_var(aclspv_id_t c_reg, h_aclspv_ctx_t h_ctx);
 
 /** the kind of a single view step: how an ALIAS2 view derives from its
  * parent. stored explicitly on the view (m_step) rather than derived from

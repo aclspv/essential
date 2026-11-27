@@ -17,97 +17,12 @@
 
 #include <ae2f/pat/dbg.h>
 
-/** has this register ever been the target of a store? */
-static aclspv_bool_t s_ever_stored(aclspv_id_t c_reg, h_aclspv_ctx_t h_ctx) {
-	aclspv_wrd_t	i;
-
-	for(i = 0; i < h_ctx->m_num_cursor; ++i) {
-		h_aclcur_t p = aclcur_get_node_idx(i, h_ctx);
-
-		if(p && p->m_class == ACLCUR_STORE
-				&& p->m_d.m_store.m_reg == c_reg)
-			return 1;
-	}
-
-	return 0;
-}
-
-/** a call may have written state this function does not own: every register
- * whose storage the callee can reach gets a new value definition.
- *
- * that is exactly aclcur_reg_needs_memory(): a non-SCOPED register (global /
- * interface / pointer pointee) or an ALLOCATED one (its address escaped).
- * a plain Function-storage local lives in SSA and no callee can touch it.
- *
- * the new value is a memory load, and the register's cached value becomes
- * that load for the rest of the block:
- *
- *   untrack + CHANGED  -> the load path takes the memory seed, not the
- *                         pre-call SSA value
- *   load               -> one OpLoad, materialised by aclcur_emit only if
- *                         something refers to it
- *   implicit store     -> the register's value becomes that load
- *
- * the implicit store adds no node, so a read in another block does not
- * inherit the load; the label sweep untracks, and that read seeds from
- * memory itself — the same result, one load later.
- *
- * a register that was never stored has no stale SSA definition to replace:
- * untracking it is enough, its next read is a memory seed load anyway. */
-static void s_clobber_reachable(h_aclspv_ctx_t h_ctx) {
-	aclspv_wrd_t		i;
-	const aclspv_wrd_t	c_n = h_ctx->m_num_cursor;
-
-	ae2f_ifezerr(h_ctx->m_cursors.m_p) return;
-
-	for(i = 0; i < c_n; ++i) {
-		h_aclcur_t p = aclcur_get_node_idx(i, h_ctx);
-		aclspv_id_t		c_reg;
-		aclspv_id_t		c_val;
-
-		if(!p || p->m_class != ACLCUR_REG)
-			continue;
-
-		c_reg = p->m_id;
-
-		if(p->m_flag0 & (aclcur_flag0_reg(ACLCUR_FLAG0_REG_PARAM)
-					| aclcur_flag0_reg(ACLCUR_FLAG0_REG_ALIAS)))
-			continue;
-
-		/** the callee cannot reach SSA-only storage: leave its value alone.
-		 * untracking one here would be worse than useless — the value exists
-		 * only in the cache/SSA definition, and a later read in the same
-		 * block would fall to a memory load of storage that was never
-		 * written. */
-		unless(aclcur_reg_needs_memory(c_reg, h_ctx))
-			continue;
-
-		if(!(p->m_flag0 & aclcur_flag0_reg(ACLCUR_FLAG0_REG_TRACKED))
-				&& !s_ever_stored(c_reg, h_ctx)) {
-			aclcur_reg_untrack(c_reg, h_ctx);
-			continue;
-		}
-
-		/** creating nodes may move the cursor buffer: re-fetch by id. */
-		aclcur_reg_untrack(c_reg, h_ctx);
-
-		ae2f_ifezerr(p = aclcur_get_node(c_reg, h_ctx)) continue;
-
-		p->m_flag0 |= aclcur_flag0_reg(ACLCUR_FLAG0_REG_CHANGED);
-
-		ae2f_ifezerr(c_val = aclcur_load_reg(c_reg, h_ctx, 0)) {
-			_aclctx_err(h_ctx, ACLSPV_COMPILE_UNHANDLED);
-			return;
-		}
-
-		/** the register's value for the rest of this block. no node is
-		 * created, so nothing refers to the load here: a read does, and the
-		 * emitter drops it otherwise. */
-		ae2f_ifezerr(aclcur_store_reg_implicit(c_reg, c_val, h_ctx)) {
-			_aclctx_err(h_ctx, ACLSPV_COMPILE_UNHANDLED);
-			return;
-		}
-	}
+/** a call may have written state this function does not own: the callee can
+ * reach exactly the same storage a pointer write can, so the treatment is the
+ * same one (see aclcur_store_clobber_reachable). an inlined body's stores go
+ * through the ordinary store path and are handled there. */
+static aclspv_bool_t s_clobber_reachable(h_aclspv_ctx_t h_ctx) {
+	return aclcur_store_clobber_reachable(0, h_ctx);
 }
 
 aclspv_bool_t aclexpr_call_make(
@@ -156,7 +71,7 @@ aclspv_bool_t aclexpr_call_make(
 
 	/** unknown callee counts as impure: conservatively reload. */
 	unless(is_pure)
-		s_clobber_reachable(h_ctx);
+		ae2f_ifezerr(s_clobber_reachable(h_ctx)) return 1;
 
 	if(wr_is_pure)
 		*wr_is_pure = is_pure;

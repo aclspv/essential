@@ -190,6 +190,11 @@ enum CXChildVisitResult aclemit_fndecl_norm(
 		p_reg->m_flag0 |= aclcur_flag0(ACLCUR_FLAG0_VALUE)
 			| aclcur_flag0_reg(ACLCUR_FLAG0_REG_PARAM);
 
+		/** a parameter is the callee's VALUE, not its variable: no write of
+		 * this function lands in storage it owns (the caller's object does,
+		 * and that is the caller's var to invalidate). */
+		p_reg->m_flag0 &= (aclspv_wrd_t)~aclcur_flag0_reg(ACLCUR_FLAG0_REG_VAR);
+
 		/** the implicit object pointer has no ParmDecl to bind: keep the
 		 * parameter value register as the method context. */
 		if(c_has_this && i == 0) {

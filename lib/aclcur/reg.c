@@ -112,6 +112,109 @@ aclspv_bool_t	aclcur_reg_needs_memory(aclspv_id_t c_reg, h_aclspv_ctx_t h_ctx) {
 			|| (p->m_flag0 & aclcur_flag0_reg(ACLCUR_FLAG0_REG_INLINE_SLICE)));
 }
 
+/** deepest value -> var chain this walk follows (a copy of a copy of a chain).
+ * bounded like every other chain walk here. */
+#define	ACLCUR_VAR_MAX_DEPTH	8
+
+static aclspv_id_t s_value_var(
+		aclspv_id_t		c_val,
+		h_aclspv_ctx_t		h_ctx,
+		aclspv_wrd_t		c_depth
+		);
+
+aclspv_id_t	aclcur_reg_var(aclspv_id_t c_reg, h_aclspv_ctx_t h_ctx) {
+	aclspv_wrd_t n = h_ctx ? h_ctx->m_num_cursor : 0;
+	aclspv_id_t c = c_reg;
+	h_aclcur_t p;
+
+	while(c && n--) {
+		ae2f_ifezerr(p = aclcur_get_node(c, h_ctx))
+			return 0;
+		ae2f_ifnezerr_strict(p->m_class != ACLCUR_REG)
+			return 0;
+
+		/** a view is a PART of its root: the var is the root's. */
+		if(p->m_flag0 & aclcur_flag0_reg(ACLCUR_FLAG0_REG_ALIAS2)) {
+			c = p->m_d.m_reg.m_d.m_ref.m_id;
+			continue;
+		}
+
+		/** a ghost names whatever its held pointer value names. */
+		if(p->m_flag0 & aclcur_flag0_reg(ACLCUR_FLAG0_REG_GHOST))
+			return s_value_var(aclcur_reg_base(c, h_ctx), h_ctx, 0);
+
+		/** a parameter is an SSA value, and anything else without the VAR
+		 * flag owns no object: neither is something a write can land in. */
+		return (p->m_flag0 & aclcur_flag0_reg(ACLCUR_FLAG0_REG_VAR)) ? c : 0;
+	}
+
+	return 0;
+}
+
+/** the var a pointer VALUE names, or 0 when it names none we can follow.
+ *
+ * a value is nameable when it was built from a register's own address: the
+ * address-of carve emits `OpCopyObject <register>`, an entry-point argument
+ * load copies the variable's own address, a view's address is an
+ * OpAccessChain over the root. anything else — a pointer parameter, a pointer
+ * read back from a pointer variable, a cast — names nothing, and the caller
+ * must be conservative.
+ * */
+static aclspv_id_t s_value_var(
+		aclspv_id_t		c_val,
+		h_aclspv_ctx_t		h_ctx,
+		aclspv_wrd_t		c_depth
+		) {
+	h_aclcur_t p;
+
+	if(!c_val || c_depth >= ACLCUR_VAR_MAX_DEPTH)
+		return 0;
+
+	ae2f_ifezerr(p = aclcur_get_node(c_val, h_ctx))
+		return 0;
+
+	switch(p->m_class) {
+		/** the value IS a register: its id is the pointer to it. */
+		case ACLCUR_REG:
+			return aclcur_reg_var(c_val, h_ctx);
+
+		/** loading a register whose read yields its own address (the entry
+		 * point's interface variable) is that address. a plain memory load
+		 * reads a pointer value somebody else wrote: not nameable here. */
+		case ACLCUR_LOAD:
+			{
+				h_aclcur_t p_reg = aclcur_get_node(
+						p->m_d.m_load.m_reg, h_ctx);
+
+				if(p_reg && (p_reg->m_flag0
+						& aclcur_flag0_reg(ACLCUR_FLAG0_REG_ADDRESS)))
+					return aclcur_reg_var(
+							p->m_d.m_load.m_reg, h_ctx);
+
+				return 0;
+			}
+
+		/** `&x` wraps the address in OpCopyObject, exactly because a store
+		 * needs a typed pointer VALUE (see aclexpr_carve1_address); unwrap it
+		 * to the address itself. */
+		case ACLCUR_OP1:
+			return (p->m_d.m_op.m_op == SpvOpCopyObject)
+				? s_value_var(p->m_d.m_op.m_o[0], h_ctx, c_depth + 1)
+				: 0;
+
+		/** OpAccessChain: the view's address is its BASE's address plus
+		 * indices, so the var is the base's — a part of it, not a different
+		 * one. */
+		case ACLCUR_OP2:
+			return (p->m_d.m_op.m_op == SpvOpAccessChain)
+				? s_value_var(p->m_d.m_op.m_o[0], h_ctx, c_depth + 1)
+				: 0;
+
+		default:
+			return 0;
+	}
+}
+
 aclspv_id_t	aclcur_reg_alias2(
 		aclspv_id_t c_reg,
 		aclspv_id_t c_parent,
@@ -246,6 +349,12 @@ aclspv_id_t aclcur_cfg_reg1(
 	 * flag uniformly (see aclcur_store_reg). */
 	if(c_storage_class == (aclspv_wrd_t)SpvStorageClassFunction)
 		p->m_flag0 |= aclcur_flag0_reg(ACLCUR_FLAG0_REG_SCOPED);
+
+	/** a register created here OWNS storage: the substrate may drop its
+	 * OpVariable as dead, but the object exists and a pointer can name it.
+	 * (a view, a ghost and an emitted function's parameter are built
+	 * elsewhere and carry no such claim.) */
+	p->m_flag0 |= aclcur_flag0_reg(ACLCUR_FLAG0_REG_VAR);
 
 	/** created inside an inlined body's loop scaffold: local to it. */
 	if(aclemit_inline_nested(h_ctx))

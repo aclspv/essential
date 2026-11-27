@@ -40,6 +40,30 @@ aclcur_storeid_t aclcur_store_reg(
 		h_aclspv_ctx_t h_ctx
 		);
 
+/** drop every cached value the just-completed write invalidated.
+ *
+ * a write names one VAR (aclcur_reg_var): a variable, a part of one, or the
+ * variable a pointer value names. everything cached for that var is stale and
+ * re-reads memory on its next use, exactly as it would after a call. a
+ * register that names a DIFFERENT var is left alone, and so is one that names
+ * no var at all but only holds a value nothing can write — that is the whole
+ * rule; no type or storage-class guess is involved.
+ *
+ * a register whose var is UNKNOWN (0: a pointer parameter, a pointer read back
+ * from memory) could have been the one written, so it is invalidated too, and
+ * so is every reachable register when the write itself names no var.
+ *
+ * called by aclcur_store_reg itself, with `c_written` naming the register the
+ * store went through, and by a call site for the callee's writes
+ * (`c_written` = 0: no pointer of ours, anything may have been written).
+ *
+ * @return 0 on failure (the caller's expression must not continue).
+ * */
+aclspv_bool_t aclcur_store_clobber_reachable(
+		aclspv_id_t		c_written,
+		h_aclspv_ctx_t		h_ctx
+		);
+
 /**
  * implicit store to memory
  * assumes no branching is happening

@@ -22,6 +22,7 @@
 #include <aclctx/id.h>
 
 #include <aclcur/common.h>
+#include <aclcur/load.h>
 #include <aclcur/reg/var.h>
 #include <aclcur/reg/view.h>
 
@@ -1046,6 +1047,11 @@ static aclspv_compile_t s_arg_reg(
 					return ACLSPV_COMPILE_UNHANDLED_ARGS;
 				}
 				p_reg->m_id = var_id;
+
+				/** its value is that variable's ADDRESS: s_argv_emit_load
+				 * copies the variable (or a view of it), it never loads data
+				 * out of it. see ACLCUR_FLAG0_REG_ADDRESS. */
+				p_reg->m_flag0 |= aclcur_flag0_reg(ACLCUR_FLAG0_REG_ADDRESS);
 				/** the OpVariable's storage type, when it differs from the
 				 * register's logical var_type_id (wrapped-argument idiom):
 				 * the pointer value is member 0's address, so keep the
